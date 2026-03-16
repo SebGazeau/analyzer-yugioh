@@ -1,0 +1,103 @@
+/*
+ * tokens.css — Design System Tokens
+ * Phase 2 — add this file FIRST, before any template changes.
+ * Imported at the top of main.css.
+ *
+ * Convention:
+ *   --color-{role}       colors
+ *   --space-{n}          spacing scale (4px base unit)
+ *   --font-{role}        font families
+ *   --text-{size}        font sizes
+ *   --radius-{size}      border radii
+ *   --shadow-{size}      box shadows
+ *   --z-{layer}          z-index scale
+ *   --duration-{speed}   transitions
+ */
+
+[data-theme="dark"],
+:root {
+  /* ── Backgrounds ─────────────────────────────── */
+  --color-bg-base:       #0d0f14;   /* page background */
+  --color-bg-surface:    #151820;   /* panels, cards, nav */
+  --color-bg-elevated:   #1e2130;   /* modals, dropdowns, hover states */
+  --color-bg-sunken:     #0a0c10;   /* input wells, inset areas */
+
+  /* ── Borders ─────────────────────────────────── */
+  --color-border-subtle: #2a2d3a;   /* dividers, quiet separators */
+  --color-border-strong: #3d4155;   /* visible borders, focus rings base */
+  --color-border-accent: #c9a227;   /* gold — use sparingly */
+
+  /* ── Text ────────────────────────────────────── */
+  --color-text-primary:   #e8eaf0;  /* headings, labels, active elements */
+  --color-text-secondary: #8b90a8;  /* body copy, descriptions */
+  --color-text-muted:     #5a5f78;  /* placeholders, disabled, timestamps */
+  --color-text-inverse:   #0d0f14;  /* text on gold/light backgrounds */
+
+  /* ── Brand accents ───────────────────────────── */
+  --color-gold:      #c9a227;
+  --color-gold-dim:  #7a6018;
+  --color-amber:     #e8860a;
+
+  /* ── Semantic ────────────────────────────────── */
+  --color-danger:   #e05252;
+  --color-danger-bg: rgba(224, 82, 82, 0.10);
+  --color-success:  #3dba7a;
+  --color-success-bg: rgba(61, 186, 122, 0.10);
+  --color-info:     #4a9eda;
+  --color-info-bg:  rgba(74, 158, 218, 0.10);
+  --color-warning:  #e8860a;
+  --color-warning-bg: rgba(232, 134, 10, 0.10);
+
+  /* ── Deck zone colors ────────────────────────── */
+  --color-zone-main:  #4a6fa5;
+  --color-zone-extra: #8b5cf6;
+  --color-zone-side:  #3dba7a;
+
+  /* ── Typography ──────────────────────────────── */
+  --font-display: 'Rajdhani', sans-serif;   /* headings, zone labels, deck names */
+  --font-body:    'Lato', sans-serif;       /* UI text, descriptions */
+  --font-mono:    'IBM Plex Mono', monospace; /* counts, percentages, probabilities */
+
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 14px;
+  --text-md:   16px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+
+  /* ── Spacing scale (4px base) ────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Border radii ────────────────────────────── */
+  --radius-sm:  3px;
+  --radius-md:  6px;
+  --radius-lg:  8px;
+  --radius-xl: 12px;
+
+  /* ── Shadows ─────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.5);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.6);
+
+  /* ── Z-index scale ───────────────────────────── */
+  --z-base:    1;
+  --z-above:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+
+  /* ── Transitions ─────────────────────────────── */
+  --duration-fast:   100ms;
+  --duration-normal: 160ms;
+  --duration-slow:   260ms;
+  --ease-default:    cubic-bezier(0.16, 1, 0.3, 1);
+}

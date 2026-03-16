@@ -1,0 +1,19 @@
+---
+description: Slice discipline - isolate changes, allow radical redesign
+globs:
+  - "docs/**"
+  - "src/**"
+  - "tests/**"
+alwaysApply: true
+---
+
+## Slice discipline (anti-chaos, pas anti-refactor)
+- Une slice = un périmètre isolé + un contrat de sortie.
+- À l'intérieur de la slice, les changements peuvent être RADICAUX.
+- À l'extérieur, le reste du système doit rester stable (ou migré via plan explicite).
+
+## DoD (preuve obligatoire)
+- tests qui prouvent la parité (ou la migration)
+- invariants explicités et vérifiés
+- décision résumée dans docs/decisions.md (pourquoi cette architecture)
+- qualité Rust: fmt/clippy + erreurs non-silencieuses

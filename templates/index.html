@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Deck Analyzer</title>
+	<link rel="stylesheet" href="/static/css/main.css?v={{ timestamp }}">
+	<script type="module" src="/static/dist/main.js?v={{ timestamp }}"></script>
+</head>
+<body class="dashboard-page" data-dashboard="page">
+    <div class="container">
+        {% include "components/header.html" %}
+        <div class="main-content">
+            {% include "pages/builder.html" %}
+            <section id="decks" class="tab-panel section page-decks-section" data-page="decks" role="tabpanel">
+                {% include "pages/decks.html" %}
+            </section>
+            {% include "pages/analysis.html" %}
+        </div>
+    </div>
+</body>
+</html>

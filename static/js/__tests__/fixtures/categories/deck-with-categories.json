@@ -1,0 +1,18 @@
+{
+  "main": [
+    { "name": "Ash Blossom & Joyous Spring", "quantity": 3, "engine": "Staple", "categories": ["Hand Trap", "Interruption"] },
+    { "name": "Maxx \"C\"", "quantity": 3, "engine": "Staple", "categories": ["Hand Trap"] },
+    { "name": "Starter Card A", "quantity": 3, "engine": "Engine 1", "categories": ["Starter", "Consistency"] },
+    { "name": "Extender Card B", "quantity": 2, "engine": "Engine 1", "categories": ["Extender"] },
+    { "name": "Board Breaker C", "quantity": 2, "categories": ["Board Breaker"] },
+    { "name": "Wincon D", "quantity": 1, "categories": ["Wincon"] },
+    { "name": "Brick E", "quantity": 1, "categories": ["Brick"] },
+    { "name": "Filler No Cat", "quantity": 2 }
+  ],
+  "extra": [
+    { "name": "Fusion Boss", "quantity": 1, "categories": ["Wincon"] }
+  ],
+  "side": [
+    { "name": "Hand Trap Side", "quantity": 3, "categories": ["Hand Trap", "Interruption"] }
+  ]
+}

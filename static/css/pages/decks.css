@@ -1,0 +1,10 @@
+/*
+ * pages/decks.css
+ * Interface Decks : liste « Mes decks » (data-page="decks").
+ * Scope : .page-decks. Pour matrice de droits, cibler ce bloc.
+ */
+
+.page-decks {
+  /* Scope pour l’interface Decks ; styles dédiés à ajouter ici si besoin. */
+}
+

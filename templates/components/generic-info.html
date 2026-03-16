@@ -1,0 +1,59 @@
+<div id="live-stats" class="info-panel builder-stats-panel">
+  <div class="builder-stats-deck-summary-wrap">
+    <span id="deck-count-summary" class="builder-stats-deck-summary" aria-live="polite">0 MAIN / 0 EXTRA / 0 SIDE</span>
+  </div>
+  <div class="builder-stats-block" data-builder-stats="opening-hand">
+    <h3 class="builder-stats-block-title">Opening hand</h3>
+    <div class="builder-stats-opening-row">
+      <span class="builder-stats-label">1st (5 cards)</span>
+      <span id="builder-stats-first" class="builder-stats-value builder-stats-value--success" aria-live="polite">—</span>
+    </div>
+    <div class="builder-stats-opening-row">
+      <span class="builder-stats-label">2nd (6 cards)</span>
+      <span id="builder-stats-second" class="builder-stats-value builder-stats-value--success" aria-live="polite">—</span>
+    </div>
+    <div class="builder-stats-opening-row">
+      <span class="builder-stats-label">Engine hit</span>
+      <span id="builder-stats-engine" class="builder-stats-value builder-stats-value--accent" aria-live="polite">—</span>
+    </div>
+  </div>
+
+  <div class="builder-stats-block" data-builder-stats="composition">
+    <h3 class="builder-stats-block-title builder-stats-sort-trigger" data-builder-sort="composition" title="Cliquer pour trier le Main Deck par type (Monster / Spell / Trap)">Composition</h3>
+    <div class="builder-composition-rows">
+      <div class="builder-composition-row">
+        <span class="builder-composition-label">Monsters</span>
+        <span id="count-monster" class="builder-composition-count">0</span>
+        <div class="builder-composition-bar-wrap"><div id="builder-bar-monster" class="builder-composition-bar" role="presentation"></div></div>
+      </div>
+      <div class="builder-composition-row">
+        <span class="builder-composition-label">Spells</span>
+        <span id="count-spell" class="builder-composition-count">0</span>
+        <div class="builder-composition-bar-wrap"><div id="builder-bar-spell" class="builder-composition-bar" role="presentation"></div></div>
+      </div>
+      <div class="builder-composition-row">
+        <span class="builder-composition-label">Traps</span>
+        <span id="count-trap" class="builder-composition-count">0</span>
+        <div class="builder-composition-bar-wrap"><div id="builder-bar-trap" class="builder-composition-bar" role="presentation"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="builder-stats-block" data-builder-stats="categories">
+    <h3 class="builder-stats-block-title builder-stats-sort-trigger" data-builder-sort="categories" title="Cliquer pour trier le Main Deck par catégorie">Catégories (Main)</h3>
+    <div id="deck-stats-category-bar" class="deck-stats-category-bar" role="img" aria-label="Répartition par catégorie"></div>
+    <div id="builder-category-list" class="builder-category-list" aria-label="Détail par catégorie"></div>
+  </div>
+
+  <div class="builder-stats-actions">
+    <a href="#analysis" class="btn btn-deck btn-deck-outline btn-block builder-stats-action-btn" id="btn-analyze-link" data-builder-action="scroll-analysis" title="Aller à l'analyse">Analyser →</a>
+    <div class="builder-stats-toolbar">
+      <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" id="btn-clear-deck" title="Vider les grilles">Tout supprimer</button>
+      <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" id="btn-export-json" title="Télécharger en JSON">Exporter</button>
+      <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" id="btn-import-json-trigger" title="Charger depuis un fichier">Importer</button>
+      <input type="file" id="import-json" accept=".json" hidden>
+      <button type="button" class="btn btn-deck btn-deck-primary btn-sm" id="btn-save-server" title="Créer un nouveau deck sur le serveur">Sauvegarder</button>
+      <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" id="btn-update-server" style="display: none;" title="Enregistrer les modifications">Mettre à jour</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+{# Interface Decks : grille de cartes decks + New Deck. #}
+<div class="page-decks" data-page="decks">
+  <div class="deck-saved-panel">
+    <div class="deck-saved-header">
+      <h3 class="deck-saved-title">Mes decks</h3>
+      <button type="button" class="btn btn-deck btn-deck-ghost" id="btn-refresh-decks" title="Actualiser la liste">Rafraîchir</button>
+    </div>
+    <div class="deck-saved-list-wrap">
+      <div class="deck-saved-grid">
+        <ul id="my-decks-list" class="deck-saved-list deck-saved-list--grid"></ul>
+        <div class="deck-card-new" data-deck-action="new-deck" role="button" tabindex="0">
+          <span class="deck-card-new-icon">+</span>
+          <span class="deck-card-new-label">New Deck</span>
+        </div>
+      </div>
+      <p id="my-decks-empty" class="deck-saved-empty" hidden>Aucun deck sauvegardé. Utilisez « Sauvegarder » pour en créer un.</p>
+    </div>
+  </div>
+</div>

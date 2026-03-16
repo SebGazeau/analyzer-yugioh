@@ -1,0 +1,11 @@
+@import './tokens.css';
+@import './reset.css';
+@import './typography.css';
+@import './components/scrollbar.css';
+@import './components/button.css';
+@import './components/header.css';
+@import './pages/auth.css';
+@import './pages/dashboard.css';
+@import './pages/decks.css';
+@import './pages/builder.css';
+@import './pages/analysis.css';

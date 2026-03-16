@@ -1,0 +1,280 @@
+{
+  "main": [
+    {
+      "name": "Dogmatika Ecclesia, the Virtuous",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Starter",
+        "Extender"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Incredible Ecclesia, the Virtuous",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Starter",
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Fallen of Albaz",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Starter",
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Fallen of the White Dragon",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Starter",
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "The Fallen & The Virtuous",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Board Breaker",
+        "Extender"
+      ],
+      "engine": "Staple"
+    },
+    {
+      "name": "Forbidden Crown",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Board Breaker"
+      ],
+      "engine": "Staple"
+    },
+    {
+      "name": "Nadir Servant",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Starter"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Regenesis",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Starter"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Archfiend",
+      "type": "Monster",
+      "quantity": 3,
+      "categories": [
+        "Starter"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Birth",
+      "type": "Trap",
+      "quantity": 1,
+      "categories": [
+        "Wincon"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Code",
+      "type": "Spell",
+      "quantity": 1,
+      "categories": [
+        "Starter"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Dragon",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Bick"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Lord",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Bick"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Overlord",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Bick"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Sage",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Bick"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Regenesis Warrior",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Bick"
+      ],
+      "engine": "Engine 3"
+    },
+    {
+      "name": "Dogmatika Fleurdelis, the Knighted",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Hand Trap"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Dogmatika Fleurdelis, the Thunderbolt",
+      "type": "Monster",
+      "quantity": 2,
+      "categories": [
+        "Hand Trap"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Dogmatika Maximus",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Extender"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Guiding Quem, the Virtuous",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Tri-Brigade Springans Kitt",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Quadogmatika Beast",
+      "type": "Trap",
+      "quantity": 1,
+      "categories": [
+        "Wincon"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Dogmatika Punishment",
+      "type": "Trap",
+      "quantity": 1,
+      "categories": [
+        "Board Breaker"
+      ],
+      "engine": "Engine 1"
+    },
+    {
+      "name": "Forbidden Droplet",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Board Breaker"
+      ],
+      "engine": "Staple"
+    },
+    {
+      "name": "Blazing Cartesia, the Virtuous",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Extender"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Branded Fusion",
+      "type": "Spell",
+      "quantity": 2,
+      "categories": [
+        "Starter"
+      ],
+      "engine": "Engine 2"
+    },
+    {
+      "name": "Super Polymerization",
+      "type": "Spell",
+      "quantity": 3,
+      "categories": [
+        "Board Breaker"
+      ],
+      "engine": "Staple"
+    },
+    {
+      "name": "Bystial Druiswurm",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Hand Trap"
+      ],
+      "engine": "Staple"
+    },
+    {
+      "name": "Bystial Magnamhut",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [
+        "Hand Trap"
+      ],
+      "engine": "Staple"
+    }
+  ],
+  "extra": [
+    {
+      "name": "Ecclesia and the Dark Dragon",
+      "type": "Monster",
+      "quantity": 1,
+      "categories": [],
+      "engine": ""
+    }
+  ],
+  "side": []
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": 89631139,
+    "name": "Magicien Sombre",
+    "name_en": "Dark Magician",
+    "type": "Normal Monster",
+    "race": "Spellcaster",
+    "desc": "The ultimate wizard.",
+    "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+    "atk": 2500,
+    "def": 2100,
+    "level": 7
+  },
+  {
+    "id": 46986414,
+    "name": "Dragon Blanc aux Yeux Bleus",
+    "name_en": "Blue-Eyes White Dragon",
+    "type": "Normal Monster",
+    "race": "Dragon",
+    "desc": "Legendary dragon.",
+    "image_url": "https://images.ygoprodeck.com/images/cards/46986414.jpg",
+    "atk": 3000,
+    "def": 2500,
+    "level": 8
+  },
+  {
+    "id": 53129443,
+    "name": "Trou Noir",
+    "name_en": "Dark Hole",
+    "type": "Spell Card",
+    "race": "Normal",
+    "desc": "Destroy all monsters on the field.",
+    "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg"
+  }
+]

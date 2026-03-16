@@ -1,0 +1,25 @@
+<div class="search-card-section">
+	<div class="search-container">
+		<div class="search-input-wrapper">
+			<div class="search-icon">🔍</div>
+			<input
+				type="text"
+				id="search-box"
+				class="search-input"
+				placeholder="Nom, type, effet... (min. 4 caractères)"
+				autocomplete="off"
+			>
+		</div>
+		<div class="search-filter-bar" role="group" aria-label="Filtrer par type de carte">
+			<button type="button" class="search-filter-btn active" data-search-filter="all" aria-pressed="true">Tous</button>
+			<button type="button" class="search-filter-btn" data-search-filter="monster" aria-pressed="false">Monster</button>
+			<button type="button" class="search-filter-btn" data-search-filter="spell" aria-pressed="false">Spell</button>
+			<button type="button" class="search-filter-btn" data-search-filter="trap" aria-pressed="false">Trap</button>
+		</div>
+		<div class="search-results" id="searchResults" style="display: none;" role="region" aria-label="Résultats de recherche">
+			<div class="search-results-list" id="search-results-list">
+				<!-- Rempli par JS -->
+			</div>
+		</div>
+	</div>
+</div>

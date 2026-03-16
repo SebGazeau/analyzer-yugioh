@@ -1,0 +1,179 @@
+/*
+ * pages/analysis.css
+ * Interface Analysis (data-page="analysis") : hero stats, composition, simulation, tableaux.
+ * Scope : .page-analysis. Pour matrice de droits, cibler cette section.
+ */
+
+/* ── Titre section (NOM_DU_DECK — Analyse) ──────── */
+.analysis-title .analysis-deck-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-gold);
+}
+.analysis-title .analysis-title-suffix {
+  color: var(--color-text-primary);
+}
+
+/* ── Hero : 3 grandes cartes (1st hand, 2nd hand, engine hit) ─ */
+.page-analysis .analysis-hero,
+.analysis-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.analysis-hero-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.analysis-hero-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.analysis-hero-group {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.analysis-hero-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.analysis-hero-card-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.analysis-hero-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-gold);
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.analysis-hero-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ── Deck composition strip (Main zone) ─────────── */
+.deck-composition-wrap {
+  margin-bottom: var(--space-6);
+}
+
+.deck-composition-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.deck-composition-strip {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+}
+
+.deck-composition-segment {
+  flex: 0 0 auto;
+  min-width: 2px;
+  transition: flex-basis var(--duration-normal) var(--ease-default);
+}
+
+/* Palette par index (cycle) */
+.deck-composition-segment:nth-child(8n+1) { background: var(--color-zone-main); }
+.deck-composition-segment:nth-child(8n+2) { background: var(--color-zone-extra); }
+.deck-composition-segment:nth-child(8n+3) { background: var(--color-zone-side); }
+.deck-composition-segment:nth-child(8n+4) { background: var(--color-gold); }
+.deck-composition-segment:nth-child(8n+5) { background: var(--color-info); }
+.deck-composition-segment:nth-child(8n+6) { background: var(--color-success); }
+.deck-composition-segment:nth-child(8n+7) { background: var(--color-amber); }
+.deck-composition-segment:nth-child(8n+8) { background: var(--color-danger); }
+
+/* ── Tableau analysis : pastilles, % deck (jaune), P(≥1 IN 5) (vert) ─ */
+.page-analysis .analysis-table {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.page-analysis .analysis-table th {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-elevated);
+}
+.page-analysis .analysis-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+.page-analysis .analysis-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.page-analysis .analysis-table tbody tr:hover td {
+  background: var(--color-bg-elevated);
+}
+.page-analysis .analysis-table td:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.analysis-category-dot {
+  flex-shrink: 0;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: 50%;
+}
+.analysis-category-dot--zone-main { background: var(--color-zone-main); }
+.analysis-category-dot--zone-extra { background: var(--color-zone-extra); }
+.analysis-category-dot--zone-side { background: var(--color-zone-side); }
+.analysis-category-dot--gold { background: var(--color-gold); }
+.analysis-category-dot--info { background: var(--color-info); }
+.analysis-category-dot--success { background: var(--color-success); }
+.analysis-category-dot--amber { background: var(--color-amber); }
+.analysis-category-dot--danger { background: var(--color-danger); }
+.page-analysis .analysis-table .analysis-td-pct {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-gold);
+}
+.page-analysis .analysis-table .analysis-td-prob5 {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-success);
+}

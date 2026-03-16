@@ -1,0 +1,185 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  clearCurrentLoadedDeck,
+  getCurrentLoadedDeck,
+  listMyDecks,
+  loadDeckFromServer,
+  saveDeckToServer,
+  updateDeckOnServer,
+} from '../deck.js';
+
+/** DOM minimal pour loadDeckFromServer (grilles + category-summary). */
+function minimalDOM() {
+  document.body.innerHTML =
+    '<div id="deck-main-grid" class="deck-table-grid"></div>' +
+    '<div id="deck-extra-grid" class="deck-table-grid"></div>' +
+    '<div id="deck-side-grid" class="deck-table-grid"></div>' +
+    '<div id="category-summary-body"></div>';
+}
+
+describe('Save/Load deck — fetch mocké', () => {
+  beforeEach(() => {
+    minimalDOM();
+    vi.stubGlobal('prompt', vi.fn().mockReturnValue('My Deck'));
+  });
+
+  it('saveDeckToServer envoie POST /decks avec name et main/extra/side', async () => {
+    let postBody: unknown = null;
+    vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u === '/decks' && init?.method === 'POST') {
+        postBody = init.body ? JSON.parse(init.body as string) : null;
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }));
+    const r = await saveDeckToServer();
+    expect(r.id).toBe(1);
+    expect(postBody).toHaveProperty('name', 'My Deck');
+    expect(postBody).toHaveProperty('main');
+    expect(postBody).toHaveProperty('extra');
+    expect(postBody).toHaveProperty('side');
+  });
+
+  it('load deck avec 0 extra ne plante pas (fetch mocké retourne deck sans extra)', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u.startsWith('/decks/')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: 1,
+              name: 'Empty Extra',
+              main: [{ name: 'Card A', quantity: 1 }],
+              extra: [],
+              side: [],
+            }),
+            { status: 200 },
+          ),
+        );
+      }
+      if (u.startsWith('/card?name=')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 1, name: 'Card A', type: 'Effect Monster' }),
+            { status: 200 },
+          ),
+        );
+      }
+      return Promise.resolve(new Response('[]', { status: 200 }));
+    }));
+    const ok = await loadDeckFromServer(1);
+    expect(ok).toBe(true);
+    const extraGrid = document.getElementById('deck-extra-grid');
+    expect(extraGrid?.querySelectorAll('.deck-card-cell').length ?? 0).toBe(0);
+  });
+
+  it('listMyDecks retourne la liste quand fetch ok', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u === '/decks') {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              { id: 1, name: 'Deck A', is_public: false, created_at: '2024-01-01' },
+              { id: 2, name: 'Deck B', is_public: true, created_at: '2024-01-02' },
+            ]),
+            { status: 200 },
+          ),
+        );
+      }
+      return Promise.resolve(new Response('[]', { status: 200 }));
+    }));
+    const decks = await listMyDecks();
+    expect(decks).toHaveLength(2);
+    expect(decks[0].name).toBe('Deck A');
+    expect(decks[1].id).toBe(2);
+  });
+
+  it('listMyDecks retourne [] quand fetch !ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })));
+    const decks = await listMyDecks();
+    expect(decks).toEqual([]);
+  });
+
+  it('getCurrentLoadedDeck retourne null quand aucun deck chargé', () => {
+    clearCurrentLoadedDeck();
+    expect(getCurrentLoadedDeck()).toBeNull();
+  });
+
+  it('updateDeckOnServer retourne error quand aucun deck chargé', async () => {
+    clearCurrentLoadedDeck();
+    const r = await updateDeckOnServer();
+    expect(r.error).toBeDefined();
+    expect(r.ok).toBeUndefined();
+  });
+
+  it('updateDeckOnServer envoie PUT /decks/:id après un load', async () => {
+    let putUrl: string | null = null;
+    let putBody: unknown = null;
+    vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u.startsWith('/decks/') && init?.method === 'PUT') {
+        putUrl = u;
+        putBody = init.body ? JSON.parse(init.body as string) : null;
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+      }
+      if (u === '/decks') {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 1, name: 'Deck', main: [{ name: 'C', quantity: 1 }], extra: [], side: [] }),
+            { status: 200 },
+          ),
+        );
+      }
+      if (u.startsWith('/card?name=')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: 200 }),
+        );
+      }
+      return Promise.resolve(new Response('[]', { status: 200 }));
+    }));
+    const ok = await loadDeckFromServer(1);
+    expect(ok).toBe(true);
+    const updateResult = await updateDeckOnServer();
+    expect(updateResult.error).toBeUndefined();
+    expect(updateResult.ok).toBe(true);
+    expect(putUrl).toContain('/decks/1');
+    expect(putBody).toHaveProperty('main');
+  });
+
+  it('load deck préserve les catégories quand les cartes sont chargées', async () => {
+    let cardCalls = 0;
+    vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u.startsWith('/decks/')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: 1,
+              name: 'Deck',
+              main: [{ name: 'Ash Blossom', quantity: 1, categories: ['Hand Trap'] }],
+              extra: [],
+              side: [],
+            }),
+            { status: 200 },
+          ),
+        );
+      }
+      if (u.startsWith('/card?name=')) {
+        cardCalls += 1;
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 14558127, name: 'Ash Blossom & Joyous Spring', type: 'Tuner Monster' }),
+            { status: 200 },
+          ),
+        );
+      }
+      return Promise.resolve(new Response('[]', { status: 200 }));
+    }));
+    const ok = await loadDeckFromServer(1);
+    expect(ok).toBe(true);
+    expect(cardCalls).toBeGreaterThanOrEqual(1);
+  });
+});

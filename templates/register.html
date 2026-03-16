@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un compte - Deck Analyzer</title>
+    <link rel="stylesheet" href="/static/css/main.css?v={{ timestamp }}">
+</head>
+<body>
+    <main class="auth-page" data-auth="page" data-form="register">
+        <div class="auth-card">
+            <a href="/" class="auth-card__back" data-auth-action="back">← Retour à l'accueil</a>
+            <h1 class="auth-card__title">Créer un compte</h1>
+            {% if error %}
+            <p class="auth-form__error" role="alert">{{ error }}</p>
+            {% endif %}
+            <form method="post" action="/register" class="auth-form" data-auth-form="register">
+                <div class="auth-form__group">
+                    <label for="pseudo" class="auth-form__label">Pseudo</label>
+                    <input type="text" id="pseudo" name="pseudo" value="{{ pseudo_retry }}" required minlength="4" autocomplete="username" placeholder="Votre pseudo (min. 4 caractères)" class="auth-form__input">
+                </div>
+                <div class="auth-form__group">
+                    <label for="password" class="auth-form__label">Mot de passe</label>
+                    <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Min. 8 caractères, majuscule, minuscule, chiffre, symbole" class="auth-form__input">
+                </div>
+                <div class="auth-form__checkbox-group">
+                    <input type="checkbox" id="accept_conditions" name="accept_conditions" value="on" required>
+                    <label for="accept_conditions">J'accepte les conditions d'utilisation du site.</label>
+                </div>
+                <button type="submit" class="btn btn--primary auth-form__submit btn--block">Créer mon compte</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

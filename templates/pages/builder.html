@@ -1,0 +1,22 @@
+{# Interface Builder : recherche, deck courant, zones Main/Extra/Side, stats en direct. #}
+<section id="builder" class="tab-panel tab-panel--active section page-builder" data-page="builder" role="tabpanel">
+    <div class="deck-builder-layout">
+    <div class="deck-builder-search" data-builder="search-column">
+      <h2 class="card-search-title">
+        <span class="card-search-title-text">Recherche de cartes</span>
+      </h2>
+      {% include "components/search-card.html" %}
+    </div>
+    <div class="deck-builder-zones" data-builder="zones-column">
+      <div class="deck-zone-header">
+        <input type="text" id="deck-name-input" class="deck-name-input" placeholder="Nom du deck (ex. Dragon Rulers v3.2)" autocomplete="off" />
+      </div>
+      <div class="deck-table-container">
+        {% include "components/table-card.html" %}
+      </div>
+    </div>
+    <div class="deck-builder-stats" data-builder="stats-column">
+      {% include "components/generic-info.html" %}
+    </div>
+  </div>
+</section>

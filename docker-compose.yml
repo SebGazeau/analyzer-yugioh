@@ -1,0 +1,77 @@
+# Environnement local : app + PostgreSQL (pgvector) + pgAdmin.
+#
+# Démarrage : docker compose up -d
+# App       : http://localhost:8080
+# pgAdmin   : http://localhost:5050 (email/mot de passe ci-dessous)
+# Connexion dans pgAdmin : host=db, port=5432, user/password/database depuis .env
+#
+# Après démarrage DB, appeler GET http://localhost:8080/admin/fetch_cards (header X-Admin-Key: <ADMIN_SECRET>) pour remplir les cartes.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: analyzer-yugioh-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-analyzer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-analyzer}
+      POSTGRES_DB: ${POSTGRES_DB:-analyzer_yugioh}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # 5433 sur l'hôte pour éviter conflit avec un Postgres local (pgAdmin se connecte via le service "db:5432")
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analyzer} -d ${POSTGRES_DB:-analyzer_yugioh}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: analyzer-yugioh-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: analyzer-yugioh:local
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      CARDS_PATH: /app/data/cards.json
+      DATABASE_URL: postgres://${POSTGRES_USER:-analyzer}:${POSTGRES_PASSWORD:-analyzer}@db:5432/${POSTGRES_DB:-analyzer_yugioh}
+      STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: /storage
+      RUST_LOG: info
+      ADMIN_SECRET: ${ADMIN_SECRET:-}
+    volumes:
+      - cards_data:/app/data
+      - image_storage:/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/count"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  cards_data:
+  image_storage:
+    # Images WebP (original, desktop, mobile) — pipeline /images/import

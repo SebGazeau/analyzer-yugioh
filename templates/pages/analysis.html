@@ -1,0 +1,63 @@
+{# Interface Analysis : stats hero, composition, simulation, tableaux. #}
+<section id="analysis" class="tab-panel section page-analysis" data-page="analysis" role="tabpanel">
+  <h2 class="section-title analysis-title"><span id="analysis-deck-name" class="analysis-deck-name"></span><span class="analysis-title-suffix">Analyse des catégories</span></h2>
+  <div class="analysis-hero" data-analysis="hero">
+    <p class="analysis-hero-desc" id="analysis-hero-desc">P(≥1 carte) pour la 1<sup>re</sup> engine ou catégorie (ordre alphabétique). Si ce groupe contient presque tout le deck, la proba est proche de 100&nbsp;%.</p>
+    <div class="analysis-hero-cards">
+      <div class="analysis-hero-card">
+        <span class="analysis-hero-card-title">1st hand</span>
+        <span id="analysis-hero-first" class="analysis-hero-value" aria-live="polite">—</span>
+        <span class="analysis-hero-label">5-card opening</span>
+      </div>
+      <div class="analysis-hero-card">
+        <span class="analysis-hero-card-title">2nd hand</span>
+        <span id="analysis-hero-second" class="analysis-hero-value" aria-live="polite">—</span>
+        <span class="analysis-hero-label">6-card opening</span>
+      </div>
+      <div class="analysis-hero-card">
+        <span class="analysis-hero-card-title">Engine hit</span>
+        <span id="analysis-hero-engine" class="analysis-hero-value" aria-live="polite">—</span>
+        <span class="analysis-hero-label">Starter in hand</span>
+      </div>
+    </div>
+    <p class="analysis-hero-group" id="analysis-hero-group" aria-live="polite"></p>
+  </div>
+  <div class="deck-composition-wrap">
+    <span class="deck-composition-label">Deck composition</span>
+    <div id="deck-composition-strip" class="deck-composition-strip" role="img" aria-label="Répartition des cartes du Main Deck par catégorie"></div>
+  </div>
+  <p class="analysis-intro">Les tableaux ci-dessous regroupent les cartes de ton Main Deck par <strong>engine</strong>, par <strong>catégorie</strong> (Starter, Extender, etc.) et par <strong>groupe de catégories</strong>. Choisis <strong>5 cartes (first)</strong> ou <strong>6 cartes (second)</strong> pour la taille de ta main de départ ; les colonnes <strong>≥1</strong> à <strong>≥6</strong> donnent la probabilité d'avoir <em>au moins</em> 1, 2, … 6 cartes de ce groupe. Les calculs utilisent la loi <strong>hypergéométrique</strong> (tirage sans remise).</p>
+  <div class="draw-simulation-info" role="region" aria-labelledby="draw-simulation-info-title">
+    <h3 id="draw-simulation-info-title" class="draw-simulation-info-title">Simulation de tirage</h3>
+    <p class="draw-simulation-info-desc">Cette section simule des mains de départ (5 ou 6 cartes) tirées au hasard dans ton Main Deck. <strong>«&nbsp;Tirer une carte&nbsp;»</strong> ajoute une carte tirée au hasard (sans remise). <strong>«&nbsp;Run 1000 sims&nbsp;»</strong> lance 1000 tirages par catégorie : le graphique principal affiche la catégorie choisie dans le menu ; en dessous, un mini-graphique par catégorie (avec un jeu de couleurs) permet de comparer toutes les catégories.</p>
+    <p class="draw-simulation-info-conditions"><strong>Pour utiliser «&nbsp;Run 1000 sims&nbsp;»</strong>&nbsp;: ton Main Deck doit contenir au moins une carte, et au moins une carte doit avoir une <strong>catégorie</strong> assignée (via «&nbsp;Modifier la carte&nbsp;» dans le Builder).</p>
+  </div>
+  <div class="draw-simulation-bar">
+    <span class="draw-simulation-label">Main de départ :</span>
+    <div class="hand-size-toggle" role="group" aria-label="Going first ou second">
+      <button type="button" class="btn btn-deck btn-deck-ghost hand-size-btn active" id="btn-hand-5" data-hand="5" title="Going first — 5 cartes en main">5 cartes (first)</button>
+      <button type="button" class="btn btn-deck btn-deck-ghost hand-size-btn" id="btn-hand-6" data-hand="6" title="Going second — 6 cartes en main">6 cartes (second)</button>
+    </div>
+    <span class="draw-simulation-label">Catégorie :</span>
+    <select id="draw-histogram-category" class="draw-histogram-category-select" title="Catégorie pour le graphique principal (rempli selon le deck)">
+      <option value="">— Choisir après Run 1000 sims —</option>
+    </select>
+    <span class="draw-simulation-label">Simulation :</span>
+    <button type="button" class="btn btn-deck btn-deck-outline" id="btn-draw-one" title="Tirer une carte au hasard dans le deck (sans remise)">Tirer une carte</button>
+    <button type="button" class="btn btn-deck btn-deck-ghost" id="btn-draw-reset" title="Réinitialiser la simulation">Réinitialiser</button>
+    <button type="button" class="btn btn-deck btn-deck-outline" id="btn-run-1000-sims" title="Lancer 1000 tirages et afficher la distribution">Run 1000 sims</button>
+    <button type="button" class="btn btn-deck btn-deck-ghost" id="btn-clear-histograms" title="Effacer les graphiques (distribution et mini-graphiques)">Effacer les graphiques</button>
+    <span class="draw-simulation-drawn">Cartes tirées (<span id="draw-simulation-count">0</span>/<span id="draw-simulation-max">5</span>) :</span>
+    <div id="draw-simulation-list" class="draw-simulation-cards" aria-label="Cartes tirées"></div>
+  </div>
+  <div class="draw-histogram-wrap">
+    <p class="draw-histogram-heading" id="draw-histogram-heading">Distribution (1000 tirages)</p>
+    <p class="draw-histogram-explanation" id="draw-histogram-explanation">En abscisse : nombre de cartes de la catégorie en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur 1000 ayant ce résultat.</p>
+    <div id="draw-simulation-histogram" class="draw-histogram" role="img" aria-label="Histogramme de la distribution"></div>
+    <p class="draw-histogram-all-title" id="draw-histogram-all-title">Toutes les catégories (1000 tirages chacune)</p>
+    <div id="draw-histogram-all-categories" class="draw-histogram-all" aria-label="Un mini-graphique par catégorie"></div>
+  </div>
+  <div class="table-container">
+    {% include "components/table-analysis.html" %}
+  </div>
+</section>

@@ -1,0 +1,45 @@
+[package]
+name = "analyzer-yugioh"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = "4"
+actix-files = "0.6"
+actix-session = { version = "0.9", features = ["cookie-session"] }
+jsonwebtoken = "9"
+utoipa = { version = "4", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "6", features = ["actix-web"] }
+
+# Sérialisation
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.149"
+tera = "1.20.1"
+thiserror = "2.0.18"
+chrono = "0.4.43"
+argon2 = "0.5"
+rand_core = "0.6"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+
+# Base de données (cartes + images)
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "json"] }
+
+# Pipeline images
+image = "0.25"
+webp = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }
+tokio = { version = "1", features = ["fs", "time", "sync"] }
+anyhow = "1"
+backoff = { version = "0.4", features = ["tokio"] }
+futures = "0.3"
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[features]
+default = []
+gcs = ["google-cloud-storage"]
+
+[dependencies.google-cloud-storage]
+version = "0.22"
+optional = true

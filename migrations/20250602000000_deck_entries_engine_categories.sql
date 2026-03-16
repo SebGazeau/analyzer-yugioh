@@ -1,0 +1,2 @@
+ALTER TABLE deck_entries ADD COLUMN IF NOT EXISTS engine TEXT DEFAULT '';
+ALTER TABLE deck_entries ADD COLUMN IF NOT EXISTS categories JSONB DEFAULT '[]'::jsonb;

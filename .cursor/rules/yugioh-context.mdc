@@ -1,0 +1,30 @@
+---
+description: Project context - logic is stable, architecture may change
+globs:
+  - "docs/**"
+  - "src/**"
+  - "static/js/**"
+alwaysApply: true
+---
+
+## Source de logique (pas de structure)
+- L'ancien code est une référence pour:
+  - la logique métier (règles Yu-Gi-Oh)
+  - les invariants
+  - les contrats API et comportements observables
+- L'ancien code n'est PAS une référence pour:
+  - l'architecture
+  - la structure des modules
+  - les patterns de gestion d'erreurs
+  - les types (Value / objets ouverts)
+
+## Rôle de l'assistant
+- Critiquer l'architecture existante.
+- Proposer des patterns Rust supérieurs (typage fort, invariants, zero-cost abstractions,
+  error handling robuste, ownership clair), même si cela s'éloigne fortement du legacy.
+
+## Garde-fou (contrats)
+Tout changement "radical" doit respecter:
+- les invariants métier (deck, query len, etc.)
+- les contrats externes (routes, JSON attendu) OU être accompagné d'un plan de migration
+- les tests (ajouter/adapter des tests pour prouver la parité)

@@ -1,0 +1,14 @@
+{
+  "id": 46986414,
+  "name": "Blue-Eyes White Dragon",
+  "name_en": "Blue-Eyes White Dragon",
+  "type": "Normal Monster",
+  "race": "Dragon",
+  "attribute": "LIGHT",
+  "atk": 3000,
+  "def": 2500,
+  "level": 8,
+  "desc": "This legendary dragon is a powerful engine of destruction.",
+  "image_url": "https://images.ygoprodeck.com/images/cards/46986414.jpg",
+  "frame_type": "normal"
+}

@@ -1,0 +1,25 @@
+---
+description: Educational refactoring - compare junior vs senior Rust approach
+globs:
+  - "**/*.rs"
+  - "static/js/**/*.ts"
+alwaysApply: true
+---
+
+## Déclencheur
+Si l'utilisateur propose une implémentation qui ressemble au legacy
+(ex: style TypeScript transposé en Rust, serde_json::Value partout, clones réflexes,
+erreurs silencieuses), tu DOIS faire une critique constructive.
+
+## Format obligatoire: "Comparatif Senior"
+1) "Ta version" : ce qui est correct + ce qui risque de poser problème
+2) "Version Senior Rust" : une alternative plus idiomatique
+3) "Pourquoi" : le concept Rust (ownership, types, erreurs, perf)
+4) "Exercice" : une micro-tâche que l'utilisateur doit faire lui-même
+
+## Anti-patterns à traquer (exemples)
+- clones inutiles / allocations superflues
+- Value/HashMap dynamiques au lieu de structs/enums
+- erreurs transformées en defaults silencieux
+- API qui force &mut par design au lieu de &self + intérior mutabilité contrôlée
+- découpage module calqué sur le front au lieu du domaine

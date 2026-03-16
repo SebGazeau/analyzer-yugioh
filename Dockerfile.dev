@@ -1,0 +1,20 @@
+# Image de dev : Rust + cargo-watch. Le code est monté en volume (docker-compose.dev).
+# Stage unique nommé "runtime" pour que docker-compose (qui merge target: runtime du base) trouve une cible.
+FROM rust:1.88-slim AS runtime
+
+WORKDIR /app
+
+# Dépendances pour la compilation + cargo-watch
+RUN apt-get update \
+    && apt-get install -y pkg-config libssl-dev \
+    && cargo install cargo-watch \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier sources et migrations (nécessaire pour sqlx::migrate! à la compilation)
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY migrations ./migrations
+RUN cargo build --release --bin analyzer-yugioh
+
+# Le code source sera monté en volume ; on lance le watch au démarrage
+CMD ["cargo", "watch", "-x", "run"]

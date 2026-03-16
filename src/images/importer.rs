@@ -1,0 +1,130 @@
+//! Import bulk YGOProDeck : idempotence, rate limit, retry backoff.
+//! Charge les URLs candidates depuis la table `cards` (sans refetch API), filtre celles déjà en `images`, puis importe uniquement les nouvelles.
+
+use std::collections::HashSet;
+use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
+
+use backoff::ExponentialBackoff;
+use backoff::future::retry;
+use tokio::sync::Semaphore;
+use tokio::time::sleep;
+use tracing::{info, warn};
+
+use super::fetch::FetchError;
+use super::repository::{ImageRepository, RepositoryError};
+use super::{fetch_image_bytes, process_image};
+use crate::db;
+use crate::storage::{Storage, StorageError};
+
+const MAX_CONCURRENT: usize = 3;
+const DELAY_MS: u64 = 300;
+const LOG_EVERY: u64 = 100;
+
+#[derive(Debug, thiserror::Error)]
+pub enum ImporterError {
+    #[error("fetch list: {0}")]
+    FetchList(#[from] reqwest::Error),
+    #[error("parse: {0}")]
+    Parse(String),
+    #[error("fetch image: {0}")]
+    FetchImage(#[from] FetchError),
+    #[error("process: {0}")]
+    Process(#[from] super::ProcessError),
+    #[error("storage: {0}")]
+    Storage(#[from] StorageError),
+    #[error("repo: {0}")]
+    Repository(#[from] RepositoryError),
+}
+
+async fn fetch_with_retry(url: &str) -> Result<Vec<u8>, ImporterError> {
+    let url = url.to_string();
+    let op = || async {
+        let b = fetch_image_bytes(&url).await.map_err(|e| {
+            if matches!(&e, FetchError::Http(_) | FetchError::Status(429)) {
+                backoff::Error::transient(e)
+            } else {
+                backoff::Error::permanent(e)
+            }
+        })?;
+        Ok::<_, backoff::Error<FetchError>>(b)
+    };
+    retry(ExponentialBackoff::default(), op)
+        .await
+        .map_err(ImporterError::FetchImage)
+}
+
+pub struct ImageImporter;
+
+impl ImageImporter {
+    pub async fn run(pool: sqlx::PgPool, storage: Arc<dyn Storage>) -> Result<u64, ImporterError> {
+        let candidates = db::list_card_image_urls(&pool)
+            .await
+            .map_err(|e| ImporterError::Parse(e.to_string()))?;
+        if candidates.is_empty() {
+            info!("import images: aucune URL dans cards (lancer fetch_cards d'abord)");
+            return Ok(0);
+        }
+        let existing: HashSet<String> = ImageRepository::list_original_urls(&pool)
+            .await?
+            .into_iter()
+            .collect();
+        let urls: Vec<String> = candidates
+            .into_iter()
+            .filter(|u| !existing.contains(u))
+            .collect();
+        let total = urls.len() as u64;
+        if total == 0 {
+            info!(
+                "import images: toutes les URLs sont déjà en base ({}), rien à importer",
+                existing.len()
+            );
+            return Ok(0);
+        }
+        info!(
+            "import images: {} URLs à importer ({} déjà en base)",
+            total,
+            existing.len()
+        );
+        let sem = Arc::new(Semaphore::new(MAX_CONCURRENT));
+        let mut processed: u64 = 0;
+        for (i, url) in urls.into_iter().enumerate() {
+            let _permit = sem
+                .acquire()
+                .await
+                .map_err(|_| ImporterError::Parse("sem closed".into()))?;
+            sleep(Duration::from_millis(DELAY_MS)).await;
+            match Self::import_one(&pool, &storage, &url).await {
+                Ok(()) => {
+                    processed += 1;
+                    if processed % LOG_EVERY == 0 {
+                        info!("import images: {} / {} traitées", processed, total);
+                    }
+                }
+                Err(e) => warn!("import images: échec {} (i={}): {}", url, i, e),
+            }
+        }
+        info!("import images: terminé — {} importées", processed);
+        Ok(processed)
+    }
+
+    async fn import_one(
+        pool: &sqlx::PgPool,
+        storage: &Arc<dyn Storage>,
+        url: &str,
+    ) -> Result<(), ImporterError> {
+        let bytes = fetch_with_retry(url).await?;
+        let v = process_image(&bytes)?;
+        let id = uuid::Uuid::new_v4();
+        let base = format!("images/{}", id);
+        let p_orig = format!("{}/original.webp", base);
+        let p_desk = format!("{}/desktop.webp", base);
+        let p_mob = format!("{}/mobile.webp", base);
+        storage.store(Path::new(&p_orig), &v.original).await?;
+        storage.store(Path::new(&p_desk), &v.desktop).await?;
+        storage.store(Path::new(&p_mob), &v.mobile).await?;
+        ImageRepository::insert(pool, url, &p_orig, &p_desk, &p_mob, v.width, v.height).await?;
+        Ok(())
+    }
+}

@@ -1,0 +1,123 @@
+/*
+ * components/button.css
+ * All button variants. Import after tokens.css.
+ *
+ * Usage in Tera templates:
+ *   <button class="btn btn--primary">Save Deck</button>
+ *   <button class="btn btn--secondary">Cancel</button>
+ *   <button class="btn btn--ghost">View Details</button>
+ *   <button class="btn btn--danger">Delete</button>
+ *   <button class="btn btn--icon" aria-label="Add card">+</button>
+ */
+
+/* ── Base ──────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+
+  padding: 0 var(--space-4);
+  height: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background  var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    color       var(--duration-fast) var(--ease-default),
+    transform   var(--duration-fast);
+
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.btn:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* ── Primary (gold) ────────────────────────────── */
+.btn--primary {
+  background: rgba(201, 162, 39, 0.12);
+  border-color: var(--color-gold-dim);
+  color: var(--color-gold);
+}
+.btn--primary:hover {
+  background: rgba(201, 162, 39, 0.22);
+  border-color: var(--color-gold);
+}
+
+/* ── Secondary ─────────────────────────────────── */
+.btn--secondary {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+.btn--secondary:hover {
+  border-color: var(--color-gold-dim);
+  color: var(--color-gold);
+  background: rgba(201, 162, 39, 0.06);
+}
+
+/* ── Ghost (no border) ─────────────────────────── */
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+.btn--ghost:hover {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+}
+
+/* ── Danger ────────────────────────────────────── */
+.btn--danger {
+  background: var(--color-danger-bg);
+  border-color: rgba(224, 82, 82, 0.35);
+  color: var(--color-danger);
+}
+.btn--danger:hover {
+  background: rgba(224, 82, 82, 0.20);
+  border-color: var(--color-danger);
+}
+
+/* ── Icon button (square) ──────────────────────── */
+.btn--icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 16px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Sizes ─────────────────────────────────────── */
+.btn--sm {
+  height: 28px;
+  font-size: var(--text-xs);
+  padding: 0 var(--space-3);
+}
+
+.btn--lg {
+  height: 42px;
+  font-size: var(--text-base);
+  padding: 0 var(--space-6);
+}
+
+/* ── Full width ────────────────────────────────── */
+.btn--block {
+  width: 100%;
+}

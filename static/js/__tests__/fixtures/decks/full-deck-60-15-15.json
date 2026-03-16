@@ -1,0 +1,53 @@
+{
+  "main": [
+    { "name": "Card M1", "quantity": 3 },
+    { "name": "Card M2", "quantity": 3 },
+    { "name": "Card M3", "quantity": 2 },
+    { "name": "Card M4", "quantity": 2 },
+    { "name": "Card M5", "quantity": 1 },
+    { "name": "Card M6", "quantity": 3 },
+    { "name": "Card M7", "quantity": 3 },
+    { "name": "Card M8", "quantity": 2 },
+    { "name": "Card M9", "quantity": 2 },
+    { "name": "Card M10", "quantity": 1 },
+    { "name": "Card M11", "quantity": 3 },
+    { "name": "Card M12", "quantity": 3 },
+    { "name": "Card M13", "quantity": 2 },
+    { "name": "Card M14", "quantity": 2 },
+    { "name": "Card M15", "quantity": 1 },
+    { "name": "Card M16", "quantity": 3 },
+    { "name": "Card M17", "quantity": 3 },
+    { "name": "Card M18", "quantity": 2 },
+    { "name": "Card M19", "quantity": 2 },
+    { "name": "Card M20", "quantity": 1 },
+    { "name": "Card M21", "quantity": 4 },
+    { "name": "Card M22", "quantity": 4 },
+    { "name": "Card M23", "quantity": 4 },
+    { "name": "Card M24", "quantity": 4 }
+  ],
+  "extra": [
+    { "name": "Fusion Monster 1", "quantity": 1 },
+    { "name": "Synchro Monster 1", "quantity": 1 },
+    { "name": "XYZ Monster 1", "quantity": 1 },
+    { "name": "Link Monster 1", "quantity": 1 },
+    { "name": "Extra E2", "quantity": 1 },
+    { "name": "Extra E3", "quantity": 1 },
+    { "name": "Extra E4", "quantity": 1 },
+    { "name": "Extra E5", "quantity": 1 },
+    { "name": "Extra E6", "quantity": 1 },
+    { "name": "Extra E7", "quantity": 1 },
+    { "name": "Extra E8", "quantity": 1 },
+    { "name": "Extra E9", "quantity": 1 },
+    { "name": "Extra E10", "quantity": 1 },
+    { "name": "Extra E11", "quantity": 1 },
+    { "name": "Extra E12", "quantity": 1 }
+  ],
+  "side": [
+    { "name": "Side S1", "quantity": 3 },
+    { "name": "Side S2", "quantity": 3 },
+    { "name": "Side S3", "quantity": 2 },
+    { "name": "Side S4", "quantity": 2 },
+    { "name": "Side S5", "quantity": 2 },
+    { "name": "Side S6", "quantity": 3 }
+  ]
+}

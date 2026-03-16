@@ -1,0 +1,32 @@
+[
+  {
+    "id": 14558127,
+    "name": "Ash Blossom & Joyous Spring",
+    "name_en": "Ash Blossom & Joyous Spring",
+    "type": "Tuner Monster",
+    "race": "Zombie",
+    "desc": "When a card or effect is activated...",
+    "image_url": "https://images.ygoprodeck.com/images/cards/14558127.jpg",
+    "atk": 0,
+    "def": 1800,
+    "level": 3,
+    "banlist_info": "Limited",
+    "ban_tcg": "Limited",
+    "ban_ocg": "Limited"
+  },
+  {
+    "id": 23434538,
+    "name": "Maxx \"C\"",
+    "name_en": "Maxx \"C\"",
+    "type": "Insect",
+    "race": "Insect",
+    "desc": "During either player's turn...",
+    "image_url": "https://images.ygoprodeck.com/images/cards/23434538.jpg",
+    "atk": 500,
+    "def": 200,
+    "level": 2,
+    "banlist_info": "Banned",
+    "ban_tcg": "Banned",
+    "ban_ocg": "Limited"
+  }
+]

@@ -1,0 +1,19 @@
+# Override pour le mode dev : l'app recompile à chaque modification (cargo watch).
+# Usage : docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Ou    : make docker-dev
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - app_target:/app/target
+    command: cargo watch -x run
+    environment:
+      RUST_LOG: ${RUST_LOG:-debug}
+    restart: "no"
+
+volumes:
+  app_target:

@@ -1,0 +1,22 @@
+---
+description: Idiomatic Rust expectations and quality gates
+globs:
+  - "rust/**"
+  - "**/*.rs"
+alwaysApply: true
+---
+
+# Quality gates
+- Always format with rustfmt and prefer clippy-friendly code.
+- Prefer Result/Option over panics; if panic is used, justify.
+- Use explicit types when it improves learning or readability.
+
+# Rust idioms to prefer (explain tradeoffs)
+- Iterators over manual indexing when reasonable.
+- Ownership-first design: move/borrow rules explained, not hidden.
+- Errors: define a small error enum, implement From where useful.
+
+# Teaching rule
+When proposing code:
+- Explain the key Rust concept *it trains* (e.g., borrowing, lifetimes, trait bounds).
+- Provide 1 alternative implementation and explain why it's worse/better.

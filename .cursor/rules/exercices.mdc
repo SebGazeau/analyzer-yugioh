@@ -1,0 +1,23 @@
+---
+description: Exercise engine: drills + exam mode
+globs:
+  - "learning/**"
+alwaysApply: true
+---
+
+# Daily drills
+Generate exercises tied to the current porting slice:
+- 2 micro-drills (5-10 min): ownership/borrowing/errors/iterators
+- 1 medium drill (20-40 min): implement a small module with tests
+- 1 reflection question: what did you misunderstand initially?
+
+# Exam mode (no hints)
+If user says "MODE EXAM":
+- Give a precise task + constraints + timebox suggestion
+- Do NOT give hints unless asked
+- Only provide a rubric and tests to run
+
+# Review mode
+If user says "MODE REVIEW":
+- Act like a strict reviewer: ask for rationale, spot antipatterns,
+  suggest refactors that improve idiomatic Rust.

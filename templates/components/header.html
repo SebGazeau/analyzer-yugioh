@@ -1,0 +1,36 @@
+<header class="header" data-dashboard="header">
+    <div class="header-brand">
+        <h1>⚡ Analyseur de Deck Yu-Gi-Oh!</h1>
+        <p>Construction et analyse avancée de deck</p>
+    </div>
+    <nav class="app-tabs header-tabs" role="tablist" aria-label="Sections">
+        <div class="header-tabs-inner">
+            <a href="#decks" class="app-tab" data-tab="decks" role="tab" aria-selected="false">DECKS</a>
+            <a href="#builder" class="app-tab app-tab--active" data-tab="builder" role="tab" aria-selected="true">BUILDER</a>
+            <a href="#analysis" class="app-tab" data-tab="analysis" role="tab" aria-selected="false">ANALYSIS</a>
+        </div>
+    </nav>
+    <div class="header-auth" data-auth="zone">
+        {% if user_pseudo %}
+        <span class="header-avatar" data-pseudo="{{ user_pseudo }}" aria-hidden="true"></span>
+        <span class="header-user" aria-label="Connecté">{{ user_pseudo }}</span>
+        <form method="post" action="/logout" class="header-logout-form" data-auth-action="logout">
+            <button type="submit" class="btn btn-small btn-header">Déconnexion</button>
+        </form>
+        {% else %}
+        <div class="header-login-inline" role="region" aria-label="Formulaire de connexion">
+            {% if login_error %}
+            <p class="header-login-error" role="alert">Identifiant ou mot de passe incorrect.</p>
+            {% endif %}
+            <form method="post" action="/login" class="header-login-form" data-auth-form="login">
+                <label for="login-pseudo" class="header-login-label">Utilisateur</label>
+                <input type="text" id="login-pseudo" name="pseudo" required minlength="4" autocomplete="username" placeholder="Pseudo" class="header-login-input" aria-label="Pseudo">
+                <label for="login-password" class="header-login-label">Mot de passe</label>
+                <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="Mot de passe" class="header-login-input" aria-label="Mot de passe">
+                <button type="submit" class="btn btn-header btn-login-submit">Connexion</button>
+                <a href="/register" class="btn btn-header btn-register">Créer un compte</a>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</header>

@@ -1,0 +1,28 @@
+# Build artifacts
+target/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.cursor/
+.vscode/
+
+# Node / frontend build source (seul dist/ est nécessaire dans static/)
+static/node_modules/
+static/js/
+static/package*.json
+static/tsconfig.json
+
+# Fichiers de projet non requis dans l'image
+legacy/
+deck.json
+docs/
+learning/
+prompts/
+
+# Environnements locaux
+.env
+.env.*
+docker-compose*.yml

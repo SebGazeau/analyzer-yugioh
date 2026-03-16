@@ -1,0 +1,110 @@
+/*
+ * pages/builder.css
+ * Interface Builder (data-page="builder") : layout 3 colonnes, recherche, zones, stats.
+ * Scope : .page-builder. Pour matrice de droits, cibler cette section.
+ */
+
+/* ── Layout 3 colonnes (28% | 44% | 28%) ──────── */
+.page-builder .deck-builder-layout,
+.deck-builder-layout {
+  display: grid;
+  grid-template-columns: 20% 1fr 16%;
+  gap: var(--space-4);
+  align-items: start;
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 1024px) {
+  .deck-builder-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Colonne recherche : hauteur limitée au viewport pour que la liste de résultats descende jusqu’en bas */
+.deck-builder-search {
+  position: sticky;
+  top: var(--space-4);
+  max-height: calc(100vh - 10rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.deck-builder-search .search-card-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.deck-builder-search .search-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-builder-stats {
+  position: sticky;
+  top: var(--space-4);
+}
+
+/* Titre de la colonne recherche ───────────────── */
+.deck-builder-search .section-title {
+  margin-bottom: var(--space-3);
+}
+
+/* ── Zones Main/Extra/Side repliables ─────────── */
+.deck-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: var(--space-2);
+}
+.deck-section-title span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.deck-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: transform var(--duration-normal) var(--ease-default), color var(--duration-fast);
+}
+.deck-section-toggle:hover {
+  color: var(--color-text-primary);
+}
+.deck-section--collapsed .deck-section-toggle {
+  transform: rotate(-90deg);
+}
+
+.deck-section-body {
+  max-height: 600px;
+  overflow: hidden;
+  transition: max-height var(--duration-normal) var(--ease-default);
+}
+.deck-section--collapsed .deck-section-body {
+  max-height: 0 !important;
+  overflow: hidden;
+}
+
+/* Mes decks : panneau repliable, hauteur limitée */
+.deck-saved-collapsible .deck-section-body {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.deck-saved-collapsible .deck-saved-title {
+  display: none;
+}
+
+/* Count badge déjà en mono dans dashboard (deck-section-count) */

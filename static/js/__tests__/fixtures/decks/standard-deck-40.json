@@ -1,0 +1,23 @@
+{
+  "main": [
+    { "name": "Ash Blossom & Joyous Spring", "quantity": 3, "engine": "Staple", "categories": ["Hand Trap", "Interruption"] },
+    { "name": "Maxx \"C\"", "quantity": 3, "engine": "Staple", "categories": ["Hand Trap"] },
+    { "name": "Effect Veiler", "quantity": 2, "categories": ["Hand Trap"] },
+    { "name": "Dark Magician", "quantity": 3, "engine": "Engine 1", "categories": ["Starter"] },
+    { "name": "Magician's Rod", "quantity": 3, "engine": "Engine 1", "categories": ["Starter", "Consistency"] },
+    { "name": "Dark Magical Circle", "quantity": 3, "engine": "Engine 1", "categories": ["Consistency"] },
+    { "name": "Soul Servant", "quantity": 2, "engine": "Engine 1", "categories": ["Extender"] },
+    { "name": "Illusion of Chaos", "quantity": 1, "engine": "Engine 1", "categories": ["Starter"] },
+    { "name": "Spellbook of Knowledge", "quantity": 2, "engine": "Engine 1", "categories": ["Extender"] },
+    { "name": "Raigeki", "quantity": 1, "categories": ["Board Breaker"] },
+    { "name": "Harpie's Feather Duster", "quantity": 1, "categories": ["Board Breaker"] },
+    { "name": "Terraforming", "quantity": 1, "categories": ["Consistency"] },
+    { "name": "Monster Reborn", "quantity": 1 },
+    { "name": "Filler Monster A", "quantity": 2 },
+    { "name": "Filler Spell B", "quantity": 3 },
+    { "name": "Filler Trap C", "quantity": 2 },
+    { "name": "Filler D", "quantity": 7 }
+  ],
+  "extra": [],
+  "side": []
+}

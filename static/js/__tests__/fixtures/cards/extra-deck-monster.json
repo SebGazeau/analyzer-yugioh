@@ -1,0 +1,14 @@
+{
+  "id": 89631139,
+  "name": "Dark Magician",
+  "name_en": "Dark Magician",
+  "type": "Fusion Monster",
+  "race": "Spellcaster",
+  "attribute": "DARK",
+  "atk": 2800,
+  "def": 2300,
+  "level": 8,
+  "desc": "Fusion monster for testing.",
+  "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+  "frame_type": "fusion"
+}
