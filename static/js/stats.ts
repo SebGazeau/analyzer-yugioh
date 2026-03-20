@@ -1,4 +1,5 @@
 // Statistiques et probabilités pour le deck
+import { refreshDeckInsightsPanel } from './insights/panel.js';
 import { getDeckState } from './deck.js';
 import { CATEGORY_GROUPS } from './category.js';
 
@@ -173,17 +174,88 @@ function updateDrawSimulationUI(): void {
     }
 }
 
+export interface CompositionBreakdown {
+  monsters: { byAttribute: Record<string, number>; byLevel: Record<string, number>; byRace: Record<string, number> };
+  spells: { byRace: Record<string, number> };
+  traps: { byRace: Record<string, number> };
+}
+
+function getCompositionBreakdown(): CompositionBreakdown {
+  const main = getDeckState().main;
+  const monsters = { byAttribute: {} as Record<string, number>, byLevel: {} as Record<string, number>, byRace: {} as Record<string, number> };
+  const spells = { byRace: {} as Record<string, number> };
+  const traps = { byRace: {} as Record<string, number> };
+
+  main.forEach(row => {
+    const type = (row.type || '').toLowerCase();
+    const qty = row.quantity;
+    const key = (v: string) => v || '—';
+    if (type.includes('monster')) {
+      const attr = key(row.attribute ?? '');
+      monsters.byAttribute[attr] = (monsters.byAttribute[attr] || 0) + qty;
+      const lvl = row.level != null ? `Niveau ${row.level}` : '—';
+      monsters.byLevel[lvl] = (monsters.byLevel[lvl] || 0) + qty;
+      const race = key(row.race ?? '');
+      monsters.byRace[race] = (monsters.byRace[race] || 0) + qty;
+    } else if (type.includes('spell')) {
+      const race = key(row.race ?? '');
+      spells.byRace[race] = (spells.byRace[race] || 0) + qty;
+    } else if (type.includes('trap')) {
+      const race = key(row.race ?? '');
+      traps.byRace[race] = (traps.byRace[race] || 0) + qty;
+    }
+  });
+
+  return { monsters, spells, traps };
+}
+
+function renderBreakdownList(counts: Record<string, number>, total: number): string {
+  const entries = Object.entries(counts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) return '<p class="builder-composition-detail-empty">Aucun détail</p>';
+  const pct = (n: number) => (total > 0 ? ((n / total) * 100).toFixed(0) : '0');
+  return entries
+    .map(([label, n]) => `<div class="builder-composition-detail-row"><span class="builder-composition-detail-label">${escapeHtml(label)}</span><span class="builder-composition-detail-count">${n}</span><span class="builder-composition-detail-pct">${pct(n)}%</span></div>`)
+    .join('');
+}
+
+function refreshCompositionDetails(): void {
+  const breakdown = getCompositionBreakdown();
+  const totalMonsters = Object.values(breakdown.monsters.byAttribute).reduce((a, b) => a + b, 0);
+  const totalSpells = Object.values(breakdown.spells.byRace).reduce((a, b) => a + b, 0);
+  const totalTraps = Object.values(breakdown.traps.byRace).reduce((a, b) => a + b, 0);
+
+  const monsterDetail = document.getElementById('builder-composition-detail-monster');
+  const spellDetail = document.getElementById('builder-composition-detail-spell');
+  const trapDetail = document.getElementById('builder-composition-detail-trap');
+
+  if (monsterDetail) {
+    const parts: string[] = [];
+    if (Object.keys(breakdown.monsters.byAttribute).length) parts.push('<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Attribut</div>' + renderBreakdownList(breakdown.monsters.byAttribute, totalMonsters) + '</div>');
+    if (Object.keys(breakdown.monsters.byLevel).length) parts.push('<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Niveau / Rang</div>' + renderBreakdownList(breakdown.monsters.byLevel, totalMonsters) + '</div>');
+    if (Object.keys(breakdown.monsters.byRace).length) parts.push('<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Type (race)</div>' + renderBreakdownList(breakdown.monsters.byRace, totalMonsters) + '</div>');
+    monsterDetail.innerHTML = parts.length ? parts.join('') : '<p class="builder-composition-detail-empty">Aucun monstre dans le Main</p>';
+  }
+  if (spellDetail) {
+    spellDetail.innerHTML = totalSpells > 0
+      ? '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Sous-type</div>' + renderBreakdownList(breakdown.spells.byRace, totalSpells) + '</div>'
+      : '<p class="builder-composition-detail-empty">Aucune magie dans le Main</p>';
+  }
+  if (trapDetail) {
+    trapDetail.innerHTML = totalTraps > 0
+      ? '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Sous-type</div>' + renderBreakdownList(breakdown.traps.byRace, totalTraps) + '</div>'
+      : '<p class="builder-composition-detail-empty">Aucun piège dans le Main</p>';
+  }
+}
+
 export function computeGlobalStats(): void {
   const main = getDeckState().main;
   let monsters = 0, spells = 0, traps = 0;
-  const attributes: Record<string, number> = {};
   main.forEach(row => {
     const type = (row.type || '').toLowerCase();
     const qty = row.quantity;
     if (type.includes("monster")) monsters += qty;
     else if (type.includes("spell")) spells += qty;
     else if (type.includes("trap")) traps += qty;
-    attributes["UNKNOWN"] = (attributes["UNKNOWN"] || 0) + qty;
   });
   const monsterEl = document.getElementById("count-monster");
   if (monsterEl) monsterEl.textContent = monsters.toString();
@@ -200,6 +272,9 @@ export function computeGlobalStats(): void {
   if (barSpell) barSpell.style.width = pct(spells) + "%";
   const barTrap = document.getElementById("builder-bar-trap");
   if (barTrap) barTrap.style.width = pct(traps) + "%";
+
+  refreshCompositionDetails();
+  refreshDeckInsightsPanel();
 }
 
 function countInGrid(section: 'main' | 'extra' | 'side'): number {

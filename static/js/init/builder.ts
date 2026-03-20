@@ -4,7 +4,7 @@
  */
 import { updateDeckCount, updateProbabilities, computeGlobalStats } from '../stats.js';
 import { setupSearch } from '../search.js';
-import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState } from '../deck.js';
+import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons } from '../deck.js';
 import { bindDeckToolbar } from './deck-actions.js';
 import { bindKeyboard } from './keyboard.js';
 import { bindCollapsibles } from './collapsibles.js';
@@ -31,6 +31,8 @@ function updateBuilderSortIndicators(): void {
 
 export function initBuilder(): void {
     updateDeckCount();
+    computeGlobalStats();
+    refreshDeckSaveUpdateButtons();
     if (typeof setupSearch === 'function') {
         setupSearch();
     }
@@ -57,6 +59,19 @@ export function initBuilder(): void {
     const liveStats = document.getElementById('live-stats');
     if (liveStats) {
         liveStats.addEventListener('click', (e: Event) => {
+            const toggle = (e.target as HTMLElement).closest?.('[data-composition-toggle]') as HTMLElement | null;
+            if (toggle) {
+                e.preventDefault();
+                const kind = toggle.getAttribute('data-composition-toggle');
+                const controlsId = toggle.getAttribute('aria-controls');
+                const item = toggle.closest('.builder-composition-accordion-item');
+                const detail = controlsId ? document.getElementById(controlsId) : null;
+                if (!item || !detail) return;
+                const expanded = item.classList.toggle('builder-composition-item--expanded');
+                toggle.setAttribute('aria-expanded', String(expanded));
+                if (expanded) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
+                return;
+            }
             const target = (e.target as HTMLElement).closest?.('[data-builder-sort], [data-builder-sort-category]') as HTMLElement | null;
             if (!target) return;
             e.preventDefault();

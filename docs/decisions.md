@@ -251,6 +251,12 @@ Les trois points suivants ont été tranchés et sont intégrés dans les sectio
 - **Playwright** : E2E dans `static/e2e/` ; 2 parcours (page charge zones deck ; panneau « Mes decks »). Option `webServer: cargo run` ou serveur déjà lancé avec `BASE_URL`.
 - **CSS Modules / scoped** : **Non retenu.** Tera injecte des noms de classes en HTML ; le design system repose déjà sur BEM + tokens globaux. Les CSS Modules (classes générées à l’import) demanderaient un pipeline spécifique (manifest pour Tera) sans gain immédiat.
 
+### Slice — Insights deck (Seventh Tachyon, front uniquement)
+
+- **Emplacement** : logique pure sous `static/js/insights/` ; agrégateur `collectDeckInsights` ; règle isolée `seventhTachyon.ts` (extensible `kind` / `severity`).
+- **Données** : snapshot aligné sur `getDeckState()` (`level` = rang Xyz côté API, numéro Number parsé sur le nom EN).
+- **UI** : onglet header **SUGGESTIONS** (masqué si aucun insight), page dédiée avec tableaux ; rafraîchi depuis `computeGlobalStats()`. Navigation : `static/js/tabs.ts` (`setActiveTab`).
+
 ---
 
 *Document finalisé avec ces décisions. À mettre à jour au fur et à mesure des changements de code et des évolutions (ex. mise en place du job worker RAG).*

@@ -21,20 +21,32 @@
   <div class="builder-stats-block" data-builder-stats="composition">
     <h3 class="builder-stats-block-title builder-stats-sort-trigger" data-builder-sort="composition" title="Cliquer pour trier le Main Deck par type (Monster / Spell / Trap)">Composition</h3>
     <div class="builder-composition-rows">
-      <div class="builder-composition-row">
-        <span class="builder-composition-label">Monsters</span>
-        <span id="count-monster" class="builder-composition-count">0</span>
+      <div class="builder-composition-accordion-item" data-composition-kind="monster">
+        <button type="button" class="builder-composition-row builder-composition-toggle" data-composition-toggle="monster" aria-expanded="false" aria-controls="builder-composition-detail-monster" id="builder-composition-btn-monster">
+          <span class="builder-composition-label">Monsters</span>
+          <span id="count-monster" class="builder-composition-count">0</span>
+          <span class="builder-composition-chevron" aria-hidden="true"></span>
+        </button>
         <div class="builder-composition-bar-wrap"><div id="builder-bar-monster" class="builder-composition-bar" role="presentation"></div></div>
+        <div id="builder-composition-detail-monster" class="builder-composition-detail" role="region" aria-labelledby="builder-composition-btn-monster" hidden></div>
       </div>
-      <div class="builder-composition-row">
-        <span class="builder-composition-label">Spells</span>
-        <span id="count-spell" class="builder-composition-count">0</span>
+      <div class="builder-composition-accordion-item" data-composition-kind="spell">
+        <button type="button" class="builder-composition-row builder-composition-toggle" data-composition-toggle="spell" aria-expanded="false" aria-controls="builder-composition-detail-spell" id="builder-composition-btn-spell">
+          <span class="builder-composition-label">Spells</span>
+          <span id="count-spell" class="builder-composition-count">0</span>
+          <span class="builder-composition-chevron" aria-hidden="true"></span>
+        </button>
         <div class="builder-composition-bar-wrap"><div id="builder-bar-spell" class="builder-composition-bar" role="presentation"></div></div>
+        <div id="builder-composition-detail-spell" class="builder-composition-detail" role="region" aria-labelledby="builder-composition-btn-spell" hidden></div>
       </div>
-      <div class="builder-composition-row">
-        <span class="builder-composition-label">Traps</span>
-        <span id="count-trap" class="builder-composition-count">0</span>
+      <div class="builder-composition-accordion-item" data-composition-kind="trap">
+        <button type="button" class="builder-composition-row builder-composition-toggle" data-composition-toggle="trap" aria-expanded="false" aria-controls="builder-composition-detail-trap" id="builder-composition-btn-trap">
+          <span class="builder-composition-label">Traps</span>
+          <span id="count-trap" class="builder-composition-count">0</span>
+          <span class="builder-composition-chevron" aria-hidden="true"></span>
+        </button>
         <div class="builder-composition-bar-wrap"><div id="builder-bar-trap" class="builder-composition-bar" role="presentation"></div></div>
+        <div id="builder-composition-detail-trap" class="builder-composition-detail" role="region" aria-labelledby="builder-composition-btn-trap" hidden></div>
       </div>
     </div>
   </div>

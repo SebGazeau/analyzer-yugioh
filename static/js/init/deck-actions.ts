@@ -7,6 +7,7 @@ import {
     listMyDecks,
     loadDeckFromServer,
     deleteDeckFromServer,
+    duplicateDeckOnServer,
     saveDeckToServer,
     updateDeckOnServer,
     cleanCardTable,
@@ -53,10 +54,22 @@ export async function refreshMyDecksList(): Promise<void> {
         li.appendChild(coverEl);
         const meta = d.created_at ? `<span class="deck-saved-item-meta">${formatDeckDate(d.created_at)}</span>` : '';
         const trashSvg = '<svg class="deck-saved-item-delete-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+        const copySvg = '<svg class="deck-saved-item-duplicate-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
         const bodyEl = document.createElement('div');
         bodyEl.className = 'deck-saved-item-body';
-        bodyEl.innerHTML = `<span class="deck-saved-item-name">${escapeHtml(d.name)}</span><div class="deck-saved-item-footer">${meta}<button type="button" class="deck-saved-item-delete" data-deck-delete="${d.id}" title="Supprimer le deck">${trashSvg}</button></div>`;
+        bodyEl.innerHTML = `<span class="deck-saved-item-name">${escapeHtml(d.name)}</span><div class="deck-saved-item-footer">${meta}<div class="deck-saved-item-actions"><button type="button" class="deck-saved-item-duplicate" data-deck-duplicate="${d.id}" title="Dupliquer le deck">${copySvg}</button><button type="button" class="deck-saved-item-delete" data-deck-delete="${d.id}" title="Supprimer le deck">${trashSvg}</button></div></div>`;
         li.appendChild(bodyEl);
+        const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>('.deck-saved-item-duplicate');
+        duplicateBtn?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const r = await duplicateDeckOnServer(d.id);
+            if (r.error) alert('Erreur: ' + r.error);
+            else {
+                await refreshMyDecksList();
+                alert(`Deck dupliqué : « ${d.name} (copie) »`);
+            }
+        });
         const deleteBtn = bodyEl.querySelector<HTMLButtonElement>('.deck-saved-item-delete');
         deleteBtn?.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -95,6 +108,7 @@ export function bindDeckList(): void {
 
     const newDeckCard = pageDecks.querySelector<HTMLElement>('[data-deck-action="new-deck"]');
     newDeckCard?.addEventListener('click', () => {
+        cleanCardTable();
         import('../main.js').then((m) => m.setActiveTab('builder'));
         const nameInput = document.getElementById('deck-name-input') as HTMLInputElement | null;
         nameInput?.focus();

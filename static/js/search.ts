@@ -84,6 +84,16 @@ function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement):
     filtered.forEach((card) => renderResultRow(card, query, resultsEl));
 }
 
+/** Remplit la recherche du builder et lance une requête (ex. depuis l’onglet Suggestions). */
+export function runSearchWithQuery(q: string): void {
+    const input = document.getElementById('search-box') as HTMLInputElement | null;
+    if (!input) return;
+    const trimmed = q.trim();
+    if (trimmed.length < MIN_QUERY_LENGTH) return;
+    input.value = trimmed;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 export function setupSearch(): void {
     const input = document.getElementById('search-box') as HTMLInputElement | null;
     const resultsContainer = document.getElementById('searchResults') as HTMLElement | null;

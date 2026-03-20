@@ -26,6 +26,8 @@ pub struct CardRow {
     pub ygoprodeck_url: Option<String>,
     pub image_url: Option<String>,
     pub image_url_small: Option<String>,
+    #[sqlx(rename = "ban_tcg")]
+    pub ban_tcg: Option<String>,
 }
 
 impl From<CardRow> for RawCardSearchResult {
@@ -45,6 +47,7 @@ impl From<CardRow> for RawCardSearchResult {
             ygoprodeck_url: row.ygoprodeck_url,
             image_url: row.image_url,
             image_url_small: row.image_url_small,
+            ban_tcg: row.ban_tcg,
         }
     }
 }
@@ -73,7 +76,7 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), DbError> {
 pub async fn load_all_cards(pool: &PgPool) -> Result<Vec<CardSearchResult>, DbError> {
     // Cast ENUMs to text pour que sqlx décode en String (card_type, card_attribute, card_frame en base).
     let rows: Vec<CardRow> = sqlx::query_as::<_, CardRow>(
-        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small FROM cards ORDER BY id",
+        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg FROM cards ORDER BY id",
     )
     .fetch_all(pool)
     .await?;

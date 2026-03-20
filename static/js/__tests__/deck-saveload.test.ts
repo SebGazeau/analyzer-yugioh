@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   clearCurrentLoadedDeck,
+  duplicateDeckOnServer,
   getCurrentLoadedDeck,
   listMyDecks,
   loadDeckFromServer,
@@ -147,6 +148,38 @@ describe('Save/Load deck — fetch mocké', () => {
     expect(updateResult.ok).toBe(true);
     expect(putUrl).toContain('/decks/1');
     expect(putBody).toHaveProperty('main');
+  });
+
+  it('duplicateDeckOnServer GET puis POST avec nom « (copie) »', async () => {
+    let postBody: unknown = null;
+    vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u === '/decks/7' && !init?.method) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: 7,
+              name: 'Mon deck',
+              main: [{ name: 'A', quantity: 2 }],
+              extra: [],
+              side: [],
+            }),
+            { status: 200 },
+          ),
+        );
+      }
+      if (u === '/decks' && init?.method === 'POST') {
+        postBody = init.body ? JSON.parse(init.body as string) : null;
+        return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
+      }
+      return Promise.resolve(new Response('', { status: 404 }));
+    }));
+    const r = await duplicateDeckOnServer(7);
+    expect(r.id).toBe(99);
+    expect(postBody).toMatchObject({
+      name: 'Mon deck (copie)',
+      main: [{ name: 'A', quantity: 2 }],
+    });
   });
 
   it('load deck préserve les catégories quand les cartes sont chargées', async () => {

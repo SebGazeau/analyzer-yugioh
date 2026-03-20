@@ -55,6 +55,10 @@
   box-sizing: border-box;
   transition: color var(--duration-fast), border-color var(--duration-fast);
 }
+/* [hidden] seul perd face à display:flex ci-dessus (spécificité) — obligatoire pour l’onglet Suggestions dynamique */
+.header .header-tabs .app-tab[hidden] {
+  display: none !important;
+}
 .header .header-tabs .app-tab:hover {
   color: var(--color-text-primary);
 }

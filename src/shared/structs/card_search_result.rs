@@ -18,6 +18,7 @@ pub struct CardSearchResult {
     frame_type: Option<String>,
     ygoprodeck_url: Option<String>,
     image_url: Option<String>,
+    ban_tcg: Option<String>,
 }
 
 impl CardSearchResult {
@@ -35,6 +36,7 @@ impl CardSearchResult {
         frame_type: Option<String>,
         ygoprodeck_url: Option<String>,
         image_url: Option<String>,
+        ban_tcg: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -50,6 +52,7 @@ impl CardSearchResult {
             frame_type,
             ygoprodeck_url,
             image_url,
+            ban_tcg,
         }
     }
 
@@ -90,6 +93,7 @@ impl CardSearchResult {
             frame_type: self.frame_type.clone(),
             ygoprodeck_url: self.ygoprodeck_url.clone(),
             image_url: self.image_url.clone(),
+            ban_tcg: self.ban_tcg.clone(),
         }
     }
 }
@@ -115,6 +119,9 @@ pub struct RawCardSearchResult {
     pub image_url: Option<String>,
     #[serde(default)]
     pub image_url_small: Option<String>,
+    #[serde(default)]
+    #[serde(rename = "ban_tcg")]
+    pub ban_tcg: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -175,6 +182,7 @@ impl TryFrom<RawCardSearchResult> for CardSearchResult {
             frame_type: raw.frame_type,
             ygoprodeck_url: raw.ygoprodeck_url,
             image_url: raw.image_url,
+            ban_tcg: raw.ban_tcg,
         })
     }
 }
@@ -210,6 +218,7 @@ mod tests {
             def.clone(),
             frame_type.clone(),
             ygoprodeck_url.clone(),
+            None,
             None,
         );
 
@@ -257,6 +266,7 @@ mod tests {
             def.clone(),
             frame_type.clone(),
             ygoprodeck_url.clone(),
+            None,
             None,
         );
         let search_dto = card_search_result.to_search_dto();

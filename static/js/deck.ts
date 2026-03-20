@@ -12,6 +12,25 @@ export interface DeckRow {
     engine: string;
     categories: string[];
     imageUrl?: string;
+    /** Attribut (monstres) : DARK, LIGHT, etc. */
+    attribute?: string;
+    /** Niveau ou rang (monstres). */
+    level?: number;
+    /** Race / type détaillé : Dragon, Spellcaster (monstres) ; Quick-Play, Normal (spells/traps). */
+    race?: string;
+    /** Sous-type affichage : normal, effect, quickplay, continuous, etc. */
+    frame_type?: string;
+    /** Nombre max d'exemplaires autorisés par la banlist TCG (0=Forbidden, 1=Limited, 2=Semi-Limited, 3=illimité). */
+    maxCopies?: number;
+}
+
+/** Forbidden=0, Limited=1, Semi-Limited=2, sinon 3. */
+function banTcgToMaxCopies(ban: string | undefined): number {
+    const s = (ban ?? '').toLowerCase();
+    if (s.includes('forbidden') || s === 'banned') return 0;
+    if (s.includes('limited') && !s.includes('semi')) return 1;
+    if (s.includes('semi')) return 2;
+    return 3;
 }
 
 const DECK_GRID_IDS: Record<DeckSection, string> = {
@@ -123,17 +142,29 @@ export function getCurrentLoadedDeck(): { id: number; name: string } | null {
     return currentLoadedDeck;
 }
 
+/** Sauvegarder (création) et Mettre à jour (deck déjà en base) ne sont jamais visibles en même temps. */
+function syncDeckSaveUpdateButtons(): void {
+    const saveBtn = document.getElementById('btn-save-server');
+    const updateBtn = document.getElementById('btn-update-server');
+    const loaded = currentLoadedDeck !== null;
+    if (saveBtn instanceof HTMLElement) saveBtn.style.display = loaded ? 'none' : '';
+    if (updateBtn instanceof HTMLElement) updateBtn.style.display = loaded ? '' : 'none';
+}
+
 function setCurrentLoadedDeck(id: number, name: string): void {
     currentLoadedDeck = { id, name };
-    const btn = document.getElementById('btn-update-server');
-    if (btn && btn instanceof HTMLElement) btn.style.display = '';
+    syncDeckSaveUpdateButtons();
 }
 
 export function clearCurrentLoadedDeck(): void {
     currentLoadedDeck = null;
     setAnalysisDeckName('');
-    const btn = document.getElementById('btn-update-server');
-    if (btn && btn instanceof HTMLElement) btn.style.display = 'none';
+    syncDeckSaveUpdateButtons();
+}
+
+/** À appeler au chargement du builder si le DOM a été restauré sans passer par clear/load. */
+export function refreshDeckSaveUpdateButtons(): void {
+    syncDeckSaveUpdateButtons();
 }
 
 const DECK_COVER_STORAGE_KEY = 'yugioh-deck-cover';
@@ -357,7 +388,12 @@ function openPopover(section: DeckSection, index: number, anchor: HTMLElement): 
     const qtySelect = popover.querySelector('.deck-card-popover-qty') as HTMLSelectElement;
     const engineSelect = popover.querySelector('.deck-card-popover-engine') as HTMLSelectElement;
     const catContainer = popover.querySelector('.deck-card-popover-cat-container') as HTMLElement;
-    if (qtySelect) qtySelect.value = String(row.quantity);
+    if (qtySelect) {
+        qtySelect.value = String(row.quantity);
+        qtySelect.classList.remove('deck-card-popover-qty--limit-0', 'deck-card-popover-qty--limit-1', 'deck-card-popover-qty--limit-2');
+        const limit = row.maxCopies ?? 3;
+        if (limit < 3) qtySelect.classList.add(`deck-card-popover-qty--limit-${limit}`);
+    }
     if (engineSelect) engineSelect.value = row.engine || '';
     if (catContainer) {
         catContainer.innerHTML = '';
@@ -384,6 +420,9 @@ function renderDeckSection(section: DeckSection): void {
         const thumbHtml = row.imageUrl
             ? `<img class="deck-card-thumb-img" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
             : '<span class="deck-card-thumb-placeholder">?</span>';
+        const banBadge = row.maxCopies != null && row.maxCopies < 3
+            ? `<span class="deck-card-ban-badge" title="Banlist TCG : max ${row.maxCopies} exemplaire(s)">lt. ${row.maxCopies}</span>`
+            : '';
         const cell = document.createElement('div');
         cell.className = `deck-card-cell deck-card-cell--${kind}`;
         cell.setAttribute('data-deck-cell-section', section);
@@ -391,6 +430,7 @@ function renderDeckSection(section: DeckSection): void {
         cell.setAttribute('title', row.name);
         cell.innerHTML = `
             <div class="deck-card-thumb">${thumbHtml}</div>
+            ${banBadge}
             <span class="deck-card-qty">x${row.quantity}</span>
         `;
         cell.addEventListener('click', (e) => {
@@ -432,6 +472,11 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
         engine: '',
         categories: [],
         imageUrl: card.image_url ?? undefined,
+        attribute: typeof card.attribute === 'string' ? card.attribute : undefined,
+        level: typeof card.level === 'number' ? card.level : undefined,
+        race: typeof card.race === 'string' ? card.race : undefined,
+        frame_type: typeof card.frame_type === 'string' ? card.frame_type : undefined,
+        maxCopies: banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined),
     };
     arr.push(row);
     renderDeckSection(section);
@@ -516,6 +561,36 @@ export async function listMyDecks(): Promise<{ id: number; name: string; is_publ
     return res.json();
 }
 
+/** Duplique un deck serveur : nouveau deck nommé « {nom} (copie) » avec le même contenu. */
+export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string }> {
+    const res = await fetch(`/decks/${id}`);
+    if (!res.ok) return { error: 'Deck introuvable' };
+    const data = await res.json().catch(() => ({}));
+    const baseName = String(data.name ?? 'Sans nom').trim() || 'Sans nom';
+    const newName = `${baseName} (copie)`;
+    const body = {
+        name: newName,
+        main: Array.isArray(data.main) ? data.main : [],
+        extra: Array.isArray(data.extra) ? data.extra : [],
+        side: Array.isArray(data.side) ? data.side : [],
+    };
+    const postRes = await fetch('/decks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    const postData = await postRes.json().catch(() => ({}));
+    if (!postRes.ok) {
+        const msg =
+            postData.error ||
+            (Array.isArray(postData.errors) && postData.errors.length ? postData.errors.join(' ; ') : null) ||
+            postRes.statusText;
+        return { error: msg };
+    }
+    const newId = postData.id as number;
+    return newId != null ? { id: newId } : {};
+}
+
 export async function loadDeckFromServer(id: number): Promise<boolean> {
     const res = await fetch(`/decks/${id}`);
     if (!res.ok) return false;
@@ -533,6 +608,11 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
                 engine: entry.engine ?? '',
                 categories: entry.categories ?? [],
                 imageUrl: infoCard.image_url ?? undefined,
+                attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
+                level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
+                race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
+                frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
+                maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
             });
         }
     };
@@ -611,6 +691,11 @@ export function importDeckFromFile(event: Event): void {
                         engine: card.engine ?? '',
                         categories: card.categories ?? [],
                         imageUrl: infoCard.image_url ?? undefined,
+                        attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
+                        level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
+                        race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
+                        frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
+                        maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
                     });
                 }
             };

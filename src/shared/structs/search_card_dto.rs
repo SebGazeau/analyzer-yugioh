@@ -21,4 +21,6 @@ pub struct SearchCardDto {
     pub ygoprodeck_url: Option<String>,
     /// URL d'affichage : image locale (/images/{id}/file/desktop) si importée, sinon URL externe (YGOProDeck).
     pub image_url: Option<String>,
+    /// Liste TCG : Forbidden, Limited, Semi-Limited. Détermine le nombre max d'exemplaires en deck.
+    pub ban_tcg: Option<String>,
 }

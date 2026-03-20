@@ -1,0 +1,61 @@
+{# Onglet Suggestions : rempli par le JS (insights) ; onglet header masqué si aucun insight. #}
+<section id="suggestions" class="tab-panel section page-suggestions" data-page="suggestions" role="tabpanel" aria-label="Suggestions deck">
+  <h2 class="section-title page-suggestions-title">Suggestions</h2>
+  <p class="page-suggestions-intro" data-suggestions-intro>
+    Indications basées sur le <strong>deck courant</strong> (onglet Builder), sans simulation de duel complète.
+  </p>
+
+  <div class="suggestions-table-wrap" data-suggestions-summary-wrap>
+    <table class="suggestions-table suggestions-table--summary" data-insights-summary-table>
+      <caption class="suggestions-table-caption">Vue d’ensemble des règles actives</caption>
+      <thead>
+        <tr>
+          <th scope="col">Règle</th>
+          <th scope="col">Statut</th>
+          <th scope="col">Titre</th>
+          <th scope="col">Résumé</th>
+        </tr>
+      </thead>
+      <tbody data-insights-summary-tbody></tbody>
+    </table>
+  </div>
+
+  <div class="suggestions-table-wrap suggestions-number-wrap" data-suggestions-number-wrap hidden>
+    <h3 class="suggestions-detail-heading">Xyz « Number » 101–107 et C101–C107 à envisager</h3>
+    <p class="suggestions-number-lead" data-suggestions-number-lead>
+      Noms en anglais (recherche API). La colonne <strong>Récupérables (Main / Side)</strong> liste les cartes de ton Main ou Side concernées (niveau = rang, type ou attribut) ; chaque carte est étiquetée Main ou Side. Les vignettes s'affichent si le builder a une URL d’image.
+    </p>
+    <table class="suggestions-table suggestions-table--numbers" data-insights-number-table>
+      <caption class="suggestions-table-caption">Propositions de cartes Extra</caption>
+      <thead>
+        <tr>
+          <th scope="col">Carte</th>
+          <th scope="col">N°</th>
+          <th scope="col">Rang</th>
+          <th scope="col">Attribut / Type</th>
+          <th scope="col">Récupérables (Main / Side)</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody data-insights-number-tbody></tbody>
+    </table>
+  </div>
+
+  <div class="suggestions-table-wrap suggestions-detail-wrap" data-suggestions-detail-wrap hidden>
+    <h3 class="suggestions-detail-heading" data-suggestions-detail-heading>Détail par Xyz (Seventh Tachyon)</h3>
+    <table class="suggestions-table suggestions-table--detail" data-insights-detail-table>
+      <caption class="suggestions-table-caption">Cibles Main possibles (Type ou Attribut identique, Niveau = Rang)</caption>
+      <thead>
+        <tr>
+          <th scope="col">Monstre Xyz</th>
+          <th scope="col">N°</th>
+          <th scope="col">Rang</th>
+          <th scope="col">Cibles Main</th>
+        </tr>
+      </thead>
+      <tbody data-insights-detail-tbody></tbody>
+    </table>
+  </div>
+
+  <p class="page-suggestions-help" data-insights-page-help></p>
+</section>
