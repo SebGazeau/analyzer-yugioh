@@ -295,8 +295,40 @@ fn entries_to_insert(
     Ok(out)
 }
 
+/// Utilisateur connecté (inscription / connexion) : pseudo en session → `site_users.id`.
+async fn require_site_user_id(session: &Session, pool: &sqlx::PgPool) -> Result<uuid::Uuid, HttpResponse> {
+    let pseudo: Option<String> = match session.get::<String>(SESSION_SITE_USER_PSEUDO) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::error!("session get: {}", e);
+            return Err(HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur session" })));
+        }
+    }
+    .filter(|s| !s.trim().is_empty());
+    let pseudo = pseudo.ok_or_else(|| {
+        HttpResponse::Unauthorized().json(serde_json::json!({
+            "error": "Connexion requise pour enregistrer ou gérer vos decks."
+        }))
+    })?;
+    let user = user_db::get_user_by_pseudo(pool, &pseudo)
+        .await
+        .map_err(|e| {
+            tracing::error!("get_user_by_pseudo: {}", e);
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
+        })?;
+    let u = user.ok_or_else(|| {
+        HttpResponse::Unauthorized().json(serde_json::json!({
+            "error": "Session invalide. Reconnectez-vous."
+        }))
+    })?;
+    Ok(u.id)
+}
+
 #[post("/decks")]
 pub async fn create_deck_handler(
+    session: Session,
     pool: Option<web::Data<sqlx::PgPool>>,
     card_cache: web::Data<CardCache>,
     body: web::Json<SaveDeckRequest>,
@@ -304,6 +336,10 @@ pub async fn create_deck_handler(
     let pool = match pool {
         Some(p) => p,
         None => return HttpResponse::ServiceUnavailable().body("Base de données indisponible."),
+    };
+    let site_user_id = match require_site_user_id(&session, pool.get_ref()).await {
+        Ok(id) => id,
+        Err(resp) => return resp,
     };
     let name = body.name.trim();
     if name.is_empty() {
@@ -339,7 +375,7 @@ pub async fn create_deck_handler(
     entries.extend(side_entries);
     let cover_name = body.cover_card_name.as_deref().filter(|s| !s.trim().is_empty());
     let cover_url = body.cover_image_url.as_deref().filter(|s| !s.trim().is_empty());
-    match db::create_deck(pool.get_ref(), name, None, &entries, cover_name, cover_url).await {
+    match db::create_deck(pool.get_ref(), name, site_user_id, &entries, cover_name, cover_url).await {
         Ok(id) => HttpResponse::Created().json(serde_json::json!({ "id": id })),
         Err(e) => {
             tracing::error!("create_deck: {}", e);
@@ -349,15 +385,22 @@ pub async fn create_deck_handler(
 }
 
 #[get("/decks")]
-pub async fn list_decks_handler(pool: Option<web::Data<sqlx::PgPool>>) -> HttpResponse {
+pub async fn list_decks_handler(
+    session: Session,
+    pool: Option<web::Data<sqlx::PgPool>>,
+) -> HttpResponse {
     let pool = match pool {
         Some(p) => p,
         None => return HttpResponse::ServiceUnavailable().body("Base de données indisponible."),
     };
-    match db::list_decks(pool.get_ref()).await {
+    let site_user_id = match require_site_user_id(&session, pool.get_ref()).await {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+    match db::list_decks_for_site_user(pool.get_ref(), site_user_id).await {
         Ok(list) => HttpResponse::Ok().json(list),
         Err(e) => {
-            tracing::error!("list_decks: {}", e);
+            tracing::error!("list_decks_for_site_user: {}", e);
             HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
@@ -365,6 +408,7 @@ pub async fn list_decks_handler(pool: Option<web::Data<sqlx::PgPool>>) -> HttpRe
 
 #[get("/decks/{id}")]
 pub async fn get_deck_handler(
+    session: Session,
     pool: Option<web::Data<sqlx::PgPool>>,
     path: web::Path<i32>,
 ) -> HttpResponse {
@@ -372,8 +416,12 @@ pub async fn get_deck_handler(
         Some(p) => p,
         None => return HttpResponse::ServiceUnavailable().body("Base de données indisponible."),
     };
+    let site_user_id = match require_site_user_id(&session, pool.get_ref()).await {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
     let id = path.into_inner();
-    match db::get_deck_with_entries(pool.get_ref(), id).await {
+    match db::get_deck_with_entries(pool.get_ref(), id, site_user_id).await {
         Ok(Some((name, is_public, cover_card_name, cover_image_url, entries))) => {
             let mut json = serde_json::json!({
                 "id": id,
@@ -403,6 +451,7 @@ pub async fn get_deck_handler(
 
 #[put("/decks/{id}")]
 pub async fn update_deck_handler(
+    session: Session,
     pool: Option<web::Data<sqlx::PgPool>>,
     card_cache: web::Data<CardCache>,
     path: web::Path<i32>,
@@ -411,6 +460,10 @@ pub async fn update_deck_handler(
     let pool = match pool {
         Some(p) => p,
         None => return HttpResponse::ServiceUnavailable().body("Base de données indisponible."),
+    };
+    let site_user_id = match require_site_user_id(&session, pool.get_ref()).await {
+        Ok(id) => id,
+        Err(resp) => return resp,
     };
     let id = path.into_inner();
     let name = body.name.trim();
@@ -447,7 +500,7 @@ pub async fn update_deck_handler(
     entries.extend(side_entries);
     let cover_name = body.cover_card_name.as_deref().filter(|s| !s.trim().is_empty());
     let cover_url = body.cover_image_url.as_deref().filter(|s| !s.trim().is_empty());
-    match db::update_deck(pool.get_ref(), id, name, &entries, cover_name, cover_url).await {
+    match db::update_deck(pool.get_ref(), id, site_user_id, name, &entries, cover_name, cover_url).await {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "ok": true })),
         Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" })),
         Err(e) => {
@@ -459,6 +512,7 @@ pub async fn update_deck_handler(
 
 #[delete("/decks/{id}")]
 pub async fn delete_deck_handler(
+    session: Session,
     pool: Option<web::Data<sqlx::PgPool>>,
     path: web::Path<i32>,
 ) -> HttpResponse {
@@ -466,8 +520,12 @@ pub async fn delete_deck_handler(
         Some(p) => p,
         None => return HttpResponse::ServiceUnavailable().body("Base de données indisponible."),
     };
+    let site_user_id = match require_site_user_id(&session, pool.get_ref()).await {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
     let id = path.into_inner();
-    match db::delete_deck(pool.get_ref(), id).await {
+    match db::delete_deck(pool.get_ref(), id, site_user_id).await {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "ok": true })),
         Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" })),
         Err(e) => {

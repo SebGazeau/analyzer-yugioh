@@ -499,6 +499,22 @@ export function toDeckEntryPayload(e: { name: string; quantity: number; engine: 
     return out;
 }
 
+/** Cookie de session (connexion site) pour POST/GET/PUT/DELETE /decks. */
+const DECK_FETCH_INIT: RequestInit = { credentials: 'same-origin' };
+
+function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
+    if (res.status === 401) {
+        return typeof data.error === 'string'
+            ? data.error
+            : 'Connexion requise. Connectez-vous pour enregistrer ou gérer vos decks.';
+    }
+    return (
+        (typeof data.error === 'string' ? data.error : null) ||
+        (Array.isArray(data.errors) && data.errors.length ? (data.errors as string[]).join(' ; ') : null) ||
+        res.statusText
+    );
+}
+
 function getDeckPayload(): { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] } {
     return {
         main: mainDeck.map(toDeckEntryPayload),
@@ -513,14 +529,14 @@ export async function saveDeckToServer(): Promise<{ id?: number; error?: string 
     const payload = getDeckPayload();
     const body = { name: name.trim(), ...payload };
     const res = await fetch('/decks', {
+        ...DECK_FETCH_INIT,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
-        const msg = data.error || (Array.isArray(data.errors) && data.errors.length ? data.errors.join(' ; ') : null) || res.statusText;
-        return { error: msg };
+        return { error: deckApiErrorMessage(res, data) };
     }
     const id = data.id as number;
     if (id != null) {
@@ -542,29 +558,33 @@ export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: stri
         body.cover_image_url = cover.imageUrl || undefined;
     }
     const res = await fetch(`/decks/${deck.id}`, {
+        ...DECK_FETCH_INIT,
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
-    const data = await res.json().catch(() => ({}));
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
-        const msg = data.error || (Array.isArray(data.errors) && data.errors.length ? data.errors.join(' ; ') : null) || res.statusText;
-        return { error: msg };
+        return { error: deckApiErrorMessage(res, data) };
     }
     setCurrentLoadedDeck(deck.id, name);
     return { ok: true };
 }
 
 export async function listMyDecks(): Promise<{ id: number; name: string; is_public: boolean; created_at: string; cover_card_name?: string; cover_image_url?: string }[]> {
-    const res = await fetch('/decks');
+    const res = await fetch('/decks', DECK_FETCH_INIT);
     if (!res.ok) return [];
     return res.json();
 }
 
 /** Duplique un deck serveur : nouveau deck nommé « {nom} (copie) » avec le même contenu. */
 export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string }> {
-    const res = await fetch(`/decks/${id}`);
-    if (!res.ok) return { error: 'Deck introuvable' };
+    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
+    if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        if (res.status === 401) return { error: deckApiErrorMessage(res, data) };
+        return { error: typeof data.error === 'string' ? data.error : 'Deck introuvable' };
+    }
     const data = await res.json().catch(() => ({}));
     const baseName = String(data.name ?? 'Sans nom').trim() || 'Sans nom';
     const newName = `${baseName} (copie)`;
@@ -575,24 +595,21 @@ export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; 
         side: Array.isArray(data.side) ? data.side : [],
     };
     const postRes = await fetch('/decks', {
+        ...DECK_FETCH_INIT,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
-    const postData = await postRes.json().catch(() => ({}));
+    const postData = (await postRes.json().catch(() => ({}))) as Record<string, unknown>;
     if (!postRes.ok) {
-        const msg =
-            postData.error ||
-            (Array.isArray(postData.errors) && postData.errors.length ? postData.errors.join(' ; ') : null) ||
-            postRes.statusText;
-        return { error: msg };
+        return { error: deckApiErrorMessage(postRes, postData) };
     }
     const newId = postData.id as number;
     return newId != null ? { id: newId } : {};
 }
 
 export async function loadDeckFromServer(id: number): Promise<boolean> {
-    const res = await fetch(`/decks/${id}`);
+    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
     if (!res.ok) return false;
     const data = await res.json();
     cleanCardTable();
@@ -639,7 +656,7 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
 
 /** Supprime un deck sur le serveur (DELETE /decks/:id). Retourne true si succès. */
 export async function deleteDeckFromServer(id: number): Promise<boolean> {
-    const res = await fetch(`/decks/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/decks/${id}`, { ...DECK_FETCH_INIT, method: 'DELETE' });
     if (!res.ok) return false;
     const loaded = getCurrentLoadedDeck();
     if (loaded?.id === id) clearCurrentLoadedDeck();

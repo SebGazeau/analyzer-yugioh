@@ -257,6 +257,11 @@ Les trois points suivants ont été tranchés et sont intégrés dans les sectio
 - **Données** : snapshot aligné sur `getDeckState()` (`level` = rang Xyz côté API, numéro Number parsé sur le nom EN).
 - **UI** : onglet header **SUGGESTIONS** (masqué si aucun insight), page dédiée avec tableaux ; rafraîchi depuis `computeGlobalStats()`. Navigation : `static/js/tabs.ts` (`setActiveTab`).
 
+### Slice — Decks serveur et session site
+
+- **Auth** : `GET/POST/PUT/DELETE /decks*` exigent la session cookie **inscription / connexion** (`site_user_pseudo` → `site_users.id`). Le builder HTML reste public ; seule la persistance DB est protégée.
+- **Données** : colonne `decks.site_user_id` (FK `site_users`), migration `20260320100000_decks_site_user.sql`. Les anciens decks sans `site_user_id` ne sont plus exposés par l’API tant qu’ils ne sont pas rattachés à un compte.
+
 ---
 
 *Document finalisé avec ces décisions. À mettre à jour au fur et à mesure des changements de code et des évolutions (ex. mise en place du job worker RAG).*

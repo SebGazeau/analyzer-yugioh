@@ -11,6 +11,7 @@ Ce document décrit le schéma d’authentification : **JWT** pour l’API (docu
 | **API**  | JWT (Bearer) | `/api/auth/token`, `/api/profile` |
 | **Web**  | Session cookie (actix-session) | `/web/login`, `/web/logout`, `/web/dashboard` |
 | **Admin** | Header `X-Admin-Key` (ADMIN_SECRET) | `/admin/*` |
+| **Decks (JSON)** | Session cookie (`site_user_pseudo`) | `/decks`, `/decks/{id}` |
 
 ---
 
@@ -57,10 +58,22 @@ Le middleware `SessionMiddleware` (CookieSessionStore) est actif dès qu’une c
 
 ---
 
-## 6. Décisions techniques
+## 6. Decks enregistrés (`/decks`)
+
+Les routes JSON **liste, lecture, création, mise à jour et suppression** de decks (`GET/POST /decks`, `GET/PUT/DELETE /decks/{id}`) exigent une **session site** : cookie défini après **inscription** ou **connexion** (`POST /register`, `POST /login`), clé de session `site_user_pseudo`.
+
+- Sans connexion : **401 Unauthorized** avec un corps JSON `{ "error": "…" }`.
+- Chaque deck est lié à `decks.site_user_id` → `site_users.id` ; un utilisateur ne voit et ne modifie que ses propres decks.
+
+Le **builder** (pages HTML, recherche, validation locale) reste utilisable sans compte ; seule la **persistance serveur** est réservée aux comptes connectés.
+
+---
+
+## 7. Décisions techniques
 
 - **JWT** : extracteur `JwtClaims` (FromRequest) au lieu d’un middleware Transform, pour rester compatible avec les scopes Actix et éviter d’implémenter `Transform` à la main.
 - **Sessions** : `actix-session` avec `CookieSessionStore` ; clé dérivée de `SESSION_SECRET` (64 octets, troncation/remplissage si nécessaire).
 - **Documentation** : `utoipa` + `utoipa-swagger-ui` ; schéma Bearer via `HttpBuilder::new().scheme(Bearer).bearer_format("JWT").build()`.
+- **Decks** : auth par session cookie (même mécanisme que la page d’accueil), pas par JWT.
 
 Ces choix sont résumés dans `docs/decisions.md` si besoin.

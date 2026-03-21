@@ -209,8 +209,11 @@ pub struct DeckEntryInsert {
     pub categories: Vec<String>,
 }
 
-/// Liste les decks (user_id NULL accepté).
-pub async fn list_decks(pool: &PgPool) -> Result<Vec<DeckListItem>, DbError> {
+/// Liste les decks du compte connecté (`site_user_id`).
+pub async fn list_decks_for_site_user(
+    pool: &PgPool,
+    site_user_id: uuid::Uuid,
+) -> Result<Vec<DeckListItem>, DbError> {
     #[derive(sqlx::FromRow)]
     struct Row {
         id: i32,
@@ -221,8 +224,9 @@ pub async fn list_decks(pool: &PgPool) -> Result<Vec<DeckListItem>, DbError> {
         cover_image_url: Option<String>,
     }
     let rows: Vec<Row> = sqlx::query_as(
-        "SELECT id, name, is_public, created_at, cover_card_name, cover_image_url FROM decks ORDER BY created_at DESC",
+        "SELECT id, name, is_public, created_at, cover_card_name, cover_image_url FROM decks WHERE site_user_id = $1 ORDER BY created_at DESC",
     )
+    .bind(site_user_id)
     .fetch_all(pool)
     .await?;
     Ok(rows
@@ -238,10 +242,11 @@ pub async fn list_decks(pool: &PgPool) -> Result<Vec<DeckListItem>, DbError> {
         .collect())
 }
 
-/// Retourne un deck par id avec ses entrées et la couverture.
+/// Retourne un deck par id avec ses entrées et la couverture (réservé au propriétaire `site_user_id`).
 pub async fn get_deck_with_entries(
     pool: &PgPool,
     deck_id: i32,
+    site_user_id: uuid::Uuid,
 ) -> Result<Option<(String, bool, Option<String>, Option<String>, Vec<DeckEntryItem>)>, DbError> {
     #[derive(sqlx::FromRow)]
     struct DeckRow {
@@ -251,9 +256,10 @@ pub async fn get_deck_with_entries(
         cover_image_url: Option<String>,
     }
     let deck: Option<DeckRow> = sqlx::query_as(
-        "SELECT name, is_public, cover_card_name, cover_image_url FROM decks WHERE id = $1",
+        "SELECT name, is_public, cover_card_name, cover_image_url FROM decks WHERE id = $1 AND site_user_id = $2",
     )
     .bind(deck_id)
+    .bind(site_user_id)
     .fetch_optional(pool)
     .await?;
     let deck = match deck {
@@ -303,20 +309,20 @@ pub async fn get_deck_with_entries(
     )))
 }
 
-/// Crée un deck et ses entrées. user_id = None pour l'instant.
+/// Crée un deck et ses entrées pour un compte site.
 pub async fn create_deck(
     pool: &PgPool,
     name: &str,
-    user_id: Option<i32>,
+    site_user_id: uuid::Uuid,
     entries: &[DeckEntryInsert],
     cover_card_name: Option<&str>,
     cover_image_url: Option<&str>,
 ) -> Result<i32, DbError> {
     let row: (i32,) = sqlx::query_as(
-        "INSERT INTO decks (name, user_id, is_public, cover_card_name, cover_image_url) VALUES ($1, $2, false, $3, $4) RETURNING id",
+        "INSERT INTO decks (name, user_id, site_user_id, is_public, cover_card_name, cover_image_url) VALUES ($1, NULL, $2, false, $3, $4) RETURNING id",
     )
     .bind(name)
-    .bind(user_id)
+    .bind(site_user_id)
     .bind(cover_card_name)
     .bind(cover_image_url)
     .fetch_one(pool)
@@ -339,22 +345,24 @@ pub async fn create_deck(
     Ok(deck_id)
 }
 
-/// Met à jour le nom, la couverture et remplace toutes les entrées du deck.
+/// Met à jour le nom, la couverture et remplace toutes les entrées du deck (propriétaire uniquement).
 pub async fn update_deck(
     pool: &PgPool,
     deck_id: i32,
+    site_user_id: uuid::Uuid,
     name: &str,
     entries: &[DeckEntryInsert],
     cover_card_name: Option<&str>,
     cover_image_url: Option<&str>,
 ) -> Result<bool, DbError> {
     let res = sqlx::query(
-        "UPDATE decks SET name = $1, cover_card_name = $2, cover_image_url = $3, updated_at = NOW() WHERE id = $4",
+        "UPDATE decks SET name = $1, cover_card_name = $2, cover_image_url = $3, updated_at = NOW() WHERE id = $4 AND site_user_id = $5",
     )
     .bind(name)
     .bind(cover_card_name)
     .bind(cover_image_url)
     .bind(deck_id)
+    .bind(site_user_id)
     .execute(pool)
     .await?;
     if res.rows_affected() == 0 {
@@ -381,10 +389,15 @@ pub async fn update_deck(
     Ok(true)
 }
 
-/// Supprime un deck (CASCADE supprime les entrées).
-pub async fn delete_deck(pool: &PgPool, deck_id: i32) -> Result<bool, DbError> {
-    let res = sqlx::query("DELETE FROM decks WHERE id = $1")
+/// Supprime un deck (CASCADE supprime les entrées) si le propriétaire correspond.
+pub async fn delete_deck(
+    pool: &PgPool,
+    deck_id: i32,
+    site_user_id: uuid::Uuid,
+) -> Result<bool, DbError> {
+    let res = sqlx::query("DELETE FROM decks WHERE id = $1 AND site_user_id = $2")
         .bind(deck_id)
+        .bind(site_user_id)
         .execute(pool)
         .await?;
     Ok(res.rows_affected() > 0)
