@@ -1,0 +1,67 @@
+/**
+ * Logique pure déplacement / réorganisation des cartes (drag-and-drop builder).
+ */
+
+export type DeckSection = 'main' | 'extra' | 'side';
+
+export interface DeckRowLike {
+    type: string;
+    frame_type?: string;
+    quantity: number;
+}
+
+export const MAX_MAIN_CARDS = 60;
+export const MAX_EXTRA_CARDS = 15;
+export const MAX_SIDE_CARDS = 15;
+
+export function sumQuantities(rows: { quantity: number }[]): number {
+    return rows.reduce((s, r) => s + r.quantity, 0);
+}
+
+/** Fusion / Synchro / Xyz / Link (type ou frame_type). */
+export function isExtraDeckRowLike(row: DeckRowLike): boolean {
+    const t = (row.type || '').toLowerCase();
+    const f = (row.frame_type || '').toLowerCase();
+    return (
+        t.includes('fusion') ||
+        t.includes('synchro') ||
+        t.includes('xyz') ||
+        t.includes('link') ||
+        f.includes('fusion') ||
+        f.includes('synchro') ||
+        f.includes('xyz') ||
+        f.includes('link')
+    );
+}
+
+/**
+ * Zone effective pour une carte : une carte Extra ne peut pas aller en Main (→ Extra).
+ * Une carte non-Extra ne peut pas aller en Extra (→ null).
+ */
+export function resolveTargetZone(row: DeckRowLike, requested: DeckSection): DeckSection | null {
+    if (requested === 'extra' && !isExtraDeckRowLike(row)) return null;
+    if (requested === 'main' && isExtraDeckRowLike(row)) return 'extra';
+    return requested;
+}
+
+/**
+ * Réordonnancement dans la même zone : index d'insertion après retrait de `fromIdx`.
+ * `dropOnIdx` = insérer avant cette carte. `null` = pas de changement (même cellule).
+ */
+export function sameZoneInsertIndex(fromIdx: number, dropOnIdx: number, length: number): number | null {
+    if (fromIdx === dropOnIdx) return null;
+    if (dropOnIdx < 0 || dropOnIdx > length) return null;
+    if (fromIdx < dropOnIdx) return dropOnIdx - 1;
+    return dropOnIdx;
+}
+
+export function maxCardsForZone(zone: DeckSection): number {
+    switch (zone) {
+        case 'main':
+            return MAX_MAIN_CARDS;
+        case 'extra':
+            return MAX_EXTRA_CARDS;
+        case 'side':
+            return MAX_SIDE_CARDS;
+    }
+}

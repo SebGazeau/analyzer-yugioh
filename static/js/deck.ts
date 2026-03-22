@@ -2,6 +2,13 @@
 import { updateDeckCount, updateProbabilities, computeGlobalStats, setAnalysisDeckName } from './stats.js';
 import { createCategorySelector } from './category.js';
 import { fetchCardByName, Card } from './api.js';
+import {
+    isExtraDeckRowLike,
+    resolveTargetZone,
+    sameZoneInsertIndex,
+    sumQuantities,
+    maxCardsForZone,
+} from './deck-move.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -204,12 +211,15 @@ export function setDeckName(name: string): void {
 }
 
 export function isExtraDeckCard(card: Card): boolean {
-    const t = (card.type || '').toLowerCase();
-    const f = (card.frame_type || '').toLowerCase();
-    return (
-        t.includes('fusion') || t.includes('synchro') || t.includes('xyz') || t.includes('link') ||
-        f.includes('fusion') || f.includes('synchro') || f.includes('xyz') || f.includes('link')
-    );
+    return isExtraDeckRowLike({
+        type: card.type || '',
+        frame_type: typeof card.frame_type === 'string' ? card.frame_type : undefined,
+        quantity: 1,
+    });
+}
+
+export function isExtraDeckRow(row: DeckRow): boolean {
+    return isExtraDeckRowLike(row);
 }
 
 function typeKind(type: string): 'monster' | 'spell' | 'trap' {
@@ -428,6 +438,7 @@ function renderDeckSection(section: DeckSection): void {
         cell.setAttribute('data-deck-cell-section', section);
         cell.setAttribute('data-deck-cell-index', String(index));
         cell.setAttribute('title', row.name);
+        cell.setAttribute('draggable', 'true');
         cell.innerHTML = `
             <div class="deck-card-thumb">${thumbHtml}</div>
             ${banBadge}
@@ -751,3 +762,153 @@ export function enableColumnSort(_gridId: string, _cols: number, _onSort?: () =>
 
 /** No-op pour compatibilité : suppression via popover. */
 export function enableGridRowDeletion(_gridSelector: string, _cols: number, _btnClass?: string, _onDelete?: () => void): void {}
+
+const DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
+
+function afterDeckStructureChange(): void {
+    mainDeckSortBy = 'none';
+    mainDeckSortCategory = null;
+    updateDeckCount();
+    updateProbabilities();
+    computeGlobalStats();
+    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
+    if (typeof (window as any).updateCategorySummary === 'function') {
+        (window as any).updateCategorySummary();
+    }
+}
+
+/**
+ * Déplace une ligne de carte (réordonnancement ou changement de zone Main / Extra / Side).
+ * @param dropOnIndex insérer avant cette position ; utiliser `length` pour la fin.
+ */
+export function moveDeckRow(
+    fromSection: DeckSection,
+    fromIndex: number,
+    dropSection: DeckSection,
+    dropOnIndex: number,
+): boolean {
+    const fromArr = getState(fromSection);
+    const row = fromArr[fromIndex];
+    if (!row) return false;
+
+    const resolved = resolveTargetZone(row, dropSection);
+    if (resolved === null) {
+        alert('Cette carte ne peut pas être placée dans l\'Extra Deck.');
+        return false;
+    }
+
+    if (fromSection === resolved) {
+        const arr = getState(resolved);
+        const len = arr.length;
+        const [moved] = arr.splice(fromIndex, 1);
+        if (dropSection !== fromSection) {
+            arr.push(moved);
+        } else {
+            const ins = sameZoneInsertIndex(fromIndex, Math.min(dropOnIndex, len), len);
+            if (ins === null) {
+                arr.splice(fromIndex, 0, moved);
+                return false;
+            }
+            arr.splice(ins, 0, moved);
+        }
+        renderDeckSection(resolved);
+        afterDeckStructureChange();
+        return true;
+    }
+
+    const fromA = getState(fromSection);
+    const toA = getState(resolved);
+    const maxT = maxCardsForZone(resolved);
+    if (sumQuantities(toA) + row.quantity > maxT) {
+        alert(`Zone pleine (max ${maxT} cartes).`);
+        return false;
+    }
+
+    const [moved] = fromA.splice(fromIndex, 1);
+    let ins = dropSection === resolved ? Math.max(0, Math.min(dropOnIndex, toA.length)) : toA.length;
+    ins = Math.max(0, Math.min(ins, toA.length));
+    toA.splice(ins, 0, moved);
+
+    renderDeckSection(fromSection);
+    renderDeckSection(resolved);
+    afterDeckStructureChange();
+    return true;
+}
+
+/** Branche drag-and-drop sur `.deck-sections` (délégation, survit aux re-rendus de grille). */
+export function bindDeckDragAndDrop(): void {
+    const root = document.querySelector('.deck-sections');
+    if (!root || (root as HTMLElement).dataset.deckDndBound === '1') return;
+    (root as HTMLElement).dataset.deckDndBound = '1';
+
+    let suppressClickUntil = 0;
+
+    root.addEventListener('dragstart', (e: DragEvent) => {
+        const cell = (e.target as HTMLElement).closest('[data-deck-cell-section]');
+        if (!cell || !e.dataTransfer) return;
+        const section = cell.getAttribute('data-deck-cell-section') as DeckSection;
+        const index = parseInt(cell.getAttribute('data-deck-cell-index') || '-1', 10);
+        if (index < 0 || !['main', 'extra', 'side'].includes(section)) return;
+        e.dataTransfer.setData(DND_PAYLOAD_TYPE, JSON.stringify({ section, index }));
+        e.dataTransfer.effectAllowed = 'move';
+        cell.classList.add('deck-card-cell--dragging');
+        document.querySelector('.deck-card-popover--open')?.classList.remove('deck-card-popover--open');
+    });
+
+    root.addEventListener('dragend', (e: DragEvent) => {
+        (e.target as HTMLElement).closest('[data-deck-cell-section]')?.classList.remove('deck-card-cell--dragging');
+        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((el) => el.classList.remove('deck-cards-grid--dnd-over'));
+        suppressClickUntil = Date.now() + 200;
+    });
+
+    root.addEventListener(
+        'click',
+        (e: MouseEvent) => {
+            if (Date.now() < suppressClickUntil && (e.target as HTMLElement).closest('.deck-sections')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        },
+        true,
+    );
+
+    root.addEventListener('dragover', (e: DragEvent) => {
+        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
+        if (!grid || !e.dataTransfer?.types.includes(DND_PAYLOAD_TYPE)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((el) => el.classList.remove('deck-cards-grid--dnd-over'));
+        grid.classList.add('deck-cards-grid--dnd-over');
+    });
+
+    root.addEventListener('drop', (e: DragEvent) => {
+        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
+        if (!grid || !e.dataTransfer) return;
+        e.preventDefault();
+        grid.classList.remove('deck-cards-grid--dnd-over');
+        const raw = e.dataTransfer.getData(DND_PAYLOAD_TYPE);
+        if (!raw) return;
+        let parsed: { section: DeckSection; index: number };
+        try {
+            parsed = JSON.parse(raw) as { section: DeckSection; index: number };
+        } catch {
+            return;
+        }
+        const { section: fromSection, index: fromIndex } = parsed;
+        const gridId = grid.id;
+        const dropSection: DeckSection | null =
+            gridId === 'deck-main-grid' ? 'main' : gridId === 'deck-extra-grid' ? 'extra' : gridId === 'deck-side-grid' ? 'side' : null;
+        if (!dropSection) return;
+
+        const cell = (e.target as HTMLElement).closest('[data-deck-cell-index]');
+        const arr = getState(dropSection);
+        let dropOnIdx: number;
+        if (cell && grid.contains(cell)) {
+            dropOnIdx = parseInt(cell.getAttribute('data-deck-cell-index') || '0', 10);
+        } else {
+            dropOnIdx = arr.length;
+        }
+
+        moveDeckRow(fromSection, fromIndex, dropSection, dropOnIdx);
+    });
+}

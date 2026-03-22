@@ -4,7 +4,7 @@
  */
 import { updateDeckCount, updateProbabilities, computeGlobalStats } from '../stats.js';
 import { setupSearch } from '../search.js';
-import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons } from '../deck.js';
+import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons, bindDeckDragAndDrop } from '../deck.js';
 import { bindDeckToolbar } from './deck-actions.js';
 import { bindKeyboard } from './keyboard.js';
 import { bindCollapsibles } from './collapsibles.js';
@@ -96,4 +96,5 @@ export function initBuilder(): void {
 
     bindKeyboard();
     bindCollapsibles();
+    bindDeckDragAndDrop();
 }
