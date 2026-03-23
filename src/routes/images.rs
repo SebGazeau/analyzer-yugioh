@@ -123,10 +123,11 @@ pub async fn serve_image_file(
         "mobile" => record.path_mobile,
         _ => return Ok(HttpResponse::BadRequest().body("variant must be original|desktop|mobile")),
     };
-    let bytes = storage
-        .get(Path::new(&file_path))
-        .await?
-        .ok_or_else(|| ImageRouteError::Storage(StorageError::Other("file not found".into())))?;
+    let bytes = match storage.get(Path::new(&file_path)).await? {
+        Some(b) => b,
+        // Fichier absent (disque éphémère Cloud Run, autre instance, ou jamais importé) : 404 explicite, pas 500.
+        None => return Ok(HttpResponse::NotFound().body("image file not on this instance")),
+    };
     Ok(HttpResponse::Ok().content_type("image/webp").body(bytes))
 }
 

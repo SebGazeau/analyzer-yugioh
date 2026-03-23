@@ -10,7 +10,7 @@ Ce document décrit le **pipeline d’import, traitement et service d’images**
 
 - Récupérer une image depuis une **URL externe** (API ou CDN).
 - La **traiter** : décodage, redimensionnement, encodage WebP (original, desktop, mobile).
-- La **stocker** dans un backend configurable : **fichier local** (dev / Docker) ou **Google Cloud Storage** (prod, stub pour l’instant).
+- La **stocker** dans un backend configurable : **fichier local** (dev / Docker) ou **Google Cloud Storage** (bucket **privé**, accès via compte de service + lecture dans l’app).
 - Enregistrer les **métadonnées** en base PostgreSQL.
 - **Servir** les images et leurs métadonnées via des routes Actix-web.
 
@@ -32,9 +32,9 @@ Le **choix du backend de stockage** (local vs GCS) se fait uniquement via la var
 src/
 ├── config.rs           # Chargement STORAGE_BACKEND, LOCAL_STORAGE_PATH, GCS_BUCKET_NAME
 ├── storage/
-│   ├── mod.rs          # Trait Storage + from_config()
+│   ├── mod.rs          # Trait Storage + from_config / from_config_async
 │   ├── local.rs        # Implémentation filesystem (volume Docker / répertoire local)
-│   └── gcs.rs          # Stub GCS (retourne erreur si utilisé)
+│   └── gcs.rs          # GCS réel si feature `gcs` (image Docker prod)
 ├── images/
 │   ├── mod.rs          # Ré-exports
 │   ├── fetch.rs        # Téléchargement HTTP des bytes
@@ -44,11 +44,11 @@ src/
 │   ├── mod.rs
 │   └── images.rs       # Handlers Actix : import, list, get, serve file
 ├── app.rs              # make_app() reçoit Option<Arc<dyn Storage>> et enregistre les routes images
-└── main.rs             # Config::from_env(), storage::from_config(), tracing
+└── main.rs             # Config::from_env(), storage::from_config_async(), tracing
 ```
 
 - **config** : lit l’environnement une fois au démarrage.
-- **storage** : abstraction (trait) + deux implémentations (local utilisée, GCS en stub).
+- **storage** : abstraction (trait) + local + GCS (`from_config_async`, feature `gcs`).
 - **images** : logique métier (fetch, process, repository) sans dépendance directe à Actix.
 - **routes** : couche HTTP qui utilise `images::*` et le `Storage` injecté.
 
@@ -104,14 +104,17 @@ Utilisée en **développement** et dans le **Docker Compose** avec un volume mon
 
 ### Implémentation GCS (`gcs.rs`)
 
-- **Stub** : `GcsStorage::new(bucket_name)` existe mais toutes les méthodes (`store`, `get`, `exists`) retournent une erreur du type « GCS non implémenté ».
-- Préparé pour une future implémentation avec le crate `google-cloud-storage` (feature `gcs`).
+- Activée avec la feature Cargo **`gcs`** (image Docker prod : `cargo build --features gcs`).
+- **`GcsStorage::connect(bucket).await`** : `ClientConfig::default().with_auth().await` (ADC : Cloud Run, `GOOGLE_APPLICATION_CREDENTIALS`, etc.).
+- **`store` / `get` / `exists`** : API JSON `upload_object`, `download_object`, `get_object` ; **404** → `get` renvoie `None`, `exists` → `false`.
+- Bucket **privé** : pas d’URL publique ; le client passe par **`GET /images/.../file/...`**.
 
-### Construction depuis la config (`from_config`)
+### Construction depuis la config
 
-- **`storage::from_config(config: &Config) -> Result<Arc<dyn Storage>, String>`** :
-  - Si `StorageBackend::Local` → `Arc::new(LocalStorage::new(config.local_storage_path.clone()))`.
-  - Si `StorageBackend::Gcs` → exige `GCS_BUCKET_NAME`, puis `Arc::new(GcsStorage::new(bucket)?)` (pour l’instant le stub échoue à l’usage).
+- **`storage::from_config_async(config).await`** (utilisé au démarrage dans `main.rs`) :
+  - `Local` → `LocalStorage`.
+  - `Gcs` → `GcsStorage::connect` (feature `gcs` requise à la compilation).
+- **`storage::from_config`** : **local uniquement** ; si `Gcs` → erreur explicite (utiliser `from_config_async`).
 
 L’`Arc<dyn Storage>` est ensuite enregistré dans l’app Actix via `web::Data` et passé aux handlers.
 
@@ -240,7 +243,7 @@ Toutes les routes images nécessitent **pool Postgres** et **Storage** injectés
 
 - **Tracing** : `tracing_subscriber::fmt()` avec `EnvFilter::from_default_env()` (variable `RUST_LOG`).
 - **Config** : `config::Config::from_env()`. En cas d’erreur, log warning et `storage_data = None`.
-- **Storage** : si config OK, `storage::from_config(&config)` → `storage_data = Some(web::Data::new(arc_storage))`, sinon `None`.
+- **Storage** : si config OK, `storage::from_config_async(&config).await` → `storage_data = Some(web::Data::new(arc_storage))`, sinon `None`.
 - **make_app** : appelé avec `storage_data.clone()` en dernier argument. Le reste (cache cartes, tera, cards_path, pool) est inchangé.
 
 ### App (`app.rs`)
@@ -303,7 +306,7 @@ En prod Cloud Run (sans volume), il faudra utiliser `STORAGE_BACKEND=gcs` et une
 - **tracing** / **tracing-subscriber** : logs structurés.
 - **sqlx** (postgres, uuid, chrono, …) : pool et migrations (table `images` déjà couverte par les migrations existantes).
 
-Feature **`gcs`** : optionnelle, pour brancher plus tard `google-cloud-storage` dans `gcs.rs`.
+Feature **`gcs`** : active `google-cloud-storage` et l’implémentation réelle dans `gcs.rs` (image Docker prod).
 
 ---
 
@@ -348,6 +351,7 @@ curl -X POST http://localhost:8080/admin/import \
 ### Route admin
 
 - **`POST /admin/import`** : déclenche `ImageImporter::run` en **arrière-plan** (`tokio::spawn`), répond immédiatement **202 Accepted** avec le corps `"import started in background"`. Si pool ou storage manquant → **503**.
+- **`POST /admin/rehydrate_storage`** : `ImageImporter::rehydrate_storage` — pour chaque ligne `images`, retélécharge `original_url` et réécrit les 3 fichiers aux `path_*` déjà en base (remplir GCS après import local). Query **`?force=true`** : réécrit même si l’objet existe. **202** / **503** comme ci-dessus.
 
 ### Repository
 
@@ -364,9 +368,9 @@ curl -X POST http://localhost:8080/admin/import \
 | Fichier | Rôle |
 |---------|------|
 | `src/config.rs` | Config stockage depuis l’env. |
-| `src/storage/mod.rs` | Trait `Storage`, `from_config`, erreurs. |
+| `src/storage/mod.rs` | Trait `Storage`, `from_config` / `from_config_async`, erreurs. |
 | `src/storage/local.rs` | Stockage fichier (tokio::fs). |
-| `src/storage/gcs.rs` | Stub GCS. |
+| `src/storage/gcs.rs` | GCS (feature `gcs`, bucket privé). |
 | `src/images/mod.rs` | Ré-exports fetch, process, repository. |
 | `src/images/fetch.rs` | Téléchargement HTTP. |
 | `src/images/process.rs` | Décodage + 3 WebP. |
@@ -374,7 +378,7 @@ curl -X POST http://localhost:8080/admin/import \
 | `src/images/importer.rs` | Import bulk YGOProDeck (rate limit, retry, idempotence). |
 | `src/routes/mod.rs` | Module routes. |
 | `src/routes/images.rs` | 4 handlers Actix. |
-| `src/routes/admin.rs` | POST /admin/import (spawn ImageImporter). |
+| `src/routes/admin.rs` | POST /admin/import, POST /admin/rehydrate_storage. |
 | `migrations/20250203100000_create_images.sql` | Création table `images`. |
 | `src/lib.rs` | Déclaration modules config, storage, images, routes. |
 | `src/app.rs` | Paramètre storage, enregistrement routes images. |

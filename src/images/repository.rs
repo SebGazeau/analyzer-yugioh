@@ -86,10 +86,11 @@ impl ImageRepository {
             if url.is_empty() {
                 continue;
             }
-            let row: Option<(Uuid,)> = sqlx::query_as("SELECT id FROM images WHERE TRIM(original_url) = $1")
-                .bind(url)
-                .fetch_optional(pool)
-                .await?;
+            let row: Option<(Uuid,)> =
+                sqlx::query_as("SELECT id FROM images WHERE TRIM(original_url) = $1")
+                    .bind(url)
+                    .fetch_optional(pool)
+                    .await?;
             if let Some((id,)) = row {
                 map.insert(url.to_string(), id);
             }

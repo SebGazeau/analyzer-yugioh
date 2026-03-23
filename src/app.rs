@@ -92,7 +92,12 @@ pub fn make_app(
                         let secret = secret.clone();
                         let authorized = routes::is_admin_allowed(&req, &secret);
                         type AdminResp = Result<
-                            actix_web::dev::ServiceResponse<actix_web::body::EitherBody<actix_web::body::BoxBody, actix_web::body::BoxBody>>,
+                            actix_web::dev::ServiceResponse<
+                                actix_web::body::EitherBody<
+                                    actix_web::body::BoxBody,
+                                    actix_web::body::BoxBody,
+                                >,
+                            >,
                             actix_web::Error,
                         >;
                         if !authorized {
@@ -119,7 +124,8 @@ pub fn make_app(
                 .service(routes::admin_setup_page)
                 .service(routes::admin_setup)
                 .service(handlers::fetch_cards)
-                .service(routes::admin_import),
+                .service(routes::admin_import)
+                .service(routes::admin_rehydrate_storage),
         )
         .service(
             web::scope("/web")

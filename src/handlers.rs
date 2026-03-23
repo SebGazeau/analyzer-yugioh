@@ -1,7 +1,7 @@
 //! Handlers HTTP pour les routes.
 
 use actix_session::Session;
-use actix_web::{delete, get, http::StatusCode, post, put, web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, delete, get, http::StatusCode, post, put, web};
 use serde::Deserialize;
 use std::path::Path;
 
@@ -258,7 +258,8 @@ fn resolve_name_to_id(
     name: &str,
 ) -> Option<u64> {
     let name_norm = normalize_name_for_match(name);
-    cards.iter()
+    cards
+        .iter()
         .find(|c| {
             normalize_name_for_match(c.as_str()) == name_norm
                 || c.card_name_en()
@@ -280,9 +281,14 @@ fn entries_to_insert(
         if name.is_empty() {
             continue;
         }
-        let card_id = resolve_name_to_id(cards, name).ok_or_else(|| format!("Carte inconnue: {}", name))? as i64;
+        let card_id = resolve_name_to_id(cards, name)
+            .ok_or_else(|| format!("Carte inconnue: {}", name))? as i64;
         let quantity = dto.quantity.clamp(1, 3) as i16;
-        let engine = dto.engine.as_deref().filter(|s| !s.is_empty()).map(String::from);
+        let engine = dto
+            .engine
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(String::from);
         let categories = dto.categories.clone().unwrap_or_default();
         out.push(db::DeckEntryInsert {
             card_id,
@@ -296,7 +302,10 @@ fn entries_to_insert(
 }
 
 /// Utilisateur connecté (inscription / connexion) : pseudo en session → `site_users.id`.
-async fn require_site_user_id(session: &Session, pool: &sqlx::PgPool) -> Result<uuid::Uuid, HttpResponse> {
+async fn require_site_user_id(
+    session: &Session,
+    pool: &sqlx::PgPool,
+) -> Result<uuid::Uuid, HttpResponse> {
     let pseudo: Option<String> = match session.get::<String>(SESSION_SITE_USER_PSEUDO) {
         Ok(v) => v,
         Err(e) => {
@@ -373,13 +382,29 @@ pub async fn create_deck_handler(
     let mut entries = main_entries;
     entries.extend(extra_entries);
     entries.extend(side_entries);
-    let cover_name = body.cover_card_name.as_deref().filter(|s| !s.trim().is_empty());
-    let cover_url = body.cover_image_url.as_deref().filter(|s| !s.trim().is_empty());
-    match db::create_deck(pool.get_ref(), name, site_user_id, &entries, cover_name, cover_url).await {
+    let cover_name = body
+        .cover_card_name
+        .as_deref()
+        .filter(|s| !s.trim().is_empty());
+    let cover_url = body
+        .cover_image_url
+        .as_deref()
+        .filter(|s| !s.trim().is_empty());
+    match db::create_deck(
+        pool.get_ref(),
+        name,
+        site_user_id,
+        &entries,
+        cover_name,
+        cover_url,
+    )
+    .await
+    {
         Ok(id) => HttpResponse::Created().json(serde_json::json!({ "id": id })),
         Err(e) => {
             tracing::error!("create_deck: {}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
 }
@@ -401,7 +426,8 @@ pub async fn list_decks_handler(
         Ok(list) => HttpResponse::Ok().json(list),
         Err(e) => {
             tracing::error!("list_decks_for_site_user: {}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
 }
@@ -433,18 +459,27 @@ pub async fn get_deck_handler(
             });
             if let Some(obj) = json.as_object_mut() {
                 if cover_card_name.is_some() {
-                    obj.insert("cover_card_name".to_string(), serde_json::json!(cover_card_name));
+                    obj.insert(
+                        "cover_card_name".to_string(),
+                        serde_json::json!(cover_card_name),
+                    );
                 }
                 if cover_image_url.is_some() {
-                    obj.insert("cover_image_url".to_string(), serde_json::json!(cover_image_url));
+                    obj.insert(
+                        "cover_image_url".to_string(),
+                        serde_json::json!(cover_image_url),
+                    );
                 }
             }
             HttpResponse::Ok().json(json)
         }
-        Ok(None) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" })),
+        Ok(None) => {
+            HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" }))
+        }
         Err(e) => {
             tracing::error!("get_deck: {}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
 }
@@ -498,14 +533,33 @@ pub async fn update_deck_handler(
     let mut entries = main_entries;
     entries.extend(extra_entries);
     entries.extend(side_entries);
-    let cover_name = body.cover_card_name.as_deref().filter(|s| !s.trim().is_empty());
-    let cover_url = body.cover_image_url.as_deref().filter(|s| !s.trim().is_empty());
-    match db::update_deck(pool.get_ref(), id, site_user_id, name, &entries, cover_name, cover_url).await {
+    let cover_name = body
+        .cover_card_name
+        .as_deref()
+        .filter(|s| !s.trim().is_empty());
+    let cover_url = body
+        .cover_image_url
+        .as_deref()
+        .filter(|s| !s.trim().is_empty());
+    match db::update_deck(
+        pool.get_ref(),
+        id,
+        site_user_id,
+        name,
+        &entries,
+        cover_name,
+        cover_url,
+    )
+    .await
+    {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "ok": true })),
-        Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" })),
+        Ok(false) => {
+            HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" }))
+        }
         Err(e) => {
             tracing::error!("update_deck: {}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
 }
@@ -527,10 +581,13 @@ pub async fn delete_deck_handler(
     let id = path.into_inner();
     match db::delete_deck(pool.get_ref(), id, site_user_id).await {
         Ok(true) => HttpResponse::Ok().json(serde_json::json!({ "ok": true })),
-        Ok(false) => HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" })),
+        Ok(false) => {
+            HttpResponse::NotFound().json(serde_json::json!({ "error": "Deck introuvable" }))
+        }
         Err(e) => {
             tracing::error!("delete_deck: {}", e);
-            HttpResponse::InternalServerError().json(serde_json::json!({ "error": "Erreur base de données" }))
+            HttpResponse::InternalServerError()
+                .json(serde_json::json!({ "error": "Erreur base de données" }))
         }
     }
 }
@@ -588,7 +645,10 @@ pub async fn register_submit(
     if !accept {
         let mut ctx = tera::Context::new();
         ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
-        ctx.insert("error", &Some("Vous devez accepter les conditions d'utilisation."));
+        ctx.insert(
+            "error",
+            &Some("Vous devez accepter les conditions d'utilisation."),
+        );
         ctx.insert("pseudo_retry", &form.pseudo);
         let body = tera.render("register.html", &ctx).map_err(TemplateError)?;
         return Ok(HttpResponse::Ok()
@@ -597,7 +657,10 @@ pub async fn register_submit(
     }
     match user_db::create_user(pool.get_ref(), &form.pseudo, &form.password).await {
         Ok(_) => {
-            let user = user_db::get_user_by_pseudo(pool.get_ref(), &form.pseudo).await.ok().flatten();
+            let user = user_db::get_user_by_pseudo(pool.get_ref(), &form.pseudo)
+                .await
+                .ok()
+                .flatten();
             if let Some(u) = user {
                 let _ = session.insert(SESSION_SITE_USER_PSEUDO, u.pseudo.clone());
             }
@@ -610,7 +673,9 @@ pub async fn register_submit(
                 CreateUserError::Pseudo(_) => e.to_string(),
                 CreateUserError::Password(_) => e.to_string(),
                 CreateUserError::PseudoTaken => "Ce pseudo est déjà utilisé.".to_string(),
-                CreateUserError::Hash | CreateUserError::Db(_) => "Erreur technique. Réessayez.".to_string(),
+                CreateUserError::Hash | CreateUserError::Db(_) => {
+                    "Erreur technique. Réessayez.".to_string()
+                }
             };
             let mut ctx = tera::Context::new();
             ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
@@ -632,25 +697,34 @@ pub async fn login_submit(
 ) -> HttpResponse {
     let pool = match pool {
         Some(p) => p,
-        None => return HttpResponse::SeeOther().append_header(("Location", "/")).finish(),
+        None => {
+            return HttpResponse::SeeOther()
+                .append_header(("Location", "/"))
+                .finish();
+        }
     };
     match user_db::authenticate(pool.get_ref(), form.pseudo.trim(), &form.password).await {
         Ok(Some(user)) => {
-            if session.insert(SESSION_SITE_USER_PSEUDO, user.pseudo).is_err() {
+            if session
+                .insert(SESSION_SITE_USER_PSEUDO, user.pseudo)
+                .is_err()
+            {
                 tracing::error!("session insert failed");
             }
-            HttpResponse::SeeOther().append_header(("Location", "/")).finish()
-        }
-        _ => {
             HttpResponse::SeeOther()
-                .append_header(("Location", "/?login_error=1"))
+                .append_header(("Location", "/"))
                 .finish()
         }
+        _ => HttpResponse::SeeOther()
+            .append_header(("Location", "/?login_error=1"))
+            .finish(),
     }
 }
 
 #[post("/logout")]
 pub async fn logout_submit(session: Session) -> HttpResponse {
     session.remove(SESSION_SITE_USER_PSEUDO);
-    HttpResponse::SeeOther().append_header(("Location", "/")).finish()
+    HttpResponse::SeeOther()
+        .append_header(("Location", "/"))
+        .finish()
 }

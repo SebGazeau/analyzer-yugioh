@@ -29,7 +29,34 @@ pub trait Storage: Send + Sync {
     async fn exists(&self, path: &Path) -> Result<bool, StorageError>;
 }
 
+/// Construction synchrone : **local uniquement**. Pour `STORAGE_BACKEND=gcs`, utiliser [`from_config_async`].
 pub fn from_config(config: &Config) -> Result<Arc<dyn Storage>, String> {
+    match &config.storage_backend {
+        StorageBackend::Local => Ok(Arc::new(LocalStorage::new(
+            config.local_storage_path.clone(),
+        ))),
+        StorageBackend::Gcs => {
+            config
+                .gcs_bucket_name
+                .as_deref()
+                .ok_or_else(|| "GCS_BUCKET_NAME requis quand STORAGE_BACKEND=gcs".to_string())?;
+            #[cfg(feature = "gcs")]
+            {
+                Err(
+                    "STORAGE_BACKEND=gcs : utiliser storage::from_config_async() au démarrage"
+                        .into(),
+                )
+            }
+            #[cfg(not(feature = "gcs"))]
+            {
+                Err("STORAGE_BACKEND=gcs : recompiler avec --features gcs".into())
+            }
+        }
+    }
+}
+
+/// Initialise le stockage (local ou GCS avec auth async).
+pub async fn from_config_async(config: &Config) -> Result<Arc<dyn Storage>, String> {
     match &config.storage_backend {
         StorageBackend::Local => Ok(Arc::new(LocalStorage::new(
             config.local_storage_path.clone(),
@@ -38,8 +65,17 @@ pub fn from_config(config: &Config) -> Result<Arc<dyn Storage>, String> {
             let bucket = config
                 .gcs_bucket_name
                 .as_deref()
-                .ok_or("GCS_BUCKET_NAME requis quand STORAGE_BACKEND=gcs")?;
-            Ok(Arc::new(GcsStorage::new(bucket)?))
+                .ok_or_else(|| "GCS_BUCKET_NAME requis quand STORAGE_BACKEND=gcs".to_string())?;
+            #[cfg(feature = "gcs")]
+            {
+                let s = GcsStorage::connect(bucket).await?;
+                Ok(Arc::new(s) as Arc<dyn Storage>)
+            }
+            #[cfg(not(feature = "gcs"))]
+            {
+                let _ = bucket;
+                Err("STORAGE_BACKEND=gcs : recompiler avec --features gcs".into())
+            }
         }
     }
 }
@@ -84,6 +120,24 @@ mod tests {
         let r = from_config(&config);
         if let Err(e) = r {
             assert!(e.contains("GCS_BUCKET_NAME"));
+        } else {
+            panic!("expected Err");
+        }
+    }
+
+    #[test]
+    fn from_config_gcs_with_bucket_requires_async() {
+        let config = Config {
+            storage_backend: crate::config::StorageBackend::Gcs,
+            local_storage_path: std::path::PathBuf::from("/"),
+            gcs_bucket_name: Some("my-bucket".into()),
+        };
+        let r = from_config(&config);
+        if let Err(e) = r {
+            #[cfg(feature = "gcs")]
+            assert!(e.contains("from_config_async"), "unexpected err: {e}");
+            #[cfg(not(feature = "gcs"))]
+            assert!(e.contains("gcs"), "unexpected err: {e}");
         } else {
             panic!("expected Err");
         }

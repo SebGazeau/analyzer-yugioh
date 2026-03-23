@@ -1,8 +1,8 @@
 //! Authentification admin : hachage mot de passe (Argon2) et vérification en base.
 
 use argon2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
 use rand_core::OsRng;
 use sqlx::FromRow;
@@ -21,7 +21,9 @@ pub struct AdminUser {
 pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
-    Ok(argon2.hash_password(password.as_bytes(), &salt)?.to_string())
+    Ok(argon2
+        .hash_password(password.as_bytes(), &salt)?
+        .to_string())
 }
 
 /// Vérifie un mot de passe contre un hash PHC.
@@ -69,13 +71,11 @@ pub async fn create_admin(
 ) -> Result<Uuid, db::DbError> {
     let email_trimmed = email.trim();
     let id = Uuid::new_v4();
-    sqlx::query(
-        "INSERT INTO admin_users (id, email, password_hash) VALUES ($1, $2, $3)",
-    )
-    .bind(id)
-    .bind(email_trimmed)
-    .bind(password_hash)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO admin_users (id, email, password_hash) VALUES ($1, $2, $3)")
+        .bind(id)
+        .bind(email_trimmed)
+        .bind(password_hash)
+        .execute(pool)
+        .await?;
     Ok(id)
 }

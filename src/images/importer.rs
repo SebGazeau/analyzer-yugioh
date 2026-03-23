@@ -13,7 +13,7 @@ use tokio::time::sleep;
 use tracing::{info, warn};
 
 use super::fetch::FetchError;
-use super::repository::{ImageRepository, RepositoryError};
+use super::repository::{ImageRecord, ImageRepository, RepositoryError};
 use super::{fetch_image_bytes, process_image};
 use crate::db;
 use crate::storage::{Storage, StorageError};
@@ -55,9 +55,88 @@ async fn fetch_with_retry(url: &str) -> Result<Vec<u8>, ImporterError> {
         .map_err(ImporterError::FetchImage)
 }
 
+/// Compteurs après [`ImageImporter::rehydrate_storage`].
+#[derive(Debug, Default, Clone, Copy)]
+pub struct RehydrateStats {
+    pub uploaded: u64,
+    pub skipped: u64,
+    pub failed: u64,
+}
+
 pub struct ImageImporter;
 
 impl ImageImporter {
+    /// Re-télécharge depuis `original_url` et réécrit **original / desktop / mobile** aux chemins
+    /// déjà présents en base (`path_*`). Ne modifie pas les lignes SQL : les clés GCS restent alignées.
+    ///
+    /// Si `force` est faux, les lignes dont `path_desktop` existe déjà dans le stockage sont ignorées.
+    /// Cas d’usage : DB remplie + fichiers sur disque local éphémère → activer GCS puis appeler cette
+    /// tâche pour remplir le bucket sans changer les UUID ni les chemins.
+    pub async fn rehydrate_storage(
+        pool: sqlx::PgPool,
+        storage: Arc<dyn Storage>,
+        force: bool,
+    ) -> Result<RehydrateStats, ImporterError> {
+        let rows = ImageRepository::list(&pool).await?;
+        let total = rows.len();
+        info!("rehydrate storage: {} ligne(s), force={}", total, force);
+        let sem = Arc::new(Semaphore::new(MAX_CONCURRENT));
+        let mut stats = RehydrateStats::default();
+        for (i, record) in rows.into_iter().enumerate() {
+            let path_desk = Path::new(&record.path_desktop);
+            if !force && storage.exists(path_desk).await? {
+                stats.skipped += 1;
+                continue;
+            }
+            let _permit = sem
+                .acquire()
+                .await
+                .map_err(|_| ImporterError::Parse("sem closed".into()))?;
+            sleep(Duration::from_millis(DELAY_MS)).await;
+            match Self::rehydrate_one(&storage, &record).await {
+                Ok(()) => {
+                    stats.uploaded += 1;
+                    if stats.uploaded % LOG_EVERY == 0 {
+                        info!(
+                            "rehydrate storage: {} uploadée(s) (itération i={})",
+                            stats.uploaded, i
+                        );
+                    }
+                }
+                Err(e) => {
+                    stats.failed += 1;
+                    warn!(
+                        "rehydrate storage: échec id={} url={}: {}",
+                        record.id, record.original_url, e
+                    );
+                }
+            }
+        }
+        info!(
+            "rehydrate storage: terminé — uploadées={}, ignorées={}, échecs={}",
+            stats.uploaded, stats.skipped, stats.failed
+        );
+        Ok(stats)
+    }
+
+    async fn rehydrate_one(
+        storage: &Arc<dyn Storage>,
+        record: &ImageRecord,
+    ) -> Result<(), ImporterError> {
+        let bytes = fetch_with_retry(record.original_url.as_str()).await?;
+        let v = process_image(&bytes)?;
+        storage
+            .store(Path::new(&record.path_original), &v.original)
+            .await?;
+        storage
+            .store(Path::new(&record.path_desktop), &v.desktop)
+            .await?;
+        storage
+            .store(Path::new(&record.path_mobile), &v.mobile)
+            .await?;
+        Ok(())
+    }
+
     pub async fn run(pool: sqlx::PgPool, storage: Arc<dyn Storage>) -> Result<u64, ImporterError> {
         let candidates = db::list_card_image_urls(&pool)
             .await

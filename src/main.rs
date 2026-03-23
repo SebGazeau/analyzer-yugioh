@@ -7,13 +7,14 @@
 //!   STORAGE_BACKEND    — "local" (défaut) ou "gcs"
 //!   LOCAL_STORAGE_PATH — ex. /storage (Docker)
 //!   ADMIN_SECRET       — protège /admin (header X-Admin-Key)
-//!   SESSION_SECRET     — clé 64 octets pour les cookies de session (/web)
-//!   JWT_SECRET         — secret pour signer les JWT et clé pour POST /api/auth/token
+//!   SESSION_SECRET     — clé pour les cookies de session (/web)
+//!   JWT_SECRET         — secret JWT + clé pour POST /api/auth/token
+
+use std::path::Path;
 
 use actix_web::cookie::Key;
 use actix_web::{HttpServer, web};
 use sqlx::postgres::PgPoolOptions;
-use std::path::Path;
 
 use analyzer_yugioh::{
     auth::jwt::JwtSecret,
@@ -36,7 +37,7 @@ fn resolve_cards_path() -> String {
 }
 
 /// Charge le cache depuis `path`. Si le fichier est absent ou invalide,
-/// démarre avec un cache vide (les cartes seront chargées via GET /admin/fetch_cards, protégé par X-Admin-Key).
+/// démarre avec un cache vide (cartes via GET /admin/fetch_cards si ADMIN_SECRET).
 fn load_cache_from_file(path: &str) -> CardCache {
     CardCache::load_from_path(Path::new(path)).unwrap_or_else(|e| {
         eprintln!(
@@ -58,7 +59,7 @@ async fn main() -> std::io::Result<()> {
     let database_url = std::env::var("DATABASE_URL").ok();
 
     let storage_data = match config::Config::from_env() {
-        Ok(cfg) => match storage::from_config(&cfg) {
+        Ok(cfg) => match storage::from_config_async(&cfg).await {
             Ok(s) => Some(web::Data::new(s)),
             Err(e) => {
                 tracing::warn!("storage: {} — routes images désactivées", e);

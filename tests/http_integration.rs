@@ -167,22 +167,22 @@ async fn test_web_dashboard_without_session_redirects_to_login() {
 // --- Admin (X-Admin-Key) ---
 
 #[actix_web::test]
-async fn test_admin_import_without_key_returns_404() {
+async fn test_admin_import_without_key_returns_403() {
     let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
     let req = test::TestRequest::post().uri("/admin/import").to_request();
     let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status().as_u16(), 404);
+    assert_eq!(resp.status().as_u16(), 403);
 }
 
 #[actix_web::test]
-async fn test_admin_import_with_wrong_key_returns_404() {
+async fn test_admin_import_with_wrong_key_returns_403() {
     let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
     let req = test::TestRequest::post()
         .uri("/admin/import")
         .insert_header(("x-admin-key", "wrong"))
         .to_request();
     let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status().as_u16(), 404);
+    assert_eq!(resp.status().as_u16(), 403);
 }
 
 #[actix_web::test]
@@ -202,6 +202,25 @@ async fn test_admin_import_with_correct_key_accepts_request() {
         let body = test::read_body(resp).await;
         let body_str = String::from_utf8_lossy(&body);
         assert!(body_str.contains("import started"));
+    }
+}
+
+#[actix_web::test]
+async fn test_admin_rehydrate_storage_with_correct_key_accepts_request() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri("/admin/rehydrate_storage")
+        .insert_header(("x-admin-key", "secret-key"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert!(
+        resp.status().as_u16() == 202 || resp.status().as_u16() == 503,
+        "guard OK => 202 ou 503 (backend non configuré)"
+    );
+    if resp.status().as_u16() == 202 {
+        let body = test::read_body(resp).await;
+        let body_str = String::from_utf8_lossy(&body);
+        assert!(body_str.contains("rehydrate_storage started"));
     }
 }
 
@@ -337,14 +356,20 @@ async fn test_get_register_returns_200_and_form() {
     let app = test::init_service(configure_app_for_tests()).await;
     let req = test::TestRequest::get().uri("/register").to_request();
     let resp = test::call_service(&app, req).await;
-    assert!(resp.status().is_success(), "GET /register doit répondre 200");
+    assert!(
+        resp.status().is_success(),
+        "GET /register doit répondre 200"
+    );
     let body = test::read_body(resp).await;
     let body_str = String::from_utf8_lossy(&body);
     assert!(
         body_str.contains("Créer mon compte") || body_str.contains("Créer un compte"),
         "La page doit contenir le libellé du bouton d'inscription"
     );
-    assert!(body_str.contains("pseudo") || body_str.contains("Pseudo"), "Formulaire avec champ pseudo");
+    assert!(
+        body_str.contains("pseudo") || body_str.contains("Pseudo"),
+        "Formulaire avec champ pseudo"
+    );
 }
 
 #[actix_web::test]
@@ -381,7 +406,11 @@ async fn test_post_login_without_pool_redirects_to_index() {
         .set_payload(payload)
         .to_request();
     let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status().as_u16(), 303, "Sans pool, POST /login redirige (See Other)");
+    assert_eq!(
+        resp.status().as_u16(),
+        303,
+        "Sans pool, POST /login redirige (See Other)"
+    );
     let loc = resp.headers().get("Location").and_then(|v| v.to_str().ok());
     assert_eq!(loc, Some("/"), "Redirection vers /");
 }
@@ -391,7 +420,11 @@ async fn test_post_logout_redirects_to_index() {
     let app = test::init_service(configure_app_for_tests()).await;
     let req = test::TestRequest::post().uri("/logout").to_request();
     let resp = test::call_service(&app, req).await;
-    assert_eq!(resp.status().as_u16(), 303, "POST /logout redirige (See Other)");
+    assert_eq!(
+        resp.status().as_u16(),
+        303,
+        "POST /logout redirige (See Other)"
+    );
     let loc = resp.headers().get("Location").and_then(|v| v.to_str().ok());
     assert_eq!(loc, Some("/"), "Redirection vers /");
 }
@@ -401,11 +434,17 @@ async fn test_index_with_login_error_param_returns_200() {
     let app = test::init_service(configure_app_for_tests()).await;
     let req = test::TestRequest::get().uri("/?login_error=1").to_request();
     let resp = test::call_service(&app, req).await;
-    assert!(resp.status().is_success(), "GET /?login_error=1 doit répondre 200");
+    assert!(
+        resp.status().is_success(),
+        "GET /?login_error=1 doit répondre 200"
+    );
     let body = test::read_body(resp).await;
     let body_str = String::from_utf8_lossy(&body);
     assert!(
-        body_str.contains("login_error") || body_str.contains("incorrect") || body_str.contains("erreur") || body_str.contains("Identifiant"),
+        body_str.contains("login_error")
+            || body_str.contains("incorrect")
+            || body_str.contains("erreur")
+            || body_str.contains("Identifiant"),
         "La page doit afficher ou utiliser le paramètre d'erreur de connexion"
     );
 }

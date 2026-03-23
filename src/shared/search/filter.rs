@@ -89,7 +89,10 @@ mod tests {
         // Recherche sur le nom EN (double recherche façon Cardmarket)
         let filtered_en = filter_cards(&cards, &SearchQuery::new("Blue-Eyes").unwrap());
         assert_eq!(filtered_en.len(), 1);
-        assert_eq!(filtered_en[0].card_name_en().unwrap().as_str(), "Heart of the Blue-Eyes");
+        assert_eq!(
+            filtered_en[0].card_name_en().unwrap().as_str(),
+            "Heart of the Blue-Eyes"
+        );
         // assert_eq!(filtered[0].card_type().as_str(), "Monster");
         // assert_eq!(filtered[0].attribute().as_str(), "Dark");
         // assert_eq!(filtered[0].race().as_str(), "Dragon");

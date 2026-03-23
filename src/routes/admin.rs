@@ -6,13 +6,15 @@ use std::sync::Arc;
 use actix_session::Session;
 use actix_session::SessionExt;
 use actix_web::dev::ServiceRequest;
-use actix_web::{get, HttpResponse, post, web};
+use actix_web::{HttpResponse, get, post, web};
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::auth::admin_db::{count_admins, create_admin, get_admin_by_email, hash_password, verify_password};
+use crate::auth::admin_db::{
+    count_admins, create_admin, get_admin_by_email, hash_password, verify_password,
+};
 use crate::auth::jwt::{create_token, decode_token};
-use crate::images::ImageImporter;
+use crate::images::{ImageImporter, RehydrateStats};
 use crate::storage::Storage;
 
 const ADMIN_JWT_ROLE: &str = "admin";
@@ -130,8 +132,14 @@ pub async fn admin_login_page(
   <form method="post" action="/admin/import" style="display:inline">
     <button type="submit">Importer les images</button>
   </form>
+  <form method="post" action="/admin/rehydrate_storage" style="display:inline">
+    <button type="submit">Remplir le stockage (URLs → fichiers)</button>
+  </form>
+  <form method="post" action="/admin/rehydrate_storage?force=true" style="display:inline">
+    <button type="submit">Idem (forcer réécriture)</button>
+  </form>
 </p>
-<p><small>Rafraîchir : appelle l'API, met à jour la DB et le cache. Importer : télécharge les images manquantes en arrière-plan.</small></p>
+<p><small>Rafraîchir : API → DB + cache. Importer : nouvelles URLs seulement. Remplir stockage : pour chaque ligne <code>images</code>, retélécharge et écrit aux chemins déjà en base (ex. après passage en GCS).</small></p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
 </body></html>"#;
         return HttpResponse::Ok()
@@ -223,6 +231,9 @@ pub async fn admin_login(
   <form method="post" action="/admin/import" style="display:inline">
     <button type="submit">Importer les images</button>
   </form>
+  <form method="post" action="/admin/rehydrate_storage" style="display:inline">
+    <button type="submit">Remplir le stockage</button>
+  </form>
   <a href="/admin/login">Espace admin</a>
 </p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
@@ -254,8 +265,7 @@ pub struct AdminSetupForm {
 #[get("/setup")]
 pub async fn admin_setup_page(pool: Option<web::Data<PgPool>>) -> HttpResponse {
     if pool.is_none() {
-        return HttpResponse::ServiceUnavailable()
-            .body("Base de données indisponible.");
+        return HttpResponse::ServiceUnavailable().body("Base de données indisponible.");
     }
     let body = r#"<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Admin – Premier compte</title></head><body>
@@ -297,12 +307,13 @@ pub async fn admin_setup(
     if n > 0 {
         return HttpResponse::BadRequest()
             .content_type("text/html; charset=utf-8")
-            .body("<p>Un compte admin existe déjà.</p><p><a href=\"/admin/login\">Connexion</a></p>");
+            .body(
+                "<p>Un compte admin existe déjà.</p><p><a href=\"/admin/login\">Connexion</a></p>",
+            );
     }
     let email = form.email.trim();
     if email.is_empty() {
-        return HttpResponse::BadRequest()
-            .body("Email requis.");
+        return HttpResponse::BadRequest().body("Email requis.");
     }
     let password_hash = match hash_password(form.password.as_str()) {
         Ok(h) => h,
@@ -326,6 +337,12 @@ pub async fn admin_logout(session: Session) -> HttpResponse {
         .finish()
 }
 
+#[derive(Deserialize)]
+pub struct RehydrateQuery {
+    #[serde(default)]
+    pub force: bool,
+}
+
 #[post("/import")]
 pub async fn admin_import(
     pool: Option<web::Data<PgPool>>,
@@ -345,4 +362,41 @@ pub async fn admin_import(
         }
     });
     HttpResponse::Accepted().body("import started in background")
+}
+
+/// Re-remplit le stockage (ex. GCS) à partir des `original_url` et des chemins déjà en base.
+/// Query : `?force=true` pour réécrire même si l’objet existe déjà.
+#[post("/rehydrate_storage")]
+pub async fn admin_rehydrate_storage(
+    query: web::Query<RehydrateQuery>,
+    pool: Option<web::Data<PgPool>>,
+    storage: Option<web::Data<Arc<dyn Storage>>>,
+) -> HttpResponse {
+    let pool = match pool {
+        Some(p) => p.as_ref().clone(),
+        None => return HttpResponse::ServiceUnavailable().body("pool required"),
+    };
+    let storage = match storage {
+        Some(s) => s.as_ref().clone(),
+        None => return HttpResponse::ServiceUnavailable().body("storage required"),
+    };
+    let force = query.force;
+    tokio::spawn(async move {
+        match ImageImporter::rehydrate_storage(pool, storage, force).await {
+            Ok(RehydrateStats {
+                uploaded,
+                skipped,
+                failed,
+            }) => {
+                tracing::info!(
+                    "admin rehydrate_storage: uploaded={} skipped={} failed={}",
+                    uploaded,
+                    skipped,
+                    failed
+                );
+            }
+            Err(e) => tracing::error!("admin rehydrate_storage: {}", e),
+        }
+    });
+    HttpResponse::Accepted().body("rehydrate_storage started in background")
 }

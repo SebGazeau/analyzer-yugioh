@@ -2,9 +2,9 @@
 
 pub mod admin_db;
 pub mod api;
-pub mod user_db;
 pub mod jwt;
 pub mod session;
+pub mod user_db;
 pub mod web;
 
 pub use api::{ApiDoc, api_scope};

@@ -156,10 +156,22 @@ mod tests {
 
     #[test]
     fn validate_password_missing_requirements() {
-        assert!(matches!(validate_password_strength("ABCD1234!"), Err(PasswordError::MissingLowercase)));
-        assert!(matches!(validate_password_strength("abcd1234!"), Err(PasswordError::MissingUppercase)));
-        assert!(matches!(validate_password_strength("Abcdefgh!"), Err(PasswordError::MissingDigit)));
-        assert!(matches!(validate_password_strength("Abcdefg1"), Err(PasswordError::MissingSpecial)));
+        assert!(matches!(
+            validate_password_strength("ABCD1234!"),
+            Err(PasswordError::MissingLowercase)
+        ));
+        assert!(matches!(
+            validate_password_strength("abcd1234!"),
+            Err(PasswordError::MissingUppercase)
+        ));
+        assert!(matches!(
+            validate_password_strength("Abcdefgh!"),
+            Err(PasswordError::MissingDigit)
+        ));
+        assert!(matches!(
+            validate_password_strength("Abcdefg1"),
+            Err(PasswordError::MissingSpecial)
+        ));
     }
 
     #[test]
@@ -173,13 +185,25 @@ mod tests {
         assert!(normalize_and_validate_pseudo("").is_err());
         assert!(normalize_and_validate_pseudo("a").is_err());
         assert!(normalize_and_validate_pseudo("abc").is_err());
-        assert!(matches!(normalize_and_validate_pseudo("  x  "), Err(PseudoError::TooShort(4))));
+        assert!(matches!(
+            normalize_and_validate_pseudo("  x  "),
+            Err(PseudoError::TooShort(4))
+        ));
     }
 
     #[test]
     fn normalize_pseudo_valid() {
-        assert_eq!(normalize_and_validate_pseudo("user").ok(), Some("user".to_string()));
-        assert_eq!(normalize_and_validate_pseudo("  alice  ").ok(), Some("alice".to_string()));
-        assert_eq!(normalize_and_validate_pseudo("Bob42").ok(), Some("Bob42".to_string()));
+        assert_eq!(
+            normalize_and_validate_pseudo("user").ok(),
+            Some("user".to_string())
+        );
+        assert_eq!(
+            normalize_and_validate_pseudo("  alice  ").ok(),
+            Some("alice".to_string())
+        );
+        assert_eq!(
+            normalize_and_validate_pseudo("Bob42").ok(),
+            Some("Bob42".to_string())
+        );
     }
 }

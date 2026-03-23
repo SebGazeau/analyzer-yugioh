@@ -14,10 +14,7 @@ pub struct Claims {
 }
 
 /// Décode et valide un JWT avec le secret donné.
-pub fn decode_token(
-    secret: &[u8],
-    token: &str,
-) -> Result<Claims, jsonwebtoken::errors::Error> {
+pub fn decode_token(secret: &[u8], token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     decode::<Claims>(
         token,
         &DecodingKey::from_secret(secret),

@@ -247,7 +247,16 @@ pub async fn get_deck_with_entries(
     pool: &PgPool,
     deck_id: i32,
     site_user_id: uuid::Uuid,
-) -> Result<Option<(String, bool, Option<String>, Option<String>, Vec<DeckEntryItem>)>, DbError> {
+) -> Result<
+    Option<(
+        String,
+        bool,
+        Option<String>,
+        Option<String>,
+        Vec<DeckEntryItem>,
+    )>,
+    DbError,
+> {
     #[derive(sqlx::FromRow)]
     struct DeckRow {
         name: String,
@@ -329,7 +338,8 @@ pub async fn create_deck(
     .await?;
     let deck_id = row.0;
     for e in entries {
-        let cat_json = serde_json::to_value(&e.categories).unwrap_or(serde_json::Value::Array(vec![]));
+        let cat_json =
+            serde_json::to_value(&e.categories).unwrap_or(serde_json::Value::Array(vec![]));
         sqlx::query(
             "INSERT INTO deck_entries (deck_id, card_id, zone, quantity, engine, categories) VALUES ($1, $2, $3::deck_zone, $4, $5, $6)",
         )
@@ -373,7 +383,8 @@ pub async fn update_deck(
         .execute(pool)
         .await?;
     for e in entries {
-        let cat_json = serde_json::to_value(&e.categories).unwrap_or(serde_json::Value::Array(vec![]));
+        let cat_json =
+            serde_json::to_value(&e.categories).unwrap_or(serde_json::Value::Array(vec![]));
         sqlx::query(
             "INSERT INTO deck_entries (deck_id, card_id, zone, quantity, engine, categories) VALUES ($1, $2, $3::deck_zone, $4, $5, $6)",
         )
