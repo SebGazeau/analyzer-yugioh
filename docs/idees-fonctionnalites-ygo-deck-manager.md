@@ -95,6 +95,25 @@ En plus du filtre actuel (Tous / Monster / Spell / Trap) et du champ texte :
 
 ---
 
+## 10. Cartes associées
+
+- Sur la **fiche carte** ou un panneau latéral : afficher les **cartes associées** (liens officiels / données API : même archétype, cartes citées dans le texte, matériaux de fusion / synchro / xyz / link, support, etc. — selon ce que l’API ou la base locale expose).
+- Permettre d’**ajouter au deck** ou d’**ouvrir la recherche** sur une carte associée en un clic.
+
+**Intérêt :** compléter un deck sans quitter le builder ; proche de ce que montrent certains outils concurrents sur la fiche carte.
+
+**Contrainte :** dépend du modèle de données (ex. champs YGOProDeck `misc_info`, relations archétype, parsing du texte d’effet si besoin).
+
+---
+
+## 11. Accordéons sur la composition
+
+- Dans le panneau **composition / stats** : replier ou déplier des blocs (type, attribut, catégories, etc.) pour **alléger l’écran** tout en gardant le détail accessible.
+
+**Intérêt :** lisibilité sur petits écrans et réduction du scroll.
+
+---
+
 ## Synthèse priorisée
 
 | Priorité | Fonctionnalité | Intérêt |
@@ -108,10 +127,9 @@ En plus du filtre actuel (Tous / Monster / Spell / Trap) et du champ texte :
 | **Basse** | Filtres de recherche avancés | Très utile mais dépend de l’API. |
 | **Basse** | Drag-and-drop deck | Confort UX. |
 | **Basse** | Extensions / sets | Intéressant si dimension “collection”. |
+| **Moyenne** | Cartes associées (fiche / panneau + ajout rapide) | Découverte de support et cohérence du build. |
+| **Basse** | Accordéons sur la composition | UX / densité d’information. |
 
 ---
 
 *Document généré à partir de l’analyse de 4 captures du YGO DECK MANAGER. À réviser selon l’évolution du produit et du backend.*
-
-
-faire des accordéon sur les elemennt de la composition pour complété les information du deck

@@ -7,6 +7,8 @@ use serde::Serialize;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SearchCardDto {
     pub id: u64,
+    /// Passcode pour la limite ×3 : identique pour les alias « always treated as » (ex. Fallen White → Albaz).
+    pub deck_copy_id: u64,
     pub name: String,
     pub name_en: Option<String>,
     #[serde(rename = "type")]
@@ -23,4 +25,7 @@ pub struct SearchCardDto {
     pub image_url: Option<String>,
     /// Liste TCG : Forbidden, Limited, Semi-Limited. Détermine le nombre max d'exemplaires en deck.
     pub ban_tcg: Option<String>,
+    /// Texte d'effet / description (pour cartes associées, recherche texte).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub desc: Option<String>,
 }

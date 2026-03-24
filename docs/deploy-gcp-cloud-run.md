@@ -110,6 +110,7 @@ Les clés d’objets GCS sont les **mêmes** chemins logiques que sur disque (`i
 - **`DATABASE_URL`** pour **sqlx** : utiliser un hôte non vide, ex.  
   `postgresql://USER:PASS@localhost/DB?host=/cloudsql/PROJET:REGION:INSTANCE`  
   (pas `...@/db?host=...` → erreur **empty host**).
+- **Migrations** : au boot, ou job / étape CI avec **`./analyzer-yugioh migrate`** (voir **`docs/db-migrations.md`**).
 
 ---
 

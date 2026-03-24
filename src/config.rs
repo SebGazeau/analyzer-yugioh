@@ -50,7 +50,12 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Mutex;
+
     use super::*;
+
+    /// Les tests qui lisent `std::env` ne sont pas sûrs en parallèle sans verrou.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn storage_backend_local() {
@@ -84,6 +89,7 @@ mod tests {
 
     #[test]
     fn config_from_env_defaults() {
+        let _g = ENV_LOCK.lock().unwrap();
         unsafe {
             std::env::remove_var("STORAGE_BACKEND");
             std::env::remove_var("LOCAL_STORAGE_PATH");
@@ -97,6 +103,7 @@ mod tests {
 
     #[test]
     fn config_from_env_storage_local() {
+        let _g = ENV_LOCK.lock().unwrap();
         unsafe {
             std::env::set_var("STORAGE_BACKEND", "local");
             std::env::set_var("LOCAL_STORAGE_PATH", "/tmp/storage");

@@ -1,4 +1,5 @@
 use crate::shared::enums::{attribute::Attribute, card_type::CardType};
+use crate::shared::search::card_resolve::canonical_deck_passcode;
 use crate::shared::structs::{card_name::CardName, search_card_dto::SearchCardDto};
 
 use serde::{Deserialize, Serialize};
@@ -19,6 +20,7 @@ pub struct CardSearchResult {
     ygoprodeck_url: Option<String>,
     image_url: Option<String>,
     ban_tcg: Option<String>,
+    card_desc: Option<String>,
 }
 
 impl CardSearchResult {
@@ -37,6 +39,7 @@ impl CardSearchResult {
         ygoprodeck_url: Option<String>,
         image_url: Option<String>,
         ban_tcg: Option<String>,
+        card_desc: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -53,6 +56,7 @@ impl CardSearchResult {
             ygoprodeck_url,
             image_url,
             ban_tcg,
+            card_desc,
         }
     }
 
@@ -77,10 +81,19 @@ impl CardSearchResult {
         &self.card_name().as_str()
     }
 
+    pub fn archetype(&self) -> Option<&str> {
+        self.archetype.as_deref()
+    }
+
+    pub fn card_desc(&self) -> Option<&str> {
+        self.card_desc.as_deref()
+    }
+
     /// Convertit en DTO pour la réponse API (format compatible front legacy).
-    pub fn to_search_dto(&self) -> SearchCardDto {
+    pub fn to_search_dto(&self, all_cards: &[CardSearchResult]) -> SearchCardDto {
         SearchCardDto {
             id: self.id,
+            deck_copy_id: canonical_deck_passcode(self, all_cards),
             name: self.card_name.as_str().to_string(),
             name_en: self.card_name_en.as_ref().map(|n| n.as_str().to_string()),
             card_type: format!("{:?}", self.card_type),
@@ -94,6 +107,7 @@ impl CardSearchResult {
             ygoprodeck_url: self.ygoprodeck_url.clone(),
             image_url: self.image_url.clone(),
             ban_tcg: self.ban_tcg.clone(),
+            desc: self.card_desc.clone().filter(|s| !s.trim().is_empty()),
         }
     }
 }
@@ -122,6 +136,8 @@ pub struct RawCardSearchResult {
     #[serde(default)]
     #[serde(rename = "ban_tcg")]
     pub ban_tcg: Option<String>,
+    #[serde(default)]
+    pub card_desc: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -183,6 +199,7 @@ impl TryFrom<RawCardSearchResult> for CardSearchResult {
             ygoprodeck_url: raw.ygoprodeck_url,
             image_url: raw.image_url,
             ban_tcg: raw.ban_tcg,
+            card_desc: raw.card_desc.filter(|s| !s.trim().is_empty()),
         })
     }
 }
@@ -218,6 +235,7 @@ mod tests {
             def.clone(),
             frame_type.clone(),
             ygoprodeck_url.clone(),
+            None,
             None,
             None,
         );
@@ -268,9 +286,12 @@ mod tests {
             ygoprodeck_url.clone(),
             None,
             None,
+            None,
         );
-        let search_dto = card_search_result.to_search_dto();
+        let slice = std::slice::from_ref(&card_search_result);
+        let search_dto = card_search_result.to_search_dto(slice);
         assert_eq!(search_dto.id, 1);
+        assert_eq!(search_dto.deck_copy_id, 1);
         assert_eq!(search_dto.name, "Floraison de feu");
         assert_eq!(search_dto.name_en, Some("Ash Blossom".to_string()));
         assert_eq!(search_dto.card_type, "Spell");

@@ -1,41 +1,33 @@
-//! Scope /web : session (login, logout, dashboard).
+//! Scope /web : compat redirections, dashboard (session site), déconnexion.
 
 use actix_session::Session;
 use actix_web::{HttpResponse, get, post, web};
-use serde::Deserialize;
 
-use crate::auth::session::require_session;
+use crate::auth::csrf;
+use crate::auth::session::{SITE_USER_SESSION_KEY, require_session};
 
-#[derive(Deserialize)]
-pub struct LoginForm {
-    pub user_id: String,
-}
-
+/// Ancienne URL de « connexion » factice (sec-11) : redirige vers la page d’accueil (vraie auth).
 #[get("/login")]
 pub async fn login_page() -> HttpResponse {
-    HttpResponse::Ok().body(
-        r#"<form method="post" action="/web/login">
-        <label>User ID <input name="user_id" type="text"/></label>
-        <button type="submit">Connexion</button>
-        </form>"#,
-    )
-}
-
-#[post("/login")]
-pub async fn login(session: Session, form: web::Form<LoginForm>) -> HttpResponse {
-    if let Err(e) = session.insert("user_id", form.user_id.clone()) {
-        return HttpResponse::InternalServerError().body(format!("session error: {}", e));
-    }
     HttpResponse::SeeOther()
-        .append_header(("Location", "/web/dashboard"))
+        .append_header(("Location", "/"))
         .finish()
 }
 
+#[derive(serde::Deserialize)]
+pub struct LogoutForm {
+    pub csrf_token: Option<String>,
+}
+
 #[post("/logout")]
-pub async fn logout(session: Session) -> HttpResponse {
-    session.purge();
+pub async fn logout(session: Session, form: web::Form<LogoutForm>) -> HttpResponse {
+    if !csrf::verify_csrf_token(&session, form.csrf_token.as_deref()) {
+        return csrf::csrf_rejected();
+    }
+    let _ = session.remove(SITE_USER_SESSION_KEY);
+    csrf::invalidate_csrf_token(&session);
     HttpResponse::SeeOther()
-        .append_header(("Location", "/web/login"))
+        .append_header(("Location", "/"))
         .finish()
 }
 
@@ -45,28 +37,29 @@ pub async fn dashboard(session: Session) -> HttpResponse {
         Ok(id) => id,
         Err(_) => {
             return HttpResponse::SeeOther()
-                .append_header(("Location", "/web/login"))
+                .append_header(("Location", "/"))
                 .finish();
+        }
+    };
+    let csrf_token = match csrf::sync_csrf_token(&session) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!("csrf sync (web dashboard): {}", e);
+            return HttpResponse::InternalServerError().body("session");
         }
     };
     let escaped = user_id
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('&', "&amp;");
+    let csrf_esc = csrf_token
+        .replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;");
     HttpResponse::Ok().body(format!(
         r#"<p>Connecté en tant que <strong>{}</strong>.</p>
-        <form method="post" action="/web/logout"><button type="submit">Déconnexion</button></form>"#,
-        escaped
+        <form method="post" action="/web/logout"><input type="hidden" name="csrf_token" value="{}"><button type="submit">Déconnexion</button></form>"#,
+        escaped, csrf_esc
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn login_form_deserialize() {
-        let form: LoginForm = serde_json::from_str(r#"{"user_id":"alice"}"#).unwrap();
-        assert_eq!(form.user_id, "alice");
-    }
 }

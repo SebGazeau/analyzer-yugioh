@@ -2,6 +2,7 @@
 
 pub mod admin_db;
 pub mod api;
+pub mod csrf;
 pub mod jwt;
 pub mod session;
 pub mod user_db;

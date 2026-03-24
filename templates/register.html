@@ -14,6 +14,7 @@
             <p class="auth-form__error" role="alert">{{ error }}</p>
             {% endif %}
             <form method="post" action="/register" class="auth-form" data-auth-form="register">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="auth-form__group">
                     <label for="pseudo" class="auth-form__label">Pseudo</label>
                     <input type="text" id="pseudo" name="pseudo" value="{{ pseudo_retry }}" required minlength="4" autocomplete="username" placeholder="Votre pseudo (min. 4 caractères)" class="auth-form__input">

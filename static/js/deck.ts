@@ -29,6 +29,41 @@ export interface DeckRow {
     frame_type?: string;
     /** Nombre max d'exemplaires autorisés par la banlist TCG (0=Forbidden, 1=Limited, 2=Semi-Limited, 3=illimité). */
     maxCopies?: number;
+    /** Passcode API (id carte) : impression réelle pour la sauvegarde en base. */
+    cardId?: number;
+    /** Clé fusion grille / limite ×3 (alias « always treated as », ex. White Dragon → Albaz). */
+    deckCopyId?: number;
+}
+
+/** Clé métier pour fusionner deux impressions (même limite ×3). */
+function deckMergeKeyFromRow(r: DeckRow): number | undefined {
+    if (r.deckCopyId != null && r.deckCopyId > 0) return r.deckCopyId;
+    if (r.cardId != null && r.cardId > 0) return r.cardId;
+    return undefined;
+}
+
+function deckMergeKeyFromCard(card: Card): number | undefined {
+    const dc = (card as { deck_copy_id?: unknown }).deck_copy_id;
+    if (typeof dc === 'number' && dc > 0) return dc;
+    const id = (card as { id?: unknown }).id;
+    if (typeof id === 'number' && id > 0) return id;
+    return undefined;
+}
+
+/** Fusionne une ligne dans la zone si même `deckCopyId` / même nom (chargement serveur, import). */
+function mergeRowIntoSection(row: DeckRow, section: DeckSection): void {
+    const arr = getState(section);
+    const mk = deckMergeKeyFromRow(row);
+    const idx = arr.findIndex((r) => {
+        const rk = deckMergeKeyFromRow(r);
+        if (mk != null && rk != null) return rk === mk;
+        return r.name === row.name;
+    });
+    if (idx >= 0) {
+        arr[idx].quantity += row.quantity;
+        return;
+    }
+    arr.push(row);
 }
 
 /** Forbidden=0, Limited=1, Semi-Limited=2, sinon 3. */
@@ -476,8 +511,27 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     const section: DeckSection =
         sectionOverride ?? (isExtraDeckCard(card) ? 'extra' : 'main');
     const arr = getState(section);
+    const displayName = card.name_en ?? card.name;
+    const cardId = typeof card.id === 'number' && card.id > 0 ? card.id : undefined;
+    const mergeKey = deckMergeKeyFromCard(card);
+    const existingIdx = arr.findIndex((r) => {
+        const rk = deckMergeKeyFromRow(r);
+        if (mergeKey != null && rk != null) return rk === mergeKey;
+        return r.name === displayName;
+    });
+    if (existingIdx >= 0) {
+        const row = arr[existingIdx];
+        const max = row.maxCopies ?? 3;
+        if (row.quantity >= max) return false;
+        row.quantity += 1;
+        renderDeckSection(section);
+        updateDeckCount();
+        updateProbabilities();
+        computeGlobalStats();
+        return true;
+    }
     const row: DeckRow = {
-        name: card.name_en ?? card.name,
+        name: displayName,
         type: card.type ?? '',
         quantity: 1,
         engine: '',
@@ -488,6 +542,8 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
         race: typeof card.race === 'string' ? card.race : undefined,
         frame_type: typeof card.frame_type === 'string' ? card.frame_type : undefined,
         maxCopies: banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined),
+        cardId,
+        deckCopyId: mergeKey,
     };
     arr.push(row);
     renderDeckSection(section);
@@ -501,10 +557,17 @@ export function cleanCardNameFromCell(raw: string): string {
     return raw.replace(/^—\s*/, '').trim();
 }
 
-type DeckEntryPayload = { name: string; quantity: number; engine?: string; categories?: string[] };
+type DeckEntryPayload = { name: string; quantity: number; id?: number; engine?: string; categories?: string[] };
 
-export function toDeckEntryPayload(e: { name: string; quantity: number; engine: string; categories: string[] }): DeckEntryPayload {
+export function toDeckEntryPayload(e: {
+    name: string;
+    quantity: number;
+    engine: string;
+    categories: string[];
+    cardId?: number;
+}): DeckEntryPayload {
     const out: DeckEntryPayload = { name: e.name, quantity: e.quantity };
+    if (e.cardId != null && e.cardId > 0) out.id = e.cardId;
     if (e.engine && e.engine.trim() !== '') out.engine = e.engine.trim();
     if (e.categories && e.categories.length > 0) out.categories = e.categories;
     return out;
@@ -526,11 +589,21 @@ function deckApiErrorMessage(res: Response, data: Record<string, unknown>): stri
     );
 }
 
+function rowToPayload(r: DeckRow): DeckEntryPayload {
+    return toDeckEntryPayload({
+        name: r.name,
+        quantity: r.quantity,
+        engine: r.engine,
+        categories: r.categories,
+        cardId: r.cardId,
+    });
+}
+
 function getDeckPayload(): { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] } {
     return {
-        main: mainDeck.map(toDeckEntryPayload),
-        extra: extraDeck.map(toDeckEntryPayload),
-        side: sideDeck.map(toDeckEntryPayload),
+        main: mainDeck.map(rowToPayload),
+        extra: extraDeck.map(rowToPayload),
+        side: sideDeck.map(rowToPayload),
     };
 }
 
@@ -624,24 +697,49 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
     if (!res.ok) return false;
     const data = await res.json();
     cleanCardTable();
-    const addEntries = async (entries: { name: string; quantity?: number; engine?: string; categories?: string[] }[], section: DeckSection) => {
+    const addEntries = async (
+        entries: {
+            name: string;
+            quantity?: number;
+            id?: number;
+            deck_copy_id?: number;
+            engine?: string;
+            categories?: string[];
+        }[],
+        section: DeckSection,
+    ) => {
         for (const entry of entries) {
             const infoCard = await fetchCardByName(entry.name);
             if (!infoCard) continue;
-            const arr = getState(section);
-            arr.push({
-                name: infoCard.name_en ?? infoCard.name,
-                type: infoCard.type ?? '',
-                quantity: entry.quantity ?? 1,
-                engine: entry.engine ?? '',
-                categories: entry.categories ?? [],
-                imageUrl: infoCard.image_url ?? undefined,
-                attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
-                level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
-                race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
-                frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
-                maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
-            });
+            const cid =
+                typeof entry.id === 'number' && entry.id > 0
+                    ? entry.id
+                    : typeof infoCard.id === 'number'
+                      ? infoCard.id
+                      : undefined;
+            const fromServer = entry.deck_copy_id;
+            const deckCopyId =
+                typeof fromServer === 'number' && fromServer > 0
+                    ? fromServer
+                    : deckMergeKeyFromCard(infoCard);
+            mergeRowIntoSection(
+                {
+                    name: infoCard.name_en ?? infoCard.name,
+                    type: infoCard.type ?? '',
+                    quantity: entry.quantity ?? 1,
+                    engine: entry.engine ?? '',
+                    categories: entry.categories ?? [],
+                    imageUrl: infoCard.image_url ?? undefined,
+                    attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
+                    level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
+                    race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
+                    frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
+                    maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
+                    cardId: cid,
+                    deckCopyId,
+                },
+                section,
+            );
         }
     };
     await addEntries(data.main || [], 'main');
@@ -678,10 +776,21 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
 }
 
 export function exportDeckToFile(): void {
+    const rowToJson = (r: DeckRow) => {
+        const o: Record<string, unknown> = {
+            name: r.name,
+            quantity: r.quantity,
+            engine: r.engine || undefined,
+            categories: r.categories.length ? r.categories : undefined,
+        };
+        if (r.cardId != null && r.cardId > 0) o.id = r.cardId;
+        if (r.deckCopyId != null && r.deckCopyId > 0) o.deck_copy_id = r.deckCopyId;
+        return o;
+    };
     const deck = {
-        main: mainDeck.map(r => ({ name: r.name, quantity: r.quantity, engine: r.engine || undefined, categories: r.categories.length ? r.categories : undefined })),
-        extra: extraDeck.map(r => ({ name: r.name, quantity: r.quantity, engine: r.engine || undefined, categories: r.categories.length ? r.categories : undefined })),
-        side: sideDeck.map(r => ({ name: r.name, quantity: r.quantity, engine: r.engine || undefined, categories: r.categories.length ? r.categories : undefined })),
+        main: mainDeck.map(rowToJson),
+        extra: extraDeck.map(rowToJson),
+        side: sideDeck.map(rowToJson),
     };
     const json = JSON.stringify(deck, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -711,20 +820,34 @@ export function importDeckFromFile(event: Event): void {
                         failedCards.push(card.name);
                         continue;
                     }
-                    const arr = getState(section);
-                    arr.push({
-                        name: infoCard.name_en ?? infoCard.name,
-                        type: infoCard.type ?? '',
-                        quantity: card.quantity ?? 1,
-                        engine: card.engine ?? '',
-                        categories: card.categories ?? [],
-                        imageUrl: infoCard.image_url ?? undefined,
-                        attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
-                        level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
-                        race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
-                        frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
-                        maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
-                    });
+                    const cid =
+                        typeof card.id === 'number' && card.id > 0
+                            ? card.id
+                            : typeof infoCard.id === 'number'
+                              ? infoCard.id
+                              : undefined;
+                    const dcid =
+                        typeof card.deck_copy_id === 'number' && card.deck_copy_id > 0
+                            ? card.deck_copy_id
+                            : deckMergeKeyFromCard(infoCard);
+                    mergeRowIntoSection(
+                        {
+                            name: infoCard.name_en ?? infoCard.name,
+                            type: infoCard.type ?? '',
+                            quantity: card.quantity ?? 1,
+                            engine: card.engine ?? '',
+                            categories: card.categories ?? [],
+                            imageUrl: infoCard.image_url ?? undefined,
+                            attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
+                            level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
+                            race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
+                            frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
+                            maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
+                            cardId: cid,
+                            deckCopyId: dcid,
+                        },
+                        section,
+                    );
                 }
             };
 

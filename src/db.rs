@@ -28,6 +28,7 @@ pub struct CardRow {
     pub image_url_small: Option<String>,
     #[sqlx(rename = "ban_tcg")]
     pub ban_tcg: Option<String>,
+    pub card_desc: Option<String>,
 }
 
 impl From<CardRow> for RawCardSearchResult {
@@ -48,6 +49,7 @@ impl From<CardRow> for RawCardSearchResult {
             image_url: row.image_url,
             image_url_small: row.image_url_small,
             ban_tcg: row.ban_tcg,
+            card_desc: row.card_desc.filter(|s| !s.trim().is_empty()),
         }
     }
 }
@@ -76,7 +78,7 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), DbError> {
 pub async fn load_all_cards(pool: &PgPool) -> Result<Vec<CardSearchResult>, DbError> {
     // Cast ENUMs to text pour que sqlx décode en String (card_type, card_attribute, card_frame en base).
     let rows: Vec<CardRow> = sqlx::query_as::<_, CardRow>(
-        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg FROM cards ORDER BY id",
+        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg, NULLIF(TRIM(card_desc), '') AS card_desc FROM cards ORDER BY id",
     )
     .fetch_all(pool)
     .await?;
@@ -160,6 +162,468 @@ async fn upsert_cards_batch(pool: &PgPool, rows: &[CardUpsertRow]) -> Result<u64
     }
     tx.commit().await?;
     Ok(affected)
+}
+
+const CARD_SET_UPSERT_BATCH: usize = 400;
+
+/// Upsert des lignes `card_sets` (YGOProDeck `card_sets[]`). Pas de prix (`set_price` NULL).
+/// Au conflit : met à jour `set_name` et `rarity` ; `set_price` existant inchangé.
+pub async fn upsert_card_sets(
+    pool: &PgPool,
+    rows: &[crate::ygo_api::CardSetUpsertRow],
+) -> Result<u64, DbError> {
+    if rows.is_empty() {
+        return Ok(0);
+    }
+    let sql = r#"
+        INSERT INTO card_sets (card_id, set_code, rarity_code, set_name, rarity, set_price)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (card_id, set_code, rarity_code) DO UPDATE SET
+            set_name = EXCLUDED.set_name,
+            rarity = EXCLUDED.rarity
+    "#;
+    let mut total = 0u64;
+    for chunk in rows.chunks(CARD_SET_UPSERT_BATCH) {
+        let mut tx = pool.begin().await?;
+        for r in chunk {
+            let res = sqlx::query(sql)
+                .bind(r.card_id)
+                .bind(&r.set_code)
+                .bind(&r.rarity_code)
+                .bind(&r.set_name)
+                .bind(&r.rarity)
+                .bind(&r.set_price)
+                .execute(&mut *tx)
+                .await?;
+            total += res.rows_affected();
+        }
+        tx.commit().await?;
+    }
+    Ok(total)
+}
+
+// ---------------------------------------------------------------------------
+// Enrichissement externe (YGOrganization / YGResources)
+// ---------------------------------------------------------------------------
+
+/// `source` pour [`upsert_card_enrichment_layer`] — aligné sur `docs/enrichment-pipeline.md`.
+pub const YGORG_ENRICHMENT_SOURCE: &str = "ygorganization";
+/// Couche JSON brut tel que renvoyé par `GET /data/card/{id}`.
+pub const YGORG_LAYER_CARD_RAW: &str = "card_raw";
+
+/// Dernière révision `X-Cache-Revision` connue pour cette source (table `external_api_cache_state`).
+pub async fn get_external_cache_revision(
+    pool: &PgPool,
+    source: &str,
+) -> Result<Option<i64>, DbError> {
+    let row: Option<(i64,)> =
+        sqlx::query_as("SELECT cache_revision FROM external_api_cache_state WHERE source = $1")
+            .bind(source)
+            .fetch_optional(pool)
+            .await?;
+    Ok(row.map(|(r,)| r))
+}
+
+pub async fn set_external_cache_revision(
+    pool: &PgPool,
+    source: &str,
+    revision: i64,
+) -> Result<(), DbError> {
+    sqlx::query(
+        r#"
+        INSERT INTO external_api_cache_state (source, cache_revision, updated_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (source) DO UPDATE SET
+            cache_revision = EXCLUDED.cache_revision,
+            updated_at = NOW()
+        "#,
+    )
+    .bind(source)
+    .bind(revision)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Upsert une couche d’enrichissement (`card_enrichment_layers`).
+pub async fn upsert_card_enrichment_layer(
+    pool: &PgPool,
+    card_id: i64,
+    source: &str,
+    layer: &str,
+    payload: &serde_json::Value,
+) -> Result<(), DbError> {
+    sqlx::query(
+        r#"
+        INSERT INTO card_enrichment_layers (card_id, source, layer, payload, fetched_at)
+        VALUES ($1, $2, $3, $4, NOW())
+        ON CONFLICT (card_id, source, layer) DO UPDATE SET
+            payload = EXCLUDED.payload,
+            fetched_at = EXCLUDED.fetched_at
+        "#,
+    )
+    .bind(card_id)
+    .bind(source)
+    .bind(layer)
+    .bind(payload)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Filtre `ids` pour ne garder que les IDs présents dans `cards` (évite violation FK).
+pub async fn filter_existing_card_ids(pool: &PgPool, ids: &[i64]) -> Result<Vec<i64>, DbError> {
+    if ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut present = std::collections::HashSet::new();
+    for chunk in ids.chunks(450) {
+        let mut qb = sqlx::QueryBuilder::new("SELECT id FROM cards WHERE id IN (");
+        {
+            let mut sep = qb.separated(", ");
+            for id in chunk {
+                sep.push_bind(*id);
+            }
+        }
+        qb.push(")");
+        let rows: Vec<(i64,)> = qb.build_query_as().fetch_all(pool).await?;
+        for (id,) in rows {
+            present.insert(id);
+        }
+    }
+    Ok(ids
+        .iter()
+        .copied()
+        .filter(|id| present.contains(id))
+        .collect())
+}
+
+/// Cartes sans ligne d’enrichissement YGOrg pour `source` / `layer`.
+pub async fn list_card_ids_missing_ygorg_layer(
+    pool: &PgPool,
+    source: &str,
+    layer: &str,
+    limit: i64,
+) -> Result<Vec<i64>, DbError> {
+    let rows = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT c.id FROM cards c
+        WHERE NOT EXISTS (
+            SELECT 1 FROM card_enrichment_layers e
+            WHERE e.card_id = c.id AND e.source = $1 AND e.layer = $2
+        )
+        ORDER BY c.id
+        LIMIT $3
+        "#,
+    )
+    .bind(source)
+    .bind(layer)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Cartes sans `card_raw` YGOrg et sans ligne `card_ygorg_unresolved` (backfill par nom).
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct YgOrgBackfillCardRow {
+    pub id: i64,
+    pub name: String,
+    pub name_en: Option<String>,
+}
+
+pub async fn list_cards_for_ygorg_backfill(
+    pool: &PgPool,
+    source: &str,
+    layer: &str,
+    limit: i64,
+) -> Result<Vec<YgOrgBackfillCardRow>, DbError> {
+    let rows = sqlx::query_as::<_, YgOrgBackfillCardRow>(
+        r#"
+        SELECT c.id, c.name, c.name_en FROM cards c
+        WHERE NOT EXISTS (
+            SELECT 1 FROM card_enrichment_layers e
+            WHERE e.card_id = c.id AND e.source = $1 AND e.layer = $2
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM card_ygorg_unresolved u WHERE u.card_id = c.id
+        )
+        ORDER BY c.id
+        LIMIT $3
+        "#,
+    )
+    .bind(source)
+    .bind(layer)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Vide l’index nom EN (avant resync).
+pub async fn truncate_ygorg_name_index(pool: &PgPool) -> Result<(), DbError> {
+    sqlx::query("TRUNCATE ygorg_en_name_index")
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+/// Supprime les marqueurs « non résolu » (ex. après un nouveau `sync_index`).
+pub async fn clear_ygorg_unresolved(pool: &PgPool) -> Result<u64, DbError> {
+    let res = sqlx::query("DELETE FROM card_ygorg_unresolved")
+        .execute(pool)
+        .await?;
+    Ok(res.rows_affected())
+}
+
+const YGORG_NAME_INSERT_BATCH: usize = 400;
+
+/// Insère des paires (nom exact, id YGOrg) — appeler après `truncate_ygorg_name_index`.
+pub async fn insert_ygorg_name_index_rows(
+    pool: &PgPool,
+    rows: &[(String, i64)],
+) -> Result<u64, DbError> {
+    if rows.is_empty() {
+        return Ok(0);
+    }
+    let sql = r#"
+        INSERT INTO ygorg_en_name_index (name_exact, ygorg_internal_id)
+        VALUES ($1, $2)
+        ON CONFLICT (name_exact, ygorg_internal_id) DO NOTHING
+    "#;
+    let mut n = 0u64;
+    for chunk in rows.chunks(YGORG_NAME_INSERT_BATCH) {
+        let mut tx = pool.begin().await?;
+        for (name, yid) in chunk {
+            let r = sqlx::query(sql)
+                .bind(name)
+                .bind(yid)
+                .execute(&mut *tx)
+                .await?;
+            n += r.rows_affected();
+        }
+        tx.commit().await?;
+    }
+    Ok(n)
+}
+
+pub async fn count_ygorg_name_index_rows(pool: &PgPool) -> Result<i64, DbError> {
+    let row: (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM ygorg_en_name_index")
+        .fetch_one(pool)
+        .await?;
+    Ok(row.0)
+}
+
+/// Premier id YGOrg pour un nom EN exact (plus petit id si plusieurs entrées).
+pub async fn lookup_ygorg_id_by_exact_name(
+    pool: &PgPool,
+    name_exact: &str,
+) -> Result<Option<i64>, DbError> {
+    let row: Option<(i64,)> = sqlx::query_as(
+        r#"
+        SELECT ygorg_internal_id FROM ygorg_en_name_index
+        WHERE name_exact = $1
+        ORDER BY ygorg_internal_id
+        LIMIT 1
+        "#,
+    )
+    .bind(name_exact)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(id,)| id))
+}
+
+pub async fn mark_ygorg_unresolved(
+    pool: &PgPool,
+    card_id: i64,
+    reason: &str,
+) -> Result<(), DbError> {
+    sqlx::query(
+        r#"
+        INSERT INTO card_ygorg_unresolved (card_id, reason)
+        VALUES ($1, $2)
+        ON CONFLICT (card_id) DO UPDATE SET
+            reason = EXCLUDED.reason,
+            tried_at = NOW()
+        "#,
+    )
+    .bind(card_id)
+    .bind(reason)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn upsert_card_ygorg_id_map(
+    pool: &PgPool,
+    card_id: i64,
+    ygorg_internal_id: i64,
+) -> Result<(), DbError> {
+    sqlx::query(
+        r#"
+        INSERT INTO card_ygorg_id_map (card_id, ygorg_internal_id, updated_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (card_id) DO UPDATE SET
+            ygorg_internal_id = EXCLUDED.ygorg_internal_id,
+            updated_at = NOW()
+        "#,
+    )
+    .bind(card_id)
+    .bind(ygorg_internal_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Nos `card_id` associés à un id interne YGResources (manifest).
+pub async fn list_card_ids_by_ygorg_internal_id(
+    pool: &PgPool,
+    ygorg_internal_id: i64,
+) -> Result<Vec<i64>, DbError> {
+    sqlx::query_scalar::<_, i64>(
+        "SELECT card_id FROM card_ygorg_id_map WHERE ygorg_internal_id = $1",
+    )
+    .bind(ygorg_internal_id)
+    .fetch_all(pool)
+    .await
+    .map_err(Into::into)
+}
+
+/// Champs EN YGResources utiles pour les associations (citations texte).
+#[derive(Debug, Clone, Default)]
+pub struct YgOrgEnCatalogFields {
+    pub effect_text: Option<String>,
+    pub pendulum_effect: Option<String>,
+    pub flavor_text: Option<String>,
+    /// Effet monstre Link (`linkEffect`) si présent.
+    pub link_effect: Option<String>,
+    /// Nom officiel EN côté YGResources (peut différer légèrement de `cards.name_en`).
+    pub name_en: Option<String>,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct YgOrgEnCatalogSqlRow {
+    card_id: i64,
+    effect_text: Option<String>,
+    pendulum_effect: Option<String>,
+    flavor_text: Option<String>,
+    link_effect: Option<String>,
+    name_en: Option<String>,
+}
+
+/// Extrait `cardData.en` (effet, pendule, flavor, nom) pour `/associations/catalog`.
+pub async fn ygorg_en_catalog_fields_by_card_id(
+    pool: &PgPool,
+) -> Result<std::collections::HashMap<i64, YgOrgEnCatalogFields>, DbError> {
+    let rows: Vec<YgOrgEnCatalogSqlRow> = sqlx::query_as(
+        r#"
+        SELECT
+            card_id,
+            NULLIF(TRIM(payload #>> '{cardData,en,effectText}'), '') AS effect_text,
+            NULLIF(TRIM(payload #>> '{cardData,en,pendulumEffect}'), '') AS pendulum_effect,
+            NULLIF(TRIM(payload #>> '{cardData,en,flavorText}'), '') AS flavor_text,
+            NULLIF(TRIM(payload #>> '{cardData,en,linkEffect}'), '') AS link_effect,
+            NULLIF(TRIM(payload #>> '{cardData,en,name}'), '') AS name_en
+        FROM card_enrichment_layers
+        WHERE source = $1
+          AND layer = $2
+          AND (
+              NULLIF(TRIM(payload #>> '{cardData,en,effectText}'), '') IS NOT NULL
+              OR NULLIF(TRIM(payload #>> '{cardData,en,pendulumEffect}'), '') IS NOT NULL
+              OR NULLIF(TRIM(payload #>> '{cardData,en,flavorText}'), '') IS NOT NULL
+              OR NULLIF(TRIM(payload #>> '{cardData,en,linkEffect}'), '') IS NOT NULL
+              OR NULLIF(TRIM(payload #>> '{cardData,en,name}'), '') IS NOT NULL
+          )
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| {
+            (
+                r.card_id,
+                YgOrgEnCatalogFields {
+                    effect_text: r.effect_text,
+                    pendulum_effect: r.pendulum_effect,
+                    flavor_text: r.flavor_text,
+                    link_effect: r.link_effect,
+                    name_en: r.name_en,
+                },
+            )
+        })
+        .collect())
+}
+
+/// Upsert une entrée Q&A (`cards` = ids internes YGOrg).
+pub async fn upsert_ygorg_qa_entry(
+    pool: &PgPool,
+    qa_id: i64,
+    related_ygorg_card_ids: &[i64],
+) -> Result<(), DbError> {
+    if related_ygorg_card_ids.is_empty() {
+        return Ok(());
+    }
+    sqlx::query(
+        r#"
+        INSERT INTO ygorg_qa_entries (qa_id, related_ygorg_card_ids, fetched_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (qa_id) DO UPDATE SET
+            related_ygorg_card_ids = EXCLUDED.related_ygorg_card_ids,
+            fetched_at = NOW()
+        "#,
+    )
+    .bind(qa_id)
+    .bind(related_ygorg_card_ids)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Id interne YGOrg pour une ligne `cards` (nécessaire pour Q&A et manifest).
+pub async fn ygorg_internal_id_for_our_card(
+    pool: &PgPool,
+    card_id: i64,
+) -> Result<Option<i64>, DbError> {
+    let row: Option<(i64,)> =
+        sqlx::query_as("SELECT ygorg_internal_id FROM card_ygorg_id_map WHERE card_id = $1")
+            .bind(card_id)
+            .fetch_optional(pool)
+            .await?;
+    Ok(row.map(|(x,)| x))
+}
+
+/// Nos `card_id` qui partagent au moins une entrée Q&A avec l’id YGOrg donné (hors l’ancre).
+pub async fn list_our_card_ids_sharing_ygorg_qa_with(
+    pool: &PgPool,
+    anchor_ygorg_internal_id: i64,
+    exclude_our_card_id: i64,
+) -> Result<Vec<i64>, DbError> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT DISTINCT m.card_id
+        FROM ygorg_qa_entries q
+        INNER JOIN card_ygorg_id_map m
+            ON m.ygorg_internal_id = ANY(q.related_ygorg_card_ids)
+        WHERE $1 = ANY(q.related_ygorg_card_ids)
+          AND m.card_id <> $2
+        ORDER BY m.card_id
+        "#,
+    )
+    .bind(anchor_ygorg_internal_id)
+    .bind(exclude_our_card_id)
+    .fetch_all(pool)
+    .await
+    .map_err(Into::into)
+}
+
+pub async fn count_ygorg_qa_entries(pool: &PgPool) -> Result<i64, DbError> {
+    let row: (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM ygorg_qa_entries")
+        .fetch_one(pool)
+        .await?;
+    Ok(row.0)
 }
 
 /// Liste toutes les URLs d'images des cartes (pour l'importer, sans refetch API).

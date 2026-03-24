@@ -35,6 +35,7 @@ futures = "0.3"
 async-trait = "0.1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+regex = "1"
 
 [features]
 default = []
@@ -43,3 +44,6 @@ gcs = ["google-cloud-storage"]
 [dependencies.google-cloud-storage]
 version = "0.22"
 optional = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

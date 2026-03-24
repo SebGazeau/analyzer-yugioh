@@ -134,7 +134,8 @@ Erreurs possibles : erreur réseau/reqwest (`FetchError::Http`) ou statut HTTP n
 ### 5.2 Traitement (`process.rs`)
 
 - **`process_image(bytes: &[u8]) -> Result<ImageVariants, ProcessError>`**  
-  - Décodage avec le crate **image** (`guess_format` + `load_from_memory_with_format`).
+  - **sec-12 (image bomb)** : rejet immédiat si `bytes.len()` dépasse le même plafond que le téléchargement (`IMAGE_IMPORT_MAX_BYTES` / `fetch::max_image_fetch_bytes_from_env`, voir `.env.example`).
+  - Décodage via **`image::ImageReader`** avec limites : dimensions max **4096×4096**, allocation décodeur plafonnée (**96 MiB**). Dépassement → `ProcessError::Decode` (`ImageError::Limits`).
   - Production de **trois variantes WebP** via le crate **webp** :
 
 | Variante   | Usage              | Encodage     | Contrainte taille      |
@@ -146,7 +147,7 @@ Erreurs possibles : erreur réseau/reqwest (`FetchError::Http`) ou statut HTTP n
 - Redimensionnement : si la largeur dépasse le max, la hauteur est recalculée pour conserver le ratio ; filtre **Triangle** (image crate).
 - **`ImageVariants`** contient : `width`, `height` (dimensions de l’image source), et les trois champs `original`, `desktop`, `mobile` (`Vec<u8>`).
 
-Erreurs : décodage image (`ProcessError::Decode`), création encodeur WebP ou encodage (`ProcessError::Webp`).
+Erreurs : entrée trop longue (`ProcessError::InputTooLarge`, **413** côté route import), décodage / limites (`ProcessError::Decode`), WebP (`ProcessError::Webp`).
 
 ### 5.3 Base de données (`repository.rs`)
 
@@ -192,7 +193,9 @@ Les migrations sont exécutées au démarrage si `DATABASE_URL` est défini (mê
 
 ## 7. Routes HTTP (`src/routes/images.rs`)
 
-Toutes les routes images nécessitent **pool Postgres** et **Storage** injectés. Si l’un manque (pas de DB ou pas de config storage valide), les handlers retournent **503** avec un message du type « pool required » ou « storage required ».
+Les quatre routes (`POST` import + trois `GET`) exigent la **même authentification admin privilégiée** que les autres actions sensibles : header **`X-Admin-Key`** (si `ADMIN_SECRET` est défini), **JWT** rôle `admin`, ou **session** admin après login (`is_privileged_admin_request`). Sans droit : **403**. Si `ADMIN_SECRET` est absent (mode dev), l’accès reste ouvert côté auth (voir sec-01).
+
+Ensuite, **pool Postgres** et **Storage** sont requis là où c’est pertinent. Si l’un manque, **503** (« pool required » / « storage required »).
 
 ### POST `/images/import`
 
@@ -216,24 +219,27 @@ Toutes les routes images nécessitent **pool Postgres** et **Storage** injectés
 
 ### GET `/images`
 
+- **Auth** : comme ci-dessus (sec-06).
 - **Comportement** : liste toutes les images (ordre `created_at` décroissant).
 - **Réponse** : **200 OK**, tableau JSON d’objets avec id, original_url, path_original, path_desktop, path_mobile, width, height, mime_type, created_at (RFC3339).
 
 ### GET `/images/{id}`
 
+- **Auth** : comme ci-dessus.
 - **Comportement** : métadonnées d’une image par son UUID.
 - **Réponse** : **200 OK** avec un objet comme ci-dessus, ou **404** si l’id n’existe pas.
 
 ### GET `/images/{id}/file/{variant}`
 
+- **Auth** : **aucune** (URL opaque UUID pour le builder / balises `<img>`) ; **`GET /images`** et **`GET /images/{id}`** restent réservés aux admins (sec-06).
 - **variant** : `original` | `desktop` | `mobile`.
 - **Comportement** : lit le chemin correspondant en base, puis `Storage::get(path)` et renvoie les octets avec `Content-Type: image/webp`.
 - **Réponse** : **200 OK** (corps binaire WebP), ou **400** si `variant` invalide, **404** si image ou fichier introuvable, **503** si storage/pool manquant.
 
 ### Gestion des erreurs
 
-- **ImageRouteError** : agrège FetchError, ProcessError, StorageError, RepositoryError + NoPool / NoStorage.
-- **ResponseError** : Fetch/Process → 400 ; Storage/Repository → 500 ; NoPool/NoStorage → 503.
+- **ImageRouteError** : agrège Forbidden, UrlPolicy, FetchError, ProcessError, StorageError, RepositoryError + NoPool / NoStorage.
+- **ResponseError** : Forbidden → 403 ; Fetch/Process → 400 ; NoPool/NoStorage → 503 ; etc.
 
 ---
 

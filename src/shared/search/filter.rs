@@ -53,6 +53,7 @@ mod tests {
             ygoprodeck_url,
             None,
             None,
+            None,
         );
         let cards = vec![card_search_result];
         let query = SearchQuery::new("Test");
@@ -71,6 +72,7 @@ mod tests {
             card_name,
             card_name_en,
             card_type,
+            None,
             None,
             None,
             None,

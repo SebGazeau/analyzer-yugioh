@@ -16,6 +16,7 @@
         <span class="header-avatar" data-pseudo="{{ user_pseudo }}" aria-hidden="true"></span>
         <span class="header-user" aria-label="Connecté">{{ user_pseudo }}</span>
         <form method="post" action="/logout" class="header-logout-form" data-auth-action="logout">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn btn-small btn-header">Déconnexion</button>
         </form>
         {% else %}
@@ -24,6 +25,7 @@
             <p class="header-login-error" role="alert">Identifiant ou mot de passe incorrect.</p>
             {% endif %}
             <form method="post" action="/login" class="header-login-form" data-auth-form="login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="login-pseudo" class="header-login-label">Utilisateur</label>
                 <input type="text" id="login-pseudo" name="pseudo" required minlength="4" autocomplete="username" placeholder="Pseudo" class="header-login-input" aria-label="Pseudo">
                 <label for="login-password" class="header-login-label">Mot de passe</label>

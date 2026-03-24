@@ -1,11 +1,18 @@
 //! Décodage, redimensionnement et encodage WebP (original, desktop, mobile).
 
+use std::io::Cursor;
+
+use image::ImageReader;
 use image::imageops::FilterType;
 use tracing::instrument;
 use webp::Encoder;
 
+use super::fetch::max_image_fetch_bytes_from_env;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ProcessError {
+    #[error("entrée trop volumineuse (max {max} octets)")]
+    InputTooLarge { max: usize },
     #[error("decode: {0}")]
     Decode(#[from] image::ImageError),
     #[error("webp: {0}")]
@@ -27,11 +34,37 @@ const DESKTOP_QUALITY: f32 = 85.0;
 const MOBILE_MAX_WIDTH: u32 = 768;
 const MOBILE_QUALITY: f32 = 80.0;
 
+/// Largeur / hauteur max décodées (anti image bomb / RAM).
+const MAX_DECODE_DIMENSION: u32 = 4096;
+/// Plafond mémoire pour le buffer décodé (voir `image::Limits::max_alloc`).
+const MAX_DECODE_ALLOC_BYTES: u64 = 96 * 1024 * 1024;
+
+fn decode_limits() -> image::Limits {
+    let mut limits = image::Limits::default();
+    limits.max_image_width = Some(MAX_DECODE_DIMENSION);
+    limits.max_image_height = Some(MAX_DECODE_DIMENSION);
+    limits.max_alloc = Some(MAX_DECODE_ALLOC_BYTES);
+    limits
+}
+
 /// Décode les bytes, génère les 3 variantes WebP.
+///
+/// - Rejette d’abord les buffers plus longs que [`max_image_fetch_bytes_from_env`] (sec-12,
+///   défense en profondeur même hors import HTTP).
+/// - Applique des limites de dimensions et d’allocation via `image::ImageReader` (sec-12).
 #[instrument(skip(bytes))]
 pub fn process_image(bytes: &[u8]) -> Result<ImageVariants, ProcessError> {
-    let format = image::guess_format(bytes).map_err(ProcessError::Decode)?;
-    let img = image::load_from_memory_with_format(bytes, format).map_err(ProcessError::Decode)?;
+    let max_in = max_image_fetch_bytes_from_env();
+    if bytes.len() > max_in {
+        return Err(ProcessError::InputTooLarge { max: max_in });
+    }
+
+    let mut reader = ImageReader::new(Cursor::new(bytes))
+        .with_guessed_format()
+        .map_err(|e| image::ImageError::IoError(e.into()))?;
+    reader.limits(decode_limits());
+
+    let img = reader.decode()?;
     let (width, height) = (img.width(), img.height());
 
     let original = encode_lossless(&img)?;
@@ -72,6 +105,8 @@ fn encode_quality(img: &image::DynamicImage, quality: f32) -> Result<Vec<u8>, Pr
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{DynamicImage, ImageBuffer, ImageFormat, Rgb};
+    use std::io::Cursor;
 
     /// PNG 1x1 pixel rouge (minimal valide).
     const MINIMAL_PNG: &[u8] = &[
@@ -104,5 +139,35 @@ mod tests {
         let s = e.to_string();
         assert!(!s.is_empty());
         assert!(s.contains("decode") || s.contains("Decode"));
+    }
+
+    #[test]
+    fn process_image_input_exceeds_max_bytes_returns_too_large() {
+        let max = max_image_fetch_bytes_from_env();
+        let buf = vec![0u8; max + 1];
+        let r = process_image(&buf);
+        match r {
+            Err(ProcessError::InputTooLarge { max: m }) => assert_eq!(m, max),
+            other => panic!("attendu InputTooLarge, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn process_image_dimensions_over_limit_returns_decode_limits() {
+        let w = MAX_DECODE_DIMENSION + 500;
+        let img: ImageBuffer<Rgb<u8>, Vec<u8>> =
+            ImageBuffer::from_fn(w, 1, |_, _| Rgb([10u8, 20u8, 30u8]));
+        let dyn_img = DynamicImage::ImageRgb8(img);
+        let mut png_bytes = Vec::new();
+        dyn_img
+            .write_to(&mut Cursor::new(&mut png_bytes), ImageFormat::Png)
+            .expect("encode png test");
+
+        let r = process_image(&png_bytes);
+        assert!(
+            matches!(r, Err(ProcessError::Decode(image::ImageError::Limits(_)))),
+            "attendu erreur limites décodeur, got {:?}",
+            r
+        );
     }
 }

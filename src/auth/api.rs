@@ -1,4 +1,7 @@
 //! Scope /api : JWT + handlers token/profile + OpenAPI.
+//!
+//! La clé dans le corps `api_key` est comparée à **`API_ISSUER_SECRET`** si défini ;
+//! sinon repli sur **`JWT_SECRET`** (même valeur que pour signer le JWT — déconseillé en prod).
 
 use actix_web::{HttpResponse, get, post, web};
 use serde::Deserialize;
@@ -11,7 +14,25 @@ pub struct TokenRequest {
     pub api_key: String,
 }
 
-/// POST /api/auth/token — échange api_key contre un JWT (si api_key == JWT_SECRET).
+/// Résout le secret attendu dans le corps [`TokenRequest::api_key`].
+/// Retourne `(issuer, used_jwt_fallback)` : `used_jwt_fallback` si `API_ISSUER_SECRET` est absent ou vide après trim.
+pub fn resolve_api_token_issuer_secret(
+    api_issuer_from_env: Option<String>,
+    jwt_secret_trimmed: Option<String>,
+) -> (Option<String>, bool) {
+    let explicit = api_issuer_from_env
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty());
+    if explicit.is_some() {
+        return (explicit, false);
+    }
+    match jwt_secret_trimmed.filter(|s| !s.is_empty()) {
+        Some(j) => (Some(j), true),
+        None => (None, false),
+    }
+}
+
+/// POST /api/auth/token — échange `api_key` contre un JWT (voir [`resolve_api_token_issuer_secret`]).
 #[utoipa::path(
     post,
     path = "/api/auth/token",
@@ -25,9 +46,9 @@ pub struct TokenRequest {
 pub async fn auth_token(
     secret: web::Data<JwtSecret>,
     body: web::Json<TokenRequest>,
-    expected_key: web::Data<Option<String>>,
+    expected_issuer: web::Data<Option<String>>,
 ) -> HttpResponse {
-    let expected = match expected_key.as_ref() {
+    let expected = match expected_issuer.as_ref() {
         Some(k) => k,
         None => return HttpResponse::ServiceUnavailable().body("auth not configured"),
     };
@@ -86,10 +107,52 @@ impl utoipa::Modify for SecurityAddon {
 }
 
 /// Scope /api unique : auth_token (public) + profile (protégé JWT).
-pub fn api_scope(jwt_secret: web::Data<JwtSecret>, api_key: Option<String>) -> actix_web::Scope {
+pub fn api_scope(
+    jwt_secret: web::Data<JwtSecret>,
+    api_token_issuer_secret: Option<String>,
+) -> actix_web::Scope {
     web::scope("/api")
         .app_data(jwt_secret)
-        .app_data(web::Data::new(api_key))
+        .app_data(web::Data::new(api_token_issuer_secret))
         .service(auth_token)
         .service(profile)
+}
+
+#[cfg(test)]
+mod resolve_tests {
+    use super::resolve_api_token_issuer_secret;
+
+    #[test]
+    fn explicit_issuer_wins_no_fallback() {
+        let (iss, fb) = resolve_api_token_issuer_secret(
+            Some("  issuer-only  ".to_string()),
+            Some("jwt-signing".to_string()),
+        );
+        assert_eq!(iss.as_deref(), Some("issuer-only"));
+        assert!(!fb);
+    }
+
+    #[test]
+    fn empty_explicit_falls_back_to_jwt() {
+        let (iss, fb) = resolve_api_token_issuer_secret(
+            Some("   ".to_string()),
+            Some("fallback-jwt".to_string()),
+        );
+        assert_eq!(iss.as_deref(), Some("fallback-jwt"));
+        assert!(fb);
+    }
+
+    #[test]
+    fn missing_explicit_uses_jwt() {
+        let (iss, fb) = resolve_api_token_issuer_secret(None, Some("j".to_string()));
+        assert_eq!(iss.as_deref(), Some("j"));
+        assert!(fb);
+    }
+
+    #[test]
+    fn no_jwt_no_issuer() {
+        let (iss, fb) = resolve_api_token_issuer_secret(None, None);
+        assert!(iss.is_none());
+        assert!(!fb);
+    }
 }

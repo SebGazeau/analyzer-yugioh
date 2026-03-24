@@ -1,4 +1,5 @@
 import { addToDeck } from './deck.js';
+import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -55,6 +56,7 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         <div class="search-result-actions">
             <button type="button" class="search-result-add search-result-add--deck" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
             <button type="button" class="search-result-add search-result-add--side" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
+            <button type="button" class="search-result-associated" data-search-action="associated" title="Cartes associées (catalogue complet)">c. associés</button>
         </div>
     `;
     row.querySelector('.search-result-add--deck')?.addEventListener('click', (e) => {
@@ -64,6 +66,10 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     row.querySelector('.search-result-add--side')?.addEventListener('click', (e) => {
         e.stopPropagation();
         addToDeck(card, 'side');
+    });
+    row.querySelector('[data-search-action="associated"]')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        void openAssociatedCardsModal(card as Record<string, unknown>);
     });
     row.addEventListener('click', (e) => {
         if ((e.target as HTMLElement).closest('button')) return;

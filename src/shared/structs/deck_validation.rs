@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::shared::enums::{category::Category, engine::Engine};
 use crate::shared::structs::{
     card_name::CardName,
+    card_search_result::CardSearchResult,
     deck::{Deck, DeckError},
     deck_entry::DeckEntry,
     quantity::Quantity,
@@ -21,6 +22,9 @@ pub struct DeckValidationRequest {
 #[derive(Debug, Clone, Deserialize)]
 pub struct DeckEntryDto {
     pub name: String,
+    /// Passcode API (optionnel) : fusion des copies pour la règle ×3 malgré variantes de nom.
+    #[serde(default)]
+    pub id: Option<u64>,
     #[serde(default = "default_quantity")]
     pub quantity: u8,
     #[serde(default)]
@@ -55,7 +59,7 @@ pub enum DeckValidationError {
 
 impl DeckValidationRequest {
     /// Valide le deck et retourne la réponse.
-    pub fn validate(self) -> DeckValidationResponse {
+    pub fn validate(self, cards: &[CardSearchResult]) -> DeckValidationResponse {
         let mut errors = Vec::new();
         let main_entries =
             self.parse_entries(self.main.as_deref().unwrap_or(&[]), "main", &mut errors);
@@ -87,13 +91,13 @@ impl DeckValidationRequest {
             };
         }
 
-        if let Err(e) = Deck::main_deck(main_entries) {
+        if let Err(e) = Deck::main_deck(main_entries, cards) {
             errors.push(e.to_string());
         }
-        if let Err(e) = Deck::extra_deck(extra_entries) {
+        if let Err(e) = Deck::extra_deck(extra_entries, cards) {
             errors.push(e.to_string());
         }
-        if let Err(e) = Deck::side_deck(side_entries) {
+        if let Err(e) = Deck::side_deck(side_entries, cards) {
             errors.push(e.to_string());
         }
 
@@ -107,7 +111,7 @@ impl DeckValidationRequest {
     }
 
     /// Validation pour la sauvegarde : pas de minimum en main (liste incomplète autorisée).
-    pub fn validate_for_save(self) -> DeckValidationResponse {
+    pub fn validate_for_save(self, cards: &[CardSearchResult]) -> DeckValidationResponse {
         let mut errors = Vec::new();
         let main_entries =
             self.parse_entries(self.main.as_deref().unwrap_or(&[]), "main", &mut errors);
@@ -139,13 +143,13 @@ impl DeckValidationRequest {
             };
         }
 
-        if let Err(e) = Deck::main_deck_allow_incomplete(main_entries) {
+        if let Err(e) = Deck::main_deck_allow_incomplete(main_entries, cards) {
             errors.push(e.to_string());
         }
-        if let Err(e) = Deck::extra_deck(extra_entries) {
+        if let Err(e) = Deck::extra_deck(extra_entries, cards) {
             errors.push(e.to_string());
         }
-        if let Err(e) = Deck::side_deck(side_entries) {
+        if let Err(e) = Deck::side_deck(side_entries, cards) {
             errors.push(e.to_string());
         }
 
@@ -196,5 +200,8 @@ fn parse_entry(dto: &DeckEntryDto) -> Result<DeckEntry, DeckValidationError> {
         .iter()
         .filter_map(|s| Category::try_from(s.as_str()).ok())
         .collect();
-    Ok(DeckEntry::new(card_name, quantity, engine, categories))
+    let passcode = dto.id.filter(|&id| id > 0);
+    Ok(DeckEntry::new(
+        card_name, quantity, engine, categories, passcode,
+    ))
 }

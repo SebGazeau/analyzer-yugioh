@@ -98,6 +98,34 @@ impl ImageRepository {
         Ok(map)
     }
 
+    /// Résout beaucoup d’`original_url` en une poignée de requêtes (chunks), pour `/associations/catalog`, etc.
+    pub async fn map_original_urls_to_ids(
+        pool: &sqlx::PgPool,
+        urls: &[String],
+    ) -> Result<HashMap<String, Uuid>, RepositoryError> {
+        const CHUNK: usize = 400;
+        let mut map = HashMap::with_capacity(urls.len());
+        for chunk in urls.chunks(CHUNK) {
+            if chunk.is_empty() {
+                continue;
+            }
+            let rows: Vec<(String, Uuid)> = sqlx::query_as(
+                r#"
+                SELECT TRIM(original_url) AS u, id
+                FROM images
+                WHERE TRIM(original_url) = ANY($1)
+                "#,
+            )
+            .bind(chunk as &[String])
+            .fetch_all(pool)
+            .await?;
+            for (u, id) in rows {
+                map.insert(u, id);
+            }
+        }
+        Ok(map)
+    }
+
     pub async fn get_by_id(
         pool: &sqlx::PgPool,
         id: Uuid,

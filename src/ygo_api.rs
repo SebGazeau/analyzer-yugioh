@@ -31,6 +31,21 @@ pub struct ApiCard {
     pub card_images: Option<Vec<ApiCardImage>>,
     #[serde(rename = "banlist_info")]
     pub banlist_info: Option<ApiBanlistInfo>,
+    /// Impressions / sets (optionnel selon la requête API).
+    #[serde(default)]
+    pub card_sets: Option<Vec<ApiCardSet>>,
+}
+
+/// Une entrée `card_sets[]` dans la réponse `cardinfo.php` v7.
+#[derive(Debug, Deserialize, Clone)]
+pub struct ApiCardSet {
+    pub set_name: String,
+    pub set_code: String,
+    pub set_rarity: String,
+    #[serde(default)]
+    pub set_rarity_code: String,
+    #[serde(default)]
+    pub set_price: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -74,7 +89,55 @@ pub struct CardUpsertRow {
     pub ban_ocg: Option<String>,
 }
 
+/// Ligne pour `INSERT` / upsert dans `card_sets` (hors prix : `set_price` toujours `None` pour l’instant).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CardSetUpsertRow {
+    pub card_id: i64,
+    pub set_code: String,
+    pub rarity_code: String,
+    pub set_name: String,
+    pub rarity: String,
+    pub set_price: Option<String>,
+}
+
+/// Clé `rarity_code` pour la PK : si l’API renvoie `""`, dériver depuis `set_rarity` pour éviter les collisions.
+fn stable_rarity_code(api_rarity_code: &str, set_rarity: &str) -> String {
+    let t = api_rarity_code.trim();
+    if !t.is_empty() {
+        return t.to_string();
+    }
+    let slug: String = set_rarity
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect::<String>()
+        .to_lowercase();
+    if slug.is_empty() {
+        "::default".to_string()
+    } else {
+        format!("::{}", slug.chars().take(48).collect::<String>())
+    }
+}
+
 impl ApiCard {
+    /// Lignes `card_sets` pour cette carte (vide si pas de bloc ou tableau vide).
+    pub fn card_set_rows(&self) -> Vec<CardSetUpsertRow> {
+        let Some(sets) = self.card_sets.as_ref() else {
+            return Vec::new();
+        };
+        let id = self.id as i64;
+        sets.iter()
+            .map(|s| CardSetUpsertRow {
+                card_id: id,
+                set_code: s.set_code.trim().to_string(),
+                rarity_code: stable_rarity_code(&s.set_rarity_code, &s.set_rarity),
+                set_name: s.set_name.trim().to_string(),
+                rarity: s.set_rarity.trim().to_string(),
+                set_price: None,
+            })
+            .filter(|r| !r.set_code.is_empty())
+            .collect()
+    }
+
     /// Convertit une carte API en ligne pour upsert. Gère les ENUMs (type, attribute, frame_type, ban).
     pub fn to_upsert_row(&self) -> CardUpsertRow {
         let (image_url, image_url_small, image_url_cropped) = self
@@ -186,5 +249,32 @@ fn normalize_ban(s: String) -> Option<String> {
     match u {
         "Forbidden" | "Limited" | "Semi-Limited" => Some(u.to_string()),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserializes_card_sets_and_builds_rows() {
+        let j = r#"{"id":1,"name":"X","type":"Normal Monster","card_sets":[
+            {"set_name":"LOB","set_code":"LOB-001","set_rarity":"UR","set_rarity_code":"(UR)","set_price":"1"},
+            {"set_name":"Tin","set_code":"MP24-EN001","set_rarity":"Quarter Century Secret Rare","set_rarity_code":"","set_price":"0"}
+        ]}"#;
+        let c: ApiCard = serde_json::from_str(j).expect("parse");
+        let rows = c.card_set_rows();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].set_code, "LOB-001");
+        assert_eq!(rows[0].rarity_code, "(UR)");
+        assert_eq!(rows[1].rarity_code, "::quartercenturysecretrare");
+        assert!(rows[0].set_price.is_none() && rows[1].set_price.is_none());
+    }
+
+    #[test]
+    fn card_set_rows_empty_without_block() {
+        let j = r#"{"id":2,"name":"Y","type":"Spell Card"}"#;
+        let c: ApiCard = serde_json::from_str(j).expect("parse");
+        assert!(c.card_set_rows().is_empty());
     }
 }

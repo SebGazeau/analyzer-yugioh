@@ -1,4 +1,4 @@
-//! Routes admin : authentification par session (login/logout) ou par clé (X-Admin-Key / admin_key).
+//! Routes admin : authentification par session (login/logout), JWT admin, ou clé header **`X-Admin-Key`** uniquement.
 //! En cas de refus : 403 Forbidden. La session permet d'identifier un admin connecté sans repasser la clé.
 
 use std::sync::Arc;
@@ -6,7 +6,8 @@ use std::sync::Arc;
 use actix_session::Session;
 use actix_session::SessionExt;
 use actix_web::dev::ServiceRequest;
-use actix_web::{HttpResponse, get, post, web};
+use actix_web::http::header;
+use actix_web::{HttpRequest, HttpResponse, get, post, web};
 use serde::Deserialize;
 use sqlx::PgPool;
 
@@ -24,28 +25,74 @@ const ADMIN_TOKEN_HOURS: i64 = 24;
 #[derive(Clone)]
 pub struct AdminSecret(pub Option<String>);
 
-/// Extrait la clé admin depuis le header X-Admin-Key ou le paramètre de requête `admin_key` (pour le navigateur).
-pub fn admin_key_from_request(req: &ServiceRequest) -> Option<String> {
-    let header = req
-        .headers()
+/// Extrait la valeur de **`X-Admin-Key`** (trim, non vide). Aucune lecture du query string (sec-04).
+pub fn x_admin_key_from_headers(headers: &header::HeaderMap) -> Option<String> {
+    headers
         .get("x-admin-key")
         .and_then(|v| v.to_str().ok())
-        .map(String::from);
-    if header.is_some() {
-        return header;
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+}
+
+/// Extrait la clé admin depuis le header `X-Admin-Key` ([`ServiceRequest`]).
+pub fn admin_key_from_request(req: &ServiceRequest) -> Option<String> {
+    x_admin_key_from_headers(req.headers())
+}
+
+/// Extrait la clé admin depuis le header `X-Admin-Key` ([`HttpRequest`]).
+pub fn admin_key_from_http(req: &HttpRequest) -> Option<String> {
+    x_admin_key_from_headers(req.headers())
+}
+
+/// Comme [`is_admin_authorized`] pour une requête handler ([`HttpRequest`]).
+pub fn is_admin_authorized_http(req: &HttpRequest, secret: &Option<String>) -> bool {
+    match secret {
+        None => true,
+        Some(s) => admin_key_from_http(req)
+            .as_deref()
+            .map(|k| k == s.as_str())
+            .unwrap_or(false),
     }
-    let q = req.query_string();
-    for part in q.split('&') {
-        if let Some((k, v)) = part.split_once('=') {
-            if k == "admin_key" && !v.is_empty() {
-                return Some(v.to_string());
+}
+
+/// Bearer depuis [`HttpRequest`].
+pub fn bearer_token_from_http(req: &HttpRequest) -> Option<String> {
+    req.headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|h| h.to_str().ok())
+        .and_then(|h| h.strip_prefix("Bearer ").map(str::trim))
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+}
+
+/// Routes hors `/admin` qui exigent un contrôle équivalent : clé, JWT admin, ou session admin.
+pub fn is_privileged_admin_request(
+    req: &HttpRequest,
+    session: &Session,
+    secret: &Option<String>,
+) -> bool {
+    if is_admin_authorized_http(req, secret) {
+        return true;
+    }
+    if let Some(s) = secret {
+        if let Some(token) = bearer_token_from_http(req) {
+            if decode_token(s.as_bytes(), &token)
+                .map(|c| c.role == ADMIN_JWT_ROLE)
+                .unwrap_or(false)
+            {
+                return true;
             }
         }
     }
-    None
+    session
+        .get::<bool>("admin_authenticated")
+        .ok()
+        .flatten()
+        .unwrap_or(false)
 }
 
-/// Retourne true si l'accès admin est autorisé (pas de secret configuré, ou clé valide en header/query).
+/// Retourne true si l'accès admin est autorisé (pas de secret configuré, ou clé valide en header `X-Admin-Key`).
 pub fn is_admin_authorized(req: &ServiceRequest, secret: &Option<String>) -> bool {
     match secret {
         None => true,
@@ -128,6 +175,29 @@ pub async fn admin_login_page(
 <p>
   <form method="get" action="/admin/fetch_cards" style="display:inline">
     <button type="submit">Rafraîchir les cartes</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="sync_index"/>
+    <button type="submit">YGOrg — sync index EN (lourd)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="init"/>
+    <button type="submit">YGOrg — init révision</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="backfill"/>
+    <input type="hidden" name="max" value="30"/>
+    <button type="submit">YGOrg — backfill (30)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="manifest"/>
+    <input type="hidden" name="max" value="50"/>
+    <button type="submit">YGOrg — manifest (50)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="sync_qa"/>
+    <input type="hidden" name="max" value="150"/>
+    <button type="submit">YGOrg — sync Q&amp;A (150)</button>
   </form>
   <form method="post" action="/admin/import" style="display:inline">
     <button type="submit">Importer les images</button>
@@ -224,9 +294,33 @@ pub async fn admin_login(
 <pre id="token" style="background:#f0f0f0;padding:0.5em;overflow-x:auto;">{}</pre>
 <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('token').textContent)">Copier le token</button>
 <p>Exemple : <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/admin/fetch_cards</code></p>
+<p>YGOrganization : 1) <code>sync_index</code>, 2) <code>init</code>, 3) <code>backfill</code>, 4) <code>manifest</code>, 5) optionnel <code>sync_qa&amp;max=150</code> (Q&amp;A récents → associations). Ex. <code>curl …/enrich_ygorganization?mode=sync_qa&amp;max=150</code></p>
 <p>
   <form method="get" action="/admin/fetch_cards" style="display:inline">
     <button type="submit">Rafraîchir les cartes</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="sync_index"/>
+    <button type="submit">YGOrg — sync index EN (lourd)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="init"/>
+    <button type="submit">YGOrg — init révision</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="backfill"/>
+    <input type="hidden" name="max" value="30"/>
+    <button type="submit">YGOrg — backfill (30)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="manifest"/>
+    <input type="hidden" name="max" value="50"/>
+    <button type="submit">YGOrg — manifest (50)</button>
+  </form>
+  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
+    <input type="hidden" name="mode" value="sync_qa"/>
+    <input type="hidden" name="max" value="150"/>
+    <button type="submit">YGOrg — sync Q&amp;A (150)</button>
   </form>
   <form method="post" action="/admin/import" style="display:inline">
     <button type="submit">Importer les images</button>
@@ -399,4 +493,43 @@ pub async fn admin_rehydrate_storage(
         }
     });
     HttpResponse::Accepted().body("rehydrate_storage started in background")
+}
+
+#[cfg(test)]
+mod admin_key_tests {
+    use super::x_admin_key_from_headers;
+    use actix_web::http::header::{HeaderMap, HeaderValue};
+
+    fn header_map_with(key: &str) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert(
+            actix_web::http::header::HeaderName::from_static("x-admin-key"),
+            HeaderValue::from_str(key).unwrap(),
+        );
+        h
+    }
+
+    #[test]
+    fn x_admin_key_reads_header() {
+        let h = header_map_with("my-secret");
+        assert_eq!(x_admin_key_from_headers(&h).as_deref(), Some("my-secret"));
+    }
+
+    #[test]
+    fn x_admin_key_trims_value() {
+        let h = header_map_with("  abc  ");
+        assert_eq!(x_admin_key_from_headers(&h).as_deref(), Some("abc"));
+    }
+
+    #[test]
+    fn x_admin_key_missing_returns_none() {
+        let h = HeaderMap::new();
+        assert!(x_admin_key_from_headers(&h).is_none());
+    }
+
+    #[test]
+    fn x_admin_key_whitespace_only_returns_none() {
+        let h = header_map_with("   ");
+        assert!(x_admin_key_from_headers(&h).is_none());
+    }
 }

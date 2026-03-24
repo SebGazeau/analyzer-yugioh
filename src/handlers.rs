@@ -5,12 +5,20 @@ use actix_web::{HttpResponse, Responder, delete, get, http::StatusCode, post, pu
 use serde::Deserialize;
 use std::path::Path;
 
+use crate::auth::csrf;
+use crate::auth::session::SITE_USER_SESSION_KEY;
 use crate::auth::user_db::{self, CreateUserError};
 use crate::db;
 use crate::images::ImageRepository;
 use crate::shared::{
     enums::app_error::AppError,
-    search::{cache::CardCache, filter::filter_cards},
+    search::{
+        cache::CardCache,
+        card_resolve::{
+            canonical_deck_passcode, normalize_name_for_match, resolve_passcode_by_name,
+        },
+        filter::filter_cards,
+    },
     structs::{
         deck_validation::{DeckEntryDto, DeckValidationRequest},
         search_card_dto::SearchCardDto,
@@ -47,17 +55,23 @@ impl actix_web::ResponseError for TemplateError {
     }
 }
 
-const SESSION_SITE_USER_PSEUDO: &str = "site_user_pseudo";
-
 #[get("/")]
 pub async fn index(
     tera: web::Data<tera::Tera>,
     session: Session,
     query: web::Query<std::collections::HashMap<String, String>>,
 ) -> Result<HttpResponse, TemplateError> {
+    let csrf_token = match csrf::sync_csrf_token(&session) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!("csrf sync (index): {}", e);
+            return Ok(HttpResponse::InternalServerError().finish());
+        }
+    };
     let mut ctx = tera::Context::new();
     ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
-    let user_pseudo: Option<String> = session.get(SESSION_SITE_USER_PSEUDO).ok().flatten();
+    ctx.insert("csrf_token", &csrf_token);
+    let user_pseudo: Option<String> = session.get(SITE_USER_SESSION_KEY).ok().flatten();
     ctx.insert("user_pseudo", &user_pseudo);
     let login_error = query.get("login_error").is_some();
     ctx.insert("login_error", &login_error);
@@ -112,6 +126,15 @@ pub async fn fetch_cards(
             eprintln!("fetch_cards: upsert DB: {}", e);
             return HttpResponse::InternalServerError().body(format!("Upsert DB: {}", e));
         }
+        let set_rows: Vec<crate::ygo_api::CardSetUpsertRow> = api_response
+            .data
+            .iter()
+            .flat_map(|c| c.card_set_rows())
+            .collect();
+        if let Err(e) = db::upsert_card_sets(pool.get_ref(), &set_rows).await {
+            eprintln!("fetch_cards: upsert card_sets: {}", e);
+            return HttpResponse::InternalServerError().body(format!("Upsert card_sets: {}", e));
+        }
         let cards = match db::load_all_cards(pool.get_ref()).await {
             Ok(c) => c,
             Err(e) => {
@@ -139,6 +162,41 @@ pub async fn fetch_cards(
     HttpResponse::Ok().body("Cartes sauvegardées dans cards.json")
 }
 
+/// Enrichissement YGOrganization → `card_enrichment_layers` (admin uniquement, scope `/admin`).
+/// Query : `mode=init|sync_index|manifest|backfill|sync_qa`, `max=1..500`.
+#[get("/enrich_ygorganization")]
+pub async fn enrich_ygorganization(
+    pool: Option<web::Data<sqlx::PgPool>>,
+    query: web::Query<crate::ygorganization::EnrichQuery>,
+) -> HttpResponse {
+    let Some(pool) = pool else {
+        return HttpResponse::ServiceUnavailable().body("PostgreSQL requis pour l’enrichissement.");
+    };
+    let client = match crate::ygorganization::build_http_client() {
+        Ok(c) => c,
+        Err(e) => {
+            return HttpResponse::InternalServerError().body(format!("Client HTTP reqwest: {e}"));
+        }
+    };
+    match crate::ygorganization::run_enrichment(pool.get_ref(), &client, &query).await {
+        Ok(stats) => HttpResponse::Ok()
+            .content_type("text/plain; charset=utf-8")
+            .body(stats.to_string()),
+        Err(e) => {
+            let code = match &e {
+                crate::ygorganization::YgOrgError::BadQuery(_)
+                | crate::ygorganization::YgOrgError::RevisionNotInitialized
+                | crate::ygorganization::YgOrgError::NameIndexMissing
+                | crate::ygorganization::YgOrgError::BadNameIndex => StatusCode::BAD_REQUEST,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            HttpResponse::build(code)
+                .content_type("text/plain; charset=utf-8")
+                .body(e.to_string())
+        }
+    }
+}
+
 #[get("/search")]
 pub async fn search(
     params: web::Query<SearchParams>,
@@ -148,11 +206,11 @@ pub async fn search(
     let search_query = SearchQuery::new(params.q.clone())?;
     let cards = card_cache.get();
     let filtered = filter_cards(&cards, &search_query);
-    let mut dto: Vec<SearchCardDto> = filtered.iter().map(|c| c.to_search_dto()).collect();
-    // N'exposer que les images locales (importées) ; jamais l'URL externe.
-    for d in dto.iter_mut() {
-        d.image_url = None;
-    }
+    let mut dto: Vec<SearchCardDto> = filtered
+        .iter()
+        .map(|c| c.to_search_dto(cards.as_ref()))
+        .collect();
+    // Si une image a été importée en base, on préfère notre WebP (`/images/...`) ; sinon URL YGOProDeck du cache.
     if let Some(pool) = pool {
         let urls: Vec<String> = {
             let set: std::collections::HashSet<String> = filtered
@@ -179,8 +237,153 @@ pub async fn search(
     Ok(HttpResponse::Ok().json(dto))
 }
 
-fn normalize_name_for_match(s: &str) -> String {
-    s.replace("&amp;", "&").replace("&#38;", "&")
+/// Catalogue minimal pour le module « cartes associées » (front).
+#[derive(serde::Serialize)]
+pub struct AssociationCatalogEntry {
+    pub id: u64,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name_en: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub archetype: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub desc: Option<String>,
+    /// Effet EN (`cardData.en.effectText`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ygorg_effect_en: Option<String>,
+    /// Effet pendule EN (`pendulumEffect`) si présent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ygorg_pendulum_effect_en: Option<String>,
+    /// Texte de lore EN (`flavorText`) si présent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ygorg_flavor_en: Option<String>,
+    /// Effet Link EN (`linkEffect`) si présent.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ygorg_link_effect_en: Option<String>,
+    /// Nom officiel EN côté YGResources (`cardData.en.name`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ygorg_name_en: Option<String>,
+    /// Illu. : `/images/…/mobile` si importée, sinon URL YGOProDeck du cache (pour la modal associations).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+}
+
+#[get("/associations/catalog")]
+pub async fn associations_catalog(
+    card_cache: web::Data<CardCache>,
+    pool: Option<web::Data<sqlx::PgPool>>,
+) -> HttpResponse {
+    let ygorg_map: std::collections::HashMap<i64, db::YgOrgEnCatalogFields> = match pool.as_ref() {
+        Some(p) => db::ygorg_en_catalog_fields_by_card_id(p.get_ref())
+            .await
+            .unwrap_or_else(|e| {
+                tracing::warn!(
+                    "associations_catalog: ygorg_en_catalog_fields_by_card_id: {}",
+                    e
+                );
+                std::collections::HashMap::new()
+            }),
+        None => std::collections::HashMap::new(),
+    };
+
+    let cards = card_cache.get();
+
+    let image_map: std::collections::HashMap<String, uuid::Uuid> = if let Some(pool) = pool.as_ref()
+    {
+        let urls: Vec<String> = {
+            let set: std::collections::HashSet<String> = cards
+                .iter()
+                .filter_map(|c| c.image_url().map(|u| u.trim().to_string()))
+                .filter(|s| !s.is_empty())
+                .collect();
+            set.into_iter().collect()
+        };
+        if urls.is_empty() {
+            std::collections::HashMap::new()
+        } else {
+            ImageRepository::map_original_urls_to_ids(pool.get_ref(), &urls)
+                .await
+                .unwrap_or_else(|e| {
+                    tracing::warn!("associations_catalog: map_original_urls_to_ids: {}", e);
+                    std::collections::HashMap::new()
+                })
+        }
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    let entries: Vec<AssociationCatalogEntry> = cards
+        .iter()
+        .map(|c| {
+            let id_i64 = c.id() as i64;
+            let y = ygorg_map.get(&id_i64);
+            let image_url = c.image_url().and_then(|u| {
+                let t = u.trim();
+                if t.is_empty() {
+                    return None;
+                }
+                if let Some(id) = image_map.get(t) {
+                    Some(format!("/images/{}/file/mobile", id))
+                } else {
+                    Some(t.to_string())
+                }
+            });
+            AssociationCatalogEntry {
+                id: c.id(),
+                name: c.as_str().to_string(),
+                name_en: c.card_name_en().map(|n| n.as_str().to_string()),
+                archetype: c.archetype().map(|s| s.to_string()),
+                desc: c
+                    .card_desc()
+                    .map(|s| s.to_string())
+                    .filter(|s| !s.trim().is_empty()),
+                ygorg_effect_en: y.and_then(|f| f.effect_text.clone()),
+                ygorg_pendulum_effect_en: y.and_then(|f| f.pendulum_effect.clone()),
+                ygorg_flavor_en: y.and_then(|f| f.flavor_text.clone()),
+                ygorg_link_effect_en: y.and_then(|f| f.link_effect.clone()),
+                ygorg_name_en: y.and_then(|f| f.name_en.clone()),
+                image_url,
+            }
+        })
+        .collect();
+    HttpResponse::Ok().json(entries)
+}
+
+#[derive(serde::Deserialize)]
+pub struct QaRelatedQuery {
+    pub card_id: u64,
+}
+
+/// Cartes du catalogue qui partagent une entrée Q&A YGOrg avec l’ancre (nécessite `card_ygorg_id_map` + `sync_qa`).
+#[get("/associations/qa_related")]
+pub async fn associations_qa_related(
+    query: web::Query<QaRelatedQuery>,
+    pool: Option<web::Data<sqlx::PgPool>>,
+) -> HttpResponse {
+    let empty: Vec<u64> = Vec::new();
+    let Some(pool) = pool else {
+        return HttpResponse::Ok().json(empty);
+    };
+    let cid = query.card_id as i64;
+    let yg = match db::ygorg_internal_id_for_our_card(pool.get_ref(), cid).await {
+        Ok(x) => x,
+        Err(e) => {
+            tracing::warn!("associations_qa_related: map: {}", e);
+            return HttpResponse::Ok().json(empty);
+        }
+    };
+    let Some(yid) = yg else {
+        return HttpResponse::Ok().json(empty);
+    };
+    let ids = match db::list_our_card_ids_sharing_ygorg_qa_with(pool.get_ref(), yid, cid).await {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::warn!("associations_qa_related: list: {}", e);
+            return HttpResponse::Ok().json(empty);
+        }
+    };
+    let out: Vec<u64> = ids.into_iter().map(|x| x as u64).collect();
+    HttpResponse::Ok().json(out)
 }
 
 #[get("/card")]
@@ -203,9 +406,8 @@ pub async fn card_by_name(
     });
     match found {
         Some(c) => {
-            let mut dto = c.to_search_dto();
+            let mut dto = c.to_search_dto(cards.as_ref());
             dto.name = name.to_string();
-            dto.image_url = None;
             if let Some(pool) = pool {
                 if let Some(url) = c.image_url() {
                     let url_trimmed = url.trim();
@@ -226,8 +428,12 @@ pub async fn card_by_name(
 }
 
 #[post("/validate_deck")]
-pub async fn validate_deck(deck: web::Json<DeckValidationRequest>) -> HttpResponse {
-    let response = deck.into_inner().validate();
+pub async fn validate_deck(
+    deck: web::Json<DeckValidationRequest>,
+    card_cache: web::Data<CardCache>,
+) -> HttpResponse {
+    let cards = card_cache.get();
+    let response = deck.into_inner().validate(&cards);
     let status = if response.valid {
         StatusCode::OK
     } else {
@@ -252,23 +458,6 @@ pub struct SaveDeckRequest {
     pub cover_image_url: Option<String>,
 }
 
-/// Résout un nom de carte vers son id via le cache (nom ou name_en).
-fn resolve_name_to_id(
-    cards: &[crate::shared::structs::card_search_result::CardSearchResult],
-    name: &str,
-) -> Option<u64> {
-    let name_norm = normalize_name_for_match(name);
-    cards
-        .iter()
-        .find(|c| {
-            normalize_name_for_match(c.as_str()) == name_norm
-                || c.card_name_en()
-                    .map(|n| normalize_name_for_match(n.as_str()) == name_norm)
-                    .unwrap_or(false)
-        })
-        .map(|c| c.id())
-}
-
 /// Convertit les entrées DTO en DeckEntryInsert (card_id résolu, engine et categories conservés).
 fn entries_to_insert(
     cards: &[crate::shared::structs::card_search_result::CardSearchResult],
@@ -281,7 +470,10 @@ fn entries_to_insert(
         if name.is_empty() {
             continue;
         }
-        let card_id = resolve_name_to_id(cards, name)
+        let card_id = dto
+            .id
+            .filter(|&id| id > 0)
+            .or_else(|| resolve_passcode_by_name(cards, name))
             .ok_or_else(|| format!("Carte inconnue: {}", name))? as i64;
         let quantity = dto.quantity.clamp(1, 3) as i16;
         let engine = dto
@@ -306,7 +498,7 @@ async fn require_site_user_id(
     session: &Session,
     pool: &sqlx::PgPool,
 ) -> Result<uuid::Uuid, HttpResponse> {
-    let pseudo: Option<String> = match session.get::<String>(SESSION_SITE_USER_PSEUDO) {
+    let pseudo: Option<String> = match session.get::<String>(SITE_USER_SESSION_KEY) {
         Ok(v) => v,
         Err(e) => {
             tracing::error!("session get: {}", e);
@@ -354,16 +546,16 @@ pub async fn create_deck_handler(
     if name.is_empty() {
         return HttpResponse::BadRequest().json(serde_json::json!({ "error": "name requis" }));
     }
+    let cards = card_cache.get();
     let validation = DeckValidationRequest {
         main: body.main.clone(),
         extra: body.extra.clone(),
         side: body.side.clone(),
     };
-    let response = validation.validate_for_save();
+    let response = validation.validate_for_save(&cards);
     if !response.valid {
         return HttpResponse::BadRequest().json(response);
     }
-    let cards = card_cache.get();
     let main = body.main.as_deref().unwrap_or(&[]);
     let extra = body.extra.as_deref().unwrap_or(&[]);
     let side = body.side.as_deref().unwrap_or(&[]);
@@ -436,6 +628,7 @@ pub async fn list_decks_handler(
 pub async fn get_deck_handler(
     session: Session,
     pool: Option<web::Data<sqlx::PgPool>>,
+    card_cache: web::Data<CardCache>,
     path: web::Path<i32>,
 ) -> HttpResponse {
     let pool = match pool {
@@ -447,15 +640,24 @@ pub async fn get_deck_handler(
         Err(resp) => return resp,
     };
     let id = path.into_inner();
+    let cards = card_cache.get();
     match db::get_deck_with_entries(pool.get_ref(), id, site_user_id).await {
         Ok(Some((name, is_public, cover_card_name, cover_image_url, entries))) => {
+            let deck_copy = |card_id: i64| {
+                let cid = card_id as u64;
+                cards
+                    .iter()
+                    .find(|c| c.id() == cid)
+                    .map(|c| canonical_deck_passcode(c, cards.as_ref()))
+                    .unwrap_or(cid)
+            };
             let mut json = serde_json::json!({
                 "id": id,
                 "name": name,
                 "is_public": is_public,
-                "main": entries.iter().filter(|e| e.zone == "main").map(|e| serde_json::json!({"name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
-                "extra": entries.iter().filter(|e| e.zone == "extra").map(|e| serde_json::json!({"name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
-                "side": entries.iter().filter(|e| e.zone == "side").map(|e| serde_json::json!({"name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
+                "main": entries.iter().filter(|e| e.zone == "main").map(|e| serde_json::json!({"id": e.card_id, "deck_copy_id": deck_copy(e.card_id), "name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
+                "extra": entries.iter().filter(|e| e.zone == "extra").map(|e| serde_json::json!({"id": e.card_id, "deck_copy_id": deck_copy(e.card_id), "name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
+                "side": entries.iter().filter(|e| e.zone == "side").map(|e| serde_json::json!({"id": e.card_id, "deck_copy_id": deck_copy(e.card_id), "name": e.name, "quantity": e.quantity, "engine": e.engine, "categories": e.categories})).collect::<Vec<_>>(),
             });
             if let Some(obj) = json.as_object_mut() {
                 if cover_card_name.is_some() {
@@ -505,16 +707,16 @@ pub async fn update_deck_handler(
     if name.is_empty() {
         return HttpResponse::BadRequest().json(serde_json::json!({ "error": "name requis" }));
     }
+    let cards = card_cache.get();
     let validation = DeckValidationRequest {
         main: body.main.clone(),
         extra: body.extra.clone(),
         side: body.side.clone(),
     };
-    let response = validation.validate_for_save();
+    let response = validation.validate_for_save(&cards);
     if !response.valid {
         return HttpResponse::BadRequest().json(response);
     }
-    let cards = card_cache.get();
     let main = body.main.as_deref().unwrap_or(&[]);
     let extra = body.extra.as_deref().unwrap_or(&[]);
     let side = body.side.as_deref().unwrap_or(&[]);
@@ -600,6 +802,7 @@ pub async fn delete_deck_handler(
 pub struct LoginForm {
     pub pseudo: String,
     pub password: String,
+    pub csrf_token: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -607,12 +810,24 @@ pub struct RegisterForm {
     pub pseudo: String,
     pub password: String,
     pub accept_conditions: Option<String>,
+    pub csrf_token: Option<String>,
 }
 
 #[get("/register")]
-pub async fn register_page(tera: web::Data<tera::Tera>) -> Result<HttpResponse, TemplateError> {
+pub async fn register_page(
+    session: Session,
+    tera: web::Data<tera::Tera>,
+) -> Result<HttpResponse, TemplateError> {
+    let csrf_token = match csrf::sync_csrf_token(&session) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!("csrf sync (register): {}", e);
+            return Ok(HttpResponse::InternalServerError().finish());
+        }
+    };
     let mut ctx = tera::Context::new();
     ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
+    ctx.insert("csrf_token", &csrf_token);
     ctx.insert("error", &None::<String>);
     ctx.insert("pseudo_retry", "");
     let body = tera.render("register.html", &ctx).map_err(TemplateError)?;
@@ -628,11 +843,24 @@ pub async fn register_submit(
     tera: web::Data<tera::Tera>,
     form: web::Form<RegisterForm>,
 ) -> Result<HttpResponse, TemplateError> {
+    if !csrf::verify_csrf_token(&session, form.csrf_token.as_deref()) {
+        return Ok(csrf::csrf_rejected());
+    }
+
+    let csrf_token = match csrf::sync_csrf_token(&session) {
+        Ok(t) => t,
+        Err(e) => {
+            tracing::error!("csrf sync (register post): {}", e);
+            return Ok(HttpResponse::InternalServerError().finish());
+        }
+    };
+
     let pool = match pool {
         Some(p) => p,
         None => {
             let mut ctx = tera::Context::new();
             ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
+            ctx.insert("csrf_token", &csrf_token);
             ctx.insert("error", &Some("Service indisponible. Réessayez plus tard."));
             ctx.insert("pseudo_retry", &form.pseudo);
             let body = tera.render("register.html", &ctx).map_err(TemplateError)?;
@@ -645,6 +873,7 @@ pub async fn register_submit(
     if !accept {
         let mut ctx = tera::Context::new();
         ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
+        ctx.insert("csrf_token", &csrf_token);
         ctx.insert(
             "error",
             &Some("Vous devez accepter les conditions d'utilisation."),
@@ -662,8 +891,9 @@ pub async fn register_submit(
                 .ok()
                 .flatten();
             if let Some(u) = user {
-                let _ = session.insert(SESSION_SITE_USER_PSEUDO, u.pseudo.clone());
+                let _ = session.insert(SITE_USER_SESSION_KEY, u.pseudo.clone());
             }
+            csrf::invalidate_csrf_token(&session);
             Ok(HttpResponse::SeeOther()
                 .append_header(("Location", "/"))
                 .finish())
@@ -679,6 +909,7 @@ pub async fn register_submit(
             };
             let mut ctx = tera::Context::new();
             ctx.insert("timestamp", &format!("{}", chrono::Utc::now().timestamp()));
+            ctx.insert("csrf_token", &csrf_token);
             ctx.insert("error", &Some(msg));
             ctx.insert("pseudo_retry", &form.pseudo);
             let body = tera.render("register.html", &ctx).map_err(TemplateError)?;
@@ -695,6 +926,9 @@ pub async fn login_submit(
     session: Session,
     form: web::Form<LoginForm>,
 ) -> HttpResponse {
+    if !csrf::verify_csrf_token(&session, form.csrf_token.as_deref()) {
+        return csrf::csrf_rejected();
+    }
     let pool = match pool {
         Some(p) => p,
         None => {
@@ -705,12 +939,10 @@ pub async fn login_submit(
     };
     match user_db::authenticate(pool.get_ref(), form.pseudo.trim(), &form.password).await {
         Ok(Some(user)) => {
-            if session
-                .insert(SESSION_SITE_USER_PSEUDO, user.pseudo)
-                .is_err()
-            {
+            if session.insert(SITE_USER_SESSION_KEY, user.pseudo).is_err() {
                 tracing::error!("session insert failed");
             }
+            csrf::invalidate_csrf_token(&session);
             HttpResponse::SeeOther()
                 .append_header(("Location", "/"))
                 .finish()
@@ -721,9 +953,18 @@ pub async fn login_submit(
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct LogoutForm {
+    pub csrf_token: Option<String>,
+}
+
 #[post("/logout")]
-pub async fn logout_submit(session: Session) -> HttpResponse {
-    session.remove(SESSION_SITE_USER_PSEUDO);
+pub async fn logout_submit(session: Session, form: web::Form<LogoutForm>) -> HttpResponse {
+    if !csrf::verify_csrf_token(&session, form.csrf_token.as_deref()) {
+        return csrf::csrf_rejected();
+    }
+    session.remove(SITE_USER_SESSION_KEY);
+    csrf::invalidate_csrf_token(&session);
     HttpResponse::SeeOther()
         .append_header(("Location", "/"))
         .finish()

@@ -91,6 +91,88 @@ Prix par marketplace. PK : `card_id`. FK : `card_id` → `cards(id)` ON DELETE C
 
 ---
 
+## 5. Table `card_enrichment_layers`
+
+*(Migration `20260321120000_card_enrichment_layers.sql`.)*  
+Données **additives** par source externe (ex. YGOrganization), sans modifier les colonnes canoniques de `cards`.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `card_id` | `BIGINT` | FK → `cards(id)` ON DELETE CASCADE |
+| `source` | `TEXT` | Ex. `ygorganization`, `ygoprodeck_misc` |
+| `layer` | `TEXT` | Sous-clé (défaut `default`) |
+| `payload` | `JSONB` | Document JSON stocké tel quel ou normalisé |
+| `fetched_at` | `TIMESTAMPTZ` | Dernier fetch |
+
+PK : `(card_id, source, layer)`. Voir **`docs/enrichment-pipeline.md`**.
+
+Index partiel **`idx_card_enrichment_ygorg_card_raw`** (`20260326000000_assoc_catalog_perf_indexes.sql`) : lignes `source = 'ygorganization'` et `layer = 'card_raw'` — accélère la requête catalogue associations (`ygorg_en_catalog_fields_by_card_id`).
+
+---
+
+## 6. Table `external_api_cache_state`
+
+*(Migration `20260323183000_external_api_cache_state.sql`.)*  
+Dernière **`X-Cache-Revision`** connue par source (API YGOrganization / YGResources), pour les requêtes **`/manifest/{rev}`** sans repartir de zéro.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `source` | `TEXT` | PK — ex. `ygorganization` |
+| `cache_revision` | `BIGINT` | Révision serveur à réutiliser pour le manifest |
+| `updated_at` | `TIMESTAMPTZ` | Dernière mise à jour |
+
+---
+
+## 7. Tables YGOrganization (résolution nom → id)
+
+*(Migration `20260324120000_ygorg_name_index.sql`.)*
+
+### `ygorg_en_name_index`
+
+Copie de **`/data/idx/card/name/en`** : nom EN exact → id interne YGResources.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `name_exact` | `TEXT` | Clé (comme dans l’API) |
+| `ygorg_internal_id` | `BIGINT` | Id pour `GET /data/card/{id}` |
+
+PK : `(name_exact, ygorg_internal_id)`.
+
+### `card_ygorg_unresolved`
+
+Cartes dont le nom n’a pas matché l’index (backfill ne les reprend pas tant que `sync_index` n’a pas effacé la table).
+
+### `card_ygorg_id_map`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `card_id` | `BIGINT` | PK, FK → `cards` |
+| `ygorg_internal_id` | `BIGINT` | Id YGResources |
+| `updated_at` | `TIMESTAMPTZ` | Mise à jour |
+
+Sert au **manifest** (ids manifest = YGResources).
+
+---
+
+## 8. Table `ygorg_qa_entries`
+
+*(Migration `20260325200000_ygorg_qa_entries.sql`.)*  
+Entrées **`GET /data/qa/{id}`** : cartes concernées (ids internes YGOrg). Remplie par **`mode=sync_qa`**.
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `qa_id` | `BIGINT` | PK |
+| `related_ygorg_card_ids` | `BIGINT[]` | Ids du champ JSON `cards` |
+| `fetched_at` | `TIMESTAMPTZ` | Dernier fetch |
+
+Index GIN sur `related_ygorg_card_ids` (filtre `WHERE anchor_id = ANY(related_ygorg_card_ids)`). **`card_ygorg_id_map`** : PK sur `card_id` (lookup ancre) + index **`idx_card_ygorg_id_map_ygorg`** sur `ygorg_internal_id` (jointure `= ANY(array)`). Côté navigateur, **`/associations/qa_related`** est mis en cache par `card_id` (voir `static/js/associations/associationFetchCache.ts`).
+
+---
+
+Voir **`docs/db-migrations.md`** : application des migrations (`migrate`, `make test-db`, CI).
+
+---
+
 ## Conventions
 
 - **Noms** : snake_case.

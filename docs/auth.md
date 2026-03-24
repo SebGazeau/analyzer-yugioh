@@ -9,8 +9,8 @@ Ce document décrit le schéma d’authentification : **JWT** pour l’API (docu
 | Contexte | Mécanisme | Routes |
 |----------|-----------|--------|
 | **API**  | JWT (Bearer) | `/api/auth/token`, `/api/profile` |
-| **Web**  | Session cookie (actix-session) | `/web/login`, `/web/logout`, `/web/dashboard` |
-| **Admin** | Header `X-Admin-Key` (ADMIN_SECRET) | `/admin/*` |
+| **Web**  | Session cookie (actix-session), même clé `site_user_pseudo` que le site | `GET /web/login` (redirige vers `/`), `/web/logout`, `/web/dashboard` |
+| **Admin** | Header `X-Admin-Key` uniquement (`ADMIN_SECRET`, pas de query `admin_key`) | `/admin/*` |
 | **Decks (JSON)** | Session cookie (`site_user_pseudo`) | `/decks`, `/decks/{id}` |
 
 ---
@@ -19,7 +19,7 @@ Ce document décrit le schéma d’authentification : **JWT** pour l’API (docu
 
 - **`JWT_SECRET`** : secret pour signer les JWT et clé pour obtenir un token (`POST /api/auth/token` avec `api_key = JWT_SECRET`). Si absent, les routes `/api` et Swagger ne sont pas enregistrées.
 - **`SESSION_SECRET`** : clé (jusqu’à 64 octets) pour signer les cookies de session. Si absente, une clé par défaut est utilisée (sessions non persistantes entre redémarrages).
-- **`ADMIN_SECRET`** : protège `/admin` via le header `X-Admin-Key` (voir `docs/pipeline_images.md`).
+- **`ADMIN_SECRET`** : protège `/admin` via le header `X-Admin-Key` uniquement (voir `docs/pipeline_images.md`).
 
 ---
 
@@ -41,20 +41,27 @@ Les JWT sont signés avec `JWT_SECRET`, durée de validité 24 h. L’extracteur
 
 ## 4. Web (sessions)
 
-- **`GET /web/login`** : formulaire (user_id).
-- **`POST /web/login`** : enregistre `user_id` en session, redirection vers `/web/dashboard`.
-- **`GET /web/dashboard`** : page protégée ; si pas de session, redirection vers `/web/login`.
-- **`POST /web/logout`** : purge la session, redirection vers `/web/login`.
+- **`GET /web/login`** : **redirection 303** vers `/` (plus de formulaire ni d’impersonation par `user_id`, sec-11).
+- **`POST /web/login`** : **supprimé** (404) — la connexion passe par **`POST /login`** sur la page d’accueil (pseudo + mot de passe).
+- **`GET /web/dashboard`** : page protégée ; exige la session site **`site_user_pseudo`** (comme `/decks`) ; sinon redirection vers **`/`**.
+- **`POST /web/logout`** : retire `site_user_pseudo`, invalide le jeton CSRF, redirection vers **`/`**.
 
-Le middleware `SessionMiddleware` (CookieSessionStore) est actif dès qu’une clé de session est fournie (ou par défaut en interne). Les routes `/web/*` utilisent l’extracteur `Session` et le helper `require_session` pour vérifier la présence de `user_id`.
+Le middleware `SessionMiddleware` (CookieSessionStore) est enregistré sur toute l’app avec une clé dérivée de `SESSION_SECRET` (ou clé interne par défaut en dev). Les attributs du cookie sont fixés explicitement dans `session_cookies::cookie_session_middleware` (sec-08) : **`HttpOnly`** toujours ; en **production** (`APP_ENV=production`) : **`Secure`** + **`SameSite=Strict`** ; hors production : pas de **`Secure`** (HTTP local) + **`SameSite=Lax`**.
+
+**CSRF (sec-09)** : les `POST` **formulaire** qui s’appuient sur la session (`/login`, `/logout`, `/register`, `/web/logout`) exigent un champ **`csrf_token`** identique au jeton en session (`auth::csrf`). Les pages concernées (`GET /`, `/register`, **`GET /web/dashboard`**) appellent `sync_csrf_token` pour injecter le jeton (Tera ou HTML inline). Après connexion / inscription réussie, le jeton est invalidé (`invalidate_csrf_token`) pour limiter la fixation.
+
+**Rate limit (sec-10)** : avant la session, un `wrap_fn` sur l’`App` appelle `rate_limit::login_post_blocked_response` pour les `POST` `/login`, `/register` et `/admin/login` (fenêtre **1 minute** par **IP**). Variables : `SITE_AUTH_RATE_LIMIT_PER_MINUTE`, `ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE`.
+
+Les routes `/web/dashboard` et le helper `require_session` vérifient la présence de **`site_user_pseudo`** (même clé que pour les decks).
 
 ---
 
 ## 5. Swagger (OpenAPI)
 
-- **URL** : `/swagger-ui/` (et `/api-docs/openapi.json`).
+- **URL** : `/swagger-ui/` (et `/api-docs/openapi.json`) lorsque l’UI est **activée**.
+- **Activation** : variable **`ENABLE_SWAGGER_UI`** (`true` / `1` / `yes` / `on` → activé ; `false` / `0` / etc. → désactivé). Si la variable est absente ou vide : **activé** hors production, **désactivé** en production (`APP_ENV=production`). Voir `security_startup::swagger_ui_enabled`.
 - Le schéma documente `POST /api/auth/token` et `GET /api/profile` avec le schéma de sécurité **Bearer (JWT)**.
-- Si `JWT_SECRET` n’est pas défini, Swagger est tout de même monté mais les routes API ne sont pas enregistrées.
+- Si `JWT_SECRET` n’est pas défini, les routes `/api` ne sont pas enregistrées ; Swagger peut rester monté (selon `ENABLE_SWAGGER_UI`) mais l’API ne sera pas appelable.
 
 ---
 
@@ -72,7 +79,7 @@ Le **builder** (pages HTML, recherche, validation locale) reste utilisable sans 
 ## 7. Décisions techniques
 
 - **JWT** : extracteur `JwtClaims` (FromRequest) au lieu d’un middleware Transform, pour rester compatible avec les scopes Actix et éviter d’implémenter `Transform` à la main.
-- **Sessions** : `actix-session` avec `CookieSessionStore` ; clé dérivée de `SESSION_SECRET` (64 octets, troncation/remplissage si nécessaire).
+- **Sessions** : `actix-session` avec `CookieSessionStore` ; clé dérivée de `SESSION_SECRET` (64 octets, troncation/remplissage si nécessaire) ; politique cookie explicite (`session_cookies`, voir §4) ; jeton CSRF synchroniseur sur les POST HTML (`auth::csrf`, sec-09).
 - **Documentation** : `utoipa` + `utoipa-swagger-ui` ; schéma Bearer via `HttpBuilder::new().scheme(Bearer).bearer_format("JWT").build()`.
 - **Decks** : auth par session cookie (même mécanisme que la page d’accueil), pas par JWT.
 

@@ -102,6 +102,22 @@ describe('deck.ts', () => {
       categories: ['Hand Trap', 'Interruption'],
     });
   });
+
+  it('toDeckEntryPayload inclut id (passcode) quand cardId est défini', () => {
+    expect(
+      toDeckEntryPayload({
+        name: 'Fallen of Albaz',
+        quantity: 2,
+        engine: '',
+        categories: [],
+        cardId: 684_684_59,
+      }),
+    ).toEqual({
+      name: 'Fallen of Albaz',
+      quantity: 2,
+      id: 68468459,
+    });
+  });
 });
 
 describe('deck-state.ts — logique pure', () => {

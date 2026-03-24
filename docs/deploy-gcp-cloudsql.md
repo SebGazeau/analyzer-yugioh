@@ -1,7 +1,7 @@
 # Cloud SQL (PostgreSQL) + Cloud Run
 
 Objectif : attacher une base **PostgreSQL** à **`analyzer-yugioh`** sur Cloud Run.  
-L’app applique les migrations au démarrage (`sqlx::migrate!`).
+L’app applique les migrations au démarrage (`sqlx::migrate!`). Pour un contrôle explicite avant trafic : **`./analyzer-yugioh migrate`** (même image, voir **`docs/db-migrations.md`**).
 
 **Voir aussi** : **`deploy-gcp-cloud-run.md`** — facturation CPU, RAM, import d’images en arrière-plan (`POST /admin/import`).
 
