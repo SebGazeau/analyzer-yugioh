@@ -47,4 +47,10 @@ Rappel des objectifs après mise en place du schéma MPD v4 (PostgreSQL).
 
 ---
 
-*Dernière mise à jour : après mise en place du schéma MPD v4.*
+## 6. CI / GCP — à faire plus tard
+
+- [ ] **Artifact Analysis** : activer le scan de vulnérabilités sur le dépôt **Artifact Registry** où l’image `analyzer-yugioh` est poussée (voir [Artifact Analysis](https://cloud.google.com/artifact-analysis/docs) et `docs/ci-integration.md`).
+
+---
+
+*Dernière mise à jour : section 6 CI/GCP (Artifact Analysis).*

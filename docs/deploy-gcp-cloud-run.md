@@ -123,3 +123,66 @@ WHERE image_url IS NOT NULL AND image_url <> '';
 ```
 
 Les URLs **distinctes** peuvent être nettement inférieures au nombre de cartes (plusieurs cartes, même image).
+
+---
+
+## GitHub Actions — déploiement (CD)
+
+### Version & tag automatiques
+
+Le workflow **`.github/workflows/version-tag.yml`** tourne à chaque **push sur `main` / `master`** (sauf sur les commits générés `chore(release): bump …` pour éviter une boucle) : il **incrémente** la version **`patch`** dans `Cargo.toml`, met à jour **`Cargo.lock`** (`cargo check`), **commit**, pousse le **tag annoté** `vX.Y.Z`, ce qui déclenche le déploiement.
+
+- **Manuel** : Actions → *Version & tag* → *Run workflow* → choix **patch / minor / major** (utile sans nouveau commit sur la branche).
+- **Outil local** : `cargo run -p xtask --bin bump-cargo-version -- X.Y.Z` (crate **`xtask`**, sans dépendance runtime).
+
+Sur les dépôts avec **branch protection** stricte sur `main`, il faut autoriser **GitHub Actions** à pousser (ou utiliser un PAT stocké en secret) — sinon l’étape `git push` échouera.
+
+### Déploiement
+
+Le workflow **`.github/workflows/deploy-gcp.yml`** se déclenche **uniquement** sur push d’un **tag** `v*` (ex. `v1.2.0`). Il enchaîne d’abord les mêmes contrôles qualité que la CI (workflow réutilisable **`quality-reusable.yml`**), puis build / push de l’image et mise à jour Cloud Run.
+
+La **CI** (workflow **`CI`**) tourne sur les **pull requests** vers `main` / `master` (fmt, clippy, tests, front, **intégration Postgres + E2E**, smoke Docker). Détail : **`docs/ci-integration.md`**. Après merge, **version-tag** crée le tag ; le merge seul ne déploie pas tant que le tag n’est pas poussé (c’est ce job qui le pousse).
+
+Le job de déploiement : construit le front (`static/dist`), build l’image Docker (**`--features gcs`**, comme le `Dockerfile`), pousse vers **Artifact Registry**, puis met à jour **uniquement l’image** du service Cloud Run avec **`gcloud run services update … --image=…`** — les variables d’environnement, secrets et liaison Cloud SQL **déjà configurés** dans la console (ou via des `gcloud` précédents) **ne sont pas réinitialisés** (voir l’avertissement § « Rappels utiles » ci-dessus sur `deploy … --image` seul).
+
+### Variables GitHub (repository → Settings → Secrets and variables → Actions → Variables)
+
+| Variable | Exemple | Rôle |
+|----------|---------|------|
+| `GCP_PROJECT_ID` | `mon-projet` | Projet GCP |
+| `GCP_REGION` | `europe-west1` | Région Cloud Run + préfixe registry |
+| `GCP_RUN_SERVICE` | `analyzer-yugioh` | Nom du service Cloud Run |
+| `GCP_ARTIFACT_REPO` | `app` | Nom du **dépôt** Docker dans Artifact Registry |
+| `GCP_IMAGE_NAME` | `analyzer-yugioh` | Nom de l’**image** dans ce dépôt |
+
+Image poussée :  
+`{GCP_REGION}-docker.pkg.dev/{GCP_PROJECT_ID}/{GCP_ARTIFACT_REPO}/{GCP_IMAGE_NAME}:{tag}`  
+avec `tag` = **nom exact du tag git** (ex. `v1.0.0`).
+
+### Secrets GitHub (recommandé : sans clé JSON)
+
+Configurer la **Workload Identity Federation** (pool OIDC GitHub → compte de service GCP), puis :
+
+| Secret | Contenu |
+|--------|---------|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Ressource complète du provider WIF |
+| `GCP_SERVICE_ACCOUNT` | Email du SA utilisé par Actions (ex. `github-deploy@….iam.gserviceaccount.com`) |
+
+Droits typiques sur ce SA : **`roles/artifactregistry.writer`**, **`roles/run.admin`** (ajuster au plus juste selon ta politique IAM).
+
+**Alternative** (clé JSON de compte de service) : dans le workflow, remplacer l’étape *Authenticate to Google Cloud* par  
+`credentials_json: ${{ secrets.GCP_SA_KEY }}`  
+et supprimer `id-token: write` si tu n’utilises pas WIF. Moins recommandé (secret longue durée).
+
+### Première image / dépôt Artifact Registry
+
+Si le dépôt Docker n’existe pas encore :
+
+```bash
+gcloud artifacts repositories create "$GCP_ARTIFACT_REPO" \
+  --repository-format=docker \
+  --location="$GCP_REGION" \
+  --project="$GCP_PROJECT_ID"
+```
+
+Le service Cloud Run doit exister au moins une fois (premier déploiement manuel ou `gcloud run deploy` **complet** avec env, secrets, `--add-cloudsql-instances`, etc., comme dans **`deploy-gcp-cloudsql.md`**). Ensuite, la CI ne fait qu’**échanger l’image**.

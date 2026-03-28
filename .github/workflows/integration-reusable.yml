@@ -1,0 +1,125 @@
+# Tests d’intégration : Postgres (schéma / migrations / requêtes db_live) + Playwright E2E.
+# Postgres 16 pour coller à Cloud SQL (docs/deploy-gcp-cloudsql.md). Données jetables (pas de Secret Manager ici).
+#
+# Réutilisé par CI (PR) et Deploy GCP (tag v*) après le workflow Quality.
+
+name: Integration
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: write # rapport Playwright / logs en cas d’échec
+
+env:
+  CARGO_TERM_COLOR: always
+  # Même logique que docker-compose local : utilisateur / base alignés avec la doc GCP d’exemple
+  DATABASE_URL: postgresql://analyzer:analyzer@127.0.0.1:5432/analyzer_yugioh
+  TEST_DATABASE_URL: postgresql://analyzer:analyzer@127.0.0.1:5432/analyzer_yugioh
+
+jobs:
+  postgres-e2e:
+    name: Postgres + E2E
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: analyzer
+          POSTGRES_PASSWORD: analyzer
+          POSTGRES_DB: analyzer_yugioh
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U analyzer -d analyzer_yugioh"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - name: Compiler la binaire
+        run: cargo build
+
+      - name: Migrations SQL
+        run: ./target/debug/analyzer-yugioh migrate
+
+      - name: Tests DB live (schéma, index, requêtes)
+        run: cargo test db_live -- --ignored --nocapture
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: static/package-lock.json
+
+      - name: Build front (dist pour l’app)
+        working-directory: static
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Playwright (Chromium)
+        working-directory: static
+        run: npx playwright install chromium --with-deps
+
+      - name: Démarrer l’app + E2E
+        env:
+          BASE_URL: http://127.0.0.1:8080
+          CI: "true"
+          PORT: "8080"
+          RUST_LOG: warn
+        run: |
+          set -euo pipefail
+          ./target/debug/analyzer-yugioh > /tmp/analyzer-yugioh-ci.log 2>&1 &
+          APP_PID=$!
+          cleanup() { kill "$APP_PID" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 90); do
+            if curl -sf "http://127.0.0.1:8080/" > /dev/null 2>&1; then
+              echo "Serveur prêt (${i}s)"
+              break
+            fi
+            if ! kill -0 "$APP_PID" 2>/dev/null; then
+              echo "Processus app arrêté prématurément"
+              cat /tmp/analyzer-yugioh-ci.log || true
+              exit 1
+            fi
+            sleep 1
+          done
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            cat /tmp/analyzer-yugioh-ci.log || true
+            exit 1
+          fi
+          cd static
+          npm run test:e2e
+
+      # PR depuis fork : token souvent lecture seule → pas d’upload (évite échec du job).
+      - uses: actions/upload-artifact@v4
+        if: >-
+          failure() &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        with:
+          name: playwright-report
+          path: static/playwright-report/
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        if: >-
+          failure() &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        with:
+          name: analyzer-yugioh-ci-log
+          path: /tmp/analyzer-yugioh-ci.log
+          retention-days: 3
