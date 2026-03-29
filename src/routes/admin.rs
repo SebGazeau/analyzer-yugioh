@@ -176,6 +176,9 @@ pub async fn admin_login_page(
   <form method="get" action="/admin/fetch_cards" style="display:inline">
     <button type="submit">Rafraîchir les cartes</button>
   </form>
+  <form method="get" action="/admin/reload_cache_from_db" style="display:inline">
+    <button type="submit">Recharger le cache (Postgres)</button>
+  </form>
   <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
     <input type="hidden" name="mode" value="sync_index"/>
     <button type="submit">YGOrg — sync index EN (lourd)</button>
@@ -209,7 +212,7 @@ pub async fn admin_login_page(
     <button type="submit">Idem (forcer réécriture)</button>
   </form>
 </p>
-<p><small>Rafraîchir : API → DB + cache. Importer : nouvelles URLs seulement. Remplir stockage : pour chaque ligne <code>images</code>, retélécharge et écrit aux chemins déjà en base (ex. après passage en GCS).</small></p>
+<p><small>Rafraîchir : API → DB + cache. Recharger cache : relit <code>cards</code> en base (ex. après un job <code>sync-cards</code> sans redémarrage). Importer : nouvelles URLs seulement. Remplir stockage : pour chaque ligne <code>images</code>, retélécharge et écrit aux chemins déjà en base (ex. après passage en GCS).</small></p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
 </body></html>"#;
         return HttpResponse::Ok()
@@ -233,7 +236,7 @@ pub async fn admin_login_page(
 <html><head><meta charset="utf-8"><title>Admin</title></head><body>
 <h1>Admin</h1>
 <p>Base de données requise pour la connexion email/mot de passe.</p>
-<p><a href="/admin/fetch_cards">Rafraîchir les cartes</a> (si accès par clé)</p>
+<p><a href="/admin/fetch_cards">Rafraîchir les cartes</a> (si accès par clé) · <a href="/admin/reload_cache_from_db">Recharger le cache (Postgres)</a></p>
 </body></html>"#
     };
     HttpResponse::Ok()
@@ -298,6 +301,9 @@ pub async fn admin_login(
 <p>
   <form method="get" action="/admin/fetch_cards" style="display:inline">
     <button type="submit">Rafraîchir les cartes</button>
+  </form>
+  <form method="get" action="/admin/reload_cache_from_db" style="display:inline">
+    <button type="submit">Recharger le cache (Postgres)</button>
   </form>
   <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
     <input type="hidden" name="mode" value="sync_index"/>

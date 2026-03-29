@@ -3,6 +3,7 @@
 use actix_web::dev::ServiceResponse;
 use actix_web::http::header::HeaderMap;
 use actix_web::http::header::SET_COOKIE;
+use actix_web::http::StatusCode;
 use actix_web::test;
 use uuid::Uuid;
 
@@ -130,6 +131,39 @@ async fn test_search_valid_query_returns_200() {
     );
     let body: Vec<serde_json::Value> = test::read_body_json(resp).await;
     assert!(body.is_empty(), "Cache vide => tableau vide");
+}
+
+#[actix_web::test]
+async fn test_search_with_locale_param_returns_200() {
+    let app = test::init_service(configure_app_for_tests()).await;
+
+    let req = test::TestRequest::get()
+        .uri("/search?q=test&locale=fr")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert!(
+        resp.status().is_success(),
+        "Recherche avec locale doit répondre 200 (sans Postgres le paramètre est ignoré)"
+    );
+    let body: Vec<serde_json::Value> = test::read_body_json(resp).await;
+    assert!(body.is_empty(), "Cache vide => tableau vide");
+}
+
+#[actix_web::test]
+async fn test_admin_reload_cache_from_db_without_postgres_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+
+    let req = test::TestRequest::get()
+        .uri("/admin/reload_cache_from_db")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "sans DATABASE_URL, rechargement cache depuis DB impossible"
+    );
 }
 
 #[actix_web::test]

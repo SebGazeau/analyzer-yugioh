@@ -58,6 +58,25 @@ Index : `idx_cards_name_lower`, `idx_cards_type`, `idx_cards_frame_type`, `idx_c
 
 ---
 
+## 2bis. Table `card_locales`
+
+*(Migration `20260329120000_card_locales.sql`.)*  
+Noms et textes par **locale** (complément à `cards`, qui reste la ligne canonique par passcode).  
+Jobs : `sync-locales-ygo`, `sync-locales-konami` ; côté HTTP : `GET /search?q=…&locale=fr` (le front envoie la locale depuis `<html lang>`).
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `card_id` | `BIGINT` | PK (1/2), FK → `cards(id)` ON DELETE CASCADE |
+| `locale` | `TEXT` | PK (2/2), ex. `fr`, `de`, `ja` |
+| `name` | `TEXT` | Nom affiché |
+| `card_desc` | `TEXT` | Description / effet |
+| `source` | `TEXT` | ex. `ygoprodeck`, `konami_official` |
+| `updated_at` | `TIMESTAMPTZ` | Dernière écriture |
+
+Index : `idx_card_locales_locale`.
+
+---
+
 ## 3. Table `card_sets`
 
 Éditions / sets d’impression. PK : `(card_id, set_code, rarity_code)`. FK : `card_id` → `cards(id)` ON DELETE CASCADE.
@@ -166,6 +185,24 @@ Entrées **`GET /data/qa/{id}`** : cartes concernées (ids internes YGOrg). Remp
 | `fetched_at` | `TIMESTAMPTZ` | Dernier fetch |
 
 Index GIN sur `related_ygorg_card_ids` (filtre `WHERE anchor_id = ANY(related_ygorg_card_ids)`). **`card_ygorg_id_map`** : PK sur `card_id` (lookup ancre) + index **`idx_card_ygorg_id_map_ygorg`** sur `ygorg_internal_id` (jointure `= ANY(array)`). Côté navigateur, **`/associations/qa_related`** est mis en cache par `card_id` (voir `static/js/associations/associationFetchCache.ts`).
+
+---
+
+## Table `konami_catalog_snapshots`
+
+*(Migration `20260328140000_konami_catalog_snapshots.sql`.)*  
+Données **catalogue** parsées depuis le site officiel Konami (HTML → JSON), **sans** FK vers `cards` (snapshots globaux ou par locale).
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `snapshot_key` | `TEXT` | PK — ex. `pack_index:en` |
+| `locale` | `TEXT` | Code locale |
+| `kind` | `TEXT` | ex. `pack_index` |
+| `source_url` | `TEXT` | URL récupérée |
+| `payload` | `JSONB` | Document JSON (liste packs, chemins relatifs, etc.) |
+| `fetched_at` | `TIMESTAMPTZ` | Dernier fetch |
+
+Commande : `konami-pack-index`. Voir **`docs/konami-enrichment.md`**.
 
 ---
 
