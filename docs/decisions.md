@@ -1,5 +1,7 @@
 # Décisions d’architecture
 
+**Synthèse réorganisation backend (handlers, `db`, `modules`, repositories)** : [`reorganisation-backend-compte-rendu.md`](./reorganisation-backend-compte-rendu.md).
+
 ## 2026-03-28 — Modules métier (`src/modules/`)
 
 **Contexte** : `handlers.rs` et `db.rs` concentraient trop de responsabilités ; besoin d’un découpage vertical (style Nest) avec `helper` / `provider` / `routes` par domaine.
