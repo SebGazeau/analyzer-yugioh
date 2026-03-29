@@ -2,6 +2,7 @@
  * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, collapsibles zones.
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
+import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
 import { updateDeckCount, updateProbabilities, computeGlobalStats } from '../stats.js';
 import { setupSearch } from '../search.js';
 import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons, bindDeckDragAndDrop } from '../deck.js';
@@ -36,6 +37,7 @@ export function initBuilder(): void {
     if (typeof setupSearch === 'function') {
         setupSearch();
     }
+    prefetchAssociationCatalogWhenIdle();
 
     document.addEventListener('change', (e: Event) => {
         const target = e.target as HTMLElement | null;

@@ -1,6 +1,7 @@
 //! Accès base de données (table `cards`).
 //! Utilisé au démarrage pour charger le cache et par `/fetch_cards` (tâche 2).
 
+use sqlx::types::Json;
 use sqlx::{FromRow, PgPool};
 
 use crate::shared::structs::card_search_result::{
@@ -20,6 +21,7 @@ pub struct CardRow {
     pub race: Option<String>,
     pub level: Option<i16>,
     pub archetype: Option<String>,
+    pub archetype_source: Option<String>,
     pub atk: Option<i32>,
     pub def: Option<i32>,
     pub frame_type: Option<String>,
@@ -42,6 +44,7 @@ impl From<CardRow> for RawCardSearchResult {
             race: row.race,
             level: row.level.map(|l| l as u8),
             archetype: row.archetype,
+            archetype_source: row.archetype_source,
             atk: row.atk,
             def: row.def,
             frame_type: row.frame_type,
@@ -78,7 +81,7 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), DbError> {
 pub async fn load_all_cards(pool: &PgPool) -> Result<Vec<CardSearchResult>, DbError> {
     // Cast ENUMs to text pour que sqlx décode en String (card_type, card_attribute, card_frame en base).
     let rows: Vec<CardRow> = sqlx::query_as::<_, CardRow>(
-        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg, NULLIF(TRIM(card_desc), '') AS card_desc FROM cards ORDER BY id",
+        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, NULLIF(TRIM(archetype_source), '') AS archetype_source, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg, NULLIF(TRIM(card_desc), '') AS card_desc FROM cards ORDER BY id",
     )
     .fetch_all(pool)
     .await?;
@@ -93,6 +96,66 @@ pub async fn load_all_cards(pool: &PgPool) -> Result<Vec<CardSearchResult>, DbEr
             })
         })
         .collect()
+}
+
+/// Carte éligible à un futur complément d’`archetype` (couche YGOrg `card_raw` déjà présente).
+#[derive(Debug, FromRow)]
+pub struct ArchetypeFillCandidate {
+    pub id: i64,
+    pub name: String,
+    pub name_en: Option<String>,
+}
+
+/// Compte les cartes sans archétype utile mais avec une couche `card_raw` YGOrganization.
+pub async fn count_archetype_fill_candidates(pool: &PgPool) -> Result<i64, DbError> {
+    let n: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)::bigint
+        FROM cards c
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+          AND EXISTS (
+              SELECT 1
+              FROM card_enrichment_layers e
+              WHERE e.card_id = c.id
+                AND e.source = $1
+                AND e.layer = $2
+          )
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .fetch_one(pool)
+    .await?;
+    Ok(n)
+}
+
+/// Liste ordonnée par `id` (limite SQL) pour prévisualisation admin (dry-run).
+pub async fn list_archetype_fill_candidates(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ArchetypeFillCandidate>, DbError> {
+    let rows = sqlx::query_as::<_, ArchetypeFillCandidate>(
+        r#"
+        SELECT c.id, c.name, c.name_en
+        FROM cards c
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+          AND EXISTS (
+              SELECT 1
+              FROM card_enrichment_layers e
+              WHERE e.card_id = c.id
+                AND e.source = $1
+                AND e.layer = $2
+          )
+        ORDER BY c.id
+        LIMIT $3
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
 }
 
 const UPSERT_BATCH_SIZE: usize = 200;
@@ -269,6 +332,65 @@ pub async fn upsert_card_enrichment_layer(
     .execute(pool)
     .await?;
     Ok(())
+}
+
+/// Candidat avec JSON `card_raw` (phase 2 — dérivation d’archétype).
+#[derive(Debug, FromRow)]
+pub struct ArchetypeFillCandidatePayload {
+    pub id: i64,
+    pub name: String,
+    pub payload: Json<serde_json::Value>,
+}
+
+/// Liste les candidats avec le dernier `card_raw` (par `fetched_at`).
+pub async fn list_archetype_fill_candidates_with_payload(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ArchetypeFillCandidatePayload>, DbError> {
+    let rows = sqlx::query_as::<_, ArchetypeFillCandidatePayload>(
+        r#"
+        SELECT DISTINCT ON (c.id) c.id, c.name, e.payload
+        FROM cards c
+        INNER JOIN card_enrichment_layers e ON e.card_id = c.id
+          AND e.source = $1
+          AND e.layer = $2
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+        ORDER BY c.id, e.fetched_at DESC NULLS LAST
+        LIMIT $3
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Met à jour `archetype` + `archetype_source` uniquement si `archetype` est encore vide (NULL-only).
+/// Retourne `true` si une ligne a été modifiée.
+pub async fn update_card_archetype_null_only(
+    pool: &PgPool,
+    card_id: i64,
+    archetype: &str,
+    archetype_source: &str,
+) -> Result<bool, DbError> {
+    let res = sqlx::query(
+        r#"
+        UPDATE cards
+        SET archetype = $2,
+            archetype_source = $3,
+            updated_at = NOW()
+        WHERE id = $1
+          AND (archetype IS NULL OR TRIM(BOTH FROM COALESCE(archetype, '')) = '')
+        "#,
+    )
+    .bind(card_id)
+    .bind(archetype)
+    .bind(archetype_source)
+    .execute(pool)
+    .await?;
+    Ok(res.rows_affected() > 0)
 }
 
 /// Filtre `ids` pour ne garder que les IDs présents dans `cards` (évite violation FK).

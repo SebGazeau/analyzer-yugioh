@@ -1,5 +1,7 @@
 //! Résolution nom → passcode (id API) alignée sur `/card` et la sauvegarde de deck.
-//! Gère aussi les alias « This card is always treated as "…" » (même limite ×3).
+//! Gère les alias d’exemplaires via la formulation **always treated as** dans la description
+//! (ex. *Fallen of the White Dragon* → *Fallen of Albaz*, variantes *Harpy Lady*, etc.) :
+//! plusieurs entrées deck possibles, une seule **somme** d’exemplaires plafonnée.
 
 use std::sync::LazyLock;
 
@@ -95,6 +97,7 @@ mod tests {
             name_en.map(|s| CardName::try_from(s.to_string()).unwrap()),
             CardType::Monster,
             Some(Attribute::Dark),
+            None,
             None,
             None,
             None,

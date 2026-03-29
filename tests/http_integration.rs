@@ -328,6 +328,56 @@ async fn test_admin_import_without_key_returns_403() {
 }
 
 #[actix_web::test]
+async fn test_preview_card_metadata_fill_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/preview_card_metadata_fill")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_apply_card_metadata_fill_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/apply_card_metadata_fill?max=10")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_preview_card_metadata_fill_with_admin_key_no_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests_with_auth(
+        Some(TEST_ADMIN_KEY_32),
+        None,
+    ))
+    .await;
+    let req = test::TestRequest::get()
+        .uri("/admin/preview_card_metadata_fill?max=10")
+        .insert_header(("x-admin-key", TEST_ADMIN_KEY_32))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_apply_card_metadata_fill_with_admin_key_no_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests_with_auth(
+        Some(TEST_ADMIN_KEY_32),
+        None,
+    ))
+    .await;
+    let req = test::TestRequest::get()
+        .uri("/admin/apply_card_metadata_fill?max=10")
+        .insert_header(("x-admin-key", TEST_ADMIN_KEY_32))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
 async fn test_admin_import_with_wrong_key_returns_403() {
     let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
     let req = test::TestRequest::post()

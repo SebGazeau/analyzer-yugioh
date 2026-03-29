@@ -1,0 +1,32 @@
+# Service optionnel : passes d'enrichissement régulières (petits max, pauses).
+# Démarrage :
+#   docker compose -f docker-compose.yml -f docker-compose.enrich-job.yml --profile enrich up -d enrichment-job
+# Avec dev :
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.enrich-job.yml --profile enrich up -d enrichment-job
+#
+# Par défaut : boucle toutes les heures, sans sync_index, sans écriture apply_card_metadata_fill.
+# Pour activer l'écriture archétype : ENRICH_METADATA_FILL_WRITE=1 dans .env
+
+services:
+  enrichment-job:
+    profiles: ["enrich"]
+    image: curlimages/curl:8.11.1
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      ENRICHMENT_BASE_URL: http://app:8080
+      ADMIN_SECRET: ${ADMIN_SECRET:-}
+      ENRICH_RUN_SYNC_INDEX: ${ENRICH_RUN_SYNC_INDEX:-0}
+      ENRICH_RUN_INIT: ${ENRICH_RUN_INIT:-1}
+      ENRICH_BACKFILL_MAX: ${ENRICH_BACKFILL_MAX:-25}
+      ENRICH_MANIFEST_MAX: ${ENRICH_MANIFEST_MAX:-25}
+      ENRICH_SYNC_QA_MAX: ${ENRICH_SYNC_QA_MAX:-50}
+      ENRICH_METADATA_FILL_MAX: ${ENRICH_METADATA_FILL_MAX:-100}
+      ENRICH_METADATA_FILL_WRITE: ${ENRICH_METADATA_FILL_WRITE:-0}
+      ENRICH_SLEEP_BETWEEN_STEPS_SEC: ${ENRICH_SLEEP_BETWEEN_STEPS_SEC:-3}
+      ENRICH_INTERVAL_SEC: ${ENRICH_INTERVAL_SEC:-3600}
+    volumes:
+      - ./scripts/enrichment_job.sh:/enrichment_job.sh:ro
+    entrypoint: ["/bin/sh", "/enrichment_job.sh"]
+    restart: unless-stopped

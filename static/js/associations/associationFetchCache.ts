@@ -3,6 +3,23 @@ import type { AssociationCatalogCard } from './types.js';
 
 const CATALOG_URL = '/associations/catalog';
 
+/**
+ * Précharge le catalogue en idle (builder) pour que la première ouverture
+ * de la modal « cartes associées » évite l’attente réseau si le JSON est déjà en cache.
+ */
+export function prefetchAssociationCatalogWhenIdle(): void {
+    const run = (): void => {
+        void getAssociationCatalog().catch(() => {
+            /* hors-ligne ou erreur : la modal retentera au besoin */
+        });
+    };
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(run, { timeout: 8000 });
+    } else {
+        window.setTimeout(run, 2500);
+    }
+}
+
 let catalogMemo: AssociationCatalogCard[] | null = null;
 let catalogInflight: Promise<AssociationCatalogCard[]> | null = null;
 

@@ -10,6 +10,7 @@ use actix_files::Files;
 use actix_web::cookie::Key;
 use actix_web::dev::Service;
 use actix_web::http::StatusCode;
+use actix_web::middleware::Compress;
 use actix_web::{App, HttpResponse, web};
 use sqlx::PgPool;
 use tera::Tera;
@@ -62,6 +63,7 @@ pub fn make_app(
     // Clé de session : fournie ou dérivée (pour unifier le type App).
     let key = session_key.unwrap_or_else(|| Key::from(&[0u8; 64]));
     let app = App::new()
+        .wrap(Compress::default())
         .wrap_fn({
             move |req, srv| {
                 type RlResp = Result<
@@ -165,6 +167,8 @@ pub fn make_app(
                 .service(routes::admin_setup)
                 .service(handlers::fetch_cards)
                 .service(handlers::enrich_ygorganization)
+                .service(handlers::preview_card_metadata_fill)
+                .service(handlers::apply_card_metadata_fill)
                 .service(routes::admin_import)
                 .service(routes::admin_rehydrate_storage),
         )

@@ -15,7 +15,7 @@
 include .env
 export
 
-.PHONY: dev watch test test-db test-frontend migrate db-migrate docker-up docker-down docker-dev docker-clean build-frontend assert-npm-linux
+.PHONY: dev watch test test-db test-frontend migrate db-migrate docker-up docker-down docker-dev docker-clean build-frontend assert-npm-linux enrichment-job
 
 # Sous WSL, si npm vient de Windows, les scripts lancent CMD.EXE avec un cwd UNC
 # (\\wsl.localhost\...) : vite n'est pas trouvé. Il faut Node/npm installés dans la distro WSL.
@@ -72,3 +72,10 @@ docker-dev: assert-npm-linux
 
 docker-clean:
 	docker compose down -v
+
+# Passes YGOrg + apply_card_metadata_fill (plafonds bas : voir docs/enrichment-job.md).
+enrichment-job:
+	@chmod +x scripts/enrichment_job.sh
+	@set -a; [ ! -f .env ] || . ./.env; set +a; \
+	  ENRICHMENT_BASE_URL="$${ENRICHMENT_BASE_URL:-http://localhost:8080}" \
+	  ./scripts/enrichment_job.sh

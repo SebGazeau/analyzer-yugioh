@@ -116,6 +116,12 @@ describe('search.ts — DOM', () => {
     expect(items.length).toBe(3);
     expect(list.textContent).toContain('Dark Magician');
     expect(list.textContent).toContain('Blue-Eyes White Dragon');
+    const firstRow = list.querySelector('.search-result-row');
+    const meta = firstRow?.querySelector('.search-result-meta');
+    expect(meta?.textContent).toContain('Magician');
+    const badge = firstRow?.querySelector('[data-search-archetype-source="ygorg_effect_en"]');
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent).toContain('YGOrg');
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });

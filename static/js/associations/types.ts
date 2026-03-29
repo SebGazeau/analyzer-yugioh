@@ -54,6 +54,11 @@ export type AssociationCatalogCard = {
     ygorg_name_en?: string | null;
     /** Illu. (YGOProDeck ou `/images/…/mobile` selon API catalogue). */
     image_url?: string | null;
+    /**
+     * Provenance si l’archétype a été complété hors dump YGOProDeck (ex. `ygorg_effect_en`).
+     * Absent du JSON API quand NULL en base.
+     */
+    archetype_source?: string | null;
 };
 
 export type TextMentionRule = {

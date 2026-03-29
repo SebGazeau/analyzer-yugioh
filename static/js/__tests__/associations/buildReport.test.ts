@@ -89,6 +89,12 @@ describe('buildAssociationReport', () => {
         expect(c[0].desc).toBe('test');
     });
 
+    it('toAssociationCatalog lit archetype_source', () => {
+        const raw = [{ id: 11, name: 'Y', archetype: 'Z', archetype_source: 'ygorg_effect_en' }];
+        const c = toAssociationCatalog(raw as unknown[]);
+        expect(c[0].archetype_source).toBe('ygorg_effect_en');
+    });
+
     it('citation texte : matche ygorg_effect_en si desc vide', () => {
         const anchor = card({ id: 1, name: 'Stardust Dragon', archetype: 'Stardust' });
         const catalog: AssociationCatalogCard[] = [
@@ -172,6 +178,24 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         expect(rules.length).toBe(2);
         expect(rules.map((r) => r.displayLabel)).toContain('Citation texte : Foo');
         expect(rules.map((r) => r.displayLabel)).toContain('Citation texte : Bar');
+    });
+
+    it('n’utilise pas des mots du nom trop génériques (dragon, white, …)', () => {
+        const anchor = card({
+            id: 73819701,
+            name: 'Fallen of the White Dragon',
+            name_en: 'Fallen of the White Dragon',
+            archetype: null,
+        });
+        const rules = buildDynamicTextMentionRulesFromAnchor(anchor, {
+            includeNameWordPatterns: true,
+            minNameWordLength: 5,
+        });
+        const nameRules = rules.filter((r) => r.groupKey.startsWith('text_name:'));
+        expect(nameRules.some((r) => r.patterns.includes('dragon'))).toBe(false);
+        expect(nameRules.some((r) => r.patterns.includes('white'))).toBe(false);
+        expect(nameRules.length).toBeGreaterThanOrEqual(1);
+        expect(nameRules.some((r) => r.patterns.includes('fallen'))).toBe(true);
     });
 
     it('intègre le rapport : desc qui cite un archétype de l’ancre', () => {

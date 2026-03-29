@@ -1700,6 +1700,25 @@ tr.analysis-section-header[role="button"]:hover {
   color: var(--color-text-muted);
 }
 
+.search-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.search-result-arch-source {
+  flex-shrink: 0;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+
 .search-result-actions {
   flex-shrink: 0;
   display: grid;

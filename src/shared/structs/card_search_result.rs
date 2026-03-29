@@ -14,6 +14,7 @@ pub struct CardSearchResult {
     race: Option<String>,
     level: Option<u8>,
     archetype: Option<String>,
+    archetype_source: Option<String>,
     atk: Option<i32>,
     def: Option<i32>,
     frame_type: Option<String>,
@@ -33,6 +34,7 @@ impl CardSearchResult {
         race: Option<String>,
         level: Option<u8>,
         archetype: Option<String>,
+        archetype_source: Option<String>,
         atk: Option<i32>,
         def: Option<i32>,
         frame_type: Option<String>,
@@ -50,6 +52,7 @@ impl CardSearchResult {
             race,
             level,
             archetype,
+            archetype_source,
             atk,
             def,
             frame_type,
@@ -85,6 +88,10 @@ impl CardSearchResult {
         self.archetype.as_deref()
     }
 
+    pub fn archetype_source(&self) -> Option<&str> {
+        self.archetype_source.as_deref()
+    }
+
     pub fn card_desc(&self) -> Option<&str> {
         self.card_desc.as_deref()
     }
@@ -101,6 +108,7 @@ impl CardSearchResult {
             race: self.race.clone(),
             level: self.level,
             archetype: self.archetype.clone(),
+            archetype_source: self.archetype_source.clone(),
             atk: self.atk,
             def: self.def,
             frame_type: self.frame_type.clone(),
@@ -124,6 +132,8 @@ pub struct RawCardSearchResult {
     pub race: Option<String>,
     pub level: Option<u8>,
     pub archetype: Option<String>,
+    #[serde(default)]
+    pub archetype_source: Option<String>,
     pub atk: Option<i32>,
     pub def: Option<i32>,
     #[serde(rename = "frameType")]
@@ -193,6 +203,7 @@ impl TryFrom<RawCardSearchResult> for CardSearchResult {
             race: raw.race,
             level: raw.level,
             archetype: raw.archetype,
+            archetype_source: raw.archetype_source,
             atk: raw.atk,
             def: raw.def,
             frame_type: raw.frame_type,
@@ -231,6 +242,7 @@ mod tests {
             race.clone(),
             level.clone(),
             archetype.clone(),
+            None,
             atk.clone(),
             def.clone(),
             frame_type.clone(),
@@ -280,6 +292,7 @@ mod tests {
             race.clone(),
             level.clone(),
             archetype.clone(),
+            Some("ygorg_effect_en".to_string()),
             atk.clone(),
             def.clone(),
             frame_type.clone(),
@@ -299,6 +312,10 @@ mod tests {
         assert_eq!(search_dto.race, Some("Quick-Play".to_string()));
         assert_eq!(search_dto.level, Some(1));
         assert_eq!(search_dto.archetype, Some("Archfiend".to_string()));
+        assert_eq!(
+            search_dto.archetype_source,
+            Some("ygorg_effect_en".to_string())
+        );
         assert_eq!(search_dto.atk, Some(1000));
         assert_eq!(search_dto.def, Some(1000));
         assert_eq!(search_dto.frame_type, Some("Spell".to_string()));
@@ -315,6 +332,7 @@ mod tests {
         assert!(json.contains("\"race\":\"Quick-Play\""));
         assert!(json.contains("\"level\":1"));
         assert!(json.contains("\"archetype\":\"Archfiend\""));
+        assert!(json.contains("\"archetype_source\":\"ygorg_effect_en\""));
         assert!(json.contains("\"atk\":1000"));
         assert!(json.contains("\"def\":1000"));
         assert!(json.contains("\"frame_type\":\"Spell\""));

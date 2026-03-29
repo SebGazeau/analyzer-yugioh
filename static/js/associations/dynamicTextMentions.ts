@@ -69,6 +69,89 @@ const STOP_WORDS = new Set([
     'pièges',
 ]);
 
+/**
+ * Mots extraits du nom de carte trop **fréquents** en Yu-Gi-Oh ! pour créer un angle
+ * « citation texte (mot du nom) » — sinon des milliers de faux positifs (ex. *dragon*, *white*).
+ * Ne s’applique pas aux archétypes structurés (`archetype` API), seulement aux règles `text_name:*`.
+ */
+const NAME_WORD_YGO_GENERIC_BLOCKLIST = new Set([
+    // Types / races (EN) — longueur ≥ minNameWordLength (5) sauf exceptions
+    'dragon',
+    'warrior',
+    'spellcaster',
+    'machine',
+    'beast',
+    'fiend',
+    'aqua',
+    'pyro',
+    'rock',
+    'plant',
+    'insect',
+    'wyrm',
+    'cyberse',
+    'illusion',
+    'psychic',
+    'reptile',
+    'serpent',
+    'winged',
+    'zombie',
+    'dinosaur',
+    'fairy',
+    'beast-warrior',
+    'divine-beast',
+    // Adjectifs / termes trop génériques dans les textes de cartes
+    'white',
+    'black',
+    'light',
+    'dark',
+    'red',
+    'blue',
+    'green',
+    'gold',
+    'silver',
+    'ancient',
+    'modern',
+    'elemental',
+    'hero',
+    'knight',
+    'magician',
+    'soldier',
+    'guardian',
+    'master',
+    'lord',
+    'lady',
+    'woman',
+    'king',
+    'queen',
+    'prince',
+    'princess',
+    'sage',
+    'witch',
+    'wizard',
+    'crystal',
+    // FR (noms)
+    'magicien',
+    'magicienne',
+    'guerrier',
+    'guerrière',
+    'bete',
+    'tenebreux',
+    'lumineux',
+    'ancien',
+    'ancienne',
+    'noir',
+    'noire',
+    'blanc',
+    'blanche',
+    'rouge',
+    'bleu',
+    'bleue',
+    'vert',
+    'verte',
+    'serviteur',
+    'chevalier',
+]);
+
 function stripCombiningMarks(s: string): string {
     return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -115,6 +198,7 @@ function extractNameWords(
             );
             if (w.length < minLen) continue;
             if (STOP_WORDS.has(w)) continue;
+            if (NAME_WORD_YGO_GENERIC_BLOCKLIST.has(w)) continue;
             if (!/[a-zà-ÿ]/i.test(w)) continue;
             if (!seen.has(w)) {
                 seen.add(w);

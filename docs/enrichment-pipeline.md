@@ -40,6 +40,7 @@ Objectif : **compléter** les données sans **remplacer** le cœur importé dans
   - **`mode=sync_index`** : recharge l’index nom EN → id (TRUNCATE + insert).
   - **`mode=init`** : sonde `GET /data/card/10000`, enregistre `X-Cache-Revision`.
   - **`mode=backfill&max=N`** : pour chaque carte sans `card_raw`, lookup nom (`name_en` si non vide sinon `name`, **égalité exacte** avec l’index) → `ygorg_internal_id` → fetch JSON → `card_enrichment_layers` + `card_ygorg_id_map`.
+- **Dérivation `archetype`** (`apply_card_metadata_fill`) : en plus de la 1ʳᵉ ligne d’`effectText`, analyse des **lignes suivantes** (plafond 15) pour les motifs `"…" monster` ; citations de plus de **5 mots** ignorées (évite les noms de carte longs).
   - **`mode=manifest&max=N`** : ids du manifest = ids YGResources ; on ne met à jour que les cartes déjà présentes dans **`card_ygorg_id_map`** (souvent après backfill).
   - **`mode=sync_qa&max=N`** : liste **`GET /data/meta/recent/en/qa`**, puis pour chaque id **`GET /data/qa/{id}`** → table **`ygorg_qa_entries`** (ids `cards` = YGOrg internes).
 - Débit : ~120 ms entre chaque `GET /data/card/…`.
@@ -52,10 +53,12 @@ Objectif : **compléter** les données sans **remplacer** le cœur importé dans
 
 ## Étape 3 — Consommation côté app
 
-- **Recherche / cache** : pour l’instant `load_all_cards` ne charge pas les enrichissements ; prévoir soit :
-  - des **colonnes dérivées** (matérialisées par job), soit
-  - un **JOIN** ou lecture JSONB **à la demande** (fiche carte, « cartes associées » avancées).
-- **Cartes associées** : `GET /associations/catalog` joint les champs EN YGOrg (`effectText`, `pendulumEffect`, `flavorText`, `linkEffect`, `name`) et expose **`image_url`** : WebP **`/images/{uuid}/file/mobile`** si l’illustration est en base, sinon URL YGOProDeck du cache (pour la modal avec vignettes). **`GET /associations/qa_related?card_id=`** renvoie les ids catalogue partageant une Q&A avec l’ancre (nécessite **`sync_qa`** + **`card_ygorg_id_map`**). Le groupe « citation nom ancre » utilise **`associationCitableTextForAnchorNameMatch`** (sans `ygorg_name_en`) pour limiter les faux positifs. Côté client, le catalogue et `qa_related` sont mis en cache en session (`static/js/associations/associationFetchCache.ts`) ; index partiel DB **`idx_card_enrichment_ygorg_card_raw`** sur `card_enrichment_layers` pour le scan `ygorganization` / `card_raw`.
+- **Recherche / cache** : `load_all_cards` charge **`archetype`** et **`archetype_source`** depuis `cards` (colonne matérialisée par le job admin `apply_card_metadata_fill`). `GET /search` sérialise `archetype_source` si présent. Les enrichissements JSONB YGOrg hors colonnes restent accessibles via jointures dédiées (ex. catalogue associations).
+- **Cartes associées** : `GET /associations/catalog` joint les champs EN YGOrg (`effectText`, `pendulumEffect`, `flavorText`, `linkEffect`, `name`), expose **`archetype_source`** avec **`archetype`**, et **`image_url`** : WebP **`/images/{uuid}/file/mobile`** si l’illustration est en base, sinon URL YGOProDeck du cache (pour la modal avec vignettes). **`GET /associations/qa_related?card_id=`** renvoie les ids catalogue partageant une Q&A avec l’ancre (nécessite **`sync_qa`** + **`card_ygorg_id_map`**). Le groupe « citation nom ancre » utilise **`associationCitableTextForAnchorNameMatch`** (sans `ygorg_name_en`) pour limiter les faux positifs. Côté client, le catalogue et `qa_related` sont mis en cache en session (`static/js/associations/associationFetchCache.ts`) ; index partiel DB **`idx_card_enrichment_ygorg_card_raw`** sur `card_enrichment_layers` pour le scan `ygorganization` / `card_raw`.
+
+## Job planifié (coût maîtrisé)
+
+Orchestration par **script shell** + petits `max` + pauses : [enrichment-job.md](./enrichment-job.md). Service Docker optionnel : `docker-compose.enrich-job.yml` (profil `enrich`).
 
 ## Ordre de travail recommandé
 

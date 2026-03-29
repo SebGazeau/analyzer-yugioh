@@ -21,6 +21,72 @@ use crate::storage::Storage;
 const ADMIN_JWT_ROLE: &str = "admin";
 const ADMIN_TOKEN_HOURS: i64 = 24;
 
+/// Styles communs pour les blocs d’aide sous les actions admin (HTML embarqué).
+const ADMIN_DASHBOARD_STYLE: &str = r#"<style>
+  .admin-help { color: #333; max-width: 48rem; line-height: 1.5; font-size: 0.95rem; margin: 0.25rem 0 0.6rem; }
+  .admin-section { margin-bottom: 1.35rem; border-left: 3px solid #c8c8c8; padding-left: 0.75rem; }
+  .admin-section h2 { font-size: 1.05rem; margin: 0 0 0.35rem; }
+  .btn-row { margin-top: 0.35rem; display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+  .admin-actions-title { font-size: 1.1rem; margin: 0 0 0.75rem; }
+</style>"#;
+
+/// Actions admin : textes d’aide + formulaires (partagé page connectée et page token).
+const ADMIN_DASHBOARD_ACTIONS_HTML: &str = r#"<h2 class="admin-actions-title">Actions</h2>
+
+<section class="admin-section">
+  <h2>Catalogue YGOProDeck</h2>
+  <p class="admin-help">Interroge l’API publique YGOProDeck, met à jour les tables <code>cards</code> et <code>card_sets</code>, peut écrire le fichier <code>cards.json</code> selon la config, puis recharge le cache utilisé par la recherche. À lancer sur une base vide ou après de nouvelles sorties de cartes.</p>
+  <p class="btn-row">
+    <form method="get" action="/admin/fetch_cards" style="display:inline"><button type="submit">Rafraîchir les cartes</button></form>
+  </p>
+</section>
+
+<section class="admin-section">
+  <h2>Enrichissement YGOrganization (YGResources)</h2>
+  <p class="admin-help">Enrichit la base avec des données YGOrg (effets EN, JSON cartes, etc.). <strong>Ordre conseillé la première fois</strong> : sync index → init révision → backfill (répéter si besoin) → manifest. Ensuite, <strong>sync Q&amp;A</strong> de temps en temps pour le module « cartes associées ».</p>
+  <ul class="admin-help" style="margin: 0 0 0.5rem 1.1rem; padding: 0;">
+    <li><strong>Sync index EN</strong> : télécharge l’index des noms anglais (volumineux, à faire rarement).</li>
+    <li><strong>Init révision</strong> : enregistre la révision YGOrg de référence pour les manifests suivants.</li>
+    <li><strong>Backfill</strong> : associe les passcodes de <code>cards</code> aux IDs YGOrg via l’index.</li>
+    <li><strong>Manifest</strong> : télécharge le JSON brut des cartes (couche <code>card_raw</code>).</li>
+    <li><strong>Sync Q&amp;A</strong> : importe des Q&amp;A récents (liens entre cartes pour l’UI associations).</li>
+  </ul>
+  <p class="btn-row">
+    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="sync_index"/><button type="submit">YGOrg — sync index EN (lourd)</button></form>
+    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="init"/><button type="submit">YGOrg — init révision</button></form>
+    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="backfill"/><input type="hidden" name="max" value="30"/><button type="submit">YGOrg — backfill (30)</button></form>
+    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="manifest"/><input type="hidden" name="max" value="50"/><button type="submit">YGOrg — manifest (50)</button></form>
+    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="sync_qa"/><input type="hidden" name="max" value="150"/><button type="submit">YGOrg — sync Q&amp;A (150)</button></form>
+  </p>
+</section>
+
+<section class="admin-section">
+  <h2>Complément archétype (YGOrg)</h2>
+  <p class="admin-help">Cible : cartes sans archétype YGOProDeck mais avec couche <code>card_raw</code>. <strong>Liste CSV</strong> (<code>preview_card_metadata_fill</code>) sans analyse JSON. <strong>Phases 2–3</strong> (<code>apply_card_metadata_fill</code>) : dérive depuis le JSON (monstre : <code>\"…\" monster</code> ; sort/piège : <code>add 1 \"…\" card</code> sur la 1re ligne ; ou champ futur <code>cardData.en.archetype</code>). Avec <code>write=1</code> : <code>cards.archetype</code> + <code>archetype_source</code> (NULL-only), recharge du cache. Sinon simulation.</p>
+  <p class="btn-row">
+    <form method="get" action="/admin/preview_card_metadata_fill" style="display:inline"><input type="hidden" name="max" value="500"/><button type="submit">Liste CSV candidats (500)</button></form>
+    <form method="get" action="/admin/apply_card_metadata_fill" style="display:inline"><input type="hidden" name="max" value="300"/><button type="submit">Simuler dérivation (300)</button></form>
+    <form method="get" action="/admin/apply_card_metadata_fill" style="display:inline" onsubmit="return confirm('Écrire archetype + archetype_source en base et recharger le cache ?');"><input type="hidden" name="max" value="300"/><input type="hidden" name="write" value="1"/><button type="submit">Appliquer dérivation (300)</button></form>
+  </p>
+</section>
+
+<section class="admin-section">
+  <h2>Images illustrées</h2>
+  <p class="admin-help">Parcourt les URLs d’images référencées en base, télécharge et produit les variantes WebP. Les images déjà importées sont en principe ignorées (pas de re-traitement inutile).</p>
+  <p class="btn-row">
+    <form method="post" action="/admin/import" style="display:inline"><button type="submit">Importer les images</button></form>
+  </p>
+</section>
+
+<section class="admin-section">
+  <h2>Fichiers de stockage</h2>
+  <p class="admin-help">Pour chaque enregistrement <code>images</code>, retélécharge depuis l’URL source et écrit les fichiers aux chemins déjà en base (ex. dossier vide après déploiement ou changement de stockage). <strong>Forcer</strong> réécrit même si le fichier existe déjà.</p>
+  <p class="btn-row">
+    <form method="post" action="/admin/rehydrate_storage" style="display:inline"><button type="submit">Remplir le stockage (URLs → fichiers)</button></form>
+    <form method="post" action="/admin/rehydrate_storage?force=true" style="display:inline"><button type="submit">Remplir le stockage (forcer réécriture)</button></form>
+  </p>
+</section>"#;
+
 /// Secret admin (injecté en app_data pour le handler de login).
 #[derive(Clone)]
 pub struct AdminSecret(pub Option<String>);
@@ -168,50 +234,17 @@ pub async fn admin_login_page(
         .flatten()
         .unwrap_or(false);
     if is_connected {
-        let body = r#"<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin</title></head><body>
+        let body = format!(
+            r#"<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Admin</title>{style}</head><body>
 <h1>Espace admin</h1>
 <p>Connecté en tant qu'admin.</p>
-<p>
-  <form method="get" action="/admin/fetch_cards" style="display:inline">
-    <button type="submit">Rafraîchir les cartes</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="sync_index"/>
-    <button type="submit">YGOrg — sync index EN (lourd)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="init"/>
-    <button type="submit">YGOrg — init révision</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="backfill"/>
-    <input type="hidden" name="max" value="30"/>
-    <button type="submit">YGOrg — backfill (30)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="manifest"/>
-    <input type="hidden" name="max" value="50"/>
-    <button type="submit">YGOrg — manifest (50)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="sync_qa"/>
-    <input type="hidden" name="max" value="150"/>
-    <button type="submit">YGOrg — sync Q&amp;A (150)</button>
-  </form>
-  <form method="post" action="/admin/import" style="display:inline">
-    <button type="submit">Importer les images</button>
-  </form>
-  <form method="post" action="/admin/rehydrate_storage" style="display:inline">
-    <button type="submit">Remplir le stockage (URLs → fichiers)</button>
-  </form>
-  <form method="post" action="/admin/rehydrate_storage?force=true" style="display:inline">
-    <button type="submit">Idem (forcer réécriture)</button>
-  </form>
-</p>
-<p><small>Rafraîchir : API → DB + cache. Importer : nouvelles URLs seulement. Remplir stockage : pour chaque ligne <code>images</code>, retélécharge et écrit aux chemins déjà en base (ex. après passage en GCS).</small></p>
+{actions}
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
-</body></html>"#;
+</body></html>"#,
+            style = ADMIN_DASHBOARD_STYLE,
+            actions = ADMIN_DASHBOARD_ACTIONS_HTML,
+        );
         return HttpResponse::Ok()
             .content_type("text/html; charset=utf-8")
             .body(body);
@@ -227,13 +260,14 @@ pub async fn admin_login_page(
   <button type="submit">Connexion</button>
 </form>
 <p><a href="/admin/setup">Créer le premier compte admin</a></p>
+<p><small>Après connexion, vous accédez aux actions (catalogue YGOProDeck, enrichissement YGOrganization, images, stockage) avec une explication pour chaque bloc.</small></p>
 </body></html>"#
     } else {
         r#"<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Admin</title></head><body>
 <h1>Admin</h1>
 <p>Base de données requise pour la connexion email/mot de passe.</p>
-<p><a href="/admin/fetch_cards">Rafraîchir les cartes</a> (si accès par clé)</p>
+<p>Si vous disposez d’une <strong>clé admin</strong> (<code>X-Admin-Key</code> ou équivalent), vous pouvez tout de même <a href="/admin/fetch_cards">rafraîchir le catalogue YGOProDeck</a> : cela met à jour <code>cards</code> / <code>card_sets</code> et le cache recherche (voir la doc des autres actions une fois la base disponible).</p>
 </body></html>"#
     };
     HttpResponse::Ok()
@@ -287,54 +321,23 @@ pub async fn admin_login(
     }
     let body = format!(
         r#"<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin – Token</title></head><body>
+<html><head><meta charset="utf-8"><title>Admin – Token</title>{style}</head><body>
 <h1>Connexion réussie</h1>
-<p>Identité : <strong>{}</strong></p>
-<p>Token JWT (valide {} h) — à utiliser pour les routes <code>/admin/*</code> :</p>
-<pre id="token" style="background:#f0f0f0;padding:0.5em;overflow-x:auto;">{}</pre>
+<p>Identité : <strong>{sub}</strong></p>
+<p>Token JWT (valide {hours} h) — à utiliser en en-tête <code>Authorization: Bearer …</code> sur les routes <code>/admin/*</code> (ou <code>X-Admin-Key</code> si votre déploiement l’utilise à la place).</p>
+<pre id="token" style="background:#f0f0f0;padding:0.5em;overflow-x:auto;">{token}</pre>
 <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('token').textContent)">Copier le token</button>
-<p>Exemple : <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/admin/fetch_cards</code></p>
-<p>YGOrganization : 1) <code>sync_index</code>, 2) <code>init</code>, 3) <code>backfill</code>, 4) <code>manifest</code>, 5) optionnel <code>sync_qa&amp;max=150</code> (Q&amp;A récents → associations). Ex. <code>curl …/enrich_ygorganization?mode=sync_qa&amp;max=150</code></p>
-<p>
-  <form method="get" action="/admin/fetch_cards" style="display:inline">
-    <button type="submit">Rafraîchir les cartes</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="sync_index"/>
-    <button type="submit">YGOrg — sync index EN (lourd)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="init"/>
-    <button type="submit">YGOrg — init révision</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="backfill"/>
-    <input type="hidden" name="max" value="30"/>
-    <button type="submit">YGOrg — backfill (30)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="manifest"/>
-    <input type="hidden" name="max" value="50"/>
-    <button type="submit">YGOrg — manifest (50)</button>
-  </form>
-  <form method="get" action="/admin/enrich_ygorganization" style="display:inline">
-    <input type="hidden" name="mode" value="sync_qa"/>
-    <input type="hidden" name="max" value="150"/>
-    <button type="submit">YGOrg — sync Q&amp;A (150)</button>
-  </form>
-  <form method="post" action="/admin/import" style="display:inline">
-    <button type="submit">Importer les images</button>
-  </form>
-  <form method="post" action="/admin/rehydrate_storage" style="display:inline">
-    <button type="submit">Remplir le stockage</button>
-  </form>
-  <a href="/admin/login">Espace admin</a>
-</p>
+<p class="admin-help"><strong>Exemples curl</strong> — catalogue : <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/admin/fetch_cards</code> · liste candidats archétype : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/preview_card_metadata_fill?max=500"</code> · simuler dérivation : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/apply_card_metadata_fill?max=200"</code> · <strong>écrire</strong> archétypes dérivés : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/apply_card_metadata_fill?max=200&amp;write=1"</code> · YGOrg Q&amp;A : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/enrich_ygorganization?mode=sync_qa&amp;max=150"</code></p>
+<hr style="margin:1.25rem 0;border:none;border-top:1px solid #ddd"/>
+{actions}
+<p><a href="/admin/login">Retour espace admin</a></p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
 </body></html>"#,
-        html_escape(sub),
-        ADMIN_TOKEN_HOURS,
-        html_escape(&token),
+        style = ADMIN_DASHBOARD_STYLE,
+        sub = html_escape(sub),
+        hours = ADMIN_TOKEN_HOURS,
+        token = html_escape(&token),
+        actions = ADMIN_DASHBOARD_ACTIONS_HTML,
     );
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")

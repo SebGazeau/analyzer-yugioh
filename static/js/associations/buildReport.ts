@@ -86,6 +86,7 @@ function normalizeCatalogCard(raw: Record<string, unknown>): AssociationCatalogC
         ygorg_link_effect_en: optStr('ygorg_link_effect_en'),
         ygorg_name_en: optStr('ygorg_name_en'),
         image_url: optStr('image_url'),
+        archetype_source: optStr('archetype_source'),
     };
 }
 

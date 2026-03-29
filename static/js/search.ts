@@ -1,4 +1,5 @@
 import { addToDeck } from './deck.js';
+import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
 
@@ -19,11 +20,22 @@ function getSubtypeLine(card: any): string {
     const t = (card.type ?? '').toLowerCase();
     const race = card.race ?? '';
     const level = card.level != null ? card.level : '';
+    const arch =
+        typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
     if (t.includes('monster')) {
         const part = race || card.type || '';
-        return level ? `${part} · ${level}★` : part;
+        const line = level ? `${part} · ${level}★` : part;
+        return arch ? `${line} · ${arch}` : line;
     }
     return card.type || '';
+}
+
+function archetypeSourceBadgeHtml(card: any): string {
+    const src = card.archetype_source;
+    if (typeof src !== 'string' || !src.trim()) return '';
+    const { short, title } = archetypeSourceUi(src.trim());
+    if (!short) return '';
+    return `<span class="search-result-arch-source" data-search-archetype-source="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
 }
 
 let lastResults: any[] = [];
@@ -51,7 +63,10 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         <div class="search-result-thumb">${thumbContent}</div>
         <div class="search-result-info">
             <span class="search-result-name">${highlightMatch(mainName, query)}</span>
-            <span class="search-result-subtype">${escapeHtml(subtype)}</span>
+            <div class="search-result-meta">
+                <span class="search-result-subtype">${escapeHtml(subtype)}</span>
+                ${archetypeSourceBadgeHtml(card)}
+            </div>
         </div>
         <div class="search-result-actions">
             <button type="button" class="search-result-add search-result-add--deck" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>

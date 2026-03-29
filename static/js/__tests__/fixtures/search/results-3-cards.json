@@ -3,6 +3,8 @@
     "id": 89631139,
     "name": "Magicien Sombre",
     "name_en": "Dark Magician",
+    "archetype": "Magician",
+    "archetype_source": "ygorg_effect_en",
     "type": "Normal Monster",
     "race": "Spellcaster",
     "desc": "The ultimate wizard.",

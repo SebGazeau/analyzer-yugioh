@@ -39,6 +39,7 @@ Document de référence. Source de vérité : `migrations/20250203000002_mpd_v3.
 | `race` | `TEXT` | oui | Race / type |
 | `level` | `SMALLINT` | oui | Niveau ou rang |
 | `archetype` | `TEXT` | oui | Archétype |
+| `archetype_source` | `TEXT` | oui | Provenance si complété hors YGOProDeck (ex. `ygorg_effect_en`, migration `20260327120000`) |
 | `atk` | `INTEGER` | oui | ATK |
 | `def` | `INTEGER` | oui | DEF |
 | `ygoprodeck_url` | `TEXT` | oui | Lien YGOProDeck |

@@ -1,6 +1,11 @@
+import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
 import { associationReportToMarkdown, buildAssociationReport, toAssociationCatalog } from './buildReport.js';
+import {
+    ASSOCIATIONS_MODAL_TILES_INITIAL,
+    splitAssociationTileIdsForDisplay,
+} from './modalTileLimit.js';
 import type { AssociationCatalogCard, AssociationGroup, AssociationReport } from './types.js';
 
 const MODAL_ID = 'associations-modal';
@@ -15,6 +20,8 @@ const MODAL_ANCHOR_ART_ID = 'associations-modal-anchor-art';
 /** Markdown du dernier rapport affiché (copie presse-papiers). */
 let latestAssociationMarkdown = '';
 let associationsReturnFocus: HTMLElement | null = null;
+/** Catalogue du dernier rapport affiché (expansion « Voir plus » des tuiles). */
+let lastModalCatalogForTiles: AssociationCatalogCard[] | null = null;
 
 function countAssociationStats(groups: AssociationGroup[]): {
     groupsWithCards: number;
@@ -51,6 +58,35 @@ function renderThumbInner(
     return `<div class="associations-modal__thumb-placeholder" aria-hidden="true"><span>${escapeHtml(initials)}</span></div>`;
 }
 
+function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCatalogCard>): string {
+    const row = idToCard.get(id);
+    const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
+    const art = renderThumbInner(row?.image_url, nm, 'associations-modal__tile-img', 'lazy');
+    return `<li class="associations-modal__tile" data-card-id="${id}"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
+}
+
+function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
+    const cat = lastModalCatalogForTiles;
+    if (!cat) return;
+    const raw = btn.getAttribute('data-rest-ids') ?? '';
+    const rest = raw
+        .split(',')
+        .map((s) => s.trim())
+        .map(Number)
+        .filter((n) => Number.isFinite(n));
+    if (rest.length === 0) return;
+    const ul = btn.closest('ul');
+    if (!ul?.classList.contains('associations-modal__tile-grid')) return;
+    const idToCard = new Map<number, AssociationCatalogCard>();
+    for (const c of cat) idToCard.set(c.id, c);
+    const html = rest.map((id) => renderTileListItemHtml(id, idToCard)).join('');
+    const liWrap = btn.closest('li');
+    if (liWrap) {
+        liWrap.insertAdjacentHTML('beforebegin', html);
+        liWrap.remove();
+    }
+}
+
 function setAnchorArt(card: AssociationCatalogCard): void {
     const el = document.getElementById(MODAL_ANCHOR_ART_ID);
     if (!el) return;
@@ -67,6 +103,8 @@ function mergeAnchorWithCatalog(
     return {
         ...anchor,
         image_url: row.image_url ?? anchor.image_url ?? null,
+        archetype: row.archetype ?? anchor.archetype ?? null,
+        archetype_source: row.archetype_source ?? anchor.archetype_source ?? null,
     };
 }
 
@@ -128,12 +166,18 @@ function ensureModalElements(): {
         `;
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => {
-            if ((e.target as HTMLElement).closest('[data-associations-close]')) {
+            const el = e.target as HTMLElement;
+            if (el.closest('[data-associations-close]')) {
                 closeAssociationsModal();
             }
-            if ((e.target as HTMLElement).closest('[data-associations-action="copy-markdown"]')) {
+            if (el.closest('[data-associations-action="copy-markdown"]')) {
                 e.preventDefault();
                 void copyMarkdownToClipboard();
+            }
+            const expandBtn = el.closest('[data-associations-action="expand-tiles"]') as HTMLButtonElement | null;
+            if (expandBtn) {
+                e.preventDefault();
+                handleExpandAssociationTiles(expandBtn);
             }
         });
         document.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -147,6 +191,7 @@ function ensureModalElements(): {
 }
 
 export function closeAssociationsModal(): void {
+    lastModalCatalogForTiles = null;
     const el = document.getElementById(MODAL_ID);
     if (el) {
         el.hidden = true;
@@ -193,6 +238,17 @@ function renderReportHtml(
     parts.push(
         `<p><strong>Archétype(s) — champ API</strong> : ${escapeHtml(archLine)}</p>`,
     );
+    const srcRaw = anchor.archetype_source?.trim();
+    if (srcRaw) {
+        const { short, title } = archetypeSourceUi(srcRaw);
+        parts.push(
+            `<p><strong>Provenance archétype</strong> : <span class="associations-modal__arch-source" data-associations-archetype-source="${escapeAttr(
+                srcRaw,
+            )}" title="${escapeAttr(title)}">${escapeHtml(short || srcRaw)}</span> <code class="associations-modal__arch-source-code">${escapeHtml(
+                srcRaw,
+            )}</code></p>`,
+        );
+    }
     parts.push(
         `<p class="associations-modal__anchor-note">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause — pas la logique de regroupement.</p>`,
     );
@@ -227,20 +283,15 @@ function renderReportHtml(
         parts.push(`</summary>`);
         parts.push(`<div class="associations-modal__acc-panel">`);
         parts.push('<ul class="associations-modal__tile-grid">');
-        for (const id of g.cardIds) {
-            const row = idToCard.get(id);
-            const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
-            const art = renderThumbInner(
-                row?.image_url,
-                nm,
-                'associations-modal__tile-img',
-                'lazy',
+        const { visible, rest } = splitAssociationTileIdsForDisplay(g.cardIds, ASSOCIATIONS_MODAL_TILES_INITIAL);
+        for (const id of visible) {
+            parts.push(renderTileListItemHtml(id, idToCard));
+        }
+        if (rest.length > 0) {
+            const idsAttr = rest.join(',');
+            parts.push(
+                `<li class="associations-modal__tile-more" data-associations-tile-more="1"><button type="button" class="associations-modal__expand-tiles" data-associations-action="expand-tiles" data-rest-ids="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
-            parts.push(`<li class="associations-modal__tile" data-card-id="${id}">`);
-            parts.push(`<div class="associations-modal__tile-art">${art}</div>`);
-            parts.push(`<div class="associations-modal__tile-caption">`);
-            parts.push(`<span class="associations-modal__tile-name">${escapeHtml(nm)}</span>`);
-            parts.push(`</div></li>`);
         }
         parts.push('</ul></div></details>');
     }
@@ -316,14 +367,16 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
         const displayAnchor = mergeAnchorWithCatalog(anchor, catalog);
         setAnchorArt(displayAnchor);
 
-        const report = buildAssociationReport(anchor, catalog, { ygorgQaRelatedCardIds });
+        const report = buildAssociationReport(displayAnchor, catalog, { ygorgQaRelatedCardIds });
         const idToName = new Map<number, string>();
         for (const c of catalog) idToName.set(c.id, c.name_en?.trim() || c.name);
         const markdown = associationReportToMarkdown(report, idToName);
         latestAssociationMarkdown = markdown;
+        lastModalCatalogForTiles = catalog;
         els.body.innerHTML = renderReportHtml(report, catalog, displayAnchor, markdown);
     } catch {
         latestAssociationMarkdown = '';
+        lastModalCatalogForTiles = null;
         els.body.innerHTML =
             '<p class="associations-modal__error">Impossible de charger le catalogue (réseau ou serveur).</p>';
     } finally {

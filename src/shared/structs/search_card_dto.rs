@@ -17,6 +17,9 @@ pub struct SearchCardDto {
     pub race: Option<String>,
     pub level: Option<u8>,
     pub archetype: Option<String>,
+    /// Origine de l’archétype si complété hors YGOProDeck (ex. `ygorg_effect_en`). Absent si import pur API.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub archetype_source: Option<String>,
     pub atk: Option<i32>,
     pub def: Option<i32>,
     pub frame_type: Option<String>,

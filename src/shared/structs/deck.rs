@@ -282,6 +282,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let white = CardSearchResult::new(
             200,
@@ -289,6 +290,7 @@ mod tests {
             None,
             CardType::Monster,
             Some(Attribute::Light),
+            None,
             None,
             None,
             None,

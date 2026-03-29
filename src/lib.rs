@@ -2,6 +2,7 @@
 
 mod app;
 pub mod auth;
+pub mod card_metadata_fill;
 pub mod config;
 pub mod db;
 pub mod handlers;
