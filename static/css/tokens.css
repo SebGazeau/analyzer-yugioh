@@ -21,6 +21,8 @@
   --color-bg-surface:    #151820;   /* panels, cards, nav */
   --color-bg-elevated:   #1e2130;   /* modals, dropdowns, hover states */
   --color-bg-sunken:     #0a0c10;   /* input wells, inset areas */
+  /* Boutons/icônes au-dessus des vignettes (lisible sur artwork clair ou foncé) */
+  --color-bg-control-scrim: rgba(21, 24, 32, 0.82);
 
   /* ── Borders ─────────────────────────────────── */
   --color-border-subtle: #2a2d3a;   /* dividers, quiet separators */

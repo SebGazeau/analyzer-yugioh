@@ -281,19 +281,97 @@ function escapeAttr(s: string): string {
 }
 
 let popoverEl: HTMLElement | null = null;
+let popoverBackdropEl: HTMLElement | null = null;
 let popoverSection: DeckSection | null = null;
 let popoverIndex: number = -1;
 
 const POPOVER_GAP = 4;
 const VIEWPORT_MARGIN = 16;
 
+function deckCardPopoverIsOpen(): boolean {
+    return Boolean(popoverEl?.classList.contains('deck-card-popover--open'));
+}
+
+/** Écrit quantité / engine / catégories du popover dans l’état du deck (idempotent). */
+function persistDeckCardPopoverEdits(): void {
+    if (!popoverEl || popoverSection == null || popoverIndex < 0) return;
+    const qtySelect = popoverEl.querySelector('.deck-card-popover-qty') as HTMLSelectElement | null;
+    const engineSelect = popoverEl.querySelector('.deck-card-popover-engine') as HTMLSelectElement | null;
+    const catContainer = popoverEl.querySelector('.deck-card-popover-cat-container') as HTMLElement | null;
+    const arr = getState(popoverSection);
+    const row = arr[popoverIndex];
+    if (!row) return;
+    let newQty = parseInt(qtySelect?.value || '1', 10);
+    const key = deckLimitGroupKeyRow(row);
+    const maxA = maxAllowedForDeckLimitGroup(key, row.maxCopies ?? 3);
+    const totalOthers = totalQtyDeckLimitGroup(key) - row.quantity;
+    const maxForThisRow = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
+    if (newQty > maxForThisRow) newQty = maxForThisRow;
+    if (newQty < 1) newQty = 1;
+    row.quantity = newQty;
+    if (qtySelect) qtySelect.value = String(newQty);
+    row.engine = engineSelect?.value || '';
+    if (catContainer?.firstElementChild && typeof (catContainer.firstElementChild as any).getCategories === 'function') {
+        row.categories = (catContainer.firstElementChild as any).getCategories();
+    }
+    updateDeckCount();
+    updateProbabilities();
+    computeGlobalStats();
+    if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+    const cell = document.querySelector(`[data-deck-cell-section="${popoverSection}"][data-deck-cell-index="${popoverIndex}"]`);
+    const badge = cell?.querySelector('.deck-card-qty');
+    if (badge) badge.textContent = 'x' + row.quantity;
+}
+
+function hideDeckCardPopover(): void {
+    popoverBackdropEl?.classList.remove('deck-card-popover-backdrop--open');
+    if (popoverEl) popoverEl.classList.remove('deck-card-popover--open');
+    popoverSection = null;
+    popoverIndex = -1;
+}
+
+function dismissDeckCardPopoverSaving(): void {
+    persistDeckCardPopoverEdits();
+    hideDeckCardPopover();
+}
+
+function removeOneDeckCopy(section: DeckSection, index: number): void {
+    if (deckCardPopoverIsOpen()) {
+        persistDeckCardPopoverEdits();
+    }
+    const wasEditingHere = popoverSection === section && popoverIndex === index;
+    const arr = getState(section);
+    const row = arr[index];
+    if (!row) return;
+    if (row.quantity > 1) {
+        row.quantity -= 1;
+        renderDeckSection(section);
+        updateDeckCount();
+        updateProbabilities();
+        computeGlobalStats();
+        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+        if (wasEditingHere) {
+            const cell = document.querySelector(
+                `[data-deck-cell-section="${section}"][data-deck-cell-index="${index}"]`,
+            ) as HTMLElement | null;
+            if (cell) openPopover(section, index, cell);
+        }
+    } else {
+        arr.splice(index, 1);
+        renderDeckSection(section);
+        updateDeckCount();
+        updateProbabilities();
+        computeGlobalStats();
+        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+        hideDeckCardPopover();
+    }
+}
+
 function repositionPopover(): void {
     if (!popoverEl || !popoverEl.classList.contains('deck-card-popover--open') || popoverSection == null || popoverIndex < 0) return;
     const anchor = document.querySelector(`[data-deck-cell-section="${popoverSection}"][data-deck-cell-index="${popoverIndex}"]`) as HTMLElement | null;
     if (!anchor) {
-        popoverEl.classList.remove('deck-card-popover--open');
-        popoverSection = null;
-        popoverIndex = -1;
+        hideDeckCardPopover();
         return;
     }
     const rect = anchor.getBoundingClientRect();
@@ -313,9 +391,18 @@ function repositionPopover(): void {
 
 function getOrCreatePopover(): HTMLElement {
     if (popoverEl) return popoverEl;
+
+    popoverBackdropEl = document.createElement('div');
+    popoverBackdropEl.className = 'deck-card-popover-backdrop';
+    popoverBackdropEl.setAttribute('data-deck-popover-backdrop', '1');
+    popoverBackdropEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(popoverBackdropEl);
+    popoverBackdropEl.addEventListener('click', () => dismissDeckCardPopoverSaving());
+
     popoverEl = document.createElement('div');
     popoverEl.className = 'deck-card-popover';
     popoverEl.setAttribute('role', 'dialog');
+    popoverEl.setAttribute('aria-modal', 'true');
     popoverEl.setAttribute('aria-label', 'Modifier la carte');
     popoverEl.innerHTML = `
         <div class="deck-card-popover-inner">
@@ -343,9 +430,18 @@ function getOrCreatePopover(): HTMLElement {
                 <div class="deck-card-popover-cat-container"></div>
             </div>
             <div class="deck-card-popover-actions">
-                <button type="button" class="btn btn-deck btn-deck-outline deck-card-popover-cover" title="Définir cette carte comme couverture du deck (liste Mes decks)">Couverture</button>
-                <button type="button" class="btn btn-deck btn-deck-danger deck-card-popover-delete">Supprimer</button>
-                <button type="button" class="btn btn-deck btn-deck-outline deck-card-popover-close">Fermer</button>
+                <button type="button" class="deck-card-popover-icon-btn deck-card-popover-close btn btn-deck btn-deck-outline" title="Enregistrer les modifications et fermer" aria-label="Enregistrer et fermer">
+                    <svg class="deck-card-popover-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <button type="button" class="deck-card-popover-icon-btn deck-card-popover-delete btn btn-deck btn-deck-danger" title="Supprimer cette ligne du deck" aria-label="Supprimer la carte du deck">
+                    <svg class="deck-card-popover-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M10 11v6M14 11v6"/>
+                    </svg>
+                </button>
+                <button type="button" class="deck-card-popover-icon-btn deck-card-popover-cover btn btn-deck btn-deck-outline" title="Définir cette carte comme couverture du deck (liste Mes decks)" aria-label="Définir comme couverture du deck">
+                    <svg class="deck-card-popover-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 17l-4.5-4.5L9 20"/></svg>
+                </button>
             </div>
         </div>
     `;
@@ -358,85 +454,51 @@ function getOrCreatePopover(): HTMLElement {
     const closeBtn = popoverEl.querySelector('.deck-card-popover-close');
     const coverBtn = popoverEl.querySelector('.deck-card-popover-cover');
 
-    const close = () => {
-        if (popoverEl) popoverEl.classList.remove('deck-card-popover--open');
-        popoverSection = null;
-        popoverIndex = -1;
-    };
-
-    const apply = () => {
-        if (popoverSection == null || popoverIndex < 0) return;
-        const arr = getState(popoverSection);
-        const row = arr[popoverIndex];
-        if (!row) return;
-        let newQty = parseInt(qtySelect?.value || '1', 10);
-        const key = deckLimitGroupKeyRow(row);
-        const maxA = maxAllowedForDeckLimitGroup(key, row.maxCopies ?? 3);
-        const totalOthers = totalQtyDeckLimitGroup(key) - row.quantity;
-        const maxForThisRow = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
-        if (newQty > maxForThisRow) newQty = maxForThisRow;
-        if (newQty < 1) newQty = 1;
-        row.quantity = newQty;
-        if (qtySelect) qtySelect.value = String(newQty);
-        row.engine = engineSelect?.value || '';
-        if (catContainer?.firstElementChild && typeof (catContainer.firstElementChild as any).getCategories === 'function') {
-            row.categories = (catContainer.firstElementChild as any).getCategories();
-        }
-        updateDeckCount();
-        updateProbabilities();
-        computeGlobalStats();
-        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
-        const cell = document.querySelector(`[data-deck-cell-section="${popoverSection}"][data-deck-cell-index="${popoverIndex}"]`);
-        const badge = cell?.querySelector('.deck-card-qty');
-        if (badge) badge.textContent = 'x' + row.quantity;
-    };
-
-    qtySelect?.addEventListener('change', apply);
-    engineSelect?.addEventListener('change', apply);
+    qtySelect?.addEventListener('change', () => persistDeckCardPopoverEdits());
+    engineSelect?.addEventListener('change', () => persistDeckCardPopoverEdits());
     catContainer?.addEventListener('change', () => {
-        if (catContainer.firstElementChild && typeof (catContainer.firstElementChild as any).getCategories === 'function') {
-            const row = popoverSection != null && popoverIndex >= 0 ? getState(popoverSection)[popoverIndex] : null;
-            if (row) row.categories = (catContainer.firstElementChild as any).getCategories();
-            computeGlobalStats();
-            if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
-        }
+        persistDeckCardPopoverEdits();
     });
 
     deleteBtn?.addEventListener('click', () => {
         if (popoverSection == null || popoverIndex < 0) return;
-        const arr = getState(popoverSection);
-        arr.splice(popoverIndex, 1);
-        renderDeckSection(popoverSection);
+        persistDeckCardPopoverEdits();
+        const sec = popoverSection;
+        const idx = popoverIndex;
+        const arr = getState(sec);
+        arr.splice(idx, 1);
+        renderDeckSection(sec);
         updateDeckCount();
         updateProbabilities();
         computeGlobalStats();
         if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
-        close();
+        hideDeckCardPopover();
     });
 
-    closeBtn?.addEventListener('click', () => {
-        apply();
-        close();
-    });
+    closeBtn?.addEventListener('click', () => dismissDeckCardPopoverSaving());
     coverBtn?.addEventListener('click', async () => {
         const deck = getCurrentLoadedDeck();
         if (popoverSection == null || popoverIndex < 0 || !deck) return;
         const arr = getState(popoverSection);
         const row = arr[popoverIndex];
         if (!row) return;
+        persistDeckCardPopoverEdits();
         setDeckCover(deck.id, row.imageUrl ?? '', row.name);
-        close();
+        hideDeckCardPopover();
         await updateDeckOnServer();
-    });
-    popoverEl.addEventListener('click', (e) => {
-        if (e.target === popoverEl) {
-            apply();
-            close();
-        }
     });
 
     document.addEventListener('scroll', repositionPopover, true);
     window.addEventListener('resize', repositionPopover);
+
+    if (document.documentElement.dataset.deckPopoverEscapeBound !== '1') {
+        document.documentElement.dataset.deckPopoverEscapeBound = '1';
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key !== 'Escape') return;
+            if (!deckCardPopoverIsOpen()) return;
+            dismissDeckCardPopoverSaving();
+        });
+    }
 
     return popoverEl;
 }
@@ -445,6 +507,9 @@ function openPopover(section: DeckSection, index: number, anchor: HTMLElement): 
     const arr = getState(section);
     const row = arr[index];
     if (!row) return;
+    if (deckCardPopoverIsOpen() && (popoverSection !== section || popoverIndex !== index)) {
+        persistDeckCardPopoverEdits();
+    }
     const popover = getOrCreatePopover();
     popoverSection = section;
     popoverIndex = index;
@@ -480,6 +545,7 @@ function openPopover(section: DeckSection, index: number, anchor: HTMLElement): 
     const coverBtnEl = popover.querySelector('.deck-card-popover-cover') as HTMLElement | null;
     if (coverBtnEl) coverBtnEl.style.display = getCurrentLoadedDeck() ? '' : 'none';
 
+    popoverBackdropEl?.classList.add('deck-card-popover-backdrop--open');
     popover.classList.add('deck-card-popover--open');
     repositionPopover();
 }
@@ -507,12 +573,23 @@ function renderDeckSection(section: DeckSection): void {
         cell.innerHTML = `
             <div class="deck-card-thumb">${thumbHtml}</div>
             ${banBadge}
+            <button type="button" class="deck-card-remove-one" data-deck-action="remove-one" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
+                <svg class="deck-card-remove-one-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+                </svg>
+            </button>
             <span class="deck-card-qty">x${row.quantity}</span>
         `;
+        cell.querySelector('.deck-card-remove-one')?.addEventListener('dragstart', (e) => e.preventDefault());
         cell.addEventListener('click', (e) => {
-            if ((e.target as HTMLElement).closest('.deck-card-cell')) {
-                openPopover(section, index, cell);
+            const t = e.target as HTMLElement;
+            if (t.closest('[data-deck-action="remove-one"]')) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeOneDeckCopy(section, index);
+                return;
             }
+            openPopover(section, index, cell);
         });
         container.appendChild(cell);
     });
@@ -923,7 +1000,7 @@ export function importDeckFromFile(event: Event): void {
 /** No-op pour compatibilité : la grille cartes n'a pas de tri par colonne. */
 export function enableColumnSort(_gridId: string, _cols: number, _onSort?: () => void): void {}
 
-/** No-op pour compatibilité : suppression via popover. */
+/** No-op pour compatibilité : suppression via popover ou bouton « − » sur la carte. */
 export function enableGridRowDeletion(_gridSelector: string, _cols: number, _btnClass?: string, _onDelete?: () => void): void {}
 
 const DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
@@ -1017,7 +1094,7 @@ export function bindDeckDragAndDrop(): void {
         e.dataTransfer.setData(DND_PAYLOAD_TYPE, JSON.stringify({ section, index }));
         e.dataTransfer.effectAllowed = 'move';
         cell.classList.add('deck-card-cell--dragging');
-        document.querySelector('.deck-card-popover--open')?.classList.remove('deck-card-popover--open');
+        hideDeckCardPopover();
     });
 
     root.addEventListener('dragend', (e: DragEvent) => {

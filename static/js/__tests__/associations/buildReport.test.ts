@@ -6,6 +6,7 @@ import {
     buildAssociationReport,
     evaluateReportConclusiveness,
     EXAMPLE_BLUE_EYES_TEXT_RULES,
+    patternMatchesInCitableText,
     toAssociationCatalog,
 } from '../../associations/buildReport.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
@@ -171,6 +172,23 @@ describe('buildAssociationReport', () => {
     });
 });
 
+describe('patternMatchesInCitableText', () => {
+    it('mot entier (text_name) : pas de match de break dans breakthrough', () => {
+        const h = 'this card has a breakthrough effect'.toLowerCase();
+        expect(patternMatchesInCitableText(h, 'break', true)).toBe(false);
+        expect(patternMatchesInCitableText('destroy this break target'.toLowerCase(), 'break', true)).toBe(true);
+    });
+
+    it('sans frontière : breakthrough contient break', () => {
+        expect(patternMatchesInCitableText('breakthrough'.toLowerCase(), 'break', false)).toBe(true);
+    });
+
+    it('phrases avec espace restent en includes même avec frontière activée', () => {
+        const h = 'add 1 blue eyes monster'.toLowerCase();
+        expect(patternMatchesInCitableText(h, 'blue eyes', true)).toBe(true);
+    });
+});
+
 describe('buildDynamicTextMentionRulesFromAnchor', () => {
     it('produit une règle par archétype parsé', () => {
         const anchor = card({ id: 1, name: 'X', archetype: 'Foo / Bar' });
@@ -198,6 +216,22 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         expect(nameRules.some((r) => r.patterns.includes('fallen'))).toBe(true);
     });
 
+    it('n’utilise pas « break » du nom (trop fréquent en PSCT)', () => {
+        const anchor = card({
+            id: 1,
+            name: 'DoomZ Break - Diactorus',
+            name_en: 'DoomZ Break - Diactorus',
+            archetype: null,
+        });
+        const rules = buildDynamicTextMentionRulesFromAnchor(anchor, {
+            includeNameWordPatterns: true,
+            minNameWordLength: 5,
+        });
+        const nameRules = rules.filter((r) => r.groupKey.startsWith('text_name:'));
+        expect(nameRules.some((r) => r.patterns.includes('break'))).toBe(false);
+        expect(nameRules.some((r) => r.patterns.includes('diactorus'))).toBe(true);
+    });
+
     it('intègre le rapport : desc qui cite un archétype de l’ancre', () => {
         const anchor = card({ id: 1, name: 'A', archetype: 'Stardust' });
         const catalog: AssociationCatalogCard[] = [
@@ -212,6 +246,53 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         const tm = r.groups.filter((g) => g.angleId === 'text_mention');
         expect(tm.some((g) => g.displayLabel.includes('Stardust'))).toBe(true);
         expect(tm.some((g) => g.cardIds.includes(2))).toBe(true);
+    });
+
+    it('omet un groupe text_name si le nombre de cartes dépasse le plafond', () => {
+        const anchor = card({ id: 1, name: 'Anchor' });
+        const catalog: AssociationCatalogCard[] = [
+            anchor,
+            ...Array.from({ length: 10 }, (_, i) =>
+                card({ id: i + 2, name: `C${i}`, desc: 'effect token broadmatchtoken here' }),
+            ),
+        ];
+        const r = buildAssociationReport(anchor, catalog, {
+            dynamicTextMentions: false,
+            maxNameWordCitationMatches: 5,
+            textMentionRules: [
+                {
+                    groupKey: 'text_name:broad',
+                    displayLabel: 'Citation texte (mot du nom) : « x »',
+                    patterns: ['broadmatchtoken'],
+                },
+            ],
+        });
+        expect(r.groups.filter((g) => g.angleId === 'text_mention')).toHaveLength(0);
+        expect(r.diagnostics.some((d) => d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD')).toBe(true);
+    });
+
+    it('n’applique pas le plafond text_name aux règles text_arch', () => {
+        const anchor = card({ id: 1, name: 'A' });
+        const catalog: AssociationCatalogCard[] = [
+            anchor,
+            ...Array.from({ length: 10 }, (_, i) =>
+                card({ id: i + 2, name: `C${i}`, desc: 'stardust spark here' }),
+            ),
+        ];
+        const r = buildAssociationReport(anchor, catalog, {
+            dynamicTextMentions: false,
+            maxNameWordCitationMatches: 3,
+            textMentionRules: [
+                {
+                    groupKey: 'text_arch:stardust',
+                    displayLabel: 'Citation texte : Stardust',
+                    patterns: ['stardust'],
+                },
+            ],
+        });
+        const g = r.groups.find((x) => x.groupKey === 'text_arch:stardust');
+        expect(g?.cardIds.length).toBe(10);
+        expect(r.diagnostics.some((d) => d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD')).toBe(false);
     });
 });
 

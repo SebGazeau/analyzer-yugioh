@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { closeSearch, escapeAttr, highlightMatch, setupSearch } from '../search.js';
+import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
 import results3 from './fixtures/search/results-3-cards.json';
 
 describe('search.ts — helpers purs', () => {
@@ -33,6 +33,22 @@ describe('search.ts — helpers purs', () => {
       expect(escapeAttr('a & b')).toBe('a &amp; b');
       expect(escapeAttr('say "hi"')).toBe('say &quot;hi&quot;');
       expect(escapeAttr('<img>')).toBe('&lt;img&gt;');
+    });
+  });
+
+  describe('pickBestCardFromSearchResults', () => {
+    it('préfère l’égalité exacte sur name / name_en', () => {
+      const cards = [
+        { id: 1, name: 'Number C101: Silent Honor DARK', name_en: 'Number C101: Silent Honor DARK' },
+        { id: 2, name: 'Number 101: Silent Honor ARK', name_en: 'Number 101: Silent Honor ARK' },
+      ];
+      const pick = pickBestCardFromSearchResults(cards, 'Number 101: Silent Honor ARK');
+      expect(pick?.id).toBe(2);
+    });
+
+    it('retombe sur le premier résultat si aucune égalité', () => {
+      const cards = [{ id: 9, name: 'A', name_en: 'B' }];
+      expect(pickBestCardFromSearchResults(cards, 'Z')?.id).toBe(9);
     });
   });
 });

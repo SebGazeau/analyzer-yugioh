@@ -115,6 +115,37 @@ function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement):
     filtered.forEach((card) => renderResultRow(card, query, resultsEl));
 }
 
+/** Requête brute `/search` (même locale que le builder). */
+export async function fetchSearchResultsForQuery(q: string): Promise<any[]> {
+    const t = q.trim();
+    if (t.length < MIN_QUERY_LENGTH) return [];
+    const res = await fetch(`/search?q=${encodeURIComponent(t)}${searchLocaleQuery()}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+}
+
+function normName(s: string): string {
+    return String(s ?? '')
+        .trim()
+        .toLowerCase();
+}
+
+/**
+ * Choisit la carte la plus probable dans les résultats (égalité nom / name_en avec l’intention, sinon 1ʳᵉ).
+ */
+export function pickBestCardFromSearchResults(cards: any[], intendedName: string): any | null {
+    if (!cards.length) return null;
+    const target = normName(intendedName);
+    if (!target) return cards[0];
+    for (const c of cards) {
+        const main = normName(c.name ?? '');
+        const en = normName(c.name_en ?? '');
+        if (main === target || en === target) return c;
+    }
+    return cards[0];
+}
+
 /** Remplit la recherche du builder et lance une requête (ex. depuis l’onglet Suggestions). */
 export function runSearchWithQuery(q: string): void {
     const input = document.getElementById('search-box') as HTMLInputElement | null;

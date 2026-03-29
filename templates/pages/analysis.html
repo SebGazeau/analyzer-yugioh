@@ -47,8 +47,10 @@
     <button type="button" class="btn btn-deck btn-deck-ghost" id="btn-draw-reset" title="Réinitialiser la simulation">Réinitialiser</button>
     <button type="button" class="btn btn-deck btn-deck-outline" id="btn-run-1000-sims" title="Lancer 1000 tirages et afficher la distribution">Run 1000 sims</button>
     <button type="button" class="btn btn-deck btn-deck-ghost" id="btn-clear-histograms" title="Effacer les graphiques (distribution et mini-graphiques)">Effacer les graphiques</button>
-    <span class="draw-simulation-drawn">Cartes tirées (<span id="draw-simulation-count">0</span>/<span id="draw-simulation-max">5</span>) :</span>
-    <div id="draw-simulation-list" class="draw-simulation-cards" aria-label="Cartes tirées"></div>
+    <div class="draw-simulation-drawn-row">
+      <span class="draw-simulation-drawn">Cartes tirées (<span id="draw-simulation-count">0</span>/<span id="draw-simulation-max">5</span>) :</span>
+      <div id="draw-simulation-list" class="draw-simulation-cards" aria-label="Cartes tirées"></div>
+    </div>
   </div>
   <div class="draw-histogram-wrap">
     <p class="draw-histogram-heading" id="draw-histogram-heading">Distribution (1000 tirages)</p>

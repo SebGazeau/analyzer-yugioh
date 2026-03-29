@@ -1,3 +1,5 @@
+import { fetchCardByName } from '../api.js';
+import { addToDeck } from '../deck.js';
 import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
@@ -62,7 +64,7 @@ function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCat
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
     const art = renderThumbInner(row?.image_url, nm, 'associations-modal__tile-img', 'lazy');
-    return `<li class="associations-modal__tile" data-card-id="${id}"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
+    return `<li class="associations-modal__tile" data-card-id="${id}" data-associations-add-deck="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
 }
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
@@ -114,6 +116,35 @@ function announceAssociationsModal(message: string): void {
     live.textContent = '';
     void live.offsetWidth;
     live.textContent = message;
+}
+
+async function addAssociationTileToDeck(tile: Element): Promise<void> {
+    const idStr = tile.getAttribute('data-card-id');
+    const id = idStr ? parseInt(idStr, 10) : NaN;
+    if (!Number.isFinite(id)) return;
+    const cat = lastModalCatalogForTiles;
+    const row = cat?.find((c) => c.id === id);
+    const searchName = row?.name_en?.trim() || row?.name?.trim();
+    if (!searchName) {
+        announceAssociationsModal('Impossible de résoudre le nom de cette carte.');
+        return;
+    }
+    let card = await fetchCardByName(searchName);
+    if (!card) {
+        const { fetchSearchResultsForQuery, pickBestCardFromSearchResults } = await import('../search.js');
+        const results = await fetchSearchResultsForQuery(searchName);
+        card = pickBestCardFromSearchResults(results, searchName);
+    }
+    if (!card) {
+        alert(`Carte introuvable pour « ${searchName} » (API /carte ou recherche).`);
+        return;
+    }
+    const ok = await addToDeck(card);
+    if (!ok) {
+        alert("Impossible d'ajouter (limite d'exemplaires, zone pleine ou type incompatible).");
+        return;
+    }
+    announceAssociationsModal(`${searchName} ajouté au deck.`);
 }
 
 async function copyMarkdownToClipboard(): Promise<void> {
@@ -168,6 +199,13 @@ function ensureModalElements(): {
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => {
             const el = e.target as HTMLElement;
+            const addTile = el.closest('[data-associations-add-deck]');
+            if (addTile) {
+                e.preventDefault();
+                e.stopPropagation();
+                void addAssociationTileToDeck(addTile);
+                return;
+            }
             if (el.closest('[data-associations-close]')) {
                 closeAssociationsModal();
             }
@@ -182,7 +220,18 @@ function ensureModalElements(): {
             }
         });
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && !created.hidden) closeAssociationsModal();
+            const mod = document.getElementById(MODAL_ID);
+            if (!mod || mod.hidden) return;
+            if (e.key === 'Escape') {
+                closeAssociationsModal();
+                return;
+            }
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const t = e.target as HTMLElement;
+            const tile = t.closest('[data-associations-add-deck]');
+            if (!tile || !mod.contains(tile)) return;
+            e.preventDefault();
+            void addAssociationTileToDeck(tile);
         });
     }
     const body = document.getElementById(MODAL_BODY_ID) as HTMLElement | null;
@@ -233,6 +282,9 @@ function renderReportHtml(
         `<span class="associations-modal__stat"><span class="associations-modal__stat-value">${uniqueCardCount}</span> carte(s) distincte(s)</span>`,
     );
     parts.push(`</div>`);
+    parts.push(
+        `<p class="associations-modal__add-hint">Clique une <strong>vignette</strong> ci-dessous pour <strong>ajouter la carte au deck</strong> (comme le + du builder).</p>`,
+    );
 
     parts.push(`<div class="associations-modal__anchor-meta">`);
     parts.push(`<p class="associations-modal__anchor-label">Ancre — métadonnées</p>`);

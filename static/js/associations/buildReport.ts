@@ -10,6 +10,26 @@ import type {
 } from './types.js';
 
 const DEFAULT_MAX_GROUP = 200;
+/** Au-delà, les angles `text_name:*` sont ignorés (anti-bruit dynamique). */
+const DEFAULT_MAX_NAME_WORD_CITATION_MATCHES = 48;
+
+function escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Correspondance pour une sous-chaîne : `includes` ou mot entier ASCII (évite les sous-mots).
+ * Espaces / tirets dans le motif → toujours `includes` (phrases, « blue-eyes », etc.).
+ */
+export function patternMatchesInCitableText(haystackLower: string, patternRaw: string, useWordBoundary: boolean): boolean {
+    const p = patternRaw.toLowerCase();
+    if (!p) return false;
+    if (!useWordBoundary) return haystackLower.includes(p);
+    if (/\s/.test(p) || p.includes('-')) return haystackLower.includes(p);
+    if (p.length < 2 || /[^a-z0-9]/.test(p)) return haystackLower.includes(p);
+    const re = new RegExp(`(?<![a-z0-9])${escapeRegex(p)}(?![a-z0-9])`);
+    return re.test(haystackLower);
+}
 
 /**
  * Texte balayé pour les angles « citation » :
@@ -115,6 +135,8 @@ export function buildAssociationReport(
     options: BuildAssociationReportOptions = {},
 ): AssociationReport {
     const maxGroupSize = options.maxGroupSize ?? DEFAULT_MAX_GROUP;
+    const maxNameWordCitationMatches = options.maxNameWordCitationMatches ?? DEFAULT_MAX_NAME_WORD_CITATION_MATCHES;
+    const useWordBoundaryForNameWords = options.useWordBoundaryForNameWordPatterns !== false;
     const dynamicOn = options.dynamicTextMentions !== false;
     const textMentionRules: TextMentionRule[] = dynamicOn
         ? [
@@ -239,14 +261,24 @@ export function buildAssociationReport(
     } else {
         for (const rule of textMentionRules) {
             const matching: number[] = [];
+            const useWordBoundary =
+                useWordBoundaryForNameWords && rule.groupKey.startsWith('text_name:');
             for (const c of catalog) {
                 if (c.id === anchor.id) continue;
                 const d = associationCitableText(c).toLowerCase();
                 if (!d.trim()) continue;
-                const hit = rule.patterns.some((p) => d.includes(p.toLowerCase()));
+                const hit = rule.patterns.some((p) => patternMatchesInCitableText(d, p, useWordBoundary));
                 if (hit) matching.push(c.id);
             }
             const unique = [...new Set(matching)];
+            if (rule.groupKey.startsWith('text_name:') && unique.length > maxNameWordCitationMatches) {
+                pushDiagnostic(diagnostics, {
+                    code: 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
+                    message: `« ${rule.displayLabel} » ignoré : ${unique.length} cartes (plafond ${maxNameWordCitationMatches} pour un mot extrait du nom).`,
+                    severity: 'info',
+                });
+                continue;
+            }
             let cardIds = unique;
             if (unique.length > maxGroupSize) {
                 cardIds = unique.slice(0, maxGroupSize);
@@ -323,7 +355,8 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
             d.code === 'NO_ARCHETYPE_ON_ANCHOR' ||
             d.code === 'EMPTY_CATALOG' ||
             d.code === 'NO_DESC_IN_CATALOG' ||
-            d.code === 'YGORG_EFFECT_EN_AVAILABLE',
+            d.code === 'YGORG_EFFECT_EN_AVAILABLE' ||
+            d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
     );
     if (hasExplain) {
         reasons.push('Aucun lien trouvé mais des diagnostics expliquent pourquoi.');
