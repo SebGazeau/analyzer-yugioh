@@ -99,10 +99,20 @@ mod tests {
     /// Les tests modifient `YGOPRODECK_CARDINFO_URL` : pas de parallèle sur ce module.
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
+    /// SAFETY : `ENV_LOCK` garantit qu’un seul test touche ces variables à la fois.
+    unsafe fn env_remove_ygoprodeck_url() {
+        std::env::remove_var("YGOPRODECK_CARDINFO_URL");
+    }
+
+    /// SAFETY : idem [`env_remove_ygoprodeck_url`].
+    unsafe fn env_set_ygoprodeck_url(val: &str) {
+        std::env::set_var("YGOPRODECK_CARDINFO_URL", val);
+    }
+
     #[test]
     fn ygoprodeck_url_fr_misc_and_language() {
         let _g = ENV_LOCK.lock().expect("env lock");
-        std::env::remove_var("YGOPRODECK_CARDINFO_URL");
+        unsafe { env_remove_ygoprodeck_url() };
         let u = ygoprodeck_cardinfo_url_for_locale("fr");
         assert!(
             u.contains("misc=yes") && u.contains("language=fr"),
@@ -114,12 +124,11 @@ mod tests {
     #[test]
     fn ygoprodeck_url_strips_query_from_env_base() {
         let _g = ENV_LOCK.lock().expect("env lock");
-        std::env::set_var(
-            "YGOPRODECK_CARDINFO_URL",
-            "https://example.com/api/cardinfo.php?legacy=1&x=y",
-        );
+        unsafe {
+            env_set_ygoprodeck_url("https://example.com/api/cardinfo.php?legacy=1&x=y");
+        }
         let u = ygoprodeck_cardinfo_url_for_locale("de");
-        std::env::remove_var("YGOPRODECK_CARDINFO_URL");
+        unsafe { env_remove_ygoprodeck_url() };
         assert!(
             !u.contains("legacy") && !u.contains("x=y"),
             "query env ne doit pas fuir: {u}"

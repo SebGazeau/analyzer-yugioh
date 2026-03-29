@@ -33,13 +33,9 @@ use actix_web::{HttpServer, web};
 use sqlx::postgres::PgPoolOptions;
 
 use analyzer_yugioh::{
-    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret},
-    card_locales_sync,
-    cards_sync,
-    config, db,
-    konami_catalog,
     CARDS_PATH_DEFAULT,
-    make_app,
+    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret},
+    card_locales_sync, cards_sync, config, db, konami_catalog, make_app,
     rate_limit::rate_limit_state_from_env,
     security_startup::{self, StartupSecretError},
     session_cookies::SessionCookieSettings,
@@ -352,8 +348,7 @@ async fn run_sync_locales_ygo_only() -> std::io::Result<()> {
         std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
     })?;
 
-    let raw = std::env::var("CARD_LOCALES_YGO")
-        .unwrap_or_else(|_| "fr,de,it,pt".to_string());
+    let raw = std::env::var("CARD_LOCALES_YGO").unwrap_or_else(|_| "fr,de,it,pt".to_string());
     let locales: Vec<String> = raw
         .split(',')
         .map(|s| s.trim().to_string())

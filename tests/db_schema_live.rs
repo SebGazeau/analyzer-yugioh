@@ -235,14 +235,10 @@ async fn db_live_card_locales_search_fetch_resolve() {
     assert!(d.contains("magique"));
 
     let name_norm = normalize_name_for_match("Dragon Rouge db_live");
-    let resolved = find_card_id_by_locale_name(
-        &pool,
-        "fr",
-        name_norm.as_str(),
-        "Dragon Rouge db_live",
-    )
-    .await
-    .expect("find_card_id_by_locale_name");
+    let resolved =
+        find_card_id_by_locale_name(&pool, "fr", name_norm.as_str(), "Dragon Rouge db_live")
+            .await
+            .expect("find_card_id_by_locale_name");
     assert_eq!(resolved.map(|t| t.0), Some(T_CARD_LOCALE));
 
     sqlx::query("DELETE FROM cards WHERE id = $1")

@@ -1,9 +1,9 @@
 //! Tests d'intégration HTTP pour les routes.
 
 use actix_web::dev::ServiceResponse;
+use actix_web::http::StatusCode;
 use actix_web::http::header::HeaderMap;
 use actix_web::http::header::SET_COOKIE;
-use actix_web::http::StatusCode;
 use actix_web::test;
 use uuid::Uuid;
 

@@ -2,12 +2,14 @@
 
 use std::collections::HashSet;
 
+use sqlx::types::Json;
 use sqlx::{FromRow, PgPool};
 
 use crate::shared::structs::card_search_result::{CardSearchResult, RawCardSearchResult};
 use crate::ygo_api::CardUpsertRow;
 
 use super::error::DbError;
+use super::ygorg::{YGORG_ENRICHMENT_SOURCE, YGORG_LAYER_CARD_RAW};
 
 /// Une ligne de la table `cards` (colonnes utilisées pour le cache).
 #[derive(Debug, FromRow)]
@@ -21,6 +23,7 @@ pub struct CardRow {
     pub race: Option<String>,
     pub level: Option<i16>,
     pub archetype: Option<String>,
+    pub archetype_source: Option<String>,
     pub atk: Option<i32>,
     pub def: Option<i32>,
     pub frame_type: Option<String>,
@@ -43,6 +46,7 @@ impl From<CardRow> for RawCardSearchResult {
             race: row.race,
             level: row.level.map(|l| l as u8),
             archetype: row.archetype,
+            archetype_source: row.archetype_source,
             atk: row.atk,
             def: row.def,
             frame_type: row.frame_type,
@@ -67,7 +71,7 @@ pub async fn list_card_ids(pool: &PgPool) -> Result<HashSet<i64>, DbError> {
 pub async fn load_all_cards(pool: &PgPool) -> Result<Vec<CardSearchResult>, DbError> {
     // Cast ENUMs to text pour que sqlx décode en String (card_type, card_attribute, card_frame en base).
     let rows: Vec<CardRow> = sqlx::query_as::<_, CardRow>(
-        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg, NULLIF(TRIM(card_desc), '') AS card_desc FROM cards ORDER BY id",
+        "SELECT id, name, name_en, type::text AS type, attribute::text AS attribute, race, level, archetype, archetype_source, atk, def, frame_type::text AS frame_type, ygoprodeck_url, image_url, image_url_small, ban_tcg::text AS ban_tcg, NULLIF(TRIM(card_desc), '') AS card_desc FROM cards ORDER BY id",
     )
     .fetch_all(pool)
     .await?;
@@ -199,4 +203,118 @@ pub async fn list_card_image_urls(pool: &PgPool) -> Result<Vec<String>, DbError>
     .fetch_all(pool)
     .await?;
     Ok(rows.into_iter().map(|(u,)| u).collect())
+}
+
+// --- Complément archétype (YGOrg `card_raw`) : voir `docs/decisions.md` / `card_metadata_fill` ---
+
+#[derive(Debug, FromRow)]
+pub struct ArchetypeFillCandidate {
+    pub id: i64,
+    pub name: String,
+    pub name_en: Option<String>,
+}
+
+pub async fn count_archetype_fill_candidates(pool: &PgPool) -> Result<i64, DbError> {
+    let n: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)::bigint
+        FROM cards c
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+          AND EXISTS (
+              SELECT 1
+              FROM card_enrichment_layers e
+              WHERE e.card_id = c.id
+                AND e.source = $1
+                AND e.layer = $2
+          )
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .fetch_one(pool)
+    .await?;
+    Ok(n)
+}
+
+pub async fn list_archetype_fill_candidates(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ArchetypeFillCandidate>, DbError> {
+    let rows = sqlx::query_as::<_, ArchetypeFillCandidate>(
+        r#"
+        SELECT c.id, c.name, c.name_en
+        FROM cards c
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+          AND EXISTS (
+              SELECT 1
+              FROM card_enrichment_layers e
+              WHERE e.card_id = c.id
+                AND e.source = $1
+                AND e.layer = $2
+          )
+        ORDER BY c.id
+        LIMIT $3
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+#[derive(Debug, FromRow)]
+pub struct ArchetypeFillCandidatePayload {
+    pub id: i64,
+    pub name: String,
+    pub payload: Json<serde_json::Value>,
+}
+
+pub async fn list_archetype_fill_candidates_with_payload(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<Vec<ArchetypeFillCandidatePayload>, DbError> {
+    let rows = sqlx::query_as::<_, ArchetypeFillCandidatePayload>(
+        r#"
+        SELECT DISTINCT ON (c.id) c.id, c.name, e.payload
+        FROM cards c
+        INNER JOIN card_enrichment_layers e ON e.card_id = c.id
+          AND e.source = $1
+          AND e.layer = $2
+        WHERE (c.archetype IS NULL OR TRIM(BOTH FROM COALESCE(c.archetype, '')) = '')
+        ORDER BY c.id, e.fetched_at DESC NULLS LAST
+        LIMIT $3
+        "#,
+    )
+    .bind(YGORG_ENRICHMENT_SOURCE)
+    .bind(YGORG_LAYER_CARD_RAW)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn update_card_archetype_null_only(
+    pool: &PgPool,
+    card_id: i64,
+    archetype: &str,
+    archetype_source: &str,
+) -> Result<bool, DbError> {
+    let res = sqlx::query(
+        r#"
+        UPDATE cards
+        SET archetype = $2,
+            archetype_source = $3,
+            updated_at = NOW()
+        WHERE id = $1
+          AND (archetype IS NULL OR TRIM(BOTH FROM COALESCE(archetype, '')) = '')
+        "#,
+    )
+    .bind(card_id)
+    .bind(archetype)
+    .bind(archetype_source)
+    .execute(pool)
+    .await?;
+    Ok(res.rows_affected() > 0)
 }

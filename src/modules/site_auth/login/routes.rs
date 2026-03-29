@@ -1,7 +1,7 @@
 //! Connexion utilisateur site (`POST /login`).
 
 use actix_session::Session;
-use actix_web::{post, web, HttpResponse};
+use actix_web::{HttpResponse, post, web};
 
 use crate::auth::csrf;
 use crate::auth::session::SITE_USER_SESSION_KEY;

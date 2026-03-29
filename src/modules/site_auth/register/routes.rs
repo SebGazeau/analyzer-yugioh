@@ -1,7 +1,7 @@
 //! Inscription utilisateur site (`/register`).
 
 use actix_session::Session;
-use actix_web::{get, post, web, HttpResponse};
+use actix_web::{HttpResponse, get, post, web};
 
 use crate::auth::csrf;
 use crate::auth::session::SITE_USER_SESSION_KEY;

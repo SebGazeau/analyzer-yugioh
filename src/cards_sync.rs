@@ -15,8 +15,7 @@ use crate::db::{self, DbError};
 use crate::ygo_api::CardsApiResponse;
 
 /// URL par défaut : identique à l’historique `admin_sync::fetch_cards` (comportement inchangé).
-pub const DEFAULT_YGOPRODECK_CARDINFO_URL: &str =
-    "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+pub const DEFAULT_YGOPRODECK_CARDINFO_URL: &str = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
 
 const MAX_HTTP_ATTEMPTS: u32 = 4;
 const HTTP_TIMEOUT: Duration = Duration::from_secs(120);
@@ -33,9 +32,7 @@ pub struct CardSyncStats {
 pub enum CardSyncError {
     #[error("client HTTP reqwest: {0}")]
     HttpClient(String),
-    #[error(
-        "YGOProDeck: échec HTTP après {attempts} tentative(s), dernière erreur: {message}"
-    )]
+    #[error("YGOProDeck: échec HTTP après {attempts} tentative(s), dernière erreur: {message}")]
     HttpRetry { attempts: u32, message: String },
     #[error("YGOProDeck: JSON invalide: {0}")]
     Json(#[from] serde_json::Error),
@@ -46,9 +43,8 @@ pub enum CardSyncError {
 }
 
 fn ygoprodeck_url() -> String {
-    std::env::var("YGOPRODECK_CARDINFO_URL").unwrap_or_else(|_| {
-        DEFAULT_YGOPRODECK_CARDINFO_URL.to_string()
-    })
+    std::env::var("YGOPRODECK_CARDINFO_URL")
+        .unwrap_or_else(|_| DEFAULT_YGOPRODECK_CARDINFO_URL.to_string())
 }
 
 fn http_client() -> Result<Client, CardSyncError> {
@@ -60,6 +56,7 @@ fn http_client() -> Result<Client, CardSyncError> {
             env!("CARGO_PKG_VERSION"),
             " sync-cards (+https://ygoprodeck.com)"
         ))
+        .build()
         .map_err(|e| CardSyncError::HttpClient(e.to_string()))
 }
 
@@ -102,11 +99,7 @@ async fn fetch_body_with_retries(url: &str) -> Result<String, CardSyncError> {
 
 fn truncate_body(s: &str) -> String {
     let t = s.chars().take(400).collect::<String>();
-    if s.len() > 400 {
-        format!("{t}…")
-    } else {
-        t
-    }
+    if s.len() > 400 { format!("{t}…") } else { t }
 }
 
 async fn sleep_backoff(attempt: u32) {
@@ -128,11 +121,8 @@ pub async fn sync_from_ygoprodeck(pool: &PgPool) -> Result<CardSyncStats, CardSy
 
     let card_rows: Vec<crate::ygo_api::CardUpsertRow> =
         api.data.iter().map(|c| c.to_upsert_row()).collect();
-    let set_rows: Vec<crate::ygo_api::CardSetUpsertRow> = api
-        .data
-        .iter()
-        .flat_map(|c| c.card_set_rows())
-        .collect();
+    let set_rows: Vec<crate::ygo_api::CardSetUpsertRow> =
+        api.data.iter().flat_map(|c| c.card_set_rows()).collect();
 
     let n_cards = card_rows.len();
     let n_sets = set_rows.len();

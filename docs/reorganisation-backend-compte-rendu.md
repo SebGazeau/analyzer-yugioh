@@ -83,3 +83,20 @@ Remplacement de **`db.rs`** monolithique par :
 ---
 
 **En résumé** : le projet est passé d’un **gros `handlers.rs` + un gros `db.rs`** à une structure **`modules/` par domaine** et **`db/` découpé**, avec **repositories** pour decks, associations et catalogue (lecture locales), la **sync lourde** encore centralisée dans **`db` + modules existants**, et une **cible Cloud Job** formalisée dans la doc pour la suite.
+
+---
+
+## 7. Intégration avec le travail `main` (pré-réorganisation), sans réintroduire `handlers` / `db.rs`
+
+Quand la réorganisation a démarré sur `dev`, une partie du travail restait sur `main` (souvent non commitée) : **complément d’archétype** (`card_metadata_fill`), **colonnes / API** `archetype_source`, **admin** `preview` / `apply`, **front** associations / recherche, **scripts** d’enrichissement, etc.
+
+**Règle** : on garde **à la fois** la structure cible (§3) **et** ces fonctionnalités, en les **rebranchant** sur les bons emplacements :
+
+| Ancien emplacement (`main`) | Emplacement cible (post-réorg) |
+|-----------------------------|----------------------------------|
+| Handlers admin fetch / enrich / preview / apply | **`src/modules/admin_sync/routes.rs`** (une seule fois chaque route ; **`src/app.rs`** n’enregistre **pas** de module `handlers` inexistant). |
+| SQL candidats / update `archetype` + `archetype_source` dans l’ancien `db.rs` | **`src/db/cards.rs`** + réexports dans **`src/db/mod.rs`** (API SQL partagée carte, alignée §3.2). |
+| `pub mod card_metadata_fill` | **`src/lib.rs`** inchangé côté intention : le module reste à la racine `src/`, appelé par **`admin_sync`**. |
+| Cache `load_all_cards` avec `archetype_source` | Colonne dans le **`SELECT`** de **`db/cards.rs`** et champ dans **`CardRow`** → **`RawCardSearchResult`**. |
+
+En cas de merge Git « les deux côtés » : **ne pas** dupliquer les `.service(...)` dans **`app.rs`** (un seul jeu : `crate::modules::admin_sync::…`). Les conflits « both » sur le code HTTP doivent être résolus en **fusionnant le comportement** dans **`modules/*/routes.rs`**, pas en réimportant `handlers.rs`.

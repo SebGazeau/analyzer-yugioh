@@ -34,4 +34,5 @@ Ce qui reste **sans** test automatisé ciblé : jobs CLI `sync_ygoprodeck_locale
 - Migration : `migrations/20260329120000_card_locales.sql`
 - Sync YGO : `src/card_locales_sync.rs`
 - Sync Konami : `src/konami_catalog.rs` (`sync_pack_card_locales`)
-- Accès DB : `src/db.rs` (`upsert_card_locales`, `fetch_card_locales_map`, …)
+- **Écriture** SQL : `src/db/card_locales.rs` (`upsert_card_locales`, …), réexport `src/db/mod.rs`
+- **Lecture** pour `/search` et `/card` (locale) : `src/modules/catalog/repository.rs` (`fetch_card_locales_map`, `card_ids_matching_locale_search`, …) — l’upsert reste dans `crate::db`

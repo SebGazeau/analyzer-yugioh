@@ -1,7 +1,7 @@
 //! Routes HTTP CRUD `/decks` (utilisateur site authentifié par session).
 
 use actix_session::Session;
-use actix_web::{delete, get, post, put, web, HttpResponse};
+use actix_web::{HttpResponse, delete, get, post, put, web};
 
 use crate::shared::search::cache::CardCache;
 use crate::shared::search::card_resolve::canonical_deck_passcode;

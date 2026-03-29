@@ -1,7 +1,7 @@
 //! Snapshots catalogue Konami (`konami_catalog_snapshots`).
 
-use sqlx::types::Json;
 use sqlx::PgPool;
+use sqlx::types::Json;
 
 use super::error::DbError;
 

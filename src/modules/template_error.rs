@@ -1,6 +1,6 @@
 //! Erreur Tera pour les pages HTML (partagée entre `pages` et `site_auth`).
 
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 
 #[derive(Debug)]
 pub struct TemplateError(pub tera::Error);

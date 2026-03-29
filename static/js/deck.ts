@@ -1000,9 +1000,11 @@ export function moveDeckRow(
 
 /** Branche drag-and-drop sur `.deck-sections` (délégation, survit aux re-rendus de grille). */
 export function bindDeckDragAndDrop(): void {
-    const root = document.querySelector('.deck-sections');
-    if (!root || (root as HTMLElement).dataset.deckDndBound === '1') return;
-    (root as HTMLElement).dataset.deckDndBound = '1';
+    const el = document.querySelector('.deck-sections');
+    if (!el || !(el instanceof HTMLElement)) return;
+    const root = el;
+    if (root.dataset.deckDndBound === '1') return;
+    root.dataset.deckDndBound = '1';
 
     let suppressClickUntil = 0;
 

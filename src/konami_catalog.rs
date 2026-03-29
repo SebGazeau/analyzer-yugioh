@@ -10,7 +10,7 @@ use std::time::Duration;
 use reqwest::Client;
 use scraper::{Html, Selector};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sqlx::PgPool;
 use thiserror::Error;
 
@@ -74,7 +74,11 @@ async fn fetch_html(client: &Client, url: &str) -> Result<String, KonamiCatalogE
                 if status.is_success() {
                     return Ok(body);
                 }
-                last = format!("HTTP {} — {}", status, body.chars().take(200).collect::<String>());
+                last = format!(
+                    "HTTP {} — {}",
+                    status,
+                    body.chars().take(200).collect::<String>()
+                );
             }
             Err(e) => {
                 last = e.to_string();
@@ -110,8 +114,8 @@ fn normalize_pack_label(raw: &str) -> String {
 pub fn parse_pack_index_html(html: &str) -> Result<Vec<(String, String)>, KonamiCatalogError> {
     let sel_pack =
         Selector::parse("div.pack").map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
-    let sel_link =
-        Selector::parse("input.link_value").map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
+    let sel_link = Selector::parse("input.link_value")
+        .map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
 
     let document = Html::parse_document(html);
 
@@ -177,15 +181,8 @@ pub async fn sync_pack_index(pool: &PgPool, locale: &str) -> Result<usize, Konam
     let payload = packs_to_json(&pairs);
 
     let snapshot_key = format!("pack_index:{locale}");
-    db::upsert_konami_catalog_snapshot(
-        pool,
-        &snapshot_key,
-        locale,
-        "pack_index",
-        &url,
-        &payload,
-    )
-    .await?;
+    db::upsert_konami_catalog_snapshot(pool, &snapshot_key, locale, "pack_index", &url, &payload)
+        .await?;
 
     tracing::info!(locale, packs = count, "konami_catalog: snapshot enregistré");
     Ok(count)
@@ -204,9 +201,11 @@ pub fn absolute_konami_url(relative_or_absolute: &str, locale: &str) -> String {
     if u.contains("request_locale=") {
         return u;
     }
-    let sep = if u.contains('?') { '&' } else { '?' };
-    u.push_str(sep);
-    u.push_str("request_locale=");
+    if u.contains('?') {
+        u.push_str("&request_locale=");
+    } else {
+        u.push_str("?request_locale=");
+    }
     u.push_str(locale);
     u
 }
@@ -220,13 +219,15 @@ fn normalize_card_list_name(raw: &str) -> String {
 }
 
 /// Lignes `(nom affiché, chemin fiche)` sur une page **liste de cartes d’un pack**.
-pub fn parse_pack_listing_card_rows(html: &str) -> Result<Vec<(String, String)>, KonamiCatalogError> {
-    let sel_row =
-        Selector::parse("div.t_row.c_normal.open").map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
+pub fn parse_pack_listing_card_rows(
+    html: &str,
+) -> Result<Vec<(String, String)>, KonamiCatalogError> {
+    let sel_row = Selector::parse("div.t_row.c_normal.open")
+        .map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
     let sel_name =
         Selector::parse("span.card_name").map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
-    let sel_link =
-        Selector::parse("input.link_value").map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
+    let sel_link = Selector::parse("input.link_value")
+        .map_err(|e| KonamiCatalogError::Parse(e.to_string()))?;
 
     let doc = Html::parse_document(html);
     let mut out = Vec::new();

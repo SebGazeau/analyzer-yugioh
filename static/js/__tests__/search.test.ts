@@ -132,18 +132,16 @@ describe('search.ts — DOM', () => {
     await Promise.resolve();
     const items = list.querySelectorAll('.search-result-row');
     expect(items.length).toBe(3);
-    expect(list.textContent).toContain('Dark Magician');
-    expect(list.textContent).toContain('Blue-Eyes White Dragon');
+    // Affichage prioritaire sur `name` (locale API), puis `name_en`.
+    expect(list.textContent).toContain('Magicien Sombre');
+    expect(list.textContent).toContain('Dragon Blanc aux Yeux Bleus');
+    expect(list.textContent).toContain('Trou Noir');
     const firstRow = list.querySelector('.search-result-row');
     const meta = firstRow?.querySelector('.search-result-meta');
     expect(meta?.textContent).toContain('Magician');
     const badge = firstRow?.querySelector('[data-search-archetype-source="ygorg_effect_en"]');
     expect(badge).not.toBeNull();
     expect(badge?.textContent).toContain('YGOrg');
-    // Affichage prioritaire sur `name` (locale API), puis `name_en`.
-    expect(list.textContent).toContain('Magicien Sombre');
-    expect(list.textContent).toContain('Dragon Blanc aux Yeux Bleus');
-    expect(list.textContent).toContain('Trou Noir');
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });

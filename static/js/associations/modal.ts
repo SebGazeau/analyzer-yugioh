@@ -137,7 +137,8 @@ function ensureModalElements(): {
 } | null {
     let overlay = document.getElementById(MODAL_ID) as HTMLElement | null;
     if (!overlay) {
-        overlay = document.createElement('div');
+        const created = document.createElement('div');
+        overlay = created;
         overlay.id = MODAL_ID;
         overlay.className = 'associations-modal';
         overlay.setAttribute('role', 'dialog');
@@ -181,7 +182,7 @@ function ensureModalElements(): {
             }
         });
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && !overlay.hidden) closeAssociationsModal();
+            if (e.key === 'Escape' && !created.hidden) closeAssociationsModal();
         });
     }
     const body = document.getElementById(MODAL_BODY_ID) as HTMLElement | null;

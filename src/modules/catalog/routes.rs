@@ -2,20 +2,15 @@
 
 use std::collections::HashSet;
 
-use actix_web::{get, http::StatusCode, post, web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, get, http::StatusCode, post, web};
 use serde::Deserialize;
 
 use crate::images::ImageRepository;
 use crate::shared::{
     enums::app_error::AppError,
-    search::{
-        cache::CardCache,
-        card_resolve::normalize_name_for_match,
-        filter::filter_cards,
-    },
+    search::{cache::CardCache, card_resolve::normalize_name_for_match, filter::filter_cards},
     structs::{
-        deck_validation::DeckValidationRequest,
-        search_card_dto::SearchCardDto,
+        deck_validation::DeckValidationRequest, search_card_dto::SearchCardDto,
         search_query::SearchQuery,
     },
 };

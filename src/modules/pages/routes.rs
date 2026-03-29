@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use actix_session::Session;
-use actix_web::{get, web, HttpResponse};
+use actix_web::{HttpResponse, get, web};
 
 use crate::auth::csrf;
 use crate::auth::session::SITE_USER_SESSION_KEY;

@@ -2,8 +2,10 @@
 
 use std::path::Path;
 
-use actix_web::{get, http::StatusCode, web, HttpResponse};
+use actix_web::{HttpResponse, get, http::StatusCode, web};
+use serde::Deserialize;
 
+use crate::card_metadata_fill::{self, ARCHETYPE_SOURCE_YGORG_EFFECT_EN};
 use crate::cards_sync;
 use crate::db;
 use crate::shared::search::cache::CardCache;
@@ -126,4 +128,193 @@ pub async fn enrich_ygorganization(
                 .body(e.to_string())
         }
     }
+}
+
+fn csv_field(s: &str) -> String {
+    if s.contains(',') || s.contains('"') || s.contains('\r') || s.contains('\n') {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PreviewCardMetadataFillQuery {
+    #[serde(default = "preview_card_metadata_fill_default_max")]
+    pub max: u32,
+}
+
+fn preview_card_metadata_fill_default_max() -> u32 {
+    5000
+}
+
+#[get("/preview_card_metadata_fill")]
+pub async fn preview_card_metadata_fill(
+    pool: Option<web::Data<sqlx::PgPool>>,
+    query: web::Query<PreviewCardMetadataFillQuery>,
+) -> HttpResponse {
+    let Some(pool) = pool else {
+        return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain; charset=utf-8")
+            .body("PostgreSQL requis pour la prévisualisation.");
+    };
+    let max_rows = query.max.min(100_000) as i64;
+    let total = match db::count_archetype_fill_candidates(pool.get_ref()).await {
+        Ok(n) => n,
+        Err(e) => {
+            return HttpResponse::InternalServerError()
+                .content_type("text/plain; charset=utf-8")
+                .body(format!("DB: {e}"));
+        }
+    };
+    let rows = match db::list_archetype_fill_candidates(pool.get_ref(), max_rows).await {
+        Ok(r) => r,
+        Err(e) => {
+            return HttpResponse::InternalServerError()
+                .content_type("text/plain; charset=utf-8")
+                .body(format!("DB: {e}"));
+        }
+    };
+    let mut out = String::new();
+    out.push_str("# Phase 1 — prévisualisation complément métadonnées (aucune écriture)\n");
+    out.push_str(
+        "# Critère: archetype NULL/vide ET card_enrichment_layers (ygorganization, card_raw)\n",
+    );
+    out.push_str(&format!("total_candidates={total}\n"));
+    out.push_str(&format!("csv_rows_returned={}\n", rows.len()));
+    out.push_str(&format!("max_requested={max_rows}\n"));
+    out.push('\n');
+    out.push_str("id,name,name_en\n");
+    for r in rows {
+        let name_en = r.name_en.as_deref().unwrap_or("");
+        out.push_str(&format!(
+            "{},{},{}\n",
+            r.id,
+            csv_field(&r.name),
+            csv_field(name_en)
+        ));
+    }
+    HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body(out)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ApplyCardMetadataFillQuery {
+    #[serde(default = "apply_card_metadata_fill_default_max")]
+    pub max: u32,
+    pub write: Option<u8>,
+}
+
+fn apply_card_metadata_fill_default_max() -> u32 {
+    500
+}
+
+#[get("/apply_card_metadata_fill")]
+pub async fn apply_card_metadata_fill(
+    pool: Option<web::Data<sqlx::PgPool>>,
+    card_cache: web::Data<CardCache>,
+    query: web::Query<ApplyCardMetadataFillQuery>,
+) -> HttpResponse {
+    let Some(pool) = pool else {
+        return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain; charset=utf-8")
+            .body("PostgreSQL requis.");
+    };
+    let max_rows = query.max.min(10_000) as i64;
+    let do_write = query.write == Some(1);
+    let rows = match db::list_archetype_fill_candidates_with_payload(pool.get_ref(), max_rows).await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            return HttpResponse::InternalServerError()
+                .content_type("text/plain; charset=utf-8")
+                .body(format!("DB: {e}"));
+        }
+    };
+    let mut derivable = 0u32;
+    let mut no_derivation = 0u32;
+    let mut updated = 0u32;
+    let mut report_lines: Vec<String> = Vec::new();
+    for r in &rows {
+        let derived = card_metadata_fill::derive_archetype_from_ygorg_payload(&r.payload.0);
+        match &derived {
+            Some(a) => {
+                derivable += 1;
+                if do_write {
+                    match db::update_card_archetype_null_only(
+                        pool.get_ref(),
+                        r.id,
+                        a.as_str(),
+                        ARCHETYPE_SOURCE_YGORG_EFFECT_EN,
+                    )
+                    .await
+                    {
+                        Ok(true) => {
+                            updated += 1;
+                            report_lines.push(format!(
+                                "updated id={} name={} archetype={}",
+                                r.id, r.name, a
+                            ));
+                        }
+                        Ok(false) => report_lines.push(format!(
+                            "skip id={} (archetype déjà renseigné en concurrence ?)",
+                            r.id
+                        )),
+                        Err(e) => {
+                            return HttpResponse::InternalServerError()
+                                .content_type("text/plain; charset=utf-8")
+                                .body(format!("DB update id={}: {e}", r.id));
+                        }
+                    }
+                } else {
+                    report_lines.push(format!(
+                        "would_update id={} name={} archetype={}",
+                        r.id, r.name, a
+                    ));
+                }
+            }
+            None => {
+                no_derivation += 1;
+                if report_lines.len() < 80 {
+                    report_lines.push(format!("no_derivation id={} name={}", r.id, r.name));
+                }
+            }
+        }
+    }
+    if do_write {
+        let cards = match db::load_all_cards(pool.get_ref()).await {
+            Ok(c) => c,
+            Err(e) => {
+                return HttpResponse::InternalServerError()
+                    .content_type("text/plain; charset=utf-8")
+                    .body(format!("Rechargement cache après écriture: {e}"));
+            }
+        };
+        card_cache.replace_with(cards);
+    }
+    let mut out = String::new();
+    out.push_str("# Phase 2–3 — complément archetype depuis YGOrg card_raw\n");
+    out.push_str("# Heuristique: archetype explicite ; monstre: \\\"...\\\" monster ; Spell/Trap: add 1 \\\"...\\\" card (1re ligne)\n");
+    out.push_str(&format!("write={}\n", if do_write { "1" } else { "0" }));
+    out.push_str(&format!("candidates_scanned={}\n", rows.len()));
+    out.push_str(&format!("derivable={derivable}\n"));
+    out.push_str(&format!("no_derivation={no_derivation}\n"));
+    if do_write {
+        out.push_str(&format!("rows_updated={updated}\n"));
+    } else {
+        out.push_str(&format!("would_update_count={derivable}\n"));
+    }
+    out.push('\n');
+    let detail_truncated = report_lines.len() >= 80;
+    for line in report_lines {
+        out.push_str(&line);
+        out.push('\n');
+    }
+    if detail_truncated {
+        out.push_str("# … détail tronqué (plafond 80 lignes)\n");
+    }
+    HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body(out)
 }

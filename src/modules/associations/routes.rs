@@ -1,15 +1,13 @@
 //! Routes « cartes associées » : catalogue enrichi + Q&A YGOrg.
 
-use std::collections::HashSet;
-
-use actix_web::{get, web, HttpResponse};
+use actix_web::{HttpResponse, get, web};
 
 use crate::images::ImageRepository;
 use crate::shared::search::cache::CardCache;
 
 use super::repository::{
-    list_our_card_ids_sharing_ygorg_qa_with, ygorg_en_catalog_fields_by_card_id,
-    ygorg_internal_id_for_our_card, YgOrgEnCatalogFields,
+    YgOrgEnCatalogFields, list_our_card_ids_sharing_ygorg_qa_with,
+    ygorg_en_catalog_fields_by_card_id, ygorg_internal_id_for_our_card,
 };
 
 /// Catalogue minimal pour le module « cartes associées » (front).

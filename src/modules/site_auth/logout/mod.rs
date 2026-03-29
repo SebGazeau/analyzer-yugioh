@@ -1,3 +1,3 @@
 pub mod routes;
 
-pub use routes::{logout_submit, LogoutForm};
+pub use routes::{LogoutForm, logout_submit};

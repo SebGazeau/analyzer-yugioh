@@ -80,15 +80,15 @@
 
 **Objectif** : Unifier la remontée d’erreurs dans le crate `analyzer-yugioh` (couche `shared/`) pour pouvoir les mapper proprement vers HTTP plus tard, sans multiplier les types d’erreur côté appelant.
 
-**Constat** : On a déjà des erreurs dédiées par domaine (DeckError, CardSearchResultError, SearchQueryError, CardCacheError, etc.). Les handlers futurs devront les convertir en réponses HTTP (400, 404, 500) et en JSON.
+**Constat** : On a déjà des erreurs dédiées par domaine (DeckError, CardSearchResultError, SearchQueryError, CardCacheError, etc.). Les routes HTTP devront les convertir en réponses HTTP (400, 404, 500) et en JSON.
 
 **Périmètre (crate actuel uniquement, pas le legacy)** :
 - Introduire un type d’erreur « racine » (ex. `AppError` ou `SharedError`) : enum qui englobe les erreurs des domaines (deck, card, search, cache).
 - Implémenter `From<DeckError>` (et si utile `From<...>` pour les autres) vers ce type, pour pouvoir utiliser `?` et remonter une seule erreur.
-- Optionnel : méthode sur ce type pour en déduire un code HTTP (ex. `fn status_code(&self) -> u16`) ou un message utilisateur, en vue des handlers.
+- Optionnel : méthode sur ce type pour en déduire un code HTTP (ex. `fn status_code(&self) -> u16`) ou un message utilisateur, en vue des handlers Actix.
 
 **Hors périmètre** :
-- Modifier le legacy (handlers, templates, RAG).
+- Modifier le legacy hors crate actuel (templates, RAG).
 - Gestion des mutex / poison.
 
 **Contrat de sortie** :
@@ -112,7 +112,7 @@
 **Périmètre** :
 - Démarrer un serveur Actix (ou équivalent) dans `main`.
 - Au moins une route **GET /search?q=...** : valider la query (SearchQuery, sinon 400), lire le cache, filtrer, retourner du JSON (liste de cartes).
-- État partagé : le `CardCache` doit être accessible dans les handlers (ex. `web::Data<CardCache>` ou équivalent).
+- État partagé : le `CardCache` doit être accessible dans les routes (ex. `web::Data<CardCache>` ou équivalent).
 - Erreurs : mapper `AppError` (ou erreurs domaine) vers codes HTTP (400, 500) et corps JSON structuré si possible.
 
 **Hors périmètre pour cette slice** :
@@ -122,7 +122,7 @@
 **Contrat de sortie** :
 - Le binaire lance un serveur avec une route `/search` utilisant cache + filtre.
 - Query invalide (ex. &lt; 4 caractères) → 400.
-- Pas de `panic!` dans les handlers : erreurs remontées en réponse HTTP.
+- Pas de `panic!` dans les handlers de route : erreurs remontées en réponse HTTP.
 
 **DoD** :
 - [x] Serveur démarré dans `main` avec une route `/search`.
@@ -164,7 +164,7 @@
 - **POST /validate_deck** : accepte un JSON `{ main, extra, side }` (format export frontend), retourne `{ valid, errors, main_count, extra_count, side_count }`
 - Règles Yu-Gi-Oh : main 40–60, extra/side 0–15, max 3 copies par carte
 - Tests HTTP : `tests/http_integration.rs` (index, count, search, card, validate_deck)
-- Refactor : `src/lib.rs`, `src/handlers.rs`, `src/app.rs` pour permettre les tests
+- Refactor : `src/lib.rs`, `src/modules/…`, `src/app.rs` pour permettre les tests (structure actuelle : plus de `handlers.rs` monolithique)
 
 **DoD** :
 - [x] Route POST /validate_deck

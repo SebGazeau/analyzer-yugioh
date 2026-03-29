@@ -4,6 +4,6 @@ pub mod login;
 pub mod logout;
 pub mod register;
 
-pub use login::{login_submit, LoginForm};
-pub use logout::{logout_submit, LogoutForm};
-pub use register::{register_page, register_submit, RegisterForm};
+pub use login::{LoginForm, login_submit};
+pub use logout::{LogoutForm, logout_submit};
+pub use register::{RegisterForm, register_page, register_submit};
