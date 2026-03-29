@@ -1,0 +1,10 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Tâches de maintenance (bump version Cargo.toml racine, etc.)"
+
+[[bin]]
+name = "bump-cargo-version"
+path = "src/bump_cargo_version.rs"

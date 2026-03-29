@@ -1,0 +1,102 @@
+# Déploiement Cloud Run : uniquement sur push d’un tag v* (ex. v1.2.0).
+# Enchaîne qualité → intégration (Postgres 16 + db_live + E2E) → image + Artifact Registry + Cloud Run.
+#
+# Prérequis GitHub (Settings → Secrets and variables → Actions) :
+# — Secrets : GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT (WIF)
+# — Variables : GCP_PROJECT_ID, GCP_REGION, GCP_RUN_SERVICE, GCP_ARTIFACT_REPO, GCP_IMAGE_NAME
+#
+# Alternative clé JSON : credentials_json: ${{ secrets.GCP_SA_KEY }} (et retirer id-token: write si pas WIF).
+
+name: Deploy GCP (Cloud Run)
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write # artefacts intégration si échec avant déploiement
+
+concurrency:
+  group: deploy-gcp-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality-reusable.yml
+
+  integration:
+    needs: quality
+    uses: ./.github/workflows/integration-reusable.yml
+
+  build-and-deploy:
+    name: Image + Cloud Run
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: static/package-lock.json
+
+      - name: Frontend build (static/dist pour Docker)
+        working-directory: static
+        run: |
+          npm ci
+          npm run build
+
+      - name: Docker image tag
+        id: tag
+        run: echo "value=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Build Docker image
+        run: docker build -t "app:deploy" .
+
+      - name: Push image + update Cloud Run
+        env:
+          REGION: ${{ vars.GCP_REGION }}
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          REPO: ${{ vars.GCP_ARTIFACT_REPO }}
+          IMAGE: ${{ vars.GCP_IMAGE_NAME }}
+          SERVICE: ${{ vars.GCP_RUN_SERVICE }}
+          TAG: ${{ steps.tag.outputs.value }}
+        run: |
+          set -euo pipefail
+          for v in REGION PROJECT REPO IMAGE SERVICE; do
+            eval "x=\$$v"
+            if [ -z "$x" ]; then
+              echo "Variable GitHub manquante : GCP_$v (repository Variables)" >&2
+              exit 1
+            fi
+          done
+          REGISTRY="${REGION}-docker.pkg.dev"
+          REMOTE="${REGISTRY}/${PROJECT}/${REPO}/${IMAGE}:${TAG}"
+          docker tag app:deploy "$REMOTE"
+          docker push "$REMOTE"
+          gcloud run services update "$SERVICE" \
+            --region="$REGION" \
+            --project="$PROJECT" \
+            --image="$REMOTE"

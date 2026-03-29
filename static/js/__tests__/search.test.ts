@@ -77,6 +77,24 @@ describe('search.ts — DOM', () => {
     fetchSpy.mockRestore();
   });
 
+  it('ajoute locale= à la requête quand <html lang> est non anglais', async () => {
+    vi.useFakeTimers();
+    const prevLang = document.documentElement.lang;
+    document.documentElement.lang = 'fr';
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
+    );
+    setupSearch();
+    const input = document.getElementById('search-box') as HTMLInputElement;
+    input.value = 'abcd';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(350);
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringMatching(/\/search\?q=abcd&locale=fr/));
+    document.documentElement.lang = prevLang;
+    vi.useRealTimers();
+    fetchSpy.mockRestore();
+  });
+
   it('typing rapide ne déclenche qu’un seul fetch (debounce)', async () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
@@ -122,6 +140,10 @@ describe('search.ts — DOM', () => {
     const badge = firstRow?.querySelector('[data-search-archetype-source="ygorg_effect_en"]');
     expect(badge).not.toBeNull();
     expect(badge?.textContent).toContain('YGOrg');
+    // Affichage prioritaire sur `name` (locale API), puis `name_en`.
+    expect(list.textContent).toContain('Magicien Sombre');
+    expect(list.textContent).toContain('Dragon Blanc aux Yeux Bleus');
+    expect(list.textContent).toContain('Trou Noir');
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });

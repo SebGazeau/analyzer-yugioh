@@ -6,6 +6,15 @@ import { debounce } from './utils/debounce.js';
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 4;
 
+/** Query `locale` pour `/search` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
+function searchLocaleQuery(): string {
+    const raw = document.documentElement.lang?.trim().toLowerCase() || '';
+    if (!raw || raw.startsWith('en')) return '';
+    const base = raw.split('-')[0];
+    if (!base) return '';
+    return `&locale=${encodeURIComponent(base)}`;
+}
+
 type SearchFilter = 'all' | 'monster' | 'spell' | 'trap';
 
 function getCardTypeKind(card: { type?: string }): 'monster' | 'spell' | 'trap' {
@@ -50,7 +59,8 @@ function filterCards(cards: any[], filter: SearchFilter): any[] {
 function renderResultRow(card: any, query: string, results: HTMLElement): void {
     const kind = getCardTypeKind(card);
     const letter = kind === 'monster' ? 'M' : kind === 'spell' ? 'S' : 'T';
-    const mainName = card.name_en ?? card.name;
+    // `name` est la locale demandée quand le backend applique `card_locales` ; `name_en` reste l’anglais si présent.
+    const mainName = card.name ?? card.name_en ?? '';
     const subtype = getSubtypeLine(card);
     const imgUrl = card.image_url;
     const thumbContent = imgUrl
@@ -131,7 +141,7 @@ export function setupSearch(): void {
             return;
         }
 
-        fetch(`/search?q=${encodeURIComponent(query)}`)
+        fetch(`/search?q=${encodeURIComponent(query)}${searchLocaleQuery()}`)
             .then((res) => {
                 if (!res.ok) throw new Error(String(res.status));
                 return res.json();

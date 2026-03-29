@@ -1,0 +1,61 @@
+# Jobs Rust + frontend partagés par CI (PR) et déploiement (tag v*).
+name: Quality
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ". -> target"
+
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        run: cargo test
+
+  frontend:
+    name: Frontend (typecheck, test, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: static/package-lock.json
+
+      - name: npm ci
+        working-directory: static
+        run: npm ci
+
+      - name: TypeScript
+        working-directory: static
+        run: npm run typecheck
+
+      - name: Vitest
+        working-directory: static
+        run: npm run test
+
+      - name: Vite build
+        working-directory: static
+        run: npm run build
