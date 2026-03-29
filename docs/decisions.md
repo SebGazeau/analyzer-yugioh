@@ -91,6 +91,8 @@
 2. **Citations « mot du nom »** (`dynamicTextMentions.ts`) : blocklist **`NAME_WORD_YGO_GENERIC_BLOCKLIST`** (types de monstre, couleurs, termes ultra-fréquents EN/FR) — **sans** toucher aux règles issues du champ structuré `archetype`.
 
 **Effet attendu** : cartes type *Fallen of the White Dragon* peuvent recevoir **Blue-Eyes** (ou autre) après `apply_card_metadata_fill` si le JSON YGOrg le permet ; la modal ne crée plus d’angles *dragon* / *white* depuis le seul nom.
+**Synthèse réorganisation backend (handlers, `db`, `modules`, repositories)** : [`reorganisation-backend-compte-rendu.md`](./reorganisation-backend-compte-rendu.md).
+
 ## 2026-03-28 — Modules métier (`src/modules/`)
 
 **Contexte** : `handlers.rs` et `db.rs` concentraient trop de responsabilités ; besoin d’un découpage vertical (style Nest) avec `helper` / `provider` / `routes` par domaine.
