@@ -58,8 +58,7 @@ pub async fn dashboard(session: Session) -> HttpResponse {
         .replace('<', "&lt;")
         .replace('>', "&gt;");
     HttpResponse::Ok().body(format!(
-        r#"<p>Connecté en tant que <strong>{}</strong>.</p>
-        <form method="post" action="/web/logout"><input type="hidden" name="csrf_token" value="{}"><button type="submit">Déconnexion</button></form>"#,
-        escaped, csrf_esc
+        r#"<p>Connecté en tant que <strong>{escaped}</strong>.</p>
+        <form method="post" action="/web/logout"><input type="hidden" name="csrf_token" value="{csrf_esc}"><button type="submit">Déconnexion</button></form>"#,
     ))
 }

@@ -47,7 +47,7 @@ fn host_matches_allowed_suffix(host: &str, suffixes: &[String]) -> bool {
     let h = host.to_lowercase();
     suffixes
         .iter()
-        .any(|s| h == s.as_str() || h.ends_with(&format!(".{}", s)))
+        .any(|s| h == s.as_str() || h.ends_with(&format!(".{s}")))
 }
 
 /// Liste des suffixes depuis `IMAGE_IMPORT_ALLOWED_HOST_SUFFIXES` (virgules) ou défaut YGOProDeck.

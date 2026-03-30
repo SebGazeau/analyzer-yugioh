@@ -90,7 +90,7 @@ pub async fn associations_catalog(
                     return None;
                 }
                 if let Some(id) = image_map.get(t) {
-                    Some(format!("/images/{}/file/mobile", id))
+                    Some(format!("/images/{id}/file/mobile"))
                 } else {
                     Some(t.to_string())
                 }

@@ -236,10 +236,10 @@ pub async fn admin_login_page(
     if is_connected {
         let body = format!(
             r#"<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin</title>{style}</head><body>
+<html><head><meta charset="utf-8"><title>Admin</title>{ADMIN_DASHBOARD_STYLE}</head><body>
 <h1>Espace admin</h1>
 <p>Connecté en tant qu'admin.</p>
-{actions}
+{ADMIN_DASHBOARD_ACTIONS_HTML}
 <p>
   <form method="get" action="/admin/fetch_cards" style="display:inline">
     <button type="submit">Rafraîchir les cartes</button>
@@ -282,9 +282,7 @@ pub async fn admin_login_page(
 </p>
 <p><small>Rafraîchir : API → DB + cache. Recharger cache : relit <code>cards</code> en base (ex. après un job <code>sync-cards</code> sans redémarrage). Importer : nouvelles URLs seulement. Remplir stockage : pour chaque ligne <code>images</code>, retélécharge et écrit aux chemins déjà en base (ex. après passage en GCS).</small></p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
-</body></html>"#,
-            style = ADMIN_DASHBOARD_STYLE,
-            actions = ADMIN_DASHBOARD_ACTIONS_HTML,
+</body></html>"#
         );
         return HttpResponse::Ok()
             .content_type("text/html; charset=utf-8")
@@ -354,24 +352,26 @@ pub async fn admin_login(
     let token = match create_token(secret_bytes, sub, ADMIN_JWT_ROLE, ADMIN_TOKEN_HOURS) {
         Ok(t) => t,
         Err(e) => {
-            tracing::error!("admin jwt create: {}", e);
+            tracing::error!("admin jwt create: {e}");
             return HttpResponse::InternalServerError().body("Erreur génération token");
         }
     };
     if let Err(e) = session.insert(SESSION_KEY_ADMIN, true) {
-        tracing::error!("admin session insert: {}", e);
+        tracing::error!("admin session insert: {e}");
     }
+    let sub_esc = html_escape(sub);
+    let token_esc = html_escape(&token);
     let body = format!(
         r#"<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin – Token</title>{style}</head><body>
+<html><head><meta charset="utf-8"><title>Admin – Token</title>{ADMIN_DASHBOARD_STYLE}</head><body>
 <h1>Connexion réussie</h1>
-<p>Identité : <strong>{sub}</strong></p>
-<p>Token JWT (valide {hours} h) — à utiliser en en-tête <code>Authorization: Bearer …</code> sur les routes <code>/admin/*</code> (ou <code>X-Admin-Key</code> si votre déploiement l’utilise à la place).</p>
-<pre id="token" style="background:#f0f0f0;padding:0.5em;overflow-x:auto;">{token}</pre>
+<p>Identité : <strong>{sub_esc}</strong></p>
+<p>Token JWT (valide {ADMIN_TOKEN_HOURS} h) — à utiliser en en-tête <code>Authorization: Bearer …</code> sur les routes <code>/admin/*</code> (ou <code>X-Admin-Key</code> si votre déploiement l’utilise à la place).</p>
+<pre id="token" style="background:#f0f0f0;padding:0.5em;overflow-x:auto;">{token_esc}</pre>
 <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('token').textContent)">Copier le token</button>
 <p class="admin-help"><strong>Exemples curl</strong> — catalogue : <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/admin/fetch_cards</code> · liste candidats archétype : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/preview_card_metadata_fill?max=500"</code> · simuler dérivation : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/apply_card_metadata_fill?max=200"</code> · <strong>écrire</strong> archétypes dérivés : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/apply_card_metadata_fill?max=200&amp;write=1"</code> · YGOrg Q&amp;A : <code>curl -H "Authorization: Bearer &lt;token&gt;" "http://localhost:8080/admin/enrich_ygorganization?mode=sync_qa&amp;max=150"</code></p>
 <hr style="margin:1.25rem 0;border:none;border-top:1px solid #ddd"/>
-{actions}
+{ADMIN_DASHBOARD_ACTIONS_HTML}
 <p><a href="/admin/login">Retour espace admin</a></p>
 <p>Exemple : <code>curl -H "Authorization: Bearer &lt;token&gt;" http://localhost:8080/admin/fetch_cards</code></p>
 <p>YGOrganization : 1) <code>sync_index</code>, 2) <code>init</code>, 3) <code>backfill</code>, 4) <code>manifest</code>, 5) optionnel <code>sync_qa&amp;max=150</code> (Q&amp;A récents → associations). Ex. <code>curl …/enrich_ygorganization?mode=sync_qa&amp;max=150</code></p>
@@ -414,12 +414,7 @@ pub async fn admin_login(
   <a href="/admin/login">Espace admin</a>
 </p>
 <form method="post" action="/admin/logout"><button type="submit">Déconnexion</button></form>
-</body></html>"#,
-        style = ADMIN_DASHBOARD_STYLE,
-        sub = html_escape(sub),
-        hours = ADMIN_TOKEN_HOURS,
-        token = html_escape(&token),
-        actions = ADMIN_DASHBOARD_ACTIONS_HTML,
+</body></html>"#
     );
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")

@@ -110,10 +110,10 @@ async fn main() -> std::io::Result<()> {
         match PgPoolOptions::new().max_connections(5).connect(url).await {
             Ok(pool) => {
                 if let Err(e) = db::run_migrations(&pool).await {
-                    eprintln!("[warn] Migrations: {} — poursuite sans.", e);
+                    eprintln!("[warn] Migrations: {e} — poursuite sans.");
                 }
                 let cards = db::load_all_cards(&pool).await.unwrap_or_else(|e| {
-                    eprintln!("[warn] DB load: {} — cache vide.", e);
+                    eprintln!("[warn] DB load: {e} — cache vide.");
                     vec![]
                 });
                 let cache = CardCache::from_cards(cards);
@@ -122,8 +122,7 @@ async fn main() -> std::io::Result<()> {
             }
             Err(e) => {
                 eprintln!(
-                    "[warn] DATABASE_URL invalide ou DB injoignable: {} — fallback fichier.",
-                    e
+                    "[warn] DATABASE_URL invalide ou DB injoignable: {e} — fallback fichier."
                 );
                 (web::Data::new(load_cache_from_file(&cards_path)), None)
             }

@@ -103,7 +103,7 @@ pub async fn search(
                     if let Some(url) = card.image_url() {
                         let key = url.trim();
                         if let Some(id) = map.get(key) {
-                            d.image_url = Some(format!("/images/{}/file/desktop", id));
+                            d.image_url = Some(format!("/images/{id}/file/desktop"));
                         }
                     }
                 }

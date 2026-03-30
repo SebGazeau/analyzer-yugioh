@@ -25,8 +25,7 @@ pub const KONAMI_SITE_BASE: &str = "https://www.db.yugioh-card.com";
 
 pub fn pack_list_url(locale: &str) -> String {
     format!(
-        "{KONAMI_SITE_BASE}/yugiohdb/card_list.action?clm=1&wname=CardSearch&request_locale={}",
-        locale
+        "{KONAMI_SITE_BASE}/yugiohdb/card_list.action?clm=1&wname=CardSearch&request_locale={locale}"
     )
 }
 
@@ -145,11 +144,7 @@ pub fn parse_pack_index_html(html: &str) -> Result<Vec<(String, String)>, Konami
         );
     }
 
-    Ok(pack_labels
-        .into_iter()
-        .zip(link_values.into_iter())
-        .take(n)
-        .collect())
+    Ok(pack_labels.into_iter().zip(link_values).take(n).collect())
 }
 
 fn packs_to_json(pairs: &[(String, String)]) -> Value {
@@ -196,7 +191,7 @@ pub fn absolute_konami_url(relative_or_absolute: &str, locale: &str) -> String {
     {
         relative_or_absolute.to_string()
     } else {
-        format!("{}{}", base, relative_or_absolute)
+        format!("{base}{relative_or_absolute}")
     };
     if u.contains("request_locale=") {
         return u;

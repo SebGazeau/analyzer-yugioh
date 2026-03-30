@@ -25,7 +25,7 @@ pub fn entries_to_insert(
             .id
             .filter(|&id| id > 0)
             .or_else(|| resolve_passcode_by_name(cards, name))
-            .ok_or_else(|| format!("Carte inconnue: {}", name))? as i64;
+            .ok_or_else(|| format!("Carte inconnue: {name}"))? as i64;
         let quantity = dto.quantity.clamp(1, 3) as i16;
         let engine = dto
             .engine

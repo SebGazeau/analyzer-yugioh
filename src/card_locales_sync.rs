@@ -101,12 +101,16 @@ mod tests {
 
     /// SAFETY : `ENV_LOCK` garantit qu’un seul test touche ces variables à la fois.
     unsafe fn env_remove_ygoprodeck_url() {
-        std::env::remove_var("YGOPRODECK_CARDINFO_URL");
+        unsafe {
+            std::env::remove_var("YGOPRODECK_CARDINFO_URL");
+        }
     }
 
     /// SAFETY : idem [`env_remove_ygoprodeck_url`].
     unsafe fn env_set_ygoprodeck_url(val: &str) {
-        std::env::set_var("YGOPRODECK_CARDINFO_URL", val);
+        unsafe {
+            std::env::set_var("YGOPRODECK_CARDINFO_URL", val);
+        }
     }
 
     #[test]

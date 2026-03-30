@@ -196,10 +196,10 @@ impl ImageImporter {
         let bytes = fetch_with_retry(url).await?;
         let v = process_image(&bytes)?;
         let id = uuid::Uuid::new_v4();
-        let base = format!("images/{}", id);
-        let p_orig = format!("{}/original.webp", base);
-        let p_desk = format!("{}/desktop.webp", base);
-        let p_mob = format!("{}/mobile.webp", base);
+        let base = format!("images/{id}");
+        let p_orig = format!("{base}/original.webp");
+        let p_desk = format!("{base}/desktop.webp");
+        let p_mob = format!("{base}/mobile.webp");
         storage.store(Path::new(&p_orig), &v.original).await?;
         storage.store(Path::new(&p_desk), &v.desktop).await?;
         storage.store(Path::new(&p_mob), &v.mobile).await?;

@@ -19,7 +19,7 @@ pub async fn overlay_search_dto_image_url(
     let urls = [url_trimmed.to_string()];
     if let Ok(map) = ImageRepository::get_ids_by_original_urls(pool, &urls).await {
         if let Some(id) = map.get(url_trimmed) {
-            dto.image_url = Some(format!("/images/{}/file/desktop", id));
+            dto.image_url = Some(format!("/images/{id}/file/desktop"));
         }
     }
 }

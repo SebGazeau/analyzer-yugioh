@@ -22,9 +22,9 @@ pub async fn fetch_cards(
                 let cards = match db::load_all_cards(pool.get_ref()).await {
                     Ok(c) => c,
                     Err(e) => {
-                        eprintln!("fetch_cards: load_all_cards: {}", e);
+                        eprintln!("fetch_cards: load_all_cards: {e}");
                         return HttpResponse::InternalServerError()
-                            .body(format!("Rechargement cache: {}", e));
+                            .body(format!("Rechargement cache: {e}"));
                     }
                 };
                 card_cache.replace_with(cards);
@@ -34,8 +34,8 @@ pub async fn fetch_cards(
                 ));
             }
             Err(e) => {
-                eprintln!("fetch_cards: sync YGOProDeck: {}", e);
-                return HttpResponse::InternalServerError().body(format!("Sync YGOProDeck: {}", e));
+                eprintln!("fetch_cards: sync YGOProDeck: {e}");
+                return HttpResponse::InternalServerError().body(format!("Sync YGOProDeck: {e}"));
             }
         }
     }
@@ -43,15 +43,15 @@ pub async fn fetch_cards(
     let response = match reqwest::get(cards_sync::DEFAULT_YGOPRODECK_CARDINFO_URL).await {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("fetch_cards: erreur requête API: {}", e);
-            return HttpResponse::InternalServerError().body(format!("Erreur API: {}", e));
+            eprintln!("fetch_cards: erreur requête API: {e}");
+            return HttpResponse::InternalServerError().body(format!("Erreur API: {e}"));
         }
     };
     let json: serde_json::Value = match response.json().await {
         Ok(j) => j,
         Err(e) => {
-            eprintln!("fetch_cards: erreur JSON: {}", e);
-            return HttpResponse::InternalServerError().body(format!("Erreur JSON: {}", e));
+            eprintln!("fetch_cards: erreur JSON: {e}");
+            return HttpResponse::InternalServerError().body(format!("Erreur JSON: {e}"));
         }
     };
 
@@ -60,12 +60,12 @@ pub async fn fetch_cards(
         let _ = std::fs::create_dir_all(parent);
     }
     if let Err(e) = std::fs::write(path, json.to_string()) {
-        eprintln!("fetch_cards: erreur écriture fichier: {}", e);
-        return HttpResponse::InternalServerError().body(format!("Erreur écriture: {}", e));
+        eprintln!("fetch_cards: erreur écriture fichier: {e}");
+        return HttpResponse::InternalServerError().body(format!("Erreur écriture: {e}"));
     }
     if let Err(e) = card_cache.reload(path) {
-        eprintln!("fetch_cards: erreur rechargement cache: {}", e);
-        return HttpResponse::InternalServerError().body(format!("Erreur cache: {}", e));
+        eprintln!("fetch_cards: erreur rechargement cache: {e}");
+        return HttpResponse::InternalServerError().body(format!("Erreur cache: {e}"));
     }
     HttpResponse::Ok().body("Cartes sauvegardées dans cards.json")
 }

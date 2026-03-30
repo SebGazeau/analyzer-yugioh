@@ -49,10 +49,7 @@ pub fn swagger_ui_enabled(app_env: AppEnvironment, enable_swagger_ui_var: Option
         .filter(|s| !s.is_empty());
     match explicit {
         None => !app_env.is_production(),
-        Some(t) => match t.to_lowercase().as_str() {
-            "1" | "true" | "yes" | "on" => true,
-            _ => false,
-        },
+        Some(t) => matches!(t.to_lowercase().as_str(), "1" | "true" | "yes" | "on"),
     }
 }
 
@@ -74,13 +71,11 @@ impl fmt::Display for StartupSecretError {
         match self {
             Self::AdminSecretInvalid => write!(
                 f,
-                "ADMIN_SECRET requis en production (APP_ENV=production), non vide et >= {} octets UTF-8 après trim",
-                MIN_SECRET_UTF8_BYTES
+                "ADMIN_SECRET requis en production (APP_ENV=production), non vide et >= {MIN_SECRET_UTF8_BYTES} octets UTF-8 après trim",
             ),
             Self::SessionSecretInvalid => write!(
                 f,
-                "SESSION_SECRET requis en production (APP_ENV=production), non vide et >= {} octets UTF-8 après trim",
-                MIN_SECRET_UTF8_BYTES
+                "SESSION_SECRET requis en production (APP_ENV=production), non vide et >= {MIN_SECRET_UTF8_BYTES} octets UTF-8 après trim",
             ),
         }
     }
@@ -92,7 +87,7 @@ fn secret_ok_for_production(secret: Option<&str>) -> bool {
     let Some(s) = secret.map(str::trim).filter(|s| !s.is_empty()) else {
         return false;
     };
-    s.as_bytes().len() >= MIN_SECRET_UTF8_BYTES
+    s.len() >= MIN_SECRET_UTF8_BYTES
 }
 
 /// Échoue si l’environnement est production et qu’un secret manque ou est trop court.

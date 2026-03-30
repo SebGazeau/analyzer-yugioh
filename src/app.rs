@@ -37,6 +37,7 @@ fn test_rate_limit_data() -> web::Data<RateLimitState> {
 /// Swagger UI : si `enable_swagger_ui`, enregistre `/swagger-ui/` et `/api-docs/openapi.json`.
 /// Le corps `api_key` de POST /api/auth/token doit égaler `api_token_issuer_secret` (souvent `API_ISSUER_SECRET`).
 /// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register`, `/admin/login` (sec-10).
+#[allow(clippy::too_many_arguments)]
 pub fn make_app(
     cache: web::Data<CardCache>,
     tera_data: web::Data<Tera>,
@@ -178,14 +179,13 @@ pub fn make_app(
                 .service(auth_web::logout)
                 .service(auth_web::dashboard),
         );
-    let app = if enable_swagger_ui {
+    if enable_swagger_ui {
         app.service(
             SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
     } else {
         app
-    };
-    app
+    }
 }
 
 /// Comme [`configure_app_for_tests`] mais avec la politique cookies **production**
