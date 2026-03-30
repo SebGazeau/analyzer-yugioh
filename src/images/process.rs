@@ -61,7 +61,7 @@ pub fn process_image(bytes: &[u8]) -> Result<ImageVariants, ProcessError> {
 
     let mut reader = ImageReader::new(Cursor::new(bytes))
         .with_guessed_format()
-        .map_err(|e| image::ImageError::IoError(e.into()))?;
+        .map_err(image::ImageError::IoError)?;
     reader.limits(decode_limits());
 
     let img = reader.decode()?;
@@ -93,13 +93,13 @@ fn resize_to_max_width(img: &image::DynamicImage, max_width: u32) -> image::Dyna
 fn encode_lossless(img: &image::DynamicImage) -> Result<Vec<u8>, ProcessError> {
     let encoder = Encoder::from_image(img).map_err(|e| ProcessError::Webp(e.to_string()))?;
     let mem = encoder.encode_lossless();
-    Ok((&*mem).to_vec())
+    Ok(mem.to_vec())
 }
 
 fn encode_quality(img: &image::DynamicImage, quality: f32) -> Result<Vec<u8>, ProcessError> {
     let encoder = Encoder::from_image(img).map_err(|e| ProcessError::Webp(e.to_string()))?;
     let mem = encoder.encode(quality);
-    Ok((&*mem).to_vec())
+    Ok(mem.to_vec())
 }
 
 #[cfg(test)]
@@ -148,7 +148,7 @@ mod tests {
         let r = process_image(&buf);
         match r {
             Err(ProcessError::InputTooLarge { max: m }) => assert_eq!(m, max),
-            other => panic!("attendu InputTooLarge, got {:?}", other),
+            other => panic!("attendu InputTooLarge, got {other:?}"),
         }
     }
 
@@ -166,8 +166,7 @@ mod tests {
         let r = process_image(&png_bytes);
         assert!(
             matches!(r, Err(ProcessError::Decode(image::ImageError::Limits(_)))),
-            "attendu erreur limites décodeur, got {:?}",
-            r
+            "attendu erreur limites décodeur, got {r:?}"
         );
     }
 }

@@ -25,6 +25,20 @@ make db-migrate
 
 (`scripts/db_migrate.sh` charge `.env` si présent, puis `target/release/analyzer-yugioh migrate`, sinon `cargo run -- migrate`.)
 
+## Synchroniser les cartes (sans serveur HTTP)
+
+```bash
+./analyzer-yugioh sync-cards
+```
+
+Même binaire : remplit `cards` + `card_sets` depuis l’API YGOProDeck (JSON). Voir **`docs/card-sync-job.md`** (jobs cloud / cron).
+
+```bash
+./analyzer-yugioh konami-pack-index
+```
+
+Index des packs sur le site Konami → `konami_catalog_snapshots`. Voir **`docs/konami-enrichment.md`**.
+
 ## Tests
 
 | Commande | Rôle |

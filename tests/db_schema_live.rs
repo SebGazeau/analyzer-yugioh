@@ -7,7 +7,12 @@
 //!
 //! Ou : `make test-db` (charge `.env` si présent).
 
-use analyzer_yugioh::db::{self, list_our_card_ids_sharing_ygorg_qa_with, upsert_ygorg_qa_entry};
+use analyzer_yugioh::db::{self, upsert_ygorg_qa_entry};
+use analyzer_yugioh::modules::associations::list_our_card_ids_sharing_ygorg_qa_with;
+use analyzer_yugioh::modules::catalog::{
+    card_ids_matching_locale_search, fetch_card_locales_map, find_card_id_by_locale_name,
+};
+use analyzer_yugioh::shared::search::card_resolve::normalize_name_for_match;
 use sqlx::postgres::PgPoolOptions;
 
 /// Tables `public` attendues après application de toutes les migrations.
@@ -20,10 +25,12 @@ const REQUIRED_TABLES: &[&str] = &[
     "card_ygorg_id_map",
     "card_ygorg_unresolved",
     "cards",
+    "card_locales",
     "deck_entries",
     "decks",
     "external_api_cache_state",
     "images",
+    "konami_catalog_snapshots",
     "site_users",
     "users",
     "ygorg_en_name_index",
@@ -172,4 +179,71 @@ async fn db_live_ygorg_qa_related_query_finds_partner_card() {
             .await
             .unwrap();
     }
+}
+
+const T_CARD_LOCALE: i64 = 8_888_803;
+
+#[tokio::test]
+#[ignore = "nécessite TEST_DATABASE_URL (make test-db)"]
+async fn db_live_card_locales_search_fetch_resolve() {
+    let pool = test_pool().await;
+    db::run_migrations(&pool).await.unwrap();
+
+    sqlx::query("DELETE FROM cards WHERE id = $1")
+        .bind(T_CARD_LOCALE)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    sqlx::query(
+        r#"
+        INSERT INTO cards (id, name, type, frame_type, card_desc) VALUES
+            ($1, 'db_live card locale EN', 'Monster'::card_type, 'effect'::card_frame, '')
+        "#,
+    )
+    .bind(T_CARD_LOCALE)
+    .execute(&pool)
+    .await
+    .expect("insert card for card_locales test");
+
+    sqlx::query(
+        r#"
+        INSERT INTO card_locales (card_id, locale, name, card_desc, source) VALUES
+            ($1, 'fr', 'Dragon Rouge db_live', 'effet magique avec % et _ littéraux', 'test_source')
+        "#,
+    )
+    .bind(T_CARD_LOCALE)
+    .execute(&pool)
+    .await
+    .expect("insert card_locales");
+
+    let by_name = card_ids_matching_locale_search(&pool, "fr", "Dragon")
+        .await
+        .expect("card_ids_matching_locale_search name");
+    assert!(by_name.contains(&T_CARD_LOCALE));
+
+    let by_desc = card_ids_matching_locale_search(&pool, "fr", "magique")
+        .await
+        .expect("card_ids_matching_locale_search desc");
+    assert!(by_desc.contains(&T_CARD_LOCALE));
+
+    let map = fetch_card_locales_map(&pool, "fr", &[T_CARD_LOCALE])
+        .await
+        .expect("fetch_card_locales_map");
+    let (n, d) = map.get(&T_CARD_LOCALE).expect("row map");
+    assert_eq!(n, "Dragon Rouge db_live");
+    assert!(d.contains("magique"));
+
+    let name_norm = normalize_name_for_match("Dragon Rouge db_live");
+    let resolved =
+        find_card_id_by_locale_name(&pool, "fr", name_norm.as_str(), "Dragon Rouge db_live")
+            .await
+            .expect("find_card_id_by_locale_name");
+    assert_eq!(resolved.map(|t| t.0), Some(T_CARD_LOCALE));
+
+    sqlx::query("DELETE FROM cards WHERE id = $1")
+        .bind(T_CARD_LOCALE)
+        .execute(&pool)
+        .await
+        .unwrap();
 }

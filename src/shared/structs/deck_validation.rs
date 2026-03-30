@@ -172,7 +172,7 @@ impl DeckValidationRequest {
         for (i, dto) in dtos.iter().enumerate() {
             match parse_entry(dto) {
                 Ok(entry) => entries.push(entry),
-                Err(e) => errors.push(format!("{}[{}]: {}", section, i, e)),
+                Err(e) => errors.push(format!("{section}[{i}]: {e}")),
             }
         }
         entries

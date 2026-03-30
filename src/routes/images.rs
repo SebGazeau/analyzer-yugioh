@@ -81,10 +81,10 @@ pub async fn import_image(
     let bytes = fetch_image_bytes_trusted(url.as_str()).await?;
     let variants = process_image(&bytes)?;
     let id = uuid::Uuid::new_v4();
-    let base = format!("images/{}", id);
-    let path_original = format!("{}/original.webp", base);
-    let path_desktop = format!("{}/desktop.webp", base);
-    let path_mobile = format!("{}/mobile.webp", base);
+    let base = format!("images/{id}");
+    let path_original = format!("{base}/original.webp");
+    let path_desktop = format!("{base}/desktop.webp");
+    let path_mobile = format!("{base}/mobile.webp");
     storage
         .store(Path::new(&path_original), &variants.original)
         .await?;

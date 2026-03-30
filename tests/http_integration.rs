@@ -1,6 +1,7 @@
 //! Tests d'intégration HTTP pour les routes.
 
 use actix_web::dev::ServiceResponse;
+use actix_web::http::StatusCode;
 use actix_web::http::header::HeaderMap;
 use actix_web::http::header::SET_COOKIE;
 use actix_web::test;
@@ -97,8 +98,7 @@ async fn test_swagger_routes_absent_when_disabled() {
         assert_eq!(
             resp.status().as_u16(),
             404,
-            "sans Swagger, {} doit répondre 404",
-            uri
+            "sans Swagger, {uri} doit répondre 404"
         );
     }
 }
@@ -130,6 +130,39 @@ async fn test_search_valid_query_returns_200() {
     );
     let body: Vec<serde_json::Value> = test::read_body_json(resp).await;
     assert!(body.is_empty(), "Cache vide => tableau vide");
+}
+
+#[actix_web::test]
+async fn test_search_with_locale_param_returns_200() {
+    let app = test::init_service(configure_app_for_tests()).await;
+
+    let req = test::TestRequest::get()
+        .uri("/search?q=test&locale=fr")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert!(
+        resp.status().is_success(),
+        "Recherche avec locale doit répondre 200 (sans Postgres le paramètre est ignoré)"
+    );
+    let body: Vec<serde_json::Value> = test::read_body_json(resp).await;
+    assert!(body.is_empty(), "Cache vide => tableau vide");
+}
+
+#[actix_web::test]
+async fn test_admin_reload_cache_from_db_without_postgres_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+
+    let req = test::TestRequest::get()
+        .uri("/admin/reload_cache_from_db")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "sans DATABASE_URL, rechargement cache depuis DB impossible"
+    );
 }
 
 #[actix_web::test]
@@ -238,8 +271,7 @@ async fn test_validate_deck_same_passcode_two_names_returns_400() {
     assert!(
         errs.iter()
             .any(|e| e.as_str().is_some_and(|s| s.contains("passcode 999001"))),
-        "erreur attendue pour agrégation par passcode: {:?}",
-        errs
+        "erreur attendue pour agrégation par passcode: {errs:?}"
     );
 }
 
@@ -260,7 +292,7 @@ async fn test_web_login_post_no_longer_exists_returns_404() {
     let app = test::init_service(configure_app_for_tests()).await;
     let req = test::TestRequest::post()
         .uri("/web/login")
-        .set_form(&[("user_id", "attacker"), ("csrf_token", "ignored")])
+        .set_form([("user_id", "attacker"), ("csrf_token", "ignored")])
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(
@@ -448,7 +480,7 @@ async fn test_api_auth_token_without_key_returns_401() {
     let app = test::init_service(configure_app_for_tests_with_auth(None, Some("jwt-secret"))).await;
     let req = test::TestRequest::post()
         .uri("/api/auth/token")
-        .set_json(&serde_json::json!({ "api_key": "wrong" }))
+        .set_json(serde_json::json!({ "api_key": "wrong" }))
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 401);
@@ -463,7 +495,7 @@ async fn test_api_auth_token_issuer_split_from_jwt_signing_secret() {
 
     let req_signing = test::TestRequest::post()
         .uri("/api/auth/token")
-        .set_json(&serde_json::json!({ "api_key": signing }))
+        .set_json(serde_json::json!({ "api_key": signing }))
         .to_request();
     let resp_bad = test::call_service(&app, req_signing).await;
     assert_eq!(
@@ -474,7 +506,7 @@ async fn test_api_auth_token_issuer_split_from_jwt_signing_secret() {
 
     let req_ok = test::TestRequest::post()
         .uri("/api/auth/token")
-        .set_json(&serde_json::json!({ "api_key": issuer }))
+        .set_json(serde_json::json!({ "api_key": issuer }))
         .to_request();
     let resp_ok = test::call_service(&app, req_ok).await;
     assert!(resp_ok.status().is_success());
@@ -482,7 +514,7 @@ async fn test_api_auth_token_issuer_split_from_jwt_signing_secret() {
     let token = body["token"].as_str().expect("token");
     let profile_req = test::TestRequest::get()
         .uri("/api/profile")
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .to_request();
     let profile_resp = test::call_service(&app, profile_req).await;
     assert!(
@@ -496,17 +528,17 @@ async fn test_api_auth_token_with_correct_key_returns_200_and_token() {
     let app = test::init_service(configure_app_for_tests_with_auth(None, Some("jwt-secret"))).await;
     let req = test::TestRequest::post()
         .uri("/api/auth/token")
-        .set_json(&serde_json::json!({ "api_key": "jwt-secret" }))
+        .set_json(serde_json::json!({ "api_key": "jwt-secret" }))
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_success());
     let body: serde_json::Value = test::read_body_json(resp).await;
     assert!(
-        body.get("token")
+        !body
+            .get("token")
             .and_then(|t| t.as_str())
             .unwrap_or("")
-            .len()
-            > 0
+            .is_empty()
     );
 }
 
@@ -523,7 +555,7 @@ async fn test_api_profile_with_valid_token_returns_200() {
     let app = test::init_service(configure_app_for_tests_with_auth(None, Some("jwt-secret"))).await;
     let token_req = test::TestRequest::post()
         .uri("/api/auth/token")
-        .set_json(&serde_json::json!({ "api_key": "jwt-secret" }))
+        .set_json(serde_json::json!({ "api_key": "jwt-secret" }))
         .to_request();
     let token_resp = test::call_service(&app, token_req).await;
     assert!(token_resp.status().is_success(), "obtenir un token");
@@ -531,7 +563,7 @@ async fn test_api_profile_with_valid_token_returns_200() {
     let token = body["token"].as_str().expect("token dans la réponse");
     let req = test::TestRequest::get()
         .uri("/api/profile")
-        .insert_header(("Authorization", format!("Bearer {}", token)))
+        .insert_header(("Authorization", format!("Bearer {token}")))
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert!(
@@ -640,10 +672,8 @@ async fn test_post_register_without_pool_returns_error_page() {
     let html = String::from_utf8_lossy(&body_get);
     let csrf = extract_csrf_hidden_value(&html).expect("csrf sur /register");
     // Mot de passe URL-encodé (évite problème avec ! et autres caractères spéciaux)
-    let payload = format!(
-        "pseudo=alice&password=Abcd1234%21&accept_conditions=on&csrf_token={}",
-        csrf
-    );
+    let payload =
+        format!("pseudo=alice&password=Abcd1234%21&accept_conditions=on&csrf_token={csrf}");
     let req = test::TestRequest::post()
         .uri("/register")
         .insert_header(("Cookie", cookie))
@@ -673,7 +703,7 @@ async fn test_post_login_without_pool_redirects_to_index() {
     let body_get = test::read_body(resp_get).await;
     let html = String::from_utf8_lossy(&body_get);
     let csrf = extract_csrf_hidden_value(&html).expect("csrf sur /");
-    let payload = format!("pseudo=alice&password=wrong&csrf_token={}", csrf);
+    let payload = format!("pseudo=alice&password=wrong&csrf_token={csrf}");
     let req = test::TestRequest::post()
         .uri("/login")
         .insert_header(("Cookie", cookie))
@@ -702,7 +732,7 @@ async fn test_post_logout_redirects_to_index() {
     let req = test::TestRequest::post()
         .uri("/logout")
         .insert_header(("Cookie", cookie))
-        .set_form(&[("csrf_token", csrf.as_str())])
+        .set_form([("csrf_token", csrf.as_str())])
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(
@@ -730,7 +760,7 @@ async fn test_post_login_rate_limited_returns_429_after_two_same_ip() {
     let csrf = extract_csrf_hidden_value(&html).expect("csrf");
 
     for _ in 0..2 {
-        let payload = format!("pseudo=alice&password=x&csrf_token={}", csrf);
+        let payload = format!("pseudo=alice&password=x&csrf_token={csrf}");
         let req = test::TestRequest::post()
             .uri("/login")
             .peer_addr(addr)
@@ -746,7 +776,7 @@ async fn test_post_login_rate_limited_returns_429_after_two_same_ip() {
         );
     }
 
-    let payload3 = format!("pseudo=alice&password=x&csrf_token={}", csrf);
+    let payload3 = format!("pseudo=alice&password=x&csrf_token={csrf}");
     let req3 = test::TestRequest::post()
         .uri("/login")
         .peer_addr(addr)
@@ -797,7 +827,7 @@ async fn test_post_logout_without_valid_csrf_returns_403() {
     let req = test::TestRequest::post()
         .uri("/logout")
         .insert_header(("Cookie", cookie))
-        .set_form(&[("csrf_token", "wrong-token")])
+        .set_form([("csrf_token", "wrong-token")])
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 403);
@@ -837,7 +867,7 @@ async fn test_images_import_forbidden_when_admin_secret_set_and_no_key() {
     let req = test::TestRequest::post()
         .uri("/images/import")
         .insert_header((actix_web::http::header::CONTENT_TYPE, "application/json"))
-        .set_json(&serde_json::json!({
+        .set_json(serde_json::json!({
             "url": "https://images.ygoprodeck.com/images/cards/1.jpg"
         }))
         .to_request();
@@ -856,7 +886,7 @@ async fn test_images_import_bad_host_returns_400_before_pool() {
         .uri("/images/import")
         .insert_header(("x-admin-key", TEST_ADMIN_KEY_32))
         .insert_header((actix_web::http::header::CONTENT_TYPE, "application/json"))
-        .set_json(&serde_json::json!({ "url": "https://evil.example.com/x.png" }))
+        .set_json(serde_json::json!({ "url": "https://evil.example.com/x.png" }))
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 400);
@@ -873,7 +903,7 @@ async fn test_images_import_with_admin_key_no_pool_returns_503() {
         .uri("/images/import")
         .insert_header(("x-admin-key", TEST_ADMIN_KEY_32))
         .insert_header((actix_web::http::header::CONTENT_TYPE, "application/json"))
-        .set_json(&serde_json::json!({
+        .set_json(serde_json::json!({
             "url": "https://images.ygoprodeck.com/images/cards/1.jpg"
         }))
         .to_request();
@@ -887,7 +917,7 @@ async fn test_images_import_open_when_no_admin_secret_then_503_no_pool() {
     let req = test::TestRequest::post()
         .uri("/images/import")
         .insert_header((actix_web::http::header::CONTENT_TYPE, "application/json"))
-        .set_json(&serde_json::json!({
+        .set_json(serde_json::json!({
             "url": "https://images.ygoprodeck.com/images/cards/1.jpg"
         }))
         .to_request();

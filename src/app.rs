@@ -17,7 +17,6 @@ use tera::Tera;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::auth::{ApiDoc, api, web as auth_web};
-use crate::handlers;
 use crate::rate_limit::{RateLimitState, login_post_blocked_response};
 use crate::routes;
 use crate::session_cookies::{SessionCookieSettings, cookie_session_middleware};
@@ -38,6 +37,7 @@ fn test_rate_limit_data() -> web::Data<RateLimitState> {
 /// Swagger UI : si `enable_swagger_ui`, enregistre `/swagger-ui/` et `/api-docs/openapi.json`.
 /// Le corps `api_key` de POST /api/auth/token doit égaler `api_token_issuer_secret` (souvent `API_ISSUER_SECRET`).
 /// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register`, `/admin/login` (sec-10).
+#[allow(clippy::too_many_arguments)]
 pub fn make_app(
     cache: web::Data<CardCache>,
     tera_data: web::Data<Tera>,
@@ -106,22 +106,22 @@ pub fn make_app(
     };
     let app = app
         .service(Files::new("/static", "static"))
-        .service(handlers::index)
-        .service(handlers::count)
-        .service(handlers::search)
-        .service(handlers::associations_catalog)
-        .service(handlers::associations_qa_related)
-        .service(handlers::card_by_name)
-        .service(handlers::validate_deck)
-        .service(handlers::create_deck_handler)
-        .service(handlers::list_decks_handler)
-        .service(handlers::get_deck_handler)
-        .service(handlers::update_deck_handler)
-        .service(handlers::delete_deck_handler)
-        .service(handlers::register_page)
-        .service(handlers::register_submit)
-        .service(handlers::login_submit)
-        .service(handlers::logout_submit)
+        .service(crate::modules::pages::index)
+        .service(crate::modules::catalog::count)
+        .service(crate::modules::catalog::search)
+        .service(crate::modules::associations::associations_catalog)
+        .service(crate::modules::associations::associations_qa_related)
+        .service(crate::modules::catalog::card_by_name)
+        .service(crate::modules::catalog::validate_deck)
+        .service(crate::modules::decks::create_deck_handler)
+        .service(crate::modules::decks::list_decks_handler)
+        .service(crate::modules::decks::get_deck_handler)
+        .service(crate::modules::decks::update_deck_handler)
+        .service(crate::modules::decks::delete_deck_handler)
+        .service(crate::modules::site_auth::register_page)
+        .service(crate::modules::site_auth::register_submit)
+        .service(crate::modules::site_auth::login_submit)
+        .service(crate::modules::site_auth::logout_submit)
         .service(routes::import_image)
         .service(routes::list_images)
         .service(routes::get_image)
@@ -165,10 +165,11 @@ pub fn make_app(
                 .service(routes::admin_logout)
                 .service(routes::admin_setup_page)
                 .service(routes::admin_setup)
-                .service(handlers::fetch_cards)
-                .service(handlers::enrich_ygorganization)
-                .service(handlers::preview_card_metadata_fill)
-                .service(handlers::apply_card_metadata_fill)
+                .service(crate::modules::admin_sync::fetch_cards)
+                .service(crate::modules::admin_sync::reload_cache_from_db)
+                .service(crate::modules::admin_sync::enrich_ygorganization)
+                .service(crate::modules::admin_sync::preview_card_metadata_fill)
+                .service(crate::modules::admin_sync::apply_card_metadata_fill)
                 .service(routes::admin_import)
                 .service(routes::admin_rehydrate_storage),
         )
@@ -178,14 +179,13 @@ pub fn make_app(
                 .service(auth_web::logout)
                 .service(auth_web::dashboard),
         );
-    let app = if enable_swagger_ui {
+    if enable_swagger_ui {
         app.service(
             SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
     } else {
         app
-    };
-    app
+    }
 }
 
 /// Comme [`configure_app_for_tests`] mais avec la politique cookies **production**
@@ -202,7 +202,7 @@ pub fn configure_app_for_tests_production_cookies() -> App<
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
 
     make_app(
         cache,
@@ -233,7 +233,7 @@ pub fn configure_app_for_tests() -> App<
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
 
     make_app(
         cache,
@@ -264,7 +264,7 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
     let rl = web::Data::new(RateLimitState::new(
         Duration::from_secs(3600),
         2,
@@ -300,7 +300,7 @@ pub fn configure_app_for_tests_without_swagger() -> App<
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
 
     make_app(
         cache,
@@ -335,7 +335,7 @@ pub fn configure_app_for_tests_with_api_keys(
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
     let admin = admin_secret.map(String::from);
     let jwt_data = Some(web::Data::new(crate::auth::jwt::JwtSecret(
         jwt_signing_secret.as_bytes().to_vec(),
@@ -375,7 +375,7 @@ pub fn configure_app_for_tests_with_auth(
     let cache = web::Data::new(CardCache::empty());
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
-    let cards_path = web::Data::new(handlers::CARDS_PATH_DEFAULT.to_string());
+    let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
     let admin = admin_secret.map(String::from);
     let (jwt_data, api_token_issuer) = match api_key {
         Some(k) => (

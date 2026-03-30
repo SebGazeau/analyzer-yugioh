@@ -6,7 +6,7 @@ import { bindAppTabs } from './tabs.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
 import { initAnalysis } from './init/analysis.js';
-import { bindSuggestionsFindCard } from './init/suggestions.js';
+import { bindSuggestionsAddToDeck, bindSuggestionsFindCard } from './init/suggestions.js';
 
 function getInitials(pseudo: string | null): string {
     if (!pseudo || !pseudo.trim()) return '?';
@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBuilder();
     initAnalysis();
     bindSuggestionsFindCard();
+    bindSuggestionsAddToDeck();
 });
 
 export { setActiveTab } from './tabs.js';

@@ -10,8 +10,9 @@ RUN apt-get update \
     && cargo install cargo-watch \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier sources et migrations (nécessaire pour sqlx::migrate! à la compilation)
-COPY Cargo.toml Cargo.lock ./
+# Copier workspace (xtask est membre — requis pour `cargo build`)
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY xtask ./xtask
 COPY src ./src
 COPY migrations ./migrations
 RUN cargo build --release --bin analyzer-yugioh

@@ -5,7 +5,7 @@
 //! - monstres : `"Nom" monster` (ligne de matériel, y compris Link) ;
 //! - sorts / pièges : motif `add 1 "Nom" card` sur la **première ligne** uniquement si `cardType`
 //!   contient `spell` ou `trap` (évite d’accrocher des effets de monstre).
-//! `archetype_source` = [`ARCHETYPE_SOURCE_YGORG_EFFECT_EN`] pour tracer cette origine.
+//!   `archetype_source` = [`ARCHETYPE_SOURCE_YGORG_EFFECT_EN`] pour tracer cette origine.
 
 use std::sync::OnceLock;
 

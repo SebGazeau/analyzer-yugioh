@@ -158,12 +158,7 @@ impl ApiCard {
             name: self.name.clone(),
             name_en: None,
             type_: api_type_to_db_type(&self.type_),
-            attribute: self
-                .attribute
-                .as_deref()
-                .map(normalize_attribute)
-                .flatten()
-                .map(String::from),
+            attribute: self.attribute.as_deref().and_then(normalize_attribute),
             frame_type: self
                 .frame_type
                 .as_deref()
@@ -202,9 +197,8 @@ fn api_type_to_db_type(s: &str) -> String {
         "Trap".into()
     } else if n.contains("skill") {
         "Spell".into()
-    } else if n.contains("monster") || n.contains("token") {
-        "Monster".into()
     } else {
+        // Monstre, jeton ou type inconnu → Monster (aligné historique DB).
         "Monster".into()
     }
 }

@@ -33,7 +33,7 @@ impl CopyKey {
 
     fn display_label(&self) -> String {
         match self {
-            CopyKey::Passcode(id) => format!("passcode {}", id),
+            CopyKey::Passcode(id) => format!("passcode {id}"),
             CopyKey::Name(n) => n.as_str().to_string(),
         }
     }
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn test_deck_main_deck() {
         let entries: Vec<DeckEntry> = (1..=40)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::main_deck(entries, &[]);
         assert!(deck.is_ok());
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn test_deck_main_deck_too_few_cards() {
         let entries: Vec<DeckEntry> = (1..=39)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::main_deck(entries, &[]);
         assert!(deck.is_err());
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn test_deck_main_deck_too_many_cards() {
         let entries: Vec<DeckEntry> = (1..=61)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::main_deck(entries, &[]);
         assert!(deck.is_err());
@@ -200,7 +200,7 @@ mod tests {
     fn test_deck_main_deck_too_many_copies() {
         // 4 copies de "Carte 1" (4 entrées × qty 1) + 36 autres cartes = 40 cartes, mais TooManyCopies
         let mut entries: Vec<DeckEntry> = (2..=40)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         for _ in 0..4 {
             entries.push(make_entry("Carte 1", None, None));
@@ -215,7 +215,7 @@ mod tests {
     #[test]
     fn test_deck_extra_valid() {
         let entries: Vec<DeckEntry> = (1..=15)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::extra_deck(entries, &[]);
         assert!(deck.is_ok());
@@ -223,7 +223,7 @@ mod tests {
     #[test]
     fn test_deck_extra_too_many_cards() {
         let entries: Vec<DeckEntry> = (1..=16)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::extra_deck(entries, &[]);
         assert!(deck.is_err());
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn test_deck_side_deck_valid() {
         let entries: Vec<DeckEntry> = (1..=15)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::side_deck(entries, &[]);
         assert!(deck.is_ok());
@@ -246,7 +246,7 @@ mod tests {
     #[test]
     fn test_deck_side_deck_too_many_cards() {
         let entries: Vec<DeckEntry> = (1..=16)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let deck = Deck::side_deck(entries, &[]);
         assert!(deck.is_err());
@@ -304,7 +304,7 @@ mod tests {
         );
         let cache = [albaz, white];
         let mut entries: Vec<DeckEntry> = (1..=36)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         entries.push(make_entry("Fallen of Albaz", None, Some(100)));
         entries.push(make_entry("Fallen of Albaz", None, Some(100)));
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn test_deck_main_deck_too_many_copies_same_passcode_two_names() {
         let mut entries: Vec<DeckEntry> = (2..=37)
-            .map(|i| make_entry(&format!("Carte {}", i), None, None))
+            .map(|i| make_entry(&format!("Carte {i}"), None, None))
             .collect();
         let pid = 999_001_u64;
         entries.push(make_entry("Fallen Variant A", None, Some(pid)));

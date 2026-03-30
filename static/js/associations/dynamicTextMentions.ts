@@ -67,6 +67,20 @@ const STOP_WORDS = new Set([
     'magie',
     'piège',
     'pièges',
+    // Verbes / nœuds PSCT anglais souvent présents sur des centaines de cartes (extraits du nom → faux positifs massifs)
+    'break',
+    'chain',
+    'phase',
+    'target',
+    'negate',
+    'banish',
+    'summon',
+    'destroy',
+    'activate',
+    'battle',
+    'damage',
+    'shuffle',
+    'discard',
 ]);
 
 /**

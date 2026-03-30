@@ -82,6 +82,16 @@ export type BuildAssociationReportOptions = {
     includeNameWordPatterns?: boolean;
     /** Longueur min des mots du nom (défaut 5). */
     minNameWordLength?: number;
+    /**
+     * Plafond de cartes pour un angle « mot du nom » (`text_name:*`). Au-delà, le groupe est omis (trop bruyant).
+     * Défaut 48. N’affecte pas `text_arch:*` ni les règles manuelles sans préfixe `text_name:`.
+     */
+    maxNameWordCitationMatches?: number;
+    /**
+     * Pour `text_name:*` uniquement : exiger une occurrence en « mot entier » (évite *break* dans *breakthrough*).
+     * Défaut true.
+     */
+    useWordBoundaryForNameWordPatterns?: boolean;
     /** Si true, groupe des cartes dont le `desc` cite le nom de l’ancre (faux positifs possibles). */
     includeAnchorNameInDesc?: boolean;
     /**

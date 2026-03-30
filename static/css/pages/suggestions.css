@@ -210,3 +210,33 @@
   font-weight: 600;
   max-width: 14rem;
 }
+
+.suggestions-table tbody tr[data-insights-suggest-row] {
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+.suggestions-table tbody tr[data-insights-suggest-row]:hover td {
+  background: var(--color-bg-elevated);
+}
+
+.suggestions-main-match-chip[data-insights-add-deck-card] {
+  cursor: pointer;
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+  border-radius: var(--radius-md);
+  transition:
+    background var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+  border: 1px solid transparent;
+}
+
+.suggestions-main-match-chip[data-insights-add-deck-card]:hover {
+  background: var(--color-gold-alpha-06);
+  border-color: var(--color-border-subtle);
+}
+
+.suggestions-main-match-chip[data-insights-add-deck-card]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
+}

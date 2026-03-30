@@ -1,0 +1,4 @@
+# Aligné sur le stage builder du Dockerfile (rust:1.88-slim).
+[toolchain]
+channel = "1.88"
+components = ["rustfmt", "clippy"]

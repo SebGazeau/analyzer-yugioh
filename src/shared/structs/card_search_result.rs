@@ -25,6 +25,7 @@ pub struct CardSearchResult {
 }
 
 impl CardSearchResult {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: u64,
         card_name: CardName,
@@ -81,7 +82,7 @@ impl CardSearchResult {
     }
 
     pub fn as_str(&self) -> &str {
-        &self.card_name().as_str()
+        self.card_name().as_str()
     }
 
     pub fn archetype(&self) -> Option<&str> {
@@ -104,7 +105,7 @@ impl CardSearchResult {
             name: self.card_name.as_str().to_string(),
             name_en: self.card_name_en.as_ref().map(|n| n.as_str().to_string()),
             card_type: format!("{:?}", self.card_type),
-            attribute: self.attribute.as_ref().map(|a| format!("{:?}", a)),
+            attribute: self.attribute.as_ref().map(|a| format!("{a:?}")),
             race: self.race.clone(),
             level: self.level,
             archetype: self.archetype.clone(),
@@ -237,14 +238,14 @@ mod tests {
             1,
             card_name.clone(),
             card_name_en.clone(),
-            card_type.clone(),
-            attribute.clone(),
+            card_type,
+            attribute,
             race.clone(),
-            level.clone(),
+            level,
             archetype.clone(),
             None,
-            atk.clone(),
-            def.clone(),
+            atk,
+            def,
             frame_type.clone(),
             ygoprodeck_url.clone(),
             None,
@@ -287,14 +288,14 @@ mod tests {
             1,
             card_name.clone(),
             card_name_en.clone(),
-            card_type.clone(),
-            attribute.clone(),
+            card_type,
+            attribute,
             race.clone(),
-            level.clone(),
+            level,
             archetype.clone(),
             Some("ygorg_effect_en".to_string()),
-            atk.clone(),
-            def.clone(),
+            atk,
+            def,
             frame_type.clone(),
             ygoprodeck_url.clone(),
             None,

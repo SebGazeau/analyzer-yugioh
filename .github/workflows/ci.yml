@@ -1,0 +1,45 @@
+# CI sur les PR uniquement. Le déploiement (tag v*) est dans deploy-gcp.yml
+# après les mêmes contrôles qualité (workflow réutilisable).
+#
+# Makefile local : `make test` exige .env — ici commandes explicites.
+# Intégration : Postgres 16 + tests db_live + Playwright (workflow réutilisable).
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  actions: write # artefacts Playwright / logs (job integration)
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality-reusable.yml
+
+  integration:
+    needs: quality
+    uses: ./.github/workflows/integration-reusable.yml
+
+  docker-smoke:
+    name: Docker build (smoke)
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: static/package-lock.json
+
+      - name: Frontend build pour Docker
+        working-directory: static
+        run: |
+          npm ci
+          npm run build
+
+      - name: Docker build
+        run: docker build -t analyzer-yugioh:ci .

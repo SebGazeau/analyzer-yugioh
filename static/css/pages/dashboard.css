@@ -617,16 +617,17 @@
 .deck-card-ban-badge {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
+  right: auto;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
   color: var(--color-bg-base);
   background: var(--color-danger);
   padding: 2px var(--space-1);
-  border-radius: 0 var(--radius-sm) 0 var(--radius-sm);
+  border-radius: var(--radius-sm) 0 var(--radius-sm) 0;
   line-height: 1.2;
-  z-index: 1;
+  z-index: 2;
 }
 
 .deck-card-qty {
@@ -647,6 +648,92 @@
   justify-content: center;
   line-height: 1;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Retrait rapide : haut-droite — compact (moins d’empiètement sur les étoiles), un seul trait sans double contour */
+.deck-card-remove-one {
+  position: absolute;
+  top: calc(var(--space-1) / 2);
+  right: calc(var(--space-1) / 2);
+  left: auto;
+  bottom: auto;
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-bg-base) 48%, transparent);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  box-shadow: none;
+  transition:
+    opacity var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-default),
+    color var(--duration-normal) var(--ease-default),
+    background var(--duration-normal) var(--ease-default);
+}
+
+/* Masqué au repos sur les pointeurs avec survol (tactile : toujours visible) */
+@media (hover: hover) {
+  .deck-card-cell .deck-card-remove-one {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .deck-card-cell:hover .deck-card-remove-one,
+  .deck-card-cell:focus-within .deck-card-remove-one {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.deck-card-remove-one-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.deck-card-remove-one:hover {
+  color: color-mix(in srgb, var(--color-danger) 82%, #ffffff);
+  background: color-mix(in srgb, var(--color-bg-base) 68%, transparent);
+  transform: scale(1.04);
+}
+
+.deck-card-remove-one:active {
+  transform: scale(0.92);
+  color: color-mix(in srgb, var(--color-danger) 88%, #000000);
+  background: color-mix(in srgb, var(--color-bg-base) 58%, transparent);
+}
+
+.deck-card-remove-one:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold), var(--shadow-sm);
+}
+
+/* Fond assombri : clic = fermer + enregistrer (comme Fermer) */
+.deck-card-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-modal) - 1);
+  background: var(--color-bg-base);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--duration-fast), visibility var(--duration-fast);
+}
+.deck-card-popover-backdrop--open {
+  opacity: 0.55;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* Popover édition carte ─────────────────────────── */
@@ -729,19 +816,35 @@
 }
 .deck-card-popover-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-2);
   padding-top: var(--space-3);
   border-top: 1px solid var(--color-border-subtle);
+  align-items: center;
+  justify-content: center;
 }
-.deck-card-popover-actions .btn {
-  flex: 1;
+
+.deck-card-popover-icon-btn.btn-deck {
+  padding: 0;
 }
-.deck-card-popover-delete {
-  order: 1;
+.deck-card-popover-icon-btn {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
 }
-.deck-card-popover-close {
-  order: 0;
+
+.deck-card-popover-icon-btn .deck-card-popover-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 /* Catégories (chips + dropdown) dans le popover */
@@ -955,6 +1058,16 @@
   margin-bottom: var(--space-4);
 }
 
+/* Label + vignettes : même ligne quand il y a la place, alignement vertical stable */
+.draw-simulation-drawn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
 .draw-simulation-bar .draw-simulation-label {
   font-family: var(--font-body);
   font-weight: 600;
@@ -993,7 +1106,9 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
+  align-content: center;
+  contain: layout paint;
 }
 
 .draw-simulation-cards .draw-simulation-empty {
@@ -1005,16 +1120,19 @@
 .draw-simulation-thumb {
   width: 41px;
   height: 60px;
+  flex-shrink: 0;
   object-fit: cover;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border-subtle);
   vertical-align: middle;
+  display: block;
 }
 
 .draw-simulation-thumb-placeholder {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 41px;
   height: 60px;
   font-size: 11px;
@@ -1030,19 +1148,21 @@
   font-family: var(--font-mono);
 }
 
+/* 2D uniquement : rotateY sans perspective sur l’ancêtre provoquait des artefacts (bandeau / carte « collée » en haut de l’écran). */
 @keyframes draw-reveal {
   from {
-    transform: rotateY(-90deg);
     opacity: 0;
+    transform: scale(0.94) translateY(4px);
   }
   to {
-    transform: rotateY(0);
     opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
 .draw-simulation-thumb--reveal,
 .draw-simulation-thumb-placeholder.draw-simulation-thumb--reveal {
+  transform-origin: center center;
   animation: draw-reveal var(--duration-normal) var(--ease-default) forwards;
 }
 

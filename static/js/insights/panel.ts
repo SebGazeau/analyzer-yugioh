@@ -57,7 +57,7 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
                 c.imageUrl && c.imageUrl.trim() !== ''
                     ? `<img class="suggestions-main-match-thumb" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" data-insights-match-thumb />`
                     : '<span class="suggestions-main-match-thumb suggestions-main-match-thumb--empty" data-insights-match-thumb aria-hidden="true">?</span>';
-            return `<div class="suggestions-main-match-chip" data-insights-main-match data-insights-section="${c.section}" title="${nameAttr} (${sectionLabel(c.section)})">
+            return `<div class="suggestions-main-match-chip" data-insights-main-match data-insights-add-deck-card="1" data-insights-card-name="${nameAttr}" data-insights-section="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${sectionLabel(c.section)})" role="button" tabindex="0">
         ${thumb}
         <span class="suggestions-main-match-name">${nameEsc}</span>
         ${sectionBadge}
@@ -75,7 +75,7 @@ function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
             const attrRace = `${escapeHtml(s.attribute)} / ${escapeHtml(s.race)}`;
             const matchCell = renderMatchChips(s.matchingCards);
             return `
-    <tr data-insights-suggest-row data-insights-matches-main="${s.matchesDeck ? 'true' : 'false'}">
+    <tr data-insights-suggest-row data-insights-matches-main="${s.matchesDeck ? 'true' : 'false'}" data-insights-suggest-name="${nameAttr}" title="Cliquer pour ajouter cette carte au deck (Extra si Xyz)">
       <td data-insights-cell="name">${nameEsc}</td>
       <td data-insights-cell="num">${s.numberIndex}</td>
       <td data-insights-cell="rank">${s.rank}</td>

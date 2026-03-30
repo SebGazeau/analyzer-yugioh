@@ -3,10 +3,15 @@
 mod app;
 pub mod auth;
 pub mod card_metadata_fill;
+pub mod modules;
+
+pub use modules::CARDS_PATH_DEFAULT;
+pub mod card_locales_sync;
+pub mod cards_sync;
 pub mod config;
 pub mod db;
-pub mod handlers;
 pub mod images;
+pub mod konami_catalog;
 pub mod rate_limit;
 pub mod routes;
 pub mod security_startup;

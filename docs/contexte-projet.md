@@ -23,17 +23,27 @@ Application web **Yu-Gi-Oh** : analyse de deck, recherche de cartes, constructio
 ```
 analyzer-yugioh/
 ├── src/
-│   ├── main.rs          # Entrée, env, pool SQL, cache cartes
+│   ├── main.rs          # Entrée, env, pool SQL, cache cartes, sous-commandes CLI
 │   ├── lib.rs           # Exports + make_app pour tests
-│   ├── app.rs           # Montage Actix (routes, static, session, admin, api)
-│   ├── handlers.rs      # Pages HTML + JSON (search, decks, auth formulaires)
-│   ├── routes/          # admin (fetch_cards…), images (import, serve)
+│   ├── app.rs           # Montage Actix (modules, static, session, admin, api)
+│   ├── modules/         # Routes HTTP par domaine (style vertical)
+│   │   ├── pages/       # GET /
+│   │   ├── catalog/     # /search, /card, /count, /validate_deck + repository (locales lecture)
+│   │   ├── associations/# catalogue enrichi + Q&A YGOrg
+│   │   ├── admin_sync/  # /admin/fetch_cards, reload_cache, enrich YGOrg, metadata fill…
+│   │   ├── site_auth/   # register / login / logout formulaires site
+│   │   ├── decks/       # CRUD /decks
+│   │   ├── template_error.rs
+│   │   └── mod.rs       # CARDS_PATH_DEFAULT
+│   ├── db/              # SQL partagé : cartes, YGOrg, Konami, migrations, upsert card_locales…
+│   ├── routes/          # admin HTML (login, setup), images (import, serve)
 │   ├── auth/            # jwt, session, api web, user_db, admin_db
-│   ├── db.rs            # Migrations, chargement cartes depuis DB
 │   ├── shared/          # Types deck, recherche, cache, enums Yu-Gi-Oh
 │   ├── images/          # Pipeline fetch / traitement / repo
 │   ├── storage/         # Abstraction local vs GCS
-│   └── ygo_api.rs       # Client HTTP vers l’API cartes
+│   ├── card_metadata_fill.rs  # Heuristiques archétype (admin)
+│   ├── cards_sync.rs, card_locales_sync.rs, konami_catalog.rs, ygorganization.rs…
+│   └── ygo_api.rs       # Parse / types API YGOProDeck
 ├── migrations/          # Schéma SQL versionné (sqlx migrate)
 ├── templates/           # Tera (.html)
 ├── static/
@@ -50,15 +60,16 @@ analyzer-yugioh/
 
 ## Routes HTTP (aperçu)
 
-Les handlers dans `src/handlers.rs` et `src/routes/` exposent notamment :
+Les routes métier vivent sous **`src/modules/*/routes.rs`** ; **`src/routes/`** garde surtout admin HTML et images. Aperçu :
 
-- **Pages** : `/`, recherche, builder, decks, analysis, register/login (selon montage dans `app.rs`).
-- **JSON / API usage courant** : `/search`, `/card`, `POST /validate_deck`, CRUD decks (`/decks`, `/decks/{id}`).
-- **Admin** (sous `/admin`, clé `X-Admin-Key` si `ADMIN_SECRET`) : dont `fetch_cards` pour remplir la DB.
-- **Images** : import / liste / fichiers (si storage configuré).
-- **API documentée** : scope sous `/api` quand secrets JWT / clé API sont présents (voir `docs/auth.md`).
+- **Pages** : `/` (`modules/pages`), builder / suggestions via templates + static.
+- **JSON / API courant** : `/search`, `/card`, `POST /validate_deck` (`modules/catalog`), CRUD decks (`modules/decks`).
+- **Associations** : `/associations/...` (`modules/associations`).
+- **Admin** (sous `/admin`) : pages + formulaires dans `routes/admin.rs` ; actions lourdes (`fetch_cards`, reload cache, YGOrg, complément archétype) dans **`modules/admin_sync`** (voir `app.rs`).
+- **Images** : import / liste / fichiers (`routes/` + `images/`).
+- **API documentée** : scope `/api` si JWT / clé API (voir `docs/auth.md`).
 
-La liste exacte et les middlewares : `src/app.rs`.
+Détail structure backend : **`docs/reorganisation-backend-compte-rendu.md`**. Liste exacte des services : **`src/app.rs`**.
 
 ## Variables d’environnement
 
@@ -98,7 +109,8 @@ Docker Compose charge `.env` pour user/mot de passe Postgres et pgAdmin.
 | `docs/db_schema.md` | Modèle données (pointer vers migrations récentes si divergent) |
 | `docs/pipeline_images.md` | Images |
 | `docs/decisions.md` | Décisions d’architecture |
-| `docs/migration_plan.md` | Migration / évolution |
+| `docs/reorganisation-backend-compte-rendu.md` | Découpage `modules/` + `db/` (état réel) |
+| `docs/migration_plan.md` | Migration / évolution (slices historiques) |
 | `theory/yugioh-frontend-migration-plan.md` | Plan UI front |
 
 ## Règles d’équipe (Cursor / qualité)
@@ -109,4 +121,4 @@ Docker Compose charge `.env` pour user/mot de passe Postgres et pgAdmin.
 
 ---
 
-*Dernière mise à jour : généré à partir de l’état du dépôt ; en cas d’écart avec le code, le code et les migrations font foi.*
+*Dernière mise à jour : aligné sur la réorganisation backend (`modules/`, `db/`). En cas d’écart avec le code, le code et les migrations font foi.*
