@@ -10,6 +10,7 @@ test.describe('Deck lifecycle', () => {
 
     test('Mes decks panel or empty state visible', async ({ page }) => {
         await page.goto('/');
+        await page.getByRole('tab', { name: 'DECKS' }).click();
         await expect(page.locator('.deck-saved-list-wrap')).toBeVisible({ timeout: 10_000 });
         await expect(page.locator('#btn-refresh-decks')).toBeVisible();
     });
