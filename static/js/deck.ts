@@ -17,13 +17,7 @@ import {
     removeDeckCoverFromStorage,
     setDeckCover,
 } from './deck-builder/deckCoverStorage.js';
-import {
-    DECK_GRID_IDS,
-    DECK_NAME_INPUT_ID,
-    DECK_BTN_SAVE_SERVER_ID,
-    DECK_BTN_UPDATE_SERVER_ID,
-    DECK_DND_PAYLOAD_TYPE,
-} from './deck-builder/deckConstants.js';
+import { DECK_GRID_IDS, DECK_NAME_INPUT_ID, DECK_DND_PAYLOAD_TYPE } from './deck-builder/deckConstants.js';
 import {
     apiCreateDeck,
     apiDeleteDeck,
@@ -41,10 +35,21 @@ import {
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
 import {
+    createDeckRowFromApiCard,
+    createDeckRowFromServerEntry,
+    type ServerDeckListEntry,
+} from './deck-builder/deckRowFactory.js';
+import {
     banTcgToMaxCopies,
     canAddToDeckLimitGroup,
     deckLimitGroupKeyFromCard,
 } from './deck-builder/deckLimitGroups.js';
+import {
+    clearLoadedDeckRecord,
+    getCurrentLoadedDeck,
+    setLoadedDeckRecord,
+} from './deck-builder/loadedDeckSession.js';
+import { syncDeckSaveUpdateButtonsDom } from './deck-builder/deckSaveUpdateButtonsDom.js';
 import {
     createMainDeckSortStore,
     deckCardTypeKind,
@@ -57,6 +62,7 @@ export { toDeckEntryPayload } from './deck-builder/deckApi.js';
 export type { MainDeckSortBy, MainDeckSortDir } from './deck-builder/mainDeckSort.js';
 
 export { getDeckCover, setDeckCover } from './deck-builder/deckCoverStorage.js';
+export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -108,36 +114,20 @@ export function getDeckState(): { main: DeckRow[]; extra: DeckRow[]; side: DeckR
     };
 }
 
-/** Deck actuellement chargé depuis le serveur (pour mise à jour). */
-let currentLoadedDeck: { id: number; name: string } | null = null;
-
-export function getCurrentLoadedDeck(): { id: number; name: string } | null {
-    return currentLoadedDeck;
-}
-
-/** Sauvegarder (création) et Mettre à jour (deck déjà en base) ne sont jamais visibles en même temps. */
-function syncDeckSaveUpdateButtons(): void {
-    const saveBtn = document.getElementById(DECK_BTN_SAVE_SERVER_ID);
-    const updateBtn = document.getElementById(DECK_BTN_UPDATE_SERVER_ID);
-    const loaded = currentLoadedDeck !== null;
-    if (saveBtn instanceof HTMLElement) saveBtn.style.display = loaded ? 'none' : '';
-    if (updateBtn instanceof HTMLElement) updateBtn.style.display = loaded ? '' : 'none';
-}
-
 function setCurrentLoadedDeck(id: number, name: string): void {
-    currentLoadedDeck = { id, name };
-    syncDeckSaveUpdateButtons();
+    setLoadedDeckRecord(id, name);
+    syncDeckSaveUpdateButtonsDom();
 }
 
 export function clearCurrentLoadedDeck(): void {
-    currentLoadedDeck = null;
+    clearLoadedDeckRecord();
     setAnalysisDeckName('');
-    syncDeckSaveUpdateButtons();
+    syncDeckSaveUpdateButtonsDom();
 }
 
 /** À appeler au chargement du builder si le DOM a été restauré sans passer par clear/load. */
 export function refreshDeckSaveUpdateButtons(): void {
-    syncDeckSaveUpdateButtons();
+    syncDeckSaveUpdateButtonsDom();
 }
 
 export function getDeckName(): string {
@@ -293,30 +283,7 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     }
     if (!canAddToDeckLimitGroup(allDeckRowsFlat(), limitKey, 1, incomingMax)) return false;
 
-    const apiDc = (card as { deck_copy_id?: unknown }).deck_copy_id;
-    const deckCopyId =
-        typeof apiDc === 'number' && apiDc > 0
-            ? apiDc
-            : typeof cardId === 'number'
-              ? cardId
-              : undefined;
-
-    const row: DeckRow = {
-        name: displayName,
-        type: card.type ?? '',
-        quantity: 1,
-        engine: '',
-        categories: [],
-        imageUrl: card.image_url ?? undefined,
-        attribute: typeof card.attribute === 'string' ? card.attribute : undefined,
-        level: typeof card.level === 'number' ? card.level : undefined,
-        race: typeof card.race === 'string' ? card.race : undefined,
-        frame_type: typeof card.frame_type === 'string' ? card.frame_type : undefined,
-        maxCopies: incomingMax,
-        cardId,
-        deckCopyId,
-    };
-    arr.push(row);
+    arr.push(createDeckRowFromApiCard(card));
     renderDeckSection(section);
     updateDeckCount();
     updateProbabilities();
@@ -367,51 +334,14 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
     if (!data) return false;
     cleanCardTable();
 
-    type ServerDeckEntry = {
-        name: string;
-        quantity?: number;
-        id?: number;
-        deck_copy_id?: number;
-        engine?: string;
-        categories?: string[];
-    };
-    const asServerEntries = (v: unknown): ServerDeckEntry[] => (Array.isArray(v) ? (v as ServerDeckEntry[]) : []);
+    const asServerEntries = (v: unknown): ServerDeckListEntry[] =>
+        Array.isArray(v) ? (v as ServerDeckListEntry[]) : [];
 
-    const addEntries = async (
-        entries: ServerDeckEntry[],
-        section: DeckSection,
-    ) => {
+    const addEntries = async (entries: ServerDeckListEntry[], section: DeckSection) => {
         for (const entry of entries) {
             const infoCard = await fetchCardByName(entry.name);
             if (!infoCard) continue;
-            const cid =
-                typeof entry.id === 'number' && entry.id > 0
-                    ? entry.id
-                    : typeof infoCard.id === 'number'
-                      ? infoCard.id
-                      : undefined;
-            const fromServer = entry.deck_copy_id;
-            const deckCopyId =
-                typeof fromServer === 'number' && fromServer > 0
-                    ? fromServer
-                    : typeof cid === 'number'
-                      ? cid
-                      : undefined;
-            getState(section).push({
-                name: infoCard.name_en ?? infoCard.name,
-                type: infoCard.type ?? '',
-                quantity: entry.quantity ?? 1,
-                engine: entry.engine ?? '',
-                categories: entry.categories ?? [],
-                imageUrl: infoCard.image_url ?? undefined,
-                attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
-                level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
-                race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
-                frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
-                maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
-                cardId: cid,
-                deckCopyId,
-            });
+            getState(section).push(createDeckRowFromServerEntry(infoCard, entry));
         }
     };
     await addEntries(asServerEntries(data.main), 'main');
