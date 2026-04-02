@@ -35,9 +35,16 @@ import {
     canAddToDeckLimitGroup,
     deckLimitGroupKeyFromCard,
 } from './deck-builder/deckLimitGroups.js';
+import {
+    createMainDeckSortStore,
+    deckCardTypeKind,
+    type MainDeckSortStore,
+} from './deck-builder/mainDeckSort.js';
 
 export type { DeckEntryPayload } from './deck-builder/deckApi.js';
 export { toDeckEntryPayload } from './deck-builder/deckApi.js';
+
+export type { MainDeckSortBy, MainDeckSortDir } from './deck-builder/mainDeckSort.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -78,81 +85,6 @@ function getState(section: DeckSection): DeckRow[] {
         case 'extra': return extraDeck;
         case 'side': return sideDeck;
     }
-}
-
-/** Tri Main Deck : état et application. */
-export type MainDeckSortBy = 'none' | 'type' | 'category';
-export type MainDeckSortDir = 'asc' | 'desc';
-
-let mainDeckSortBy: MainDeckSortBy = 'none';
-let mainDeckSortCategory: string | null = null;
-let mainDeckSortDir: MainDeckSortDir = 'asc';
-
-export function getMainDeckSortState(): { by: MainDeckSortBy; category: string | null; dir: MainDeckSortDir } {
-    return { by: mainDeckSortBy, category: mainDeckSortCategory, dir: mainDeckSortDir };
-}
-
-function typeOrder(row: DeckRow): number {
-    const k = typeKind(row.type);
-    return k === 'monster' ? 0 : k === 'spell' ? 1 : 2;
-}
-
-function applyMainDeckSort(): void {
-    if (mainDeckSortBy === 'none') return;
-    const dir = mainDeckSortDir === 'asc' ? 1 : -1;
-    if (mainDeckSortBy === 'type') {
-        mainDeck.sort((a, b) => dir * (typeOrder(a) - typeOrder(b)));
-        return;
-    }
-    if (mainDeckSortBy === 'category' && mainDeckSortCategory !== null) {
-        const cat = mainDeckSortCategory;
-        mainDeck.sort((a, b) => {
-            const aHas = a.categories && a.categories.includes(cat) ? 1 : 0;
-            const bHas = b.categories && b.categories.includes(cat) ? 1 : 0;
-            if (aHas !== bHas) return dir * (bHas - aHas); // avec catégorie en premier si asc
-            return dir * (typeOrder(a) - typeOrder(b));
-        });
-        return;
-    }
-    // Tri par première catégorie (titre "Catégories" cliqué)
-    mainDeck.sort((a, b) => {
-        const aCat = (a.categories && a.categories[0]) ?? '';
-        const bCat = (b.categories && b.categories[0]) ?? '';
-        const cmp = aCat.localeCompare(bCat);
-        if (cmp !== 0) return dir * cmp;
-        return dir * (typeOrder(a) - typeOrder(b));
-    });
-}
-
-/** Bascule tri par type (Composition). Cycle: asc → desc → none. */
-export function setMainDeckSortByType(): void {
-    if (mainDeckSortBy === 'type') {
-        if (mainDeckSortDir === 'asc') { mainDeckSortDir = 'desc'; } else { mainDeckSortBy = 'none'; mainDeckSortDir = 'asc'; return; }
-    } else {
-        mainDeckSortBy = 'type';
-        mainDeckSortCategory = null;
-        mainDeckSortDir = 'asc';
-    }
-    applyMainDeckSort();
-    renderDeckSection('main');
-    updateDeckCount();
-    computeGlobalStats();
-    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
-}
-
-/** Tri par catégorie. Si categoryName == null, tri par première catégorie; sinon cartes ayant cette catégorie d'abord. */
-export function setMainDeckSortByCategory(categoryName: string | null): void {
-    if (mainDeckSortBy === 'category' && mainDeckSortCategory === categoryName) {
-        if (mainDeckSortDir === 'asc') { mainDeckSortDir = 'desc'; } else { mainDeckSortBy = 'none'; mainDeckSortCategory = null; mainDeckSortDir = 'asc'; applyMainDeckSort(); renderDeckSection('main'); updateDeckCount(); computeGlobalStats(); window.dispatchEvent(new CustomEvent('deck-sort-changed')); return; }
-    }
-    mainDeckSortBy = 'category';
-    mainDeckSortCategory = categoryName;
-    mainDeckSortDir = 'asc';
-    applyMainDeckSort();
-    renderDeckSection('main');
-    updateDeckCount();
-    computeGlobalStats();
-    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
 }
 
 /** Retourne le snapshot du deck pour stats/export. Inclut imageUrl pour getCardImageUrl. */
@@ -240,22 +172,15 @@ export function isExtraDeckRow(row: DeckRow): boolean {
     return isExtraDeckRowLike(row);
 }
 
-function typeKind(type: string): 'monster' | 'spell' | 'trap' {
-    const t = type.toLowerCase();
-    if (t.includes('monster')) return 'monster';
-    if (t.includes('spell')) return 'spell';
-    if (t.includes('trap')) return 'trap';
-    return 'monster';
-}
-
 let deckCardPopoverApi!: DeckCardPopoverApi;
+let mainDeckSortStore!: MainDeckSortStore;
 
 function renderDeckSection(section: DeckSection): void {
     renderDeckGridSection(
         section,
         DECK_GRID_IDS[section],
         getState(section),
-        typeKind,
+        deckCardTypeKind,
         removeOneDeckCopy,
         (s, i, el) => deckCardPopoverApi.openPopover(s, i, el),
     );
@@ -309,13 +234,32 @@ deckCardPopoverApi = createDeckCardPopover({
     updateDeckOnServer,
 });
 
+mainDeckSortStore = createMainDeckSortStore({
+    getMainDeck: () => mainDeck,
+    renderMain: () => renderDeckSection('main'),
+    afterVisualUpdate: () => {
+        updateDeckCount();
+        computeGlobalStats();
+    },
+});
+
+export function getMainDeckSortState(): ReturnType<MainDeckSortStore['getState']> {
+    return mainDeckSortStore.getState();
+}
+
+export function setMainDeckSortByType(): void {
+    mainDeckSortStore.setByType();
+}
+
+export function setMainDeckSortByCategory(categoryName: string | null): void {
+    mainDeckSortStore.setByCategory(categoryName);
+}
+
 export function cleanCardTable(): void {
     mainDeck = [];
     extraDeck = [];
     sideDeck = [];
-    mainDeckSortBy = 'none';
-    mainDeckSortCategory = null;
-    mainDeckSortDir = 'asc';
+    mainDeckSortStore.resetForCleanTable();
     window.dispatchEvent(new CustomEvent('deck-sort-changed'));
     renderDeckSection('main');
     renderDeckSection('extra');
@@ -550,8 +494,7 @@ export function enableColumnSort(_gridId: string, _cols: number, _onSort?: () =>
 export function enableGridRowDeletion(_gridSelector: string, _cols: number, _btnClass?: string, _onDelete?: () => void): void {}
 
 function afterDeckStructureChange(): void {
-    mainDeckSortBy = 'none';
-    mainDeckSortCategory = null;
+    mainDeckSortStore.clearAfterStructureChange();
     updateDeckCount();
     updateProbabilities();
     computeGlobalStats();
