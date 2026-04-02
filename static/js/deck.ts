@@ -25,6 +25,14 @@ import {
 } from './deck-builder/deckApi.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
+import {
+    banTcgToMaxCopies,
+    canAddToDeckLimitGroup,
+    deckLimitGroupKeyFromCard,
+    deckLimitGroupKeyRow,
+    maxAllowedForDeckLimitGroup,
+    totalQtyDeckLimitGroup,
+} from './deck-builder/deckLimitGroups.js';
 
 export type { DeckEntryPayload } from './deck-builder/deckApi.js';
 export { toDeckEntryPayload } from './deck-builder/deckApi.js';
@@ -54,55 +62,8 @@ export interface DeckRow {
     deckCopyId?: number;
 }
 
-/** Clé pour la limite d'exemplaires (même groupe = somme des qty plafonnée). */
-type DeckLimitGroupKey = number | string;
-
-function deckLimitGroupKeyRow(r: DeckRow): DeckLimitGroupKey {
-    if (r.deckCopyId != null && r.deckCopyId > 0) return r.deckCopyId;
-    if (r.cardId != null && r.cardId > 0) return `id:${r.cardId}`;
-    return `n:${r.name}`;
-}
-
-function deckLimitGroupKeyFromCard(card: Card, displayName: string): DeckLimitGroupKey {
-    const dc = (card as { deck_copy_id?: unknown }).deck_copy_id;
-    if (typeof dc === 'number' && dc > 0) return dc;
-    const id = (card as { id?: unknown }).id;
-    if (typeof id === 'number' && id > 0) return `id:${id}`;
-    return `n:${displayName}`;
-}
-
 function allDeckRowsFlat(): DeckRow[] {
     return [...mainDeck, ...extraDeck, ...sideDeck];
-}
-
-function rowsInDeckLimitGroup(key: DeckLimitGroupKey): DeckRow[] {
-    return allDeckRowsFlat().filter((r) => deckLimitGroupKeyRow(r) === key);
-}
-
-function totalQtyDeckLimitGroup(key: DeckLimitGroupKey): number {
-    return rowsInDeckLimitGroup(key).reduce((s, r) => s + r.quantity, 0);
-}
-
-/** Plafond du groupe : min(3, banlist de chaque ligne + carte ajoutée). */
-function maxAllowedForDeckLimitGroup(key: DeckLimitGroupKey, incomingMaxCopies: number): number {
-    const caps = rowsInDeckLimitGroup(key).map((r) => r.maxCopies ?? 3);
-    return Math.min(3, incomingMaxCopies, ...caps);
-}
-
-/** Peut-on ajouter `delta` exemplaires à ce groupe (toutes zones) ? */
-function canAddToDeckLimitGroup(key: DeckLimitGroupKey, delta: number, incomingMaxCopies: number): boolean {
-    if (delta <= 0) return true;
-    const maxA = maxAllowedForDeckLimitGroup(key, incomingMaxCopies);
-    return totalQtyDeckLimitGroup(key) + delta <= maxA;
-}
-
-/** Forbidden=0, Limited=1, Semi-Limited=2, sinon 3. */
-function banTcgToMaxCopies(ban: string | undefined): number {
-    const s = (ban ?? '').toLowerCase();
-    if (s.includes('forbidden') || s === 'banned') return 0;
-    if (s.includes('limited') && !s.includes('semi')) return 1;
-    if (s.includes('semi')) return 2;
-    return 3;
 }
 
 let mainDeck: DeckRow[] = [];
@@ -305,8 +266,9 @@ function persistDeckCardPopoverEdits(): void {
     if (!row) return;
     let newQty = parseInt(qtySelect?.value || '1', 10);
     const key = deckLimitGroupKeyRow(row);
-    const maxA = maxAllowedForDeckLimitGroup(key, row.maxCopies ?? 3);
-    const totalOthers = totalQtyDeckLimitGroup(key) - row.quantity;
+    const flat = allDeckRowsFlat();
+    const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? 3);
+    const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
     const maxForThisRow = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
     if (newQty > maxForThisRow) newQty = maxForThisRow;
     if (newQty < 1) newQty = 1;
@@ -482,8 +444,9 @@ function openPopover(section: DeckSection, index: number, anchor: HTMLElement): 
     const catContainer = popover.querySelector('.deck-card-popover-cat-container') as HTMLElement;
     if (qtySelect) {
         const key = deckLimitGroupKeyRow(row);
-        const maxA = maxAllowedForDeckLimitGroup(key, row.maxCopies ?? 3);
-        const totalOthers = totalQtyDeckLimitGroup(key) - row.quantity;
+        const flat = allDeckRowsFlat();
+        const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? 3);
+        const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
         const cap = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
         qtySelect.innerHTML = '';
         for (let q = 1; q <= cap; q++) {
@@ -550,14 +513,17 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     const displayName = card.name_en ?? card.name;
     const cardId = typeof card.id === 'number' && card.id > 0 ? card.id : undefined;
     const incomingMax = banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined);
-    const limitKey = deckLimitGroupKeyFromCard(card, displayName);
+    const limitKey = deckLimitGroupKeyFromCard(
+        card as { id?: unknown; deck_copy_id?: unknown },
+        displayName,
+    );
 
     const existingIdx = arr.findIndex((r) => {
         if (cardId != null && r.cardId != null) return r.cardId === cardId;
         return r.name === displayName;
     });
     if (existingIdx >= 0) {
-        if (!canAddToDeckLimitGroup(limitKey, 1, incomingMax)) return false;
+        if (!canAddToDeckLimitGroup(allDeckRowsFlat(), limitKey, 1, incomingMax)) return false;
         const row = arr[existingIdx];
         const max = row.maxCopies ?? 3;
         if (row.quantity >= max) return false;
@@ -568,7 +534,7 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
         computeGlobalStats();
         return true;
     }
-    if (!canAddToDeckLimitGroup(limitKey, 1, incomingMax)) return false;
+    if (!canAddToDeckLimitGroup(allDeckRowsFlat(), limitKey, 1, incomingMax)) return false;
 
     const apiDc = (card as { deck_copy_id?: unknown }).deck_copy_id;
     const deckCopyId =
