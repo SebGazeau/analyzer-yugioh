@@ -2,6 +2,8 @@
  * Tri du Main Deck (type, catégorie) + utilitaire type monstre/sort/piège pour la grille.
  */
 
+import { dispatchDeckSortChanged } from './deckSortEvents.js';
+
 export type MainDeckSortBy = 'none' | 'type' | 'category';
 export type MainDeckSortDir = 'asc' | 'desc';
 
@@ -75,7 +77,7 @@ export function createMainDeckSortStore(deps: {
         sortMainDeckInPlace(deps.getMainDeck(), { by, category, dir });
         deps.renderMain();
         deps.afterVisualUpdate();
-        window.dispatchEvent(new CustomEvent('deck-sort-changed'));
+        dispatchDeckSortChanged();
     }
 
     return {
@@ -109,7 +111,7 @@ export function createMainDeckSortStore(deps: {
                     sortMainDeckInPlace(deps.getMainDeck(), { by, category, dir });
                     deps.renderMain();
                     deps.afterVisualUpdate();
-                    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
+                    dispatchDeckSortChanged();
                     return;
                 }
             }

@@ -20,6 +20,7 @@ import {
     setDeckCover,
 } from './deck-builder/deckCoverStorage.js';
 import { DECK_GRID_IDS, DECK_DND_PAYLOAD_TYPE } from './deck-builder/deckConstants.js';
+import { banTcgToMaxCopies } from './deck-builder/deckLimitGroups.js';
 import {
     apiCreateDeck,
     apiDeleteDeck,
@@ -36,13 +37,10 @@ import {
 } from './deck-builder/deckFileIo.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
+import { createDeckMutationUiSync } from './deck-builder/deckMutationUiSync.js';
 import { readDeckNameFromBuilderInput, writeDeckNameToBuilderInput } from './deck-builder/deckNameInputDom.js';
-import { createDeckRowFromApiCard } from './deck-builder/deckRowFactory.js';
-import {
-    banTcgToMaxCopies,
-    canAddToDeckLimitGroup,
-    deckLimitGroupKeyFromCard,
-} from './deck-builder/deckLimitGroups.js';
+import { dispatchDeckSortChanged } from './deck-builder/deckSortEvents.js';
+import { tryAddCardToDeckSection } from './deck-builder/tryAddCardToDeckSection.js';
 import {
     clearLoadedDeckRecord,
     getCurrentLoadedDeck,
@@ -68,6 +66,13 @@ export { getDeckCover, setDeckCover } from './deck-builder/deckCoverStorage.js';
 export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
+
+const deckMutationUi = createDeckMutationUiSync({
+    updateDeckCount,
+    updateProbabilities,
+    computeGlobalStats,
+    updateCategorySummary,
+});
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -182,10 +187,7 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
     if (row.quantity > 1) {
         row.quantity -= 1;
         renderDeckSection(section);
-        updateDeckCount();
-        updateProbabilities();
-        computeGlobalStats();
-        updateCategorySummary();
+        deckMutationUi.refreshAllDeckPanels();
         if (wasEditingHere) {
             const cell = document.querySelector(
                 `[data-deck-cell-section="${section}"][data-deck-cell-index="${index}"]`,
@@ -195,10 +197,7 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
     } else {
         arr.splice(index, 1);
         renderDeckSection(section);
-        updateDeckCount();
-        updateProbabilities();
-        computeGlobalStats();
-        updateCategorySummary();
+        deckMutationUi.refreshAllDeckPanels();
         deckCardPopoverApi.hide();
     }
 }
@@ -207,12 +206,7 @@ deckCardPopoverApi = createDeckCardPopover({
     getState,
     allDeckRowsFlat,
     renderDeckSection,
-    afterDeckDataChange: () => {
-        updateDeckCount();
-        updateProbabilities();
-        computeGlobalStats();
-        updateCategorySummary();
-    },
+    afterDeckDataChange: () => deckMutationUi.refreshAllDeckPanels(),
     getCurrentLoadedDeck,
     setDeckCover,
     updateDeckOnServer,
@@ -221,10 +215,7 @@ deckCardPopoverApi = createDeckCardPopover({
 mainDeckSortStore = createMainDeckSortStore({
     getMainDeck: () => mainDeck,
     renderMain: () => renderDeckSection('main'),
-    afterVisualUpdate: () => {
-        updateDeckCount();
-        computeGlobalStats();
-    },
+    afterVisualUpdate: () => deckMutationUi.refreshCountsAndComposition(),
 });
 
 export function getMainDeckSortState(): ReturnType<MainDeckSortStore['getState']> {
@@ -244,52 +235,24 @@ export function cleanCardTable(): void {
     extraDeck = [];
     sideDeck = [];
     mainDeckSortStore.resetForCleanTable();
-    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
+    dispatchDeckSortChanged();
     renderDeckSection('main');
     renderDeckSection('extra');
     renderDeckSection('side');
     clearCategorySummaryTableBody();
     clearCurrentLoadedDeck();
     setDeckName('');
-    updateDeckCount();
-    computeGlobalStats();
+    deckMutationUi.refreshCountsAndComposition();
 }
 
 export async function addToDeck(card: Card, sectionOverride?: DeckSection): Promise<boolean> {
     const section: DeckSection =
         sectionOverride ?? (isExtraDeckCard(card) ? 'extra' : 'main');
     const arr = getState(section);
-    const displayName = card.name_en ?? card.name;
-    const cardId = typeof card.id === 'number' && card.id > 0 ? card.id : undefined;
-    const incomingMax = banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined);
-    const limitKey = deckLimitGroupKeyFromCard(
-        card as { id?: unknown; deck_copy_id?: unknown },
-        displayName,
-    );
-
-    const existingIdx = arr.findIndex((r) => {
-        if (cardId != null && r.cardId != null) return r.cardId === cardId;
-        return r.name === displayName;
-    });
-    if (existingIdx >= 0) {
-        if (!canAddToDeckLimitGroup(allDeckRowsFlat(), limitKey, 1, incomingMax)) return false;
-        const row = arr[existingIdx];
-        const max = row.maxCopies ?? 3;
-        if (row.quantity >= max) return false;
-        row.quantity += 1;
-        renderDeckSection(section);
-        updateDeckCount();
-        updateProbabilities();
-        computeGlobalStats();
-        return true;
-    }
-    if (!canAddToDeckLimitGroup(allDeckRowsFlat(), limitKey, 1, incomingMax)) return false;
-
-    arr.push(createDeckRowFromApiCard(card));
+    const result = tryAddCardToDeckSection(card, arr, allDeckRowsFlat());
+    if (!result.ok) return false;
     renderDeckSection(section);
-    updateDeckCount();
-    updateProbabilities();
-    computeGlobalStats();
+    deckMutationUi.refreshCountsProbabilitiesAndComposition();
     return true;
 }
 
@@ -354,9 +317,7 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
             typeof data.cover_card_name === 'string' ? data.cover_card_name : '',
         );
     }
-    updateDeckCount();
-    computeGlobalStats();
-    updateCategorySummary();
+    deckMutationUi.refreshAllDeckPanels();
     return true;
 }
 
@@ -387,11 +348,7 @@ export function importDeckFromFile(event: Event): void {
             renderDeckSection('extra');
             renderDeckSection('side');
         },
-        afterImportStats: () => {
-            updateDeckCount();
-            computeGlobalStats();
-            updateCategorySummary();
-        },
+        afterImportStats: () => deckMutationUi.refreshAfterFileImport(),
     });
 }
 
@@ -403,11 +360,8 @@ export function enableGridRowDeletion(_gridSelector: string, _cols: number, _btn
 
 function afterDeckStructureChange(): void {
     mainDeckSortStore.clearAfterStructureChange();
-    updateDeckCount();
-    updateProbabilities();
-    computeGlobalStats();
-    window.dispatchEvent(new CustomEvent('deck-sort-changed'));
-    updateCategorySummary();
+    deckMutationUi.refreshAllDeckPanels();
+    dispatchDeckSortChanged();
 }
 
 /**
