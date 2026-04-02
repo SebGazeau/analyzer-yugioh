@@ -10,6 +10,17 @@ import {
     maxCardsForZone,
 } from './deck-move.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deck-builder/card-edit-popover/deckCardPopoverShell.js';
+import {
+    DECK_GRID_IDS,
+    DECK_COVER_STORAGE_KEY,
+    DECK_NAME_INPUT_ID,
+    DECK_BTN_SAVE_SERVER_ID,
+    DECK_BTN_UPDATE_SERVER_ID,
+    DECK_CARD_POPOVER_GAP_PX,
+    DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
+    DECK_FETCH_INIT,
+    DECK_DND_PAYLOAD_TYPE,
+} from './deck-builder/deckConstants.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -86,12 +97,6 @@ function banTcgToMaxCopies(ban: string | undefined): number {
     if (s.includes('semi')) return 2;
     return 3;
 }
-
-const DECK_GRID_IDS: Record<DeckSection, string> = {
-    main: 'deck-main-grid',
-    extra: 'deck-extra-grid',
-    side: 'deck-side-grid',
-};
 
 let mainDeck: DeckRow[] = [];
 let extraDeck: DeckRow[] = [];
@@ -198,8 +203,8 @@ export function getCurrentLoadedDeck(): { id: number; name: string } | null {
 
 /** Sauvegarder (création) et Mettre à jour (deck déjà en base) ne sont jamais visibles en même temps. */
 function syncDeckSaveUpdateButtons(): void {
-    const saveBtn = document.getElementById('btn-save-server');
-    const updateBtn = document.getElementById('btn-update-server');
+    const saveBtn = document.getElementById(DECK_BTN_SAVE_SERVER_ID);
+    const updateBtn = document.getElementById(DECK_BTN_UPDATE_SERVER_ID);
     const loaded = currentLoadedDeck !== null;
     if (saveBtn instanceof HTMLElement) saveBtn.style.display = loaded ? 'none' : '';
     if (updateBtn instanceof HTMLElement) updateBtn.style.display = loaded ? '' : 'none';
@@ -221,8 +226,6 @@ export function refreshDeckSaveUpdateButtons(): void {
     syncDeckSaveUpdateButtons();
 }
 
-const DECK_COVER_STORAGE_KEY = 'yugioh-deck-cover';
-
 /** Retourne la carte de couverture pour un deck (localStorage). */
 export function getDeckCover(deckId: number): { imageUrl: string; name: string } | null {
     try {
@@ -243,8 +246,6 @@ export function setDeckCover(deckId: number, imageUrl: string, name: string): vo
         window.dispatchEvent(new CustomEvent('deck-cover-changed', { detail: { deckId } }));
     } catch (_) {}
 }
-
-const DECK_NAME_INPUT_ID = 'deck-name-input';
 
 export function getDeckName(): string {
     const el = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
@@ -285,9 +286,6 @@ let popoverEl: HTMLElement | null = null;
 let popoverBackdropEl: HTMLElement | null = null;
 let popoverSection: DeckSection | null = null;
 let popoverIndex: number = -1;
-
-const POPOVER_GAP = 4;
-const VIEWPORT_MARGIN = 16;
 
 function deckCardPopoverIsOpen(): boolean {
     return Boolean(popoverEl?.classList.contains('deck-card-popover--open'));
@@ -377,15 +375,16 @@ function repositionPopover(): void {
     }
     const rect = anchor.getBoundingClientRect();
     const popoverHeight = popoverEl.offsetHeight;
-    const spaceBelow = window.innerHeight - rect.bottom - POPOVER_GAP - VIEWPORT_MARGIN;
+    const spaceBelow =
+        window.innerHeight - rect.bottom - DECK_CARD_POPOVER_GAP_PX - DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX;
     const openAbove = spaceBelow < popoverHeight;
 
     popoverEl.style.left = `${rect.left}px`;
     if (openAbove) {
-        popoverEl.style.top = `${rect.top - popoverHeight - POPOVER_GAP}px`;
+        popoverEl.style.top = `${rect.top - popoverHeight - DECK_CARD_POPOVER_GAP_PX}px`;
         popoverEl.classList.add('deck-card-popover--above');
     } else {
-        popoverEl.style.top = `${rect.bottom + POPOVER_GAP}px`;
+        popoverEl.style.top = `${rect.bottom + DECK_CARD_POPOVER_GAP_PX}px`;
         popoverEl.classList.remove('deck-card-popover--above');
     }
 }
@@ -652,9 +651,6 @@ export function toDeckEntryPayload(e: {
     if (e.categories && e.categories.length > 0) out.categories = e.categories;
     return out;
 }
-
-/** Cookie de session (connexion site) pour POST/GET/PUT/DELETE /decks. */
-const DECK_FETCH_INIT: RequestInit = { credentials: 'same-origin' };
 
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
     if (res.status === 401) {
@@ -964,8 +960,6 @@ export function enableColumnSort(_gridId: string, _cols: number, _onSort?: () =>
 /** No-op pour compatibilité : suppression via popover ou bouton « − » sur la carte. */
 export function enableGridRowDeletion(_gridSelector: string, _cols: number, _btnClass?: string, _onDelete?: () => void): void {}
 
-const DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
-
 function afterDeckStructureChange(): void {
     mainDeckSortBy = 'none';
     mainDeckSortCategory = null;
@@ -1052,7 +1046,7 @@ export function bindDeckDragAndDrop(): void {
         const section = cell.getAttribute('data-deck-cell-section') as DeckSection;
         const index = parseInt(cell.getAttribute('data-deck-cell-index') || '-1', 10);
         if (index < 0 || !['main', 'extra', 'side'].includes(section)) return;
-        e.dataTransfer.setData(DND_PAYLOAD_TYPE, JSON.stringify({ section, index }));
+        e.dataTransfer.setData(DECK_DND_PAYLOAD_TYPE, JSON.stringify({ section, index }));
         e.dataTransfer.effectAllowed = 'move';
         cell.classList.add('deck-card-cell--dragging');
         hideDeckCardPopover();
@@ -1077,7 +1071,7 @@ export function bindDeckDragAndDrop(): void {
 
     root.addEventListener('dragover', (e: DragEvent) => {
         const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
-        if (!grid || !e.dataTransfer?.types.includes(DND_PAYLOAD_TYPE)) return;
+        if (!grid || !e.dataTransfer?.types.includes(DECK_DND_PAYLOAD_TYPE)) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((el) => el.classList.remove('deck-cards-grid--dnd-over'));
@@ -1089,7 +1083,7 @@ export function bindDeckDragAndDrop(): void {
         if (!grid || !e.dataTransfer) return;
         e.preventDefault();
         grid.classList.remove('deck-cards-grid--dnd-over');
-        const raw = e.dataTransfer.getData(DND_PAYLOAD_TYPE);
+        const raw = e.dataTransfer.getData(DECK_DND_PAYLOAD_TYPE);
         if (!raw) return;
         let parsed: { section: DeckSection; index: number };
         try {
@@ -1100,7 +1094,13 @@ export function bindDeckDragAndDrop(): void {
         const { section: fromSection, index: fromIndex } = parsed;
         const gridId = grid.id;
         const dropSection: DeckSection | null =
-            gridId === 'deck-main-grid' ? 'main' : gridId === 'deck-extra-grid' ? 'extra' : gridId === 'deck-side-grid' ? 'side' : null;
+            gridId === DECK_GRID_IDS.main
+                ? 'main'
+                : gridId === DECK_GRID_IDS.extra
+                  ? 'extra'
+                  : gridId === DECK_GRID_IDS.side
+                    ? 'side'
+                    : null;
         if (!dropSection) return;
 
         const cell = (e.target as HTMLElement).closest('[data-deck-cell-index]');
