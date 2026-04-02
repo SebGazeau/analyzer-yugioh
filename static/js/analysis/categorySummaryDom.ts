@@ -219,3 +219,9 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         }
     }
 }
+
+/** Vide le tbody du tableau catégories (ex. reset deck avant rechargement). */
+export function clearCategorySummaryTableBody(): void {
+    const tbody = document.getElementById('category-summary-body');
+    if (tbody) tbody.innerHTML = '';
+}

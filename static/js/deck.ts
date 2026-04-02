@@ -7,6 +7,8 @@ import {
     updateProbabilities,
 } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
+import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
+import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -17,7 +19,7 @@ import {
     removeDeckCoverFromStorage,
     setDeckCover,
 } from './deck-builder/deckCoverStorage.js';
-import { DECK_GRID_IDS, DECK_NAME_INPUT_ID, DECK_DND_PAYLOAD_TYPE } from './deck-builder/deckConstants.js';
+import { DECK_GRID_IDS, DECK_DND_PAYLOAD_TYPE } from './deck-builder/deckConstants.js';
 import {
     apiCreateDeck,
     apiDeleteDeck,
@@ -34,11 +36,8 @@ import {
 } from './deck-builder/deckFileIo.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
-import {
-    createDeckRowFromApiCard,
-    createDeckRowFromServerEntry,
-    type ServerDeckListEntry,
-} from './deck-builder/deckRowFactory.js';
+import { readDeckNameFromBuilderInput, writeDeckNameToBuilderInput } from './deck-builder/deckNameInputDom.js';
+import { createDeckRowFromApiCard } from './deck-builder/deckRowFactory.js';
 import {
     banTcgToMaxCopies,
     canAddToDeckLimitGroup,
@@ -49,6 +48,10 @@ import {
     getCurrentLoadedDeck,
     setLoadedDeckRecord,
 } from './deck-builder/loadedDeckSession.js';
+import {
+    parseUnknownAsServerDeckListEntries,
+    resolveServerDeckListEntriesToRows,
+} from './deck-builder/serverDeckHydration.js';
 import { syncDeckSaveUpdateButtonsDom } from './deck-builder/deckSaveUpdateButtonsDom.js';
 import {
     createMainDeckSortStore,
@@ -63,6 +66,8 @@ export type { MainDeckSortBy, MainDeckSortDir } from './deck-builder/mainDeckSor
 
 export { getDeckCover, setDeckCover } from './deck-builder/deckCoverStorage.js';
 export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
+
+export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -131,13 +136,11 @@ export function refreshDeckSaveUpdateButtons(): void {
 }
 
 export function getDeckName(): string {
-    const el = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
-    return el?.value?.trim() ?? '';
+    return readDeckNameFromBuilderInput();
 }
 
 export function setDeckName(name: string): void {
-    const el = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
-    if (el) el.value = name;
+    writeDeckNameToBuilderInput(name);
     setAnalysisDeckName(name);
 }
 
@@ -245,8 +248,7 @@ export function cleanCardTable(): void {
     renderDeckSection('main');
     renderDeckSection('extra');
     renderDeckSection('side');
-    const tbody = document.getElementById('category-summary-body');
-    if (tbody) tbody.innerHTML = '';
+    clearCategorySummaryTableBody();
     clearCurrentLoadedDeck();
     setDeckName('');
     updateDeckCount();
@@ -291,10 +293,6 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     return true;
 }
 
-export function cleanCardNameFromCell(raw: string): string {
-    return raw.replace(/^—\s*/, '').trim();
-}
-
 export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
     const name = getDeckName() || prompt('Nom du deck ?') || '';
     if (!name.trim()) return {};
@@ -334,19 +332,14 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
     if (!data) return false;
     cleanCardTable();
 
-    const asServerEntries = (v: unknown): ServerDeckListEntry[] =>
-        Array.isArray(v) ? (v as ServerDeckListEntry[]) : [];
-
-    const addEntries = async (entries: ServerDeckListEntry[], section: DeckSection) => {
-        for (const entry of entries) {
-            const infoCard = await fetchCardByName(entry.name);
-            if (!infoCard) continue;
-            getState(section).push(createDeckRowFromServerEntry(infoCard, entry));
-        }
+    const pushSection = async (raw: unknown, section: DeckSection) => {
+        const entries = parseUnknownAsServerDeckListEntries(raw);
+        const rows = await resolveServerDeckListEntriesToRows(entries, fetchCardByName);
+        getState(section).push(...rows);
     };
-    await addEntries(asServerEntries(data.main), 'main');
-    await addEntries(asServerEntries(data.extra), 'extra');
-    await addEntries(asServerEntries(data.side), 'side');
+    await pushSection(data.main, 'main');
+    await pushSection(data.extra, 'extra');
+    await pushSection(data.side, 'side');
     renderDeckSection('main');
     renderDeckSection('extra');
     renderDeckSection('side');
