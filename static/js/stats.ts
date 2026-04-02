@@ -1,6 +1,7 @@
-// Statistiques et probabilités pour le deck
+// Statistiques et probabilités pour le deck — façade (état tirage + handSize, réexports).
 import { refreshDeckInsightsPanel } from './insights/panel.js';
 import { getDeckState } from './deck.js';
+import { publishMainDeckTotalForHandSizeTools } from './analysis/analysisPageDom.js';
 import {
     applyBuilderMainTypeCountsAndBars,
     applyCompositionDetailPanelsHtml,
@@ -10,15 +11,10 @@ import {
     buildCompositionDetailPanelsHtml,
     computeCompositionBreakdown,
 } from './analysis/compositionBreakdown.js';
-import {
-    buildFullDeckCategorySummaries,
-    buildRemainingDeckCategorySummaries,
-    cleanDeckCardDisplayName,
-    countNameOccurrences,
-    remainingDrawCountForProbTable,
-    type CategoryEngineSummaryMap,
-} from './analysis/categorySummaryData.js';
+import { cleanDeckCardDisplayName, countNameOccurrences } from './analysis/categorySummaryData.js';
+import { buildAnalysisCategorySummaryDomInput } from './analysis/categorySummaryOrchestrator.js';
 import { renderAnalysisCategorySummaryDom } from './analysis/categorySummaryDom.js';
+import { countCardsInDeckSection } from './analysis/deckSectionQuantity.js';
 import { buildMainDeckProbabilitySnapshot } from './analysis/deckMainSnapshot.js';
 import { runHistogramSimulation1000 } from './analysis/drawHistogramDom.js';
 import { refreshDrawSimulationPanel } from './analysis/drawSimulationDom.js';
@@ -28,6 +24,7 @@ import { computeMainDeckTypeCounts } from './analysis/mainDeckTypeCounts.js';
 
 export type { CompositionBreakdown } from './analysis/compositionBreakdown.js';
 export type { ProbabilityCardEntry } from './analysis/probabilityMath.js';
+export { setAnalysisDeckName } from './analysis/analysisPageDom.js';
 export {
     hypergeometricDist,
     hypergeometric,
@@ -66,14 +63,6 @@ export function getHandSize(): 5 | 6 {
     return handSize;
 }
 
-/** Met à jour le titre de la section Analysis (ex. "Dragon Rulers — "). Appelé au chargement / reset du deck. */
-export function setAnalysisDeckName(name: string): void {
-    const el = document.getElementById("analysis-deck-name");
-    if (!el) return;
-    const text = name.trim();
-    el.textContent = text ? `${text} — ` : "";
-}
-
 /** Snapshot du Main Deck (nom, qty, engine, catégories). */
 function getDeckMainSnapshot() {
     return buildMainDeckProbabilitySnapshot(getDeckState().main);
@@ -82,17 +71,8 @@ function getDeckMainSnapshot() {
 /** Retourne l'URL d'image d'une carte du Main, ou null. */
 function getCardImageUrl(cardName: string): string | null {
     const want = cleanDeckCardDisplayName(cardName);
-    const row = getDeckState().main.find(r => cleanDeckCardDisplayName(r.name) === want);
+    const row = getDeckState().main.find((r) => cleanDeckCardDisplayName(r.name) === want);
     return row?.imageUrl ?? null;
-}
-
-/** Résumé et totaux pour le deck *restant* (après simulation). */
-function getRemainingSummary() {
-    const snapshot = getDeckMainSnapshot();
-    const drawnCounts = countNameOccurrences(drawnCards);
-    const { summary, engineSummary, totalCards } = buildRemainingDeckCategorySummaries(snapshot, drawnCounts);
-    const numDraws = remainingDrawCountForProbTable(handSize, drawnCards.length);
-    return { summary, engineSummary, totalCards, numDraws };
 }
 
 /** Tire une carte au hasard dans le deck restant (pondéré par les quantités). Retourne le nom ou null. */
@@ -138,68 +118,27 @@ export function computeGlobalStats(): void {
     refreshDeckInsightsPanel();
 }
 
-function countInGrid(section: 'main' | 'extra' | 'side'): number {
-    const state = getDeckState();
-    return state[section].reduce((sum, r) => sum + r.quantity, 0);
-}
-
 export function updateDeckCount(): void {
-    const main = countInGrid('main');
-    const extra = countInGrid('extra');
-    const side = countInGrid('side');
-    applyDeckSectionCountLabels(main, extra, side);
+    const state = getDeckState();
+    applyDeckSectionCountLabels(
+        countCardsInDeckSection(state, 'main'),
+        countCardsInDeckSection(state, 'extra'),
+        countCardsInDeckSection(state, 'side'),
+    );
     resetDrawSimulation();
     updateProbabilities();
-    updateCategorySummary(); // refait le tableau après reset (deck peut avoir changé)
+    updateCategorySummary();
 }
 
 /** Grille cartes : pas de cellule proba par carte ; probas visibles dans l’onglet Analysis. */
 export function updateProbabilities(): void {
-    const main = getDeckState().main;
-    const totalCards = main.reduce((sum, r) => sum + r.quantity, 0);
-    if (totalCards === 0) return;
-    (window as any).__deckTotalForHandSize = totalCards;
+    publishMainDeckTotalForHandSizeTools(getDeckState().main);
 }
 
 export function updateCategorySummary(): void {
     try {
-        let simulationBanner: string | null = null;
-        let summary: CategoryEngineSummaryMap;
-        let engineSummary: CategoryEngineSummaryMap;
-        let totalCards: number;
-        let numDraws: number;
-
-        if (drawnCards.length > 0) {
-            const rem = getRemainingSummary();
-            summary = rem.summary;
-            engineSummary = rem.engineSummary;
-            totalCards = rem.totalCards;
-            numDraws = rem.numDraws;
-            simulationBanner = `Simulation : ${drawnCards.length} carte(s) tirée(s), ${totalCards} restantes (probas pour ${numDraws} tirage(s) restant(s))`;
-        } else {
-            const main = getDeckState().main;
-            const built = buildFullDeckCategorySummaries(
-                main.map((r) => ({
-                    name: r.name,
-                    quantity: r.quantity,
-                    engine: r.engine || '',
-                    categories: r.categories || [],
-                })),
-            );
-            summary = built.summary;
-            engineSummary = built.engineSummary;
-            totalCards = built.totalCards;
-            numDraws = handSize;
-        }
-
-        renderAnalysisCategorySummaryDom({
-            simulationBanner,
-            summary,
-            engineSummary,
-            totalCards,
-            numDraws,
-            handSize,
-        });
+        const input = buildAnalysisCategorySummaryDomInput(getDeckState().main, drawnCards, handSize);
+        renderAnalysisCategorySummaryDom(input);
     } catch (error) {
         console.error(error);
     }
