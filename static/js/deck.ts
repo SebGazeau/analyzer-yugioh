@@ -1,5 +1,11 @@
 // Gestion du deck Yu-Gi-Oh! — state + grille de cartes
-import { updateDeckCount, updateProbabilities, computeGlobalStats, setAnalysisDeckName } from './stats.js';
+import {
+    computeGlobalStats,
+    setAnalysisDeckName,
+    updateCategorySummary,
+    updateDeckCount,
+    updateProbabilities,
+} from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
@@ -7,8 +13,12 @@ import {
     type DeckCardPopoverApi,
 } from './deck-builder/card-edit-popover/deckCardPopover.js';
 import {
+    getDeckCover,
+    removeDeckCoverFromStorage,
+    setDeckCover,
+} from './deck-builder/deckCoverStorage.js';
+import {
     DECK_GRID_IDS,
-    DECK_COVER_STORAGE_KEY,
     DECK_NAME_INPUT_ID,
     DECK_BTN_SAVE_SERVER_ID,
     DECK_BTN_UPDATE_SERVER_ID,
@@ -45,6 +55,8 @@ export type { DeckEntryPayload } from './deck-builder/deckApi.js';
 export { toDeckEntryPayload } from './deck-builder/deckApi.js';
 
 export type { MainDeckSortBy, MainDeckSortDir } from './deck-builder/mainDeckSort.js';
+
+export { getDeckCover, setDeckCover } from './deck-builder/deckCoverStorage.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -128,27 +140,6 @@ export function refreshDeckSaveUpdateButtons(): void {
     syncDeckSaveUpdateButtons();
 }
 
-/** Retourne la carte de couverture pour un deck (localStorage). */
-export function getDeckCover(deckId: number): { imageUrl: string; name: string } | null {
-    try {
-        const raw = localStorage.getItem(`${DECK_COVER_STORAGE_KEY}-${deckId}`);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw) as { imageUrl?: string; name?: string };
-        if (parsed && typeof parsed.name === 'string') {
-            return { imageUrl: typeof parsed.imageUrl === 'string' ? parsed.imageUrl : '', name: parsed.name };
-        }
-    } catch (_) {}
-    return null;
-}
-
-/** Définit la carte de couverture pour un deck (localStorage). */
-export function setDeckCover(deckId: number, imageUrl: string, name: string): void {
-    try {
-        localStorage.setItem(`${DECK_COVER_STORAGE_KEY}-${deckId}`, JSON.stringify({ imageUrl, name }));
-        window.dispatchEvent(new CustomEvent('deck-cover-changed', { detail: { deckId } }));
-    } catch (_) {}
-}
-
 export function getDeckName(): string {
     const el = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
     return el?.value?.trim() ?? '';
@@ -201,7 +192,7 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
         updateDeckCount();
         updateProbabilities();
         computeGlobalStats();
-        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+        updateCategorySummary();
         if (wasEditingHere) {
             const cell = document.querySelector(
                 `[data-deck-cell-section="${section}"][data-deck-cell-index="${index}"]`,
@@ -214,7 +205,7 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
         updateDeckCount();
         updateProbabilities();
         computeGlobalStats();
-        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+        updateCategorySummary();
         deckCardPopoverApi.hide();
     }
 }
@@ -227,7 +218,7 @@ deckCardPopoverApi = createDeckCardPopover({
         updateDeckCount();
         updateProbabilities();
         computeGlobalStats();
-        if (typeof (window as any).updateCategorySummary === 'function') (window as any).updateCategorySummary();
+        updateCategorySummary();
     },
     getCurrentLoadedDeck,
     setDeckCover,
@@ -442,9 +433,7 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
     }
     updateDeckCount();
     computeGlobalStats();
-    if (typeof (window as any).updateCategorySummary === 'function') {
-        (window as any).updateCategorySummary();
-    }
+    updateCategorySummary();
     return true;
 }
 
@@ -454,9 +443,7 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
     if (!ok) return false;
     const loaded = getCurrentLoadedDeck();
     if (loaded?.id === id) clearCurrentLoadedDeck();
-    try {
-        localStorage.removeItem(`${DECK_COVER_STORAGE_KEY}-${id}`);
-    } catch (_) {}
+    removeDeckCoverFromStorage(id);
     return true;
 }
 
@@ -480,9 +467,7 @@ export function importDeckFromFile(event: Event): void {
         afterImportStats: () => {
             updateDeckCount();
             computeGlobalStats();
-            if (typeof (window as any).updateCategorySummary === 'function') {
-                (window as any).updateCategorySummary();
-            }
+            updateCategorySummary();
         },
     });
 }
@@ -499,9 +484,7 @@ function afterDeckStructureChange(): void {
     updateProbabilities();
     computeGlobalStats();
     window.dispatchEvent(new CustomEvent('deck-sort-changed'));
-    if (typeof (window as any).updateCategorySummary === 'function') {
-        (window as any).updateCategorySummary();
-    }
+    updateCategorySummary();
 }
 
 /**
