@@ -23,6 +23,11 @@ import {
     apiUpdateDeck,
     buildDeckSectionsPayload,
 } from './deck-builder/deckApi.js';
+import {
+    buildDeckJsonExportPayload,
+    downloadJsonFile,
+    runDeckImportFromFileInput,
+} from './deck-builder/deckFileIo.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
 import {
@@ -512,107 +517,30 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
 }
 
 export function exportDeckToFile(): void {
-    const rowToJson = (r: DeckRow) => {
-        const o: Record<string, unknown> = {
-            name: r.name,
-            quantity: r.quantity,
-            engine: r.engine || undefined,
-            categories: r.categories.length ? r.categories : undefined,
-        };
-        if (r.cardId != null && r.cardId > 0) o.id = r.cardId;
-        if (r.deckCopyId != null && r.deckCopyId > 0) o.deck_copy_id = r.deckCopyId;
-        return o;
-    };
-    const deck = {
-        main: mainDeck.map(rowToJson),
-        extra: extraDeck.map(rowToJson),
-        side: sideDeck.map(rowToJson),
-    };
-    const json = JSON.stringify(deck, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'deck.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadJsonFile('deck.json', buildDeckJsonExportPayload(mainDeck, extraDeck, sideDeck));
 }
 
 export function importDeckFromFile(event: Event): void {
-    const file = (event.target as HTMLInputElement)?.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async function (e) {
-        try {
-            const raw = (e.target && (e.target as FileReader).result) as string;
-            const data = JSON.parse(raw || '{}');
-            cleanCardTable();
-
-            const failedCards: string[] = [];
-            const addEntries = async (entries: any[], section: DeckSection) => {
-                for (const card of entries) {
-                    const infoCard = await fetchCardByName(card.name);
-                    if (!infoCard) {
-                        failedCards.push(card.name);
-                        continue;
-                    }
-                    const cid =
-                        typeof card.id === 'number' && card.id > 0
-                            ? card.id
-                            : typeof infoCard.id === 'number'
-                              ? infoCard.id
-                              : undefined;
-                    const dcid =
-                        typeof card.deck_copy_id === 'number' && card.deck_copy_id > 0
-                            ? card.deck_copy_id
-                            : typeof cid === 'number'
-                              ? cid
-                              : undefined;
-                    getState(section).push({
-                        name: infoCard.name_en ?? infoCard.name,
-                        type: infoCard.type ?? '',
-                        quantity: card.quantity ?? 1,
-                        engine: card.engine ?? '',
-                        categories: card.categories ?? [],
-                        imageUrl: infoCard.image_url ?? undefined,
-                        attribute: typeof infoCard.attribute === 'string' ? infoCard.attribute : undefined,
-                        level: typeof infoCard.level === 'number' ? infoCard.level : undefined,
-                        race: typeof infoCard.race === 'string' ? infoCard.race : undefined,
-                        frame_type: typeof infoCard.frame_type === 'string' ? infoCard.frame_type : undefined,
-                        maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
-                        cardId: cid,
-                        deckCopyId: dcid,
-                    });
-                }
-            };
-
-            if (Array.isArray(data)) {
-                await addEntries(data, 'main');
-            } else if (data.main || data.extra || data.side) {
-                await addEntries(data.main || [], 'main');
-                await addEntries(data.extra || [], 'extra');
-                await addEntries(data.side || [], 'side');
-            } else {
-                throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
-            }
-
+    runDeckImportFromFileInput(event, {
+        fetchCardByName,
+        banTcgToMaxCopies,
+        resetDeck: cleanCardTable,
+        pushRow: (section, row) => {
+            getState(section).push(row as DeckRow);
+        },
+        refreshAllGrids: () => {
             renderDeckSection('main');
             renderDeckSection('extra');
             renderDeckSection('side');
+        },
+        afterImportStats: () => {
             updateDeckCount();
             computeGlobalStats();
             if (typeof (window as any).updateCategorySummary === 'function') {
                 (window as any).updateCategorySummary();
             }
-            if (failedCards.length > 0) {
-                console.warn('Import: cartes non trouvées:', failedCards);
-                alert(`${failedCards.length} carte(s) non trouvée(s):\n${failedCards.slice(0, 10).join('\n')}${failedCards.length > 10 ? `\n... et ${failedCards.length - 10} autre(s)` : ''}`);
-            }
-        } catch (err: any) {
-            alert('Erreur à l\'import : ' + (err?.message ?? err));
-        }
-    };
-    reader.readAsText(file);
+        },
+    });
 }
 
 /** No-op pour compatibilité : la grille cartes n'a pas de tri par colonne. */
