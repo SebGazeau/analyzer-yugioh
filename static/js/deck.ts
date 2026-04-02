@@ -29,6 +29,7 @@ import {
     apiUpdateDeck,
     buildDeckSectionsPayload,
 } from './deck-builder/deckApi.js';
+import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
 
 export type { DeckEntryPayload } from './deck-builder/deckApi.js';
 export { toDeckEntryPayload } from './deck-builder/deckApi.js';
@@ -289,10 +290,6 @@ function typeKind(type: string): 'monster' | 'spell' | 'trap' {
     return 'monster';
 }
 
-function escapeAttr(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 let popoverEl: HTMLElement | null = null;
 let popoverBackdropEl: HTMLElement | null = null;
 let popoverSection: DeckSection | null = null;
@@ -522,48 +519,14 @@ function openPopover(section: DeckSection, index: number, anchor: HTMLElement): 
 }
 
 function renderDeckSection(section: DeckSection): void {
-    const gridId = DECK_GRID_IDS[section];
-    const container = document.getElementById(gridId);
-    if (!container) return;
-    const arr = getState(section);
-    container.innerHTML = '';
-    arr.forEach((row, index) => {
-        const kind = typeKind(row.type);
-        const thumbHtml = row.imageUrl
-            ? `<img class="deck-card-thumb-img" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
-            : '<span class="deck-card-thumb-placeholder">?</span>';
-        const banBadge = row.maxCopies != null && row.maxCopies < 3
-            ? `<span class="deck-card-ban-badge" title="Banlist TCG : max ${row.maxCopies} exemplaire(s)">lt. ${row.maxCopies}</span>`
-            : '';
-        const cell = document.createElement('div');
-        cell.className = `deck-card-cell deck-card-cell--${kind}`;
-        cell.setAttribute('data-deck-cell-section', section);
-        cell.setAttribute('data-deck-cell-index', String(index));
-        cell.setAttribute('title', row.name);
-        cell.setAttribute('draggable', 'true');
-        cell.innerHTML = `
-            <div class="deck-card-thumb">${thumbHtml}</div>
-            ${banBadge}
-            <button type="button" class="deck-card-remove-one" data-deck-action="remove-one" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
-                <svg class="deck-card-remove-one-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
-                </svg>
-            </button>
-            <span class="deck-card-qty">x${row.quantity}</span>
-        `;
-        cell.querySelector('.deck-card-remove-one')?.addEventListener('dragstart', (e) => e.preventDefault());
-        cell.addEventListener('click', (e) => {
-            const t = e.target as HTMLElement;
-            if (t.closest('[data-deck-action="remove-one"]')) {
-                e.preventDefault();
-                e.stopPropagation();
-                removeOneDeckCopy(section, index);
-                return;
-            }
-            openPopover(section, index, cell);
-        });
-        container.appendChild(cell);
-    });
+    renderDeckGridSection(
+        section,
+        DECK_GRID_IDS[section],
+        getState(section),
+        typeKind,
+        removeOneDeckCopy,
+        openPopover,
+    );
 }
 
 export function cleanCardTable(): void {
