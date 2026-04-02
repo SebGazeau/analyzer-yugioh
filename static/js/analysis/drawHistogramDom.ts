@@ -2,6 +2,10 @@
  * Rendu DOM des histogrammes de simulation de tirage (page Analysis).
  */
 
+import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
+
+const HISTOGRAM_SIM_ITERATIONS = 1000;
+
 const HISTOGRAM_BAR_MAX_HEIGHT_PX = 120;
 const HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX = 56;
 const HISTOGRAM_CATEGORY_COLORS = [
@@ -131,4 +135,50 @@ export function clearHistogramGraphs(): void {
     if (allTitleEl) allTitleEl.style.display = 'none';
     if (allContainer) allContainer.innerHTML = '';
     updateHistogramDOM({}, 0, '—');
+}
+
+/** Lance 1000 simulations et met à jour l’histogramme principal + mini-graphs par catégorie. */
+export function runHistogramSimulation1000(input: {
+    cards: ProbabilityCardEntry[];
+    handSize: 5 | 6;
+}): void {
+    const { cards, handSize } = input;
+    const categories = getAllCategories(cards).sort();
+    if (categories.length === 0 || cards.length === 0) {
+        clearHistogramGraphs();
+        return;
+    }
+    const select = document.getElementById('draw-histogram-category') as HTMLSelectElement | null;
+    if (select && select.options.length <= 1) {
+        updateHistogramCategorySelect(categories);
+    }
+    const selectedCategory =
+        select?.value && categories.includes(select.value) ? select.value : categories[0];
+    if (select && selectedCategory) {
+        select.value = selectedCategory;
+    }
+    const iterations = HISTOGRAM_SIM_ITERATIONS;
+    const headingEl = document.getElementById('draw-histogram-heading');
+    const explanationEl = document.getElementById('draw-histogram-explanation');
+    const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
+    if (headingEl) headingEl.textContent = `Distribution (${iterations} tirages) — Catégorie : ${selectedCategory}`;
+    if (explanationEl) {
+        explanationEl.style.display = 'block';
+        explanationEl.textContent = `En abscisse : nombre de cartes « ${selectedCategory} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
+    }
+    updateHistogramDOM(hist, iterations, selectedCategory);
+
+    const allTitleEl = document.getElementById('draw-histogram-all-title');
+    const allContainer = document.getElementById('draw-histogram-all-categories');
+    if (allTitleEl) {
+        allTitleEl.style.display = 'block';
+        allTitleEl.textContent = `Toutes les catégories (${iterations} tirages chacune)`;
+    }
+    if (allContainer) {
+        allContainer.innerHTML = '';
+        categories.forEach((cat, i) => {
+            const h = simulateDrawCounts(cards, cat, handSize, iterations);
+            appendCategoryMiniHistogram(allContainer, cat, h, iterations, i);
+        });
+    }
 }

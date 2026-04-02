@@ -1,7 +1,11 @@
 // Statistiques et probabilités pour le deck
 import { refreshDeckInsightsPanel } from './insights/panel.js';
 import { getDeckState } from './deck.js';
-import { CATEGORY_GROUPS } from './category.js';
+import {
+    applyBuilderMainTypeCountsAndBars,
+    applyCompositionDetailPanelsHtml,
+    applyDeckSectionCountLabels,
+} from './analysis/builderStatsDom.js';
 import {
     buildCompositionDetailPanelsHtml,
     computeCompositionBreakdown,
@@ -9,29 +13,18 @@ import {
 import {
     buildFullDeckCategorySummaries,
     buildRemainingDeckCategorySummaries,
-    categoryEntriesSorted,
     cleanDeckCardDisplayName,
     countNameOccurrences,
-    pickFirstReferenceGroup,
     remainingDrawCountForProbTable,
     type CategoryEngineSummaryMap,
 } from './analysis/categorySummaryData.js';
+import { renderAnalysisCategorySummaryDom } from './analysis/categorySummaryDom.js';
 import { buildMainDeckProbabilitySnapshot } from './analysis/deckMainSnapshot.js';
+import { runHistogramSimulation1000 } from './analysis/drawHistogramDom.js';
 import { refreshDrawSimulationPanel } from './analysis/drawSimulationDom.js';
 import { buildRemainingDrawPool, pickRandomFromPool } from './analysis/drawSimulationPile.js';
 import { readHandSizeFromStorage, writeHandSizeToStorage } from './analysis/handSizeStorage.js';
-import {
-    appendCategoryMiniHistogram,
-    clearHistogramGraphs,
-    updateHistogramCategorySelect,
-    updateHistogramDOM,
-} from './analysis/drawHistogramDom.js';
-import {
-    getAllCategories,
-    hypergeometricProbRowStrings,
-    simulateDrawCounts,
-    type ProbabilityCardEntry,
-} from './analysis/probabilityMath.js';
+import { computeMainDeckTypeCounts } from './analysis/mainDeckTypeCounts.js';
 
 export type { CompositionBreakdown } from './analysis/compositionBreakdown.js';
 export type { ProbabilityCardEntry } from './analysis/probabilityMath.js';
@@ -137,47 +130,12 @@ function updateDrawSimulationUI(): void {
     });
 }
 
-function refreshCompositionDetails(): void {
-    const breakdown = computeCompositionBreakdown(getDeckState().main);
-    const { monsterDetail, spellDetail, trapDetail } = buildCompositionDetailPanelsHtml(breakdown);
-
-    const monsterDetailEl = document.getElementById('builder-composition-detail-monster');
-    const spellDetailEl = document.getElementById('builder-composition-detail-spell');
-    const trapDetailEl = document.getElementById('builder-composition-detail-trap');
-
-    if (monsterDetailEl) monsterDetailEl.innerHTML = monsterDetail;
-    if (spellDetailEl) spellDetailEl.innerHTML = spellDetail;
-    if (trapDetailEl) trapDetailEl.innerHTML = trapDetail;
-}
-
 export function computeGlobalStats(): void {
-  const main = getDeckState().main;
-  let monsters = 0, spells = 0, traps = 0;
-  main.forEach(row => {
-    const type = (row.type || '').toLowerCase();
-    const qty = row.quantity;
-    if (type.includes("monster")) monsters += qty;
-    else if (type.includes("spell")) spells += qty;
-    else if (type.includes("trap")) traps += qty;
-  });
-  const monsterEl = document.getElementById("count-monster");
-  if (monsterEl) monsterEl.textContent = monsters.toString();
-  const spellEl = document.getElementById("count-spell");
-  if (spellEl) spellEl.textContent = spells.toString();
-  const trapEl = document.getElementById("count-trap");
-  if (trapEl) trapEl.textContent = traps.toString();
-
-  const total = monsters + spells + traps;
-  const pct = (n: number) => (total > 0 ? (n / total) * 100 : 0);
-  const barMonster = document.getElementById("builder-bar-monster");
-  if (barMonster) barMonster.style.width = pct(monsters) + "%";
-  const barSpell = document.getElementById("builder-bar-spell");
-  if (barSpell) barSpell.style.width = pct(spells) + "%";
-  const barTrap = document.getElementById("builder-bar-trap");
-  if (barTrap) barTrap.style.width = pct(traps) + "%";
-
-  refreshCompositionDetails();
-  refreshDeckInsightsPanel();
+    const main = getDeckState().main;
+    applyBuilderMainTypeCountsAndBars(computeMainDeckTypeCounts(main));
+    const breakdown = computeCompositionBreakdown(main);
+    applyCompositionDetailPanelsHtml(buildCompositionDetailPanelsHtml(breakdown));
+    refreshDeckInsightsPanel();
 }
 
 function countInGrid(section: 'main' | 'extra' | 'side'): number {
@@ -189,14 +147,7 @@ export function updateDeckCount(): void {
     const main = countInGrid('main');
     const extra = countInGrid('extra');
     const side = countInGrid('side');
-    const summaryEl = document.getElementById('deck-count-summary');
-    if (summaryEl) summaryEl.textContent = `${main} MAIN / ${extra} EXTRA / ${side} SIDE`;
-    const mainEl = document.getElementById('deck-main-count');
-    if (mainEl) mainEl.textContent = main.toString();
-    const extraEl = document.getElementById('deck-extra-count');
-    if (extraEl) extraEl.textContent = extra.toString();
-    const sideEl = document.getElementById('deck-side-count');
-    if (sideEl) sideEl.textContent = side.toString();
+    applyDeckSectionCountLabels(main, extra, side);
     resetDrawSimulation();
     updateProbabilities();
     updateCategorySummary(); // refait le tableau après reset (deck peut avoir changé)
@@ -210,34 +161,9 @@ export function updateProbabilities(): void {
     (window as any).__deckTotalForHandSize = totalCards;
 }
 
-function addSectionHeader(tbody: HTMLElement | null, title: string, sectionId?: string): void {
-    if (!tbody) return;
-    const tr = document.createElement("tr");
-    tr.className = "analysis-section-header";
-    if (sectionId) {
-        tr.setAttribute("data-section-header", sectionId);
-        tr.setAttribute("role", "button");
-        tr.setAttribute("tabindex", "0");
-        tr.setAttribute("aria-expanded", "true");
-        tr.innerHTML = `<td colspan="9"><span class="analysis-section-header-toggle" aria-hidden="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
-    } else {
-        tr.innerHTML = `<td colspan="9"><strong>${escapeHtml(title)}</strong></td>`;
-    }
-    tbody.appendChild(tr);
-}
-
-const ANALYSIS_DOT_COLORS = ["zone-main", "zone-extra", "zone-side", "gold", "info", "success", "amber", "danger"];
-
-function analysisCategoryDotClass(index: number): string {
-    return "analysis-category-dot analysis-category-dot--" + ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length];
-}
-
 export function updateCategorySummary(): void {
     try {
-        const tbody = document.getElementById("category-summary-body");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
+        let simulationBanner: string | null = null;
         let summary: CategoryEngineSummaryMap;
         let engineSummary: CategoryEngineSummaryMap;
         let totalCards: number;
@@ -249,7 +175,7 @@ export function updateCategorySummary(): void {
             engineSummary = rem.engineSummary;
             totalCards = rem.totalCards;
             numDraws = rem.numDraws;
-            addSectionHeader(tbody, `Simulation : ${drawnCards.length} carte(s) tirée(s), ${totalCards} restantes (probas pour ${numDraws} tirage(s) restant(s))`);
+            simulationBanner = `Simulation : ${drawnCards.length} carte(s) tirée(s), ${totalCards} restantes (probas pour ${numDraws} tirage(s) restant(s))`;
         } else {
             const main = getDeckState().main;
             const built = buildFullDeckCategorySummaries(
@@ -266,221 +192,28 @@ export function updateCategorySummary(): void {
             numDraws = handSize;
         }
 
-        const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + "%" : "—");
-        let dataRowIndex = 0;
-
-        // 1. Engines
-        addSectionHeader(tbody, "Engines", "engines");
-        Object.entries(engineSummary)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .forEach(([engineName, cardMap]) => {
-                const tr = document.createElement("tr");
-                tr.setAttribute("data-section", "engines");
-                const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
-                const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-                const dotClass = analysisCategoryDotClass(dataRowIndex++);
-                tr.innerHTML = `
-                    <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(engineName)}</strong></td>
-                    <td class="analysis-td-count">${K}</td>
-                    <td class="analysis-td-pct">${pctDeck(K)}</td>
-                    <td class="analysis-td-prob5">${probs[0]}</td>
-                    ${probs.slice(1).map(p => `<td>${p}</td>`).join("")}
-                `;
-                tbody.appendChild(tr);
-            });
-
-        // 2. Catégories
-        addSectionHeader(tbody, "Catégories", "categories");
-        Object.keys(summary)
-            .sort()
-            .forEach(cat => {
-                const cardMap = summary[cat];
-                const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
-                const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-                const dotClass = analysisCategoryDotClass(dataRowIndex++);
-                const tr = document.createElement("tr");
-                tr.setAttribute("data-section", "categories");
-                tr.innerHTML = `
-                    <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span>${escapeHtml(cat)}</td>
-                    <td class="analysis-td-count">${K}</td>
-                    <td class="analysis-td-pct">${pctDeck(K)}</td>
-                    <td class="analysis-td-prob5">${probs[0]}</td>
-                    ${probs.slice(1).map(p => `<td>${p}</td>`).join("")}
-                `;
-                tbody.appendChild(tr);
-            });
-
-        // 3. Groupes de catégories
-        addSectionHeader(tbody, "Groupes de catégories", "groupes");
-        Object.entries(CATEGORY_GROUPS).forEach(([groupName, includedCats]) => {
-            const cardSet = new Map<string, number>();
-            includedCats.forEach(cat => {
-                if (summary[cat]) {
-                    summary[cat].forEach((qty: number, cardName: string) => {
-                        if (!cardSet.has(cardName)) cardSet.set(cardName, qty);
-                    });
-                }
-            });
-            const K = Array.from(cardSet.values()).reduce((s, v) => s + v, 0);
-            const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-            const dotClass = analysisCategoryDotClass(dataRowIndex++);
-            const tr = document.createElement("tr");
-            tr.setAttribute("data-section", "groupes");
-            tr.innerHTML = `
-                <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(groupName)}</strong></td>
-                <td class="analysis-td-count">${K}</td>
-                <td class="analysis-td-pct">${pctDeck(K)}</td>
-                <td class="analysis-td-prob5">${probs[0]}</td>
-                ${probs.slice(1).map(p => `<td>${p}</td>`).join("")}
-            `;
-            tbody.appendChild(tr);
+        renderAnalysisCategorySummaryDom({
+            simulationBanner,
+            summary,
+            engineSummary,
+            totalCards,
+            numDraws,
+            handSize,
         });
-
-        // Hero stats : première engine ou catégorie (ordre alphab.), P(≥1) pour 5, 6 et main courante
-        const ref = pickFirstReferenceGroup(engineSummary, summary);
-        const firstGroupName = ref?.name ?? '';
-        const firstK = ref?.K ?? 0;
-        const firstEl = document.getElementById("analysis-hero-first");
-        const secondEl = document.getElementById("analysis-hero-second");
-        const engineEl = document.getElementById("analysis-hero-engine");
-        const enginePct =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : '—';
-        if (firstEl)
-            firstEl.textContent =
-                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
-        if (secondEl)
-            secondEl.textContent =
-                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
-        if (engineEl) engineEl.textContent = enginePct;
-        const heroGroupEl = document.getElementById("analysis-hero-group");
-        if (heroGroupEl) {
-            heroGroupEl.textContent = firstGroupName && totalCards > 0
-                ? `Réf. : ${firstGroupName} (${firstK} / ${totalCards} cartes) — P(≥1) en 5 ou 6 tirages.`
-                : "";
-        }
-
-        const builderFirst = document.getElementById("builder-stats-first");
-        const builderSecond = document.getElementById("builder-stats-second");
-        const builderEngine = document.getElementById("builder-stats-engine");
-        if (builderFirst)
-            builderFirst.textContent =
-                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
-        if (builderSecond)
-            builderSecond.textContent =
-                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
-        if (builderEngine) builderEngine.textContent = enginePct;
-
-        // Mise à jour du sélecteur de catégorie pour l’histogramme (page Analysis)
-        updateHistogramCategorySelect(Object.keys(summary).sort());
-
-        // Bande composition Main Deck (catégories, normalisée à 100 %)
-        const entries = categoryEntriesSorted(summary);
-        const sumAll = entries.reduce((s, e) => s + e.K, 0);
-
-        const stripEl = document.getElementById("deck-composition-strip");
-        if (stripEl) {
-            stripEl.innerHTML = "";
-            if (sumAll > 0) {
-                entries.forEach(({ name, K }) => {
-                    const pct = (K / sumAll) * 100;
-                    const seg = document.createElement("div");
-                    seg.className = "deck-composition-segment";
-                    seg.style.flexBasis = `${pct}%`;
-                    seg.setAttribute("title", `${name}: ${K} (${pct.toFixed(1)}%)`);
-                    seg.setAttribute("data-category", name);
-                    stripEl.appendChild(seg);
-                });
-            }
-        }
-
-        // Sidebar stats : petit bar chart empilé (même données)
-        const sidebarBarEl = document.getElementById("deck-stats-category-bar");
-        if (sidebarBarEl) {
-            sidebarBarEl.innerHTML = "";
-            if (sumAll > 0) {
-                entries.forEach(({ name, K }) => {
-                    const pct = (K / sumAll) * 100;
-                    const seg = document.createElement("div");
-                    seg.className = "deck-stats-category-segment";
-                    seg.style.flexBasis = `${pct}%`;
-                    seg.setAttribute("title", `${name}: ${K} (${pct.toFixed(1)}%)`);
-                    seg.setAttribute("data-category", name);
-                    sidebarBarEl.appendChild(seg);
-                });
-            }
-        }
-
-        // Liste catégories (sidebar) : label + count + barre
-        const categoryListEl = document.getElementById("builder-category-list");
-        if (categoryListEl) {
-            categoryListEl.innerHTML = "";
-            if (sumAll > 0) {
-                entries.forEach(({ name, K }) => {
-                    const pct = (K / sumAll) * 100;
-                    const row = document.createElement("div");
-                    row.className = "builder-category-list-row";
-                    row.setAttribute("data-builder-sort-category", name);
-                    row.style.cursor = "pointer";
-                    row.title = `Trier le Main Deck : ${name} en premier`;
-                    row.innerHTML = `<span class="builder-category-list-label">${escapeHtml(name)}</span><span class="builder-category-list-count">${K}</span><div class="builder-category-list-bar-wrap"><div class="builder-category-list-bar" style="width:${pct}%"></div></div>`;
-                    categoryListEl.appendChild(row);
-                });
-            }
-        }
     } catch (error) {
         console.error(error);
     }
 }
 
-function escapeHtml(s: string): string {
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-}
-
 /** Lance 1000 simulations et met à jour l'histogramme (catégorie choisie + un mini-graph par catégorie). */
 export function runSimulation1000AndUpdateHistogram(): void {
     const snapshot = getDeckMainSnapshot();
-    const cards: ProbabilityCardEntry[] = snapshot.map((r) => ({
-        name: r.name,
-        qty: r.qty,
-        categories: r.categories,
-    }));
-    const categories = getAllCategories(cards).sort();
-    if (categories.length === 0 || cards.length === 0) {
-        clearHistogramGraphs();
-        return;
-    }
-    const select = document.getElementById('draw-histogram-category') as HTMLSelectElement | null;
-    if (select && select.options.length <= 1) {
-        updateHistogramCategorySelect(categories);
-    }
-    const selectedCategory = select?.value && categories.includes(select.value) ? select.value : categories[0];
-    if (select && selectedCategory) {
-        select.value = selectedCategory;
-    }
-    const iterations = 1000;
-    const headingEl = document.getElementById('draw-histogram-heading');
-    const explanationEl = document.getElementById('draw-histogram-explanation');
-    const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
-    if (headingEl) headingEl.textContent = `Distribution (${iterations} tirages) — Catégorie : ${selectedCategory}`;
-    if (explanationEl) {
-        explanationEl.style.display = 'block';
-        explanationEl.textContent = `En abscisse : nombre de cartes « ${selectedCategory} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
-    }
-    updateHistogramDOM(hist, iterations, selectedCategory);
-
-    const allTitleEl = document.getElementById('draw-histogram-all-title');
-    const allContainer = document.getElementById('draw-histogram-all-categories');
-    if (allTitleEl) {
-        allTitleEl.style.display = 'block';
-        allTitleEl.textContent = `Toutes les catégories (${iterations} tirages chacune)`;
-    }
-    if (allContainer) {
-        allContainer.innerHTML = '';
-        categories.forEach((cat, i) => {
-            const h = simulateDrawCounts(cards, cat, handSize, iterations);
-            appendCategoryMiniHistogram(allContainer, cat, h, iterations, i);
-        });
-    }
+    runHistogramSimulation1000({
+        cards: snapshot.map((r) => ({
+            name: r.name,
+            qty: r.qty,
+            categories: r.categories,
+        })),
+        handSize,
+    });
 }
