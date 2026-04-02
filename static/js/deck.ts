@@ -2,13 +2,7 @@
 import { updateDeckCount, updateProbabilities, computeGlobalStats, setAnalysisDeckName } from './stats.js';
 import { createCategorySelector } from './category.js';
 import { fetchCardByName, Card } from './api.js';
-import {
-    isExtraDeckRowLike,
-    resolveTargetZone,
-    sameZoneInsertIndex,
-    sumQuantities,
-    maxCardsForZone,
-} from './deck-move.js';
+import { isExtraDeckRowLike } from './deck-move.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
     DECK_GRID_IDS,
@@ -29,6 +23,7 @@ import {
     apiUpdateDeck,
     buildDeckSectionsPayload,
 } from './deck-builder/deckApi.js';
+import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
 
 export type { DeckEntryPayload } from './deck-builder/deckApi.js';
@@ -865,136 +860,20 @@ export function moveDeckRow(
     dropSection: DeckSection,
     dropOnIndex: number,
 ): boolean {
-    const fromArr = getState(fromSection);
-    const row = fromArr[fromIndex];
-    if (!row) return false;
-
-    const resolved = resolveTargetZone(row, dropSection);
-    if (resolved === null) {
-        alert('Cette carte ne peut pas être placée dans l\'Extra Deck.');
-        return false;
-    }
-
-    if (fromSection === resolved) {
-        const arr = getState(resolved);
-        const len = arr.length;
-        const [moved] = arr.splice(fromIndex, 1);
-        if (dropSection !== fromSection) {
-            arr.push(moved);
-        } else {
-            const ins = sameZoneInsertIndex(fromIndex, Math.min(dropOnIndex, len), len);
-            if (ins === null) {
-                arr.splice(fromIndex, 0, moved);
-                return false;
-            }
-            arr.splice(ins, 0, moved);
-        }
-        renderDeckSection(resolved);
-        afterDeckStructureChange();
-        return true;
-    }
-
-    const fromA = getState(fromSection);
-    const toA = getState(resolved);
-    const maxT = maxCardsForZone(resolved);
-    if (sumQuantities(toA) + row.quantity > maxT) {
-        alert(`Zone pleine (max ${maxT} cartes).`);
-        return false;
-    }
-
-    const [moved] = fromA.splice(fromIndex, 1);
-    let ins = dropSection === resolved ? Math.max(0, Math.min(dropOnIndex, toA.length)) : toA.length;
-    ins = Math.max(0, Math.min(ins, toA.length));
-    toA.splice(ins, 0, moved);
-
-    renderDeckSection(fromSection);
-    renderDeckSection(resolved);
-    afterDeckStructureChange();
-    return true;
+    return executeDeckRowMove(fromSection, fromIndex, dropSection, dropOnIndex, {
+        getState,
+        renderSection: renderDeckSection,
+        afterStructureChange: afterDeckStructureChange,
+    });
 }
 
 /** Branche drag-and-drop sur `.deck-sections` (délégation, survit aux re-rendus de grille). */
 export function bindDeckDragAndDrop(): void {
-    const el = document.querySelector('.deck-sections');
-    if (!el || !(el instanceof HTMLElement)) return;
-    const root = el;
-    if (root.dataset.deckDndBound === '1') return;
-    root.dataset.deckDndBound = '1';
-
-    let suppressClickUntil = 0;
-
-    root.addEventListener('dragstart', (e: DragEvent) => {
-        const cell = (e.target as HTMLElement).closest('[data-deck-cell-section]');
-        if (!cell || !e.dataTransfer) return;
-        const section = cell.getAttribute('data-deck-cell-section') as DeckSection;
-        const index = parseInt(cell.getAttribute('data-deck-cell-index') || '-1', 10);
-        if (index < 0 || !['main', 'extra', 'side'].includes(section)) return;
-        e.dataTransfer.setData(DECK_DND_PAYLOAD_TYPE, JSON.stringify({ section, index }));
-        e.dataTransfer.effectAllowed = 'move';
-        cell.classList.add('deck-card-cell--dragging');
-        hideDeckCardPopover();
-    });
-
-    root.addEventListener('dragend', (e: DragEvent) => {
-        (e.target as HTMLElement).closest('[data-deck-cell-section]')?.classList.remove('deck-card-cell--dragging');
-        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((el) => el.classList.remove('deck-cards-grid--dnd-over'));
-        suppressClickUntil = Date.now() + 200;
-    });
-
-    root.addEventListener(
-        'click',
-        (e: MouseEvent) => {
-            if (Date.now() < suppressClickUntil && (e.target as HTMLElement).closest('.deck-sections')) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        },
-        true,
-    );
-
-    root.addEventListener('dragover', (e: DragEvent) => {
-        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
-        if (!grid || !e.dataTransfer?.types.includes(DECK_DND_PAYLOAD_TYPE)) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((el) => el.classList.remove('deck-cards-grid--dnd-over'));
-        grid.classList.add('deck-cards-grid--dnd-over');
-    });
-
-    root.addEventListener('drop', (e: DragEvent) => {
-        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
-        if (!grid || !e.dataTransfer) return;
-        e.preventDefault();
-        grid.classList.remove('deck-cards-grid--dnd-over');
-        const raw = e.dataTransfer.getData(DECK_DND_PAYLOAD_TYPE);
-        if (!raw) return;
-        let parsed: { section: DeckSection; index: number };
-        try {
-            parsed = JSON.parse(raw) as { section: DeckSection; index: number };
-        } catch {
-            return;
-        }
-        const { section: fromSection, index: fromIndex } = parsed;
-        const gridId = grid.id;
-        const dropSection: DeckSection | null =
-            gridId === DECK_GRID_IDS.main
-                ? 'main'
-                : gridId === DECK_GRID_IDS.extra
-                  ? 'extra'
-                  : gridId === DECK_GRID_IDS.side
-                    ? 'side'
-                    : null;
-        if (!dropSection) return;
-
-        const cell = (e.target as HTMLElement).closest('[data-deck-cell-index]');
-        const arr = getState(dropSection);
-        let dropOnIdx: number;
-        if (cell && grid.contains(cell)) {
-            dropOnIdx = parseInt(cell.getAttribute('data-deck-cell-index') || '0', 10);
-        } else {
-            dropOnIdx = arr.length;
-        }
-
-        moveDeckRow(fromSection, fromIndex, dropSection, dropOnIdx);
+    bindDeckDragAndDropRoot({
+        moveRow: moveDeckRow,
+        hidePopover: hideDeckCardPopover,
+        getSectionLength: (section) => getState(section).length,
+        gridIds: DECK_GRID_IDS,
+        dndPayloadType: DECK_DND_PAYLOAD_TYPE,
     });
 }
