@@ -7,14 +7,24 @@ import {
     computeCompositionBreakdown,
 } from './analysis/compositionBreakdown.js';
 import {
+    buildFullDeckCategorySummaries,
+    buildRemainingDeckCategorySummaries,
+    categoryEntriesSorted,
+    cleanDeckCardDisplayName,
+    countNameOccurrences,
+    pickFirstReferenceGroup,
+    remainingDrawCountForProbTable,
+    type CategoryEngineSummaryMap,
+} from './analysis/categorySummaryData.js';
+import {
     appendCategoryMiniHistogram,
     clearHistogramGraphs,
     updateHistogramCategorySelect,
     updateHistogramDOM,
 } from './analysis/drawHistogramDom.js';
 import {
-    cumulativeHypergeometric,
     getAllCategories,
+    hypergeometricProbRowStrings,
     simulateDrawCounts,
     type ProbabilityCardEntry,
 } from './analysis/probabilityMath.js';
@@ -25,6 +35,7 @@ export {
     hypergeometricDist,
     hypergeometric,
     cumulativeHypergeometric,
+    hypergeometricProbRowStrings,
     probabilityAtLeast,
     getTotalCardCount,
     getCategoryCardCount,
@@ -38,10 +49,6 @@ export {
     updateHistogramCategorySelect,
     updateHistogramDOM,
 } from './analysis/drawHistogramDom.js';
-
-interface SummaryMap {
-    [key: string]: Map<string, number>;
-}
 
 /** Cartes "tirées" dans la simulation (noms, ordre de tirage). */
 let drawnCards: string[] = [];
@@ -83,10 +90,6 @@ export function setAnalysisDeckName(name: string): void {
     el.textContent = text ? `${text} — ` : "";
 }
 
-function cleanCardName(s: string): string {
-    return s.replace(/^—\s*/, '').trim();
-}
-
 /** Snapshot du Main Deck (nom, qty, engine, catégories). */
 function getDeckMainSnapshot(): { name: string; qty: number; engine: string; categories: string[] }[] {
     const main = getDeckState().main;
@@ -102,31 +105,17 @@ function countDrawn(cardName: string): number {
 
 /** Retourne l'URL d'image d'une carte du Main, ou null. */
 function getCardImageUrl(cardName: string): string | null {
-    const want = cleanCardName(cardName);
-    const row = getDeckState().main.find(r => cleanCardName(r.name) === want);
+    const want = cleanDeckCardDisplayName(cardName);
+    const row = getDeckState().main.find(r => cleanDeckCardDisplayName(r.name) === want);
     return row?.imageUrl ?? null;
 }
 
 /** Résumé et totaux pour le deck *restant* (après simulation). */
-function getRemainingSummary(): { summary: SummaryMap; engineSummary: SummaryMap; totalCards: number; numDraws: number } {
+function getRemainingSummary() {
     const snapshot = getDeckMainSnapshot();
-    const summary: SummaryMap = {};
-    const engineSummary: SummaryMap = {};
-    let totalCards = 0;
-    for (const card of snapshot) {
-        const remaining = Math.max(0, card.qty - countDrawn(card.name));
-        if (remaining === 0) continue;
-        totalCards += remaining;
-        card.categories.forEach((cat: string) => {
-            if (!summary[cat]) summary[cat] = new Map<string, number>();
-            summary[cat].set(card.name, (summary[cat].get(card.name) || 0) + remaining);
-        });
-        if (card.engine && card.engine.trim() !== '') {
-            if (!engineSummary[card.engine]) engineSummary[card.engine] = new Map<string, number>();
-            engineSummary[card.engine].set(card.name, (engineSummary[card.engine].get(card.name) || 0) + remaining);
-        }
-    }
-    const numDraws = Math.min(handSize, handSize - drawnCards.length);
+    const drawnCounts = countNameOccurrences(drawnCards);
+    const { summary, engineSummary, totalCards } = buildRemainingDeckCategorySummaries(snapshot, drawnCounts);
+    const numDraws = remainingDrawCountForProbTable(handSize, drawnCards.length);
     return { summary, engineSummary, totalCards, numDraws };
 }
 
@@ -298,28 +287,14 @@ function analysisCategoryDotClass(index: number): string {
     return "analysis-category-dot analysis-category-dot--" + ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length];
 }
 
-/** Probas P(≥1) … P(≥6) pour `numDraws` tirages sans remise. Retourne toujours 6 valeurs (≥6 = "—" si numDraws < 6). */
-function probRow(K: number, totalCards: number, numDraws: number): string[] {
-    const probs: string[] = [];
-    for (let x = 1; x <= 6; x++) {
-        if (x > numDraws || totalCards === 0) {
-            probs.push("—");
-            continue;
-        }
-        const p = 1 - cumulativeHypergeometric(x - 1, numDraws, K, totalCards);
-        probs.push(Number.isFinite(p) ? (p * 100).toFixed(2) + "%" : "—");
-    }
-    return probs;
-}
-
 export function updateCategorySummary(): void {
     try {
         const tbody = document.getElementById("category-summary-body");
         if (!tbody) return;
         tbody.innerHTML = "";
 
-        let summary: SummaryMap;
-        let engineSummary: SummaryMap;
+        let summary: CategoryEngineSummaryMap;
+        let engineSummary: CategoryEngineSummaryMap;
         let totalCards: number;
         let numDraws: number;
 
@@ -332,26 +307,18 @@ export function updateCategorySummary(): void {
             addSectionHeader(tbody, `Simulation : ${drawnCards.length} carte(s) tirée(s), ${totalCards} restantes (probas pour ${numDraws} tirage(s) restant(s))`);
         } else {
             const main = getDeckState().main;
-            summary = {};
-            engineSummary = {};
-            totalCards = 0;
+            const built = buildFullDeckCategorySummaries(
+                main.map((r) => ({
+                    name: r.name,
+                    quantity: r.quantity,
+                    engine: r.engine || '',
+                    categories: r.categories || [],
+                })),
+            );
+            summary = built.summary;
+            engineSummary = built.engineSummary;
+            totalCards = built.totalCards;
             numDraws = handSize;
-            main.forEach(row => {
-                const cardName = cleanCardName(row.name);
-                const qty = row.quantity;
-                const engine = row.engine;
-                const selected = row.categories || [];
-                if (!cardName || qty <= 0) return;
-                totalCards += qty;
-                selected.forEach((cat: string) => {
-                    if (!summary[cat]) summary[cat] = new Map<string, number>();
-                    summary[cat].set(cardName, qty);
-                });
-                if (engine && engine.trim() !== "") {
-                    if (!engineSummary[engine]) engineSummary[engine] = new Map<string, number>();
-                    engineSummary[engine].set(cardName, qty);
-                }
-            });
         }
 
         const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + "%" : "—");
@@ -365,7 +332,7 @@ export function updateCategorySummary(): void {
                 const tr = document.createElement("tr");
                 tr.setAttribute("data-section", "engines");
                 const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
-                const probs = probRow(K, totalCards, numDraws);
+                const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
                 const dotClass = analysisCategoryDotClass(dataRowIndex++);
                 tr.innerHTML = `
                     <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(engineName)}</strong></td>
@@ -384,7 +351,7 @@ export function updateCategorySummary(): void {
             .forEach(cat => {
                 const cardMap = summary[cat];
                 const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
-                const probs = probRow(K, totalCards, numDraws);
+                const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
                 const dotClass = analysisCategoryDotClass(dataRowIndex++);
                 const tr = document.createElement("tr");
                 tr.setAttribute("data-section", "categories");
@@ -410,7 +377,7 @@ export function updateCategorySummary(): void {
                 }
             });
             const K = Array.from(cardSet.values()).reduce((s, v) => s + v, 0);
-            const probs = probRow(K, totalCards, numDraws);
+            const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
             const dotClass = analysisCategoryDotClass(dataRowIndex++);
             const tr = document.createElement("tr");
             tr.setAttribute("data-section", "groupes");
@@ -425,25 +392,20 @@ export function updateCategorySummary(): void {
         });
 
         // Hero stats : première engine ou catégorie (ordre alphab.), P(≥1) pour 5, 6 et main courante
-        let firstK = 0;
-        let firstGroupName: string = "";
-        const firstEngine = Object.entries(engineSummary).sort(([a], [b]) => a.localeCompare(b))[0];
-        if (firstEngine) {
-            firstGroupName = firstEngine[0];
-            firstK = Array.from(firstEngine[1].values()).reduce((s, v) => s + v, 0);
-        } else {
-            const firstCat = Object.keys(summary).sort()[0];
-            if (firstCat && summary[firstCat]) {
-                firstGroupName = firstCat;
-                firstK = Array.from(summary[firstCat].values()).reduce((s, v) => s + v, 0);
-            }
-        }
+        const ref = pickFirstReferenceGroup(engineSummary, summary);
+        const firstGroupName = ref?.name ?? '';
+        const firstK = ref?.K ?? 0;
         const firstEl = document.getElementById("analysis-hero-first");
         const secondEl = document.getElementById("analysis-hero-second");
         const engineEl = document.getElementById("analysis-hero-engine");
-        const enginePct = totalCards > 0 && firstK > 0 ? probRow(firstK, totalCards, handSize)[0] : "—";
-        if (firstEl) firstEl.textContent = totalCards > 0 && firstK > 0 ? probRow(firstK, totalCards, 5)[0] : "—";
-        if (secondEl) secondEl.textContent = totalCards > 0 && firstK > 0 ? probRow(firstK, totalCards, 6)[0] : "—";
+        const enginePct =
+            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : '—';
+        if (firstEl)
+            firstEl.textContent =
+                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
+        if (secondEl)
+            secondEl.textContent =
+                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
         if (engineEl) engineEl.textContent = enginePct;
         const heroGroupEl = document.getElementById("analysis-hero-group");
         if (heroGroupEl) {
@@ -455,21 +417,19 @@ export function updateCategorySummary(): void {
         const builderFirst = document.getElementById("builder-stats-first");
         const builderSecond = document.getElementById("builder-stats-second");
         const builderEngine = document.getElementById("builder-stats-engine");
-        if (builderFirst) builderFirst.textContent = totalCards > 0 && firstK > 0 ? probRow(firstK, totalCards, 5)[0] : "—";
-        if (builderSecond) builderSecond.textContent = totalCards > 0 && firstK > 0 ? probRow(firstK, totalCards, 6)[0] : "—";
+        if (builderFirst)
+            builderFirst.textContent =
+                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
+        if (builderSecond)
+            builderSecond.textContent =
+                totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
         if (builderEngine) builderEngine.textContent = enginePct;
 
         // Mise à jour du sélecteur de catégorie pour l’histogramme (page Analysis)
         updateHistogramCategorySelect(Object.keys(summary).sort());
 
         // Bande composition Main Deck (catégories, normalisée à 100 %)
-        const entries = Object.keys(summary)
-            .sort()
-            .map(cat => ({
-                name: cat,
-                K: Array.from(summary[cat].values()).reduce((s, v) => s + v, 0),
-            }))
-            .filter(e => e.K > 0);
+        const entries = categoryEntriesSorted(summary);
         const sumAll = entries.reduce((s, e) => s + e.K, 0);
 
         const stripEl = document.getElementById("deck-composition-strip");

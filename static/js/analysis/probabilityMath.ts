@@ -41,6 +41,22 @@ export function cumulativeHypergeometric(maxSuccesses: number, draws: number, K:
     return sum;
 }
 
+/**
+ * Probas P(≥1) … P(≥6) formatées pour le tableau Analysis (6 colonnes ; « — » si tirage impossible).
+ */
+export function hypergeometricProbRowStrings(K: number, totalCards: number, numDraws: number): string[] {
+    const probs: string[] = [];
+    for (let x = 1; x <= 6; x++) {
+        if (x > numDraws || totalCards === 0) {
+            probs.push('—');
+            continue;
+        }
+        const p = 1 - cumulativeHypergeometric(x - 1, numDraws, K, totalCards);
+        probs.push(Number.isFinite(p) ? (p * 100).toFixed(2) + '%' : '—');
+    }
+    return probs;
+}
+
 export function probabilityAtLeast(N: number, K: number, n: number, minK: number): number {
     if (minK <= 0) return 1;
     return 1 - cumulativeHypergeometric(minK - 1, n, K, N);

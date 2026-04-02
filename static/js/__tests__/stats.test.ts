@@ -7,6 +7,7 @@ import {
   getHandSize,
   setHandSize,
   hypergeometric,
+  hypergeometricProbRowStrings,
   probabilityAtLeast,
   simulateDraw,
   simulateDrawCounts,
@@ -112,6 +113,19 @@ describe('stats.ts - cumulativeHypergeometric adaptee', () => {
 
   it('P(>=1 | 40, 3, 5) ≈ 0.3376', () => {
     expect(probabilityAtLeast(40, 3, 5, 1)).toBeCloseTo(0.3376, 3);
+  });
+});
+
+describe('stats.ts - hypergeometricProbRowStrings (tableau Analysis)', () => {
+  it('6 colonnes P(≥1)…P(≥6) pour 5 tirages', () => {
+    const row = hypergeometricProbRowStrings(3, 40, 5);
+    expect(row).toHaveLength(6);
+    expect(row[0]).toMatch(/%$/);
+    expect(row[5]).toBe('—');
+  });
+
+  it('totalCards = 0 → tout « — »', () => {
+    expect(hypergeometricProbRowStrings(1, 0, 5).every((c) => c === '—')).toBe(true);
   });
 });
 
