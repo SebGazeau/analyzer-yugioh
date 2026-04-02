@@ -16,6 +16,10 @@ import {
     remainingDrawCountForProbTable,
     type CategoryEngineSummaryMap,
 } from './analysis/categorySummaryData.js';
+import { buildMainDeckProbabilitySnapshot } from './analysis/deckMainSnapshot.js';
+import { refreshDrawSimulationPanel } from './analysis/drawSimulationDom.js';
+import { buildRemainingDrawPool, pickRandomFromPool } from './analysis/drawSimulationPile.js';
+import { readHandSizeFromStorage, writeHandSizeToStorage } from './analysis/handSizeStorage.js';
 import {
     appendCategoryMiniHistogram,
     clearHistogramGraphs,
@@ -53,26 +57,13 @@ export {
 /** Cartes "tirées" dans la simulation (noms, ordre de tirage). */
 let drawnCards: string[] = [];
 
-const HAND_SIZE_STORAGE_KEY = 'yugioh-deck-hand-size';
-
-function loadHandSizeFromStorage(): 5 | 6 {
-    try {
-        const v = localStorage.getItem(HAND_SIZE_STORAGE_KEY);
-        if (v === '6') return 6;
-        if (v === '5') return 5;
-    } catch (_) {}
-    return 5;
-}
-
 /** Taille de la main de départ : 5 (going first) ou 6 (going second). Persistée en localStorage. */
-let handSize: 5 | 6 = loadHandSizeFromStorage();
+let handSize: 5 | 6 = readHandSizeFromStorage();
 
 export function setHandSize(size: 5 | 6): void {
     if (handSize === size) return;
     handSize = size;
-    try {
-        localStorage.setItem(HAND_SIZE_STORAGE_KEY, String(size));
-    } catch (_) {}
+    writeHandSizeToStorage(size);
     updateProbabilities();
     updateCategorySummary();
     updateDrawSimulationUI();
@@ -91,16 +82,8 @@ export function setAnalysisDeckName(name: string): void {
 }
 
 /** Snapshot du Main Deck (nom, qty, engine, catégories). */
-function getDeckMainSnapshot(): { name: string; qty: number; engine: string; categories: string[] }[] {
-    const main = getDeckState().main;
-    return main
-        .filter(r => r.name && r.quantity > 0)
-        .map(r => ({ name: r.name, qty: r.quantity, engine: r.engine || '', categories: r.categories || [] }));
-}
-
-/** Compte combien de fois une carte a été tirée. */
-function countDrawn(cardName: string): number {
-    return drawnCards.filter(n => n === cardName).length;
+function getDeckMainSnapshot() {
+    return buildMainDeckProbabilitySnapshot(getDeckState().main);
 }
 
 /** Retourne l'URL d'image d'une carte du Main, ou null. */
@@ -122,14 +105,10 @@ function getRemainingSummary() {
 /** Tire une carte au hasard dans le deck restant (pondéré par les quantités). Retourne le nom ou null. */
 export function drawOneCard(): string | null {
     const snapshot = getDeckMainSnapshot();
-    const deck: string[] = [];
-    snapshot.forEach(card => {
-        const remaining = Math.max(0, card.qty - countDrawn(card.name));
-        for (let i = 0; i < remaining; i++) deck.push(card.name);
-    });
-    if (deck.length === 0 || drawnCards.length >= 5) return null;
-    const idx = Math.floor(Math.random() * deck.length);
-    const drawn = deck[idx];
+    const deck = buildRemainingDrawPool(snapshot, countNameOccurrences(drawnCards));
+    if (deck.length === 0 || drawnCards.length >= handSize) return null;
+    const drawn = pickRandomFromPool(deck);
+    if (!drawn) return null;
     drawnCards.push(drawn);
     updateDrawSimulationUI();
     updateCategorySummary();
@@ -148,48 +127,14 @@ export function getDrawnCards(): string[] {
 }
 
 function updateDrawSimulationUI(): void {
-    const container = document.getElementById('draw-simulation-list');
-    const countEl = document.getElementById('draw-simulation-count');
-    const btnDraw = document.getElementById('btn-draw-one') as HTMLButtonElement | null;
-    if (countEl) countEl.textContent = String(drawnCards.length);
-    const maxEl = document.getElementById('draw-simulation-max');
-    if (maxEl) maxEl.textContent = String(handSize);
-    if (container) {
-        container.textContent = '';
-        if (drawnCards.length === 0) {
-            const empty = document.createElement('span');
-            empty.className = 'draw-simulation-empty';
-            empty.textContent = '—';
-            container.appendChild(empty);
-        } else {
-            for (const name of drawnCards) {
-                const url = getCardImageUrl(name);
-                if (url) {
-                    const img = document.createElement('img');
-                    img.className = 'draw-simulation-thumb';
-                    img.src = url;
-                    img.alt = name;
-                    img.loading = 'lazy';
-                    img.title = name;
-                    container.appendChild(img);
-                } else {
-                    const span = document.createElement('span');
-                    span.className = 'draw-simulation-thumb-placeholder';
-                    span.textContent = name;
-                    span.title = name;
-                    container.appendChild(span);
-                }
-            }
-            const lastChild = container.lastElementChild;
-            if (lastChild) lastChild.classList.add('draw-simulation-thumb--reveal');
-        }
-    }
-    if (btnDraw) {
-        const snapshot = getDeckMainSnapshot();
-        const totalInDeck = snapshot.reduce((s, c) => s + c.qty, 0);
-        const remaining = totalInDeck - drawnCards.length;
-        btnDraw.disabled = drawnCards.length >= handSize || remaining <= 0;
-    }
+    const snapshot = getDeckMainSnapshot();
+    const totalInDeck = snapshot.reduce((s, c) => s + c.qty, 0);
+    refreshDrawSimulationPanel({
+        drawnCardNames: drawnCards,
+        handSize,
+        resolveImageUrl: getCardImageUrl,
+        totalMainDeckCards: totalInDeck,
+    });
 }
 
 function refreshCompositionDetails(): void {
