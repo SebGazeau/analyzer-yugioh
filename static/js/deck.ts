@@ -18,9 +18,20 @@ import {
     DECK_BTN_UPDATE_SERVER_ID,
     DECK_CARD_POPOVER_GAP_PX,
     DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
-    DECK_FETCH_INIT,
     DECK_DND_PAYLOAD_TYPE,
 } from './deck-builder/deckConstants.js';
+import {
+    apiCreateDeck,
+    apiDeleteDeck,
+    apiDuplicateDeck,
+    apiFetchDeckById,
+    apiListMyDecks,
+    apiUpdateDeck,
+    buildDeckSectionsPayload,
+} from './deck-builder/deckApi.js';
+
+export type { DeckEntryPayload } from './deck-builder/deckApi.js';
+export { toDeckEntryPayload } from './deck-builder/deckApi.js';
 
 export type DeckSection = 'main' | 'extra' | 'side';
 
@@ -636,152 +647,57 @@ export function cleanCardNameFromCell(raw: string): string {
     return raw.replace(/^—\s*/, '').trim();
 }
 
-type DeckEntryPayload = { name: string; quantity: number; id?: number; engine?: string; categories?: string[] };
-
-export function toDeckEntryPayload(e: {
-    name: string;
-    quantity: number;
-    engine: string;
-    categories: string[];
-    cardId?: number;
-}): DeckEntryPayload {
-    const out: DeckEntryPayload = { name: e.name, quantity: e.quantity };
-    if (e.cardId != null && e.cardId > 0) out.id = e.cardId;
-    if (e.engine && e.engine.trim() !== '') out.engine = e.engine.trim();
-    if (e.categories && e.categories.length > 0) out.categories = e.categories;
-    return out;
-}
-
-function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
-    if (res.status === 401) {
-        return typeof data.error === 'string'
-            ? data.error
-            : 'Connexion requise. Connectez-vous pour enregistrer ou gérer vos decks.';
-    }
-    return (
-        (typeof data.error === 'string' ? data.error : null) ||
-        (Array.isArray(data.errors) && data.errors.length ? (data.errors as string[]).join(' ; ') : null) ||
-        res.statusText
-    );
-}
-
-function rowToPayload(r: DeckRow): DeckEntryPayload {
-    return toDeckEntryPayload({
-        name: r.name,
-        quantity: r.quantity,
-        engine: r.engine,
-        categories: r.categories,
-        cardId: r.cardId,
-    });
-}
-
-function getDeckPayload(): { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] } {
-    return {
-        main: mainDeck.map(rowToPayload),
-        extra: extraDeck.map(rowToPayload),
-        side: sideDeck.map(rowToPayload),
-    };
-}
-
 export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
     const name = getDeckName() || prompt('Nom du deck ?') || '';
     if (!name.trim()) return {};
-    const payload = getDeckPayload();
-    const body = { name: name.trim(), ...payload };
-    const res = await fetch('/decks', {
-        ...DECK_FETCH_INIT,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!res.ok) {
-        return { error: deckApiErrorMessage(res, data) };
-    }
-    const id = data.id as number;
-    if (id != null) {
-        setCurrentLoadedDeck(id, name.trim());
+    const sections = buildDeckSectionsPayload(mainDeck, extraDeck, sideDeck);
+    const result = await apiCreateDeck(name, sections);
+    if (result.id != null) {
+        setCurrentLoadedDeck(result.id, name.trim());
         setDeckName(name.trim());
     }
-    return { id };
+    return result;
 }
 
 export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
     const deck = getCurrentLoadedDeck();
     if (!deck) return { error: 'Aucun deck chargé. Chargez un deck ou sauvegardez-en un nouveau.' };
-    const payload = getDeckPayload();
+    const sections = buildDeckSectionsPayload(mainDeck, extraDeck, sideDeck);
     const name = getDeckName() || deck.name;
     const cover = getDeckCover(deck.id);
-    const body: Record<string, unknown> = { name, ...payload };
-    if (cover) {
-        body.cover_card_name = cover.name;
-        body.cover_image_url = cover.imageUrl || undefined;
-    }
-    const res = await fetch(`/decks/${deck.id}`, {
-        ...DECK_FETCH_INIT,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!res.ok) {
-        return { error: deckApiErrorMessage(res, data) };
-    }
-    setCurrentLoadedDeck(deck.id, name);
-    return { ok: true };
+    const result = await apiUpdateDeck(deck.id, name, sections, cover);
+    if (result.ok) setCurrentLoadedDeck(deck.id, name);
+    return result;
 }
 
-export async function listMyDecks(): Promise<{ id: number; name: string; is_public: boolean; created_at: string; cover_card_name?: string; cover_image_url?: string }[]> {
-    const res = await fetch('/decks', DECK_FETCH_INIT);
-    if (!res.ok) return [];
-    return res.json();
+export async function listMyDecks(): Promise<
+    { id: number; name: string; is_public: boolean; created_at: string; cover_card_name?: string; cover_image_url?: string }[]
+> {
+    return apiListMyDecks();
 }
 
 /** Duplique un deck serveur : nouveau deck nommé « {nom} (copie) » avec le même contenu. */
 export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string }> {
-    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
-    if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        if (res.status === 401) return { error: deckApiErrorMessage(res, data) };
-        return { error: typeof data.error === 'string' ? data.error : 'Deck introuvable' };
-    }
-    const data = await res.json().catch(() => ({}));
-    const baseName = String(data.name ?? 'Sans nom').trim() || 'Sans nom';
-    const newName = `${baseName} (copie)`;
-    const body = {
-        name: newName,
-        main: Array.isArray(data.main) ? data.main : [],
-        extra: Array.isArray(data.extra) ? data.extra : [],
-        side: Array.isArray(data.side) ? data.side : [],
-    };
-    const postRes = await fetch('/decks', {
-        ...DECK_FETCH_INIT,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const postData = (await postRes.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!postRes.ok) {
-        return { error: deckApiErrorMessage(postRes, postData) };
-    }
-    const newId = postData.id as number;
-    return newId != null ? { id: newId } : {};
+    return apiDuplicateDeck(id);
 }
 
 export async function loadDeckFromServer(id: number): Promise<boolean> {
-    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
-    if (!res.ok) return false;
-    const data = await res.json();
+    const data = await apiFetchDeckById(id);
+    if (!data) return false;
     cleanCardTable();
+
+    type ServerDeckEntry = {
+        name: string;
+        quantity?: number;
+        id?: number;
+        deck_copy_id?: number;
+        engine?: string;
+        categories?: string[];
+    };
+    const asServerEntries = (v: unknown): ServerDeckEntry[] => (Array.isArray(v) ? (v as ServerDeckEntry[]) : []);
+
     const addEntries = async (
-        entries: {
-            name: string;
-            quantity?: number;
-            id?: number;
-            deck_copy_id?: number;
-            engine?: string;
-            categories?: string[];
-        }[],
+        entries: ServerDeckEntry[],
         section: DeckSection,
     ) => {
         for (const entry of entries) {
@@ -817,18 +733,22 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
             });
         }
     };
-    await addEntries(data.main || [], 'main');
-    await addEntries(data.extra || [], 'extra');
-    await addEntries(data.side || [], 'side');
+    await addEntries(asServerEntries(data.main), 'main');
+    await addEntries(asServerEntries(data.extra), 'extra');
+    await addEntries(asServerEntries(data.side), 'side');
     renderDeckSection('main');
     renderDeckSection('extra');
     renderDeckSection('side');
-    const loadedName = data.name ?? 'Sans nom';
-    const deckId = data.id ?? id;
+    const loadedName = String(data.name ?? 'Sans nom');
+    const deckId = typeof data.id === 'number' ? data.id : id;
     setCurrentLoadedDeck(deckId, loadedName);
     setDeckName(loadedName);
     if (data.cover_image_url != null || data.cover_card_name != null) {
-        setDeckCover(deckId, data.cover_image_url ?? '', data.cover_card_name ?? '');
+        setDeckCover(
+            deckId,
+            typeof data.cover_image_url === 'string' ? data.cover_image_url : '',
+            typeof data.cover_card_name === 'string' ? data.cover_card_name : '',
+        );
     }
     updateDeckCount();
     computeGlobalStats();
@@ -840,8 +760,8 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
 
 /** Supprime un deck sur le serveur (DELETE /decks/:id). Retourne true si succès. */
 export async function deleteDeckFromServer(id: number): Promise<boolean> {
-    const res = await fetch(`/decks/${id}`, { ...DECK_FETCH_INIT, method: 'DELETE' });
-    if (!res.ok) return false;
+    const ok = await apiDeleteDeck(id);
+    if (!ok) return false;
     const loaded = getCurrentLoadedDeck();
     if (loaded?.id === id) clearCurrentLoadedDeck();
     try {
