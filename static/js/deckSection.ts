@@ -3,6 +3,9 @@
 export const DECK_SECTIONS = ['main', 'extra', 'side'] as const;
 export type DeckSection = (typeof DECK_SECTIONS)[number];
 
+/** Nombre de cartes par zone (builder / résumé). */
+export type DeckSectionCounts = Record<DeckSection, number>;
+
 /** Main ou Side uniquement (pas Extra) — cibles d’ajout depuis Suggestions / insights. */
 export type DeckSectionMainSide = Extract<DeckSection, 'main' | 'side'>;
 

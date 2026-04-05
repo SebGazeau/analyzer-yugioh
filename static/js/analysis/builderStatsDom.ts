@@ -2,7 +2,20 @@
  * DOM : compteurs Main (types), barres builder, résumé MAIN/EXTRA/SIDE, panneaux composition.
  */
 
+import { DECK_SECTIONS, type DeckSection, type DeckSectionCounts } from '../deckSection.js';
 import type { MainDeckTypeCounts } from './mainDeckTypeCounts.js';
+
+const DECK_COUNT_LABEL: Record<DeckSection, string> = {
+    main: 'MAIN',
+    extra: 'EXTRA',
+    side: 'SIDE',
+};
+
+const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = {
+    main: 'deck-main-count',
+    extra: 'deck-extra-count',
+    side: 'deck-side-count',
+};
 
 export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): void {
     const { monsters, spells, traps } = counts;
@@ -23,15 +36,15 @@ export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): v
     if (barTrap) barTrap.style.width = pct(traps) + '%';
 }
 
-export function applyDeckSectionCountLabels(main: number, extra: number, side: number): void {
+export function applyDeckSectionCountLabels(counts: DeckSectionCounts): void {
     const summaryEl = document.getElementById('deck-count-summary');
-    if (summaryEl) summaryEl.textContent = `${main} MAIN / ${extra} EXTRA / ${side} SIDE`;
-    const mainEl = document.getElementById('deck-main-count');
-    if (mainEl) mainEl.textContent = String(main);
-    const extraEl = document.getElementById('deck-extra-count');
-    if (extraEl) extraEl.textContent = String(extra);
-    const sideEl = document.getElementById('deck-side-count');
-    if (sideEl) sideEl.textContent = String(side);
+    if (summaryEl) {
+        summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${DECK_COUNT_LABEL[s]}`).join(' / ');
+    }
+    for (const s of DECK_SECTIONS) {
+        const el = document.getElementById(DECK_COUNT_ELEMENT_ID[s]);
+        if (el) el.textContent = String(counts[s]);
+    }
 }
 
 export function applyCompositionDetailPanelsHtml(html: {
