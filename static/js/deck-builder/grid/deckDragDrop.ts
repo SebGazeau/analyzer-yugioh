@@ -8,7 +8,8 @@ import {
     sumQuantities,
     type DeckRowLike,
 } from '../../deck-move.js';
-import type { DeckSection } from '../../deckSection.js';
+import { deckSectionForGridElementId } from '../deckConstants.js';
+import { isDeckSection, type DeckSection } from '../../deckSection.js';
 
 export interface DeckDragMoveContext<D extends DeckRowLike = DeckRowLike> {
     getState: (section: DeckSection) => D[];
@@ -105,7 +106,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         if (!cell || !e.dataTransfer) return;
         const section = cell.getAttribute('data-deck-cell-section') as DeckSection;
         const index = parseInt(cell.getAttribute('data-deck-cell-index') || '-1', 10);
-        if (index < 0 || !['main', 'extra', 'side'].includes(section)) return;
+        if (index < 0 || !isDeckSection(section)) return;
         e.dataTransfer.setData(dndPayloadType, JSON.stringify({ section, index }));
         e.dataTransfer.effectAllowed = 'move';
         cell.classList.add('deck-card-cell--dragging');
@@ -152,15 +153,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
             return;
         }
         const { section: fromSection, index: fromIndex } = parsed;
-        const gridId = grid.id;
-        const dropSection: DeckSection | null =
-            gridId === gridIds.main
-                ? 'main'
-                : gridId === gridIds.extra
-                  ? 'extra'
-                  : gridId === gridIds.side
-                    ? 'side'
-                    : null;
+        const dropSection = deckSectionForGridElementId(grid.id, gridIds);
         if (!dropSection) return;
 
         const hit = (e.target as HTMLElement).closest('[data-deck-cell-index]');

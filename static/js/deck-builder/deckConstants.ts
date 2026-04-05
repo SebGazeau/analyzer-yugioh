@@ -14,6 +14,17 @@ export const DECK_GRID_IDS: Record<DeckSection, string> = {
 /** Même ordre que {@link DECK_SECTIONS} (pour boucles DOM). */
 export const DECK_GRID_DOM_IDS: readonly string[] = DECK_SECTIONS.map((s) => DECK_GRID_IDS[s]);
 
+/** Résout l’`id` d’un conteneur grille (ex. `deck-main-grid`) vers la zone deck. */
+export function deckSectionForGridElementId(
+    elementId: string,
+    gridIds: Record<DeckSection, string>,
+): DeckSection | null {
+    for (const s of DECK_SECTIONS) {
+        if (gridIds[s] === elementId) return s;
+    }
+    return null;
+}
+
 /** Préfixe localStorage pour la carte de couverture par deck (`${key}-${deckId}`). */
 export const DECK_COVER_STORAGE_KEY = 'yugioh-deck-cover';
 
