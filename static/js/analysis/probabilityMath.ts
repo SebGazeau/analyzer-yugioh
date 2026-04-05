@@ -2,6 +2,8 @@
  * Probabilités hypergéométriques et simulations de tirage (sans DOM).
  */
 
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+
 export interface ProbabilityCardEntry {
     name: string;
     qty: number;
@@ -48,11 +50,11 @@ export function hypergeometricProbRowStrings(K: number, totalCards: number, numD
     const probs: string[] = [];
     for (let x = 1; x <= 6; x++) {
         if (x > numDraws || totalCards === 0) {
-            probs.push('—');
+            probs.push(TEXT_EM_DASH);
             continue;
         }
         const p = 1 - cumulativeHypergeometric(x - 1, numDraws, K, totalCards);
-        probs.push(Number.isFinite(p) ? (p * 100).toFixed(2) + '%' : '—');
+        probs.push(Number.isFinite(p) ? (p * 100).toFixed(2) + '%' : TEXT_EM_DASH);
     }
     return probs;
 }

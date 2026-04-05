@@ -34,6 +34,7 @@ import {
     SUGGESTIONS_MAIN_MATCHES_CLASS,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
     SUGGESTIONS_TARGET_LIST_CLASS,
+    INSIGHTS_FIND_CARD_BUTTON_LABEL,
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
     INSIGHTS_SUGGEST_ROW_TITLE,
     insightsMainMatchChipTitle,
@@ -124,7 +125,7 @@ function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
       <td ${INSIGHTS_CELL_DATA_ATTR}="attr-race">${attrRace}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="match">${matchCell}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="action">
-        <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_FIND_CARD_BUTTON_TITLE}">Chercher</button>
+        <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_FIND_CARD_BUTTON_TITLE}">${INSIGHTS_FIND_CARD_BUTTON_LABEL}</button>
       </td>
     </tr>`;
         })

@@ -62,6 +62,9 @@ export const SUGGESTIONS_TARGET_LIST_CLASS = 'suggestions-target-list';
 /** Bouton « Chercher » (ligne Number Xyz) : combo utility + deck button. */
 export const INSIGHTS_FIND_CARD_BUTTON_CLASS = 'btn btn-deck btn-deck-ghost btn-sm';
 
+/** Libellé visible du bouton (cellule action). */
+export const INSIGHTS_FIND_CARD_BUTTON_LABEL = 'Chercher';
+
 export function suggestionsMainMatchThumbEmptyClassName(): string {
     return `${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS} ${SUGGESTIONS_MAIN_MATCH_THUMB_EMPTY_CLASS}`;
 }

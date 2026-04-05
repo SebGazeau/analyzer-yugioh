@@ -65,6 +65,9 @@ export const DECK_CARD_POPOVER_COVER_BTN_TITLE =
     'Définir cette carte comme couverture du deck (liste Mes decks)';
 export const DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL = 'Définir comme couverture du deck';
 
+/** Titre visible (`<h4>`) et `aria-label` du dialogue. */
+export const DECK_CARD_POPOVER_HEADING_TEXT = 'Modifier la carte';
+
 export const DECK_CARD_POPOVER_BACKDROP_CLASS = 'deck-card-popover-backdrop';
 export const DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS = 'deck-card-popover-backdrop--open';
 

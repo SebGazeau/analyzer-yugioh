@@ -43,6 +43,7 @@ import {
     STYLE_DISPLAY_NONE,
 } from '../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../utils/cssInlineLength.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_BAR_MAX_HEIGHT_PX = 120;
@@ -83,7 +84,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         const msg = document.createElement('p');
         msg.className = DRAW_HISTOGRAM_EMPTY_CLASS;
         msg.textContent =
-            categoryLabel === '—'
+            categoryLabel === TEXT_EM_DASH
                 ? DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG
                 : drawHistogramEmptyCategoryMsg(categoryLabel);
         container.appendChild(msg);
@@ -163,7 +164,7 @@ export function clearHistogramGraphs(): void {
     if (explanationEl) explanationEl.style.display = STYLE_DISPLAY_NONE;
     if (allTitleEl) allTitleEl.style.display = STYLE_DISPLAY_NONE;
     if (allContainer) allContainer.innerHTML = '';
-    updateHistogramDOM({}, 0, '—');
+    updateHistogramDOM({}, 0, TEXT_EM_DASH);
 }
 
 /** Lance `DRAW_HISTOGRAM_SIM_ITERATIONS` simulations et met à jour l’histogramme principal + mini-graphs. */

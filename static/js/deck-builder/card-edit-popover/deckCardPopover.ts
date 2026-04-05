@@ -32,6 +32,7 @@ import {
     DECK_CARD_POPOVER_DELETE_SELECTOR,
     DECK_CARD_POPOVER_ENGINE_SELECTOR,
     DECK_CARD_POPOVER_OPEN_CLASS,
+    DECK_CARD_POPOVER_HEADING_TEXT,
     DECK_CARD_POPOVER_QTY_LIMIT_CLASSES,
     DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX,
     DECK_CARD_POPOVER_QTY_SELECTOR,
@@ -170,7 +171,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         popoverEl.className = DECK_CARD_POPOVER_ROOT_CLASS;
         popoverEl.setAttribute(ROLE_ATTR, ROLE_DIALOG);
         popoverEl.setAttribute(ARIA_MODAL_ATTR, 'true');
-        popoverEl.setAttribute(ARIA_LABEL_ATTR, 'Modifier la carte');
+        popoverEl.setAttribute(ARIA_LABEL_ATTR, DECK_CARD_POPOVER_HEADING_TEXT);
         popoverEl.innerHTML = DECK_CARD_POPOVER_SHELL_HTML;
         document.body.appendChild(popoverEl);
 

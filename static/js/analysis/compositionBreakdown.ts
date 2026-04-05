@@ -13,6 +13,7 @@ import {
 } from './compositionBreakdownDomSelectors.js';
 import { escapeHtml } from '../utils/html.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 export interface CompositionBreakdown {
     monsters: {
@@ -46,11 +47,11 @@ export function computeCompositionBreakdown(main: CompositionBreakdownRow[]): Co
         const kind = cardTypeKindFromTypeStringOrNull(row.type);
         if (kind === null) return;
         const qty = row.quantity;
-        const key = (v: string) => v || '—';
+        const key = (v: string) => v || TEXT_EM_DASH;
         if (kind === 'monster') {
             const attr = key(row.attribute ?? '');
             monsters.byAttribute[attr] = (monsters.byAttribute[attr] || 0) + qty;
-            const lvl = row.level != null ? `Niveau ${row.level}` : '—';
+            const lvl = row.level != null ? `Niveau ${row.level}` : TEXT_EM_DASH;
             monsters.byLevel[lvl] = (monsters.byLevel[lvl] || 0) + qty;
             const race = key(row.race ?? '');
             monsters.byRace[race] = (monsters.byRace[race] || 0) + qty;

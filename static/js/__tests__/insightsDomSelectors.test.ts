@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  INSIGHTS_FIND_CARD_BUTTON_LABEL,
   INSIGHTS_FIND_CARD_BUTTON_TITLE,
   INSIGHTS_SUGGEST_ROW_TITLE,
   insightsMainMatchChipTitle,
@@ -19,5 +20,6 @@ describe('insightsDomSelectors — classes Suggestions (panel)', () => {
     expect(insightsMainMatchChipTitle('M')).toContain('M');
     expect(INSIGHTS_SUGGEST_ROW_TITLE).toContain('Xyz');
     expect(INSIGHTS_FIND_CARD_BUTTON_TITLE).toContain('Builder');
+    expect(INSIGHTS_FIND_CARD_BUTTON_LABEL).toBe('Chercher');
   });
 });

@@ -15,6 +15,7 @@ import {
     DRAW_SIMULATION_THUMB_PLACEHOLDER_CLASS,
     DRAW_SIMULATION_THUMB_REVEAL_CLASS,
 } from './drawSimulationDomSelectors.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 export interface DrawSimulationDomInput {
     drawnCardNames: readonly string[];
@@ -39,7 +40,7 @@ export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void 
         if (drawnCardNames.length === 0) {
             const empty = document.createElement('span');
             empty.className = DRAW_SIMULATION_EMPTY_CLASS;
-            empty.textContent = '—';
+            empty.textContent = TEXT_EM_DASH;
             container.appendChild(empty);
         } else {
             for (const name of drawnCardNames) {

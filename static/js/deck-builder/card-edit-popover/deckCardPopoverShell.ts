@@ -22,6 +22,7 @@ import {
     DECK_CARD_POPOVER_QTY_CLASS,
     DECK_CARD_POPOVER_ROW_CLASS,
     DECK_CARD_POPOVER_SVG_COVER_INNER_HTML,
+    DECK_CARD_POPOVER_HEADING_TEXT,
     DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML,
     DECK_CARD_POPOVER_SVG_PATH_CLOSE_D,
     DECK_CARD_POPOVER_TITLE_CLASS,
@@ -31,7 +32,7 @@ import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../../utils/htmlAttr
 
 export const DECK_CARD_POPOVER_SHELL_HTML = `
         <div class="${DECK_CARD_POPOVER_INNER_CLASS}">
-            <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS}">Modifier la carte</h4>
+            <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS}">${DECK_CARD_POPOVER_HEADING_TEXT}</h4>
             <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
                 <label>Quantité</label>
                 <select class="${DECK_CARD_POPOVER_QTY_CLASS}">

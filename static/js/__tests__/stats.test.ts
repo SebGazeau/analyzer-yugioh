@@ -12,6 +12,7 @@ import {
   simulateDraw,
   simulateDrawCounts,
 } from '../stats.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import {
   DRAW_SIMULATION_COUNT_ID,
   DRAW_SIMULATION_LIST_ID,
@@ -128,11 +129,11 @@ describe('stats.ts - hypergeometricProbRowStrings (tableau Analysis)', () => {
     const row = hypergeometricProbRowStrings(3, 40, 5);
     expect(row).toHaveLength(6);
     expect(row[0]).toMatch(/%$/);
-    expect(row[5]).toBe('—');
+    expect(row[5]).toBe(TEXT_EM_DASH);
   });
 
   it('totalCards = 0 → tout « — »', () => {
-    expect(hypergeometricProbRowStrings(1, 0, 5).every((c) => c === '—')).toBe(true);
+    expect(hypergeometricProbRowStrings(1, 0, 5).every((c) => c === TEXT_EM_DASH)).toBe(true);
   });
 });
 

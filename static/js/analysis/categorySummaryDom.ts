@@ -47,6 +47,7 @@ import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
 import { ARIA_EXPANDED_ATTR, ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { escapeHtml } from '../utils/html.js';
 import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO, TITLE_ATTR } from '../utils/htmlAttrs.js';
@@ -110,7 +111,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         addSectionHeader(tbody, simulationBanner);
     }
 
-    const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + '%' : '—');
+    const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + '%' : TEXT_EM_DASH);
     let dataRowIndex = 0;
 
     addSectionHeader(tbody, 'Engines', ANALYSIS_TABLE_SECTION_ENGINES);
@@ -184,13 +185,13 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const secondEl = document.getElementById(ANALYSIS_HERO_SECOND_ID);
     const engineEl = document.getElementById(ANALYSIS_HERO_ENGINE_ID);
     const enginePct =
-        totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : '—';
+        totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : TEXT_EM_DASH;
     if (firstEl)
         firstEl.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
+            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : TEXT_EM_DASH;
     if (secondEl)
         secondEl.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
+            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : TEXT_EM_DASH;
     if (engineEl) engineEl.textContent = enginePct;
     const heroGroupEl = document.getElementById(ANALYSIS_HERO_GROUP_ID);
     if (heroGroupEl) {
@@ -205,10 +206,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const builderEngine = document.getElementById(BUILDER_STATS_ENGINE_ID);
     if (builderFirst)
         builderFirst.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
+            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : TEXT_EM_DASH;
     if (builderSecond)
         builderSecond.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
+            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : TEXT_EM_DASH;
     if (builderEngine) builderEngine.textContent = enginePct;
 
     updateHistogramCategorySelect(Object.keys(summary).sort());
