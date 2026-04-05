@@ -1,5 +1,14 @@
 import { fetchCardByName } from '../api.js';
 import { addToDeck } from '../deck.js';
+import {
+    ARIA_ATOMIC_ATTR,
+    ARIA_BUSY_ATTR,
+    ARIA_HIDDEN_ATTR,
+    ARIA_LABEL_ATTR,
+    ARIA_LABELLEDBY_ATTR,
+    ARIA_LIVE_ATTR,
+    ARIA_MODAL_ATTR,
+} from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
@@ -128,7 +137,7 @@ function renderThumbInner(
             .replace(/[^a-zA-ZÀ-ÿ0-9]/g, '')
             .slice(0, 2)
             .toUpperCase() || '?';
-    return `<div class="${ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS}" aria-hidden="true"><span>${escapeHtml(initials)}</span></div>`;
+    return `<div class="${ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"><span>${escapeHtml(initials)}</span></div>`;
 }
 
 function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCatalogCard>): string {
@@ -244,24 +253,24 @@ function ensureModalElements(): {
         overlay.id = MODAL_ID;
         overlay.className = ASSOCIATIONS_MODAL_ROOT_CLASS;
         overlay.setAttribute('role', 'dialog');
-        overlay.setAttribute('aria-modal', 'true');
-        overlay.setAttribute('aria-labelledby', MODAL_TITLE_ID);
+        overlay.setAttribute(ARIA_MODAL_ATTR, 'true');
+        overlay.setAttribute(ARIA_LABELLEDBY_ATTR, MODAL_TITLE_ID);
         overlay.innerHTML = `
             <div class="${ASSOCIATIONS_MODAL_BACKDROP_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
             <div class="${ASSOCIATIONS_MODAL_PANEL_CLASS}" id="${MODAL_PANEL_ID}" role="document">
-                <div id="${MODAL_LIVE_ID}" class="${ASSOCIATIONS_MODAL_LIVE_CLASS}" aria-live="polite" aria-atomic="true"></div>
+                <div id="${MODAL_LIVE_ID}" class="${ASSOCIATIONS_MODAL_LIVE_CLASS}" ${ARIA_LIVE_ATTR}="polite" ${ARIA_ATOMIC_ATTR}="true"></div>
                 <header class="${ASSOCIATIONS_MODAL_HEADER_CLASS}">
                     <div class="${ASSOCIATIONS_MODAL_HEADER_MAIN_CLASS}">
-                        <div class="${ASSOCIATIONS_MODAL_ANCHOR_ART_CLASS}" id="${MODAL_ANCHOR_ART_ID}" aria-hidden="true"></div>
+                        <div class="${ASSOCIATIONS_MODAL_ANCHOR_ART_CLASS}" id="${MODAL_ANCHOR_ART_ID}" ${ARIA_HIDDEN_ATTR}="true"></div>
                         <div class="${ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS}">
                             <h2 id="${MODAL_TITLE_ID}" class="${ASSOCIATIONS_MODAL_TITLE_CLASS}">Cartes associées</h2>
                             <p id="${MODAL_SUBTITLE_ID}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button type="button" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" aria-label="Fermer">×</button>
+                    <button type="button" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="Fermer">×</button>
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
-                    <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" aria-hidden="true"></span>
+                    <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>
                     <span>Chargement des visuels et du catalogue…</span>
                 </div>
                 <div id="${MODAL_BODY_ID}" class="${ASSOCIATIONS_MODAL_BODY_CLASS}"></div>
@@ -318,7 +327,7 @@ export function closeAssociationsModal(): void {
         el.hidden = true;
         el.classList.remove(ASSOCIATIONS_MODAL_OPEN_CLASS);
     }
-    document.getElementById(MODAL_PANEL_ID)?.removeAttribute('aria-busy');
+    document.getElementById(MODAL_PANEL_ID)?.removeAttribute(ARIA_BUSY_ATTR);
     if (associationsReturnFocus && typeof associationsReturnFocus.focus === 'function') {
         try {
             associationsReturnFocus.focus();
@@ -402,7 +411,7 @@ function renderReportHtml(
         );
         parts.push(`</span>`);
         parts.push(
-            `<span class="${ASSOCIATIONS_MODAL_ACC_BADGE_CLASS}" aria-hidden="true">${g.cardIds.length}</span>`,
+            `<span class="${ASSOCIATIONS_MODAL_ACC_BADGE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">${g.cardIds.length}</span>`,
         );
         parts.push(`</summary>`);
         parts.push(`<div class="${ASSOCIATIONS_MODAL_ACC_PANEL_CLASS}">`);
@@ -414,7 +423,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(`Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe`)}">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
         }
         parts.push('</ul></div></details>');
@@ -471,7 +480,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     setAnchorArt(anchor);
 
     const panel = document.getElementById(MODAL_PANEL_ID);
-    panel?.setAttribute('aria-busy', 'true');
+    panel?.setAttribute(ARIA_BUSY_ATTR, 'true');
 
     try {
         const [catalog, ygorgQaRelatedCardIds] = await Promise.all([
@@ -494,7 +503,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
         els.body.innerHTML = `<p class="${ASSOCIATIONS_MODAL_ERROR_CLASS}">Impossible de charger le catalogue (réseau ou serveur).</p>`;
     } finally {
         els.loading.hidden = true;
-        panel?.removeAttribute('aria-busy');
+        panel?.removeAttribute(ARIA_BUSY_ATTR);
         requestAnimationFrame(() => {
             const closeBtn = els.overlay.querySelector(ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR) as HTMLButtonElement | null;
             closeBtn?.focus();

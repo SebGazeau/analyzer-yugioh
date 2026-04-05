@@ -44,6 +44,7 @@ import {
     TAB_ID_BUILDER,
     TAB_ID_SUGGESTIONS,
 } from '../tabs.js';
+import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 
 function severityLabel(sev: string): string {
@@ -77,13 +78,13 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
             const nameAttr = escapeAttr(c.name);
             const qty =
                 c.quantity > 1
-                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" aria-label="${c.quantity} exemplaires">×${c.quantity}</span>`
+                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${c.quantity} exemplaires">×${c.quantity}</span>`
                     : '';
             const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =
                 c.imageUrl && c.imageUrl.trim() !== ''
                     ? `<img class="${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} />`
-                    : `<span class="${suggestionsMainMatchThumbEmptyClassName()}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} aria-hidden="true">?</span>`;
+                    : `<span class="${suggestionsMainMatchThumbEmptyClassName()}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} ${ARIA_HIDDEN_ATTR}="true">?</span>`;
             return `<div class="${SUGGESTIONS_MAIN_MATCH_CHIP_CLASS}" ${INSIGHTS_MAIN_MATCH_DATA_ATTR} ${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="1" ${INSIGHTS_CARD_NAME_DATA_ATTR}="${nameAttr}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${deckSectionMainSideShortLabel(c.section)})" role="button" tabindex="0">
         ${thumb}
         <span class="${SUGGESTIONS_MAIN_MATCH_NAME_CLASS}">${nameEsc}</span>
@@ -153,7 +154,7 @@ export function refreshInsightsUI(): void {
 
     if (insights.length === 0) {
         tab.hidden = true;
-        tab.setAttribute('aria-hidden', 'true');
+        tab.setAttribute(ARIA_HIDDEN_ATTR, 'true');
         const active = document.querySelector(APP_TAB_ACTIVE_SELECTOR)?.getAttribute(TAB_DATA_ATTR);
         if (active === TAB_ID_SUGGESTIONS) setActiveTab(TAB_ID_BUILDER);
         summaryBody.innerHTML = '';
@@ -171,7 +172,7 @@ export function refreshInsightsUI(): void {
     }
 
     tab.hidden = false;
-    tab.setAttribute('aria-hidden', 'false');
+    tab.setAttribute(ARIA_HIDDEN_ATTR, 'false');
     summaryBody.innerHTML = renderSummaryRows(insights);
 
     const stInsight = insights.find((i) => i.kind === 'seventh_tachyon');

@@ -1,6 +1,7 @@
 /**
  * Zones repliables : deck (Main/Extra/Side), table Analysis (Engines/Catégories/Groupes).
  */
+import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import {
     analysisTableSectionCollapsedClass,
     ANALYSIS_SECTION_HEADER_ROW_SELECTOR,
@@ -17,7 +18,7 @@ export function bindCollapsibles(): void {
             const section = el.closest(DECK_SECTION_SELECTOR);
             if (!section) return;
             const expanded = section.classList.toggle(DECK_SECTION_COLLAPSED_CLASS);
-            (el as HTMLElement).setAttribute('aria-expanded', String(!expanded));
+            (el as HTMLElement).setAttribute(ARIA_EXPANDED_ATTR, String(!expanded));
         });
     });
 
@@ -30,7 +31,7 @@ export function bindCollapsibles(): void {
         const table = (target as HTMLElement).closest(ANALYSIS_TABLE_SELECTOR);
         if (!table) return;
         const collapsed = table.classList.toggle(analysisTableSectionCollapsedClass(id));
-        target.setAttribute('aria-expanded', String(!collapsed));
+        target.setAttribute(ARIA_EXPANDED_ATTR, String(!collapsed));
         const toggle = target.querySelector(ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR);
         if (toggle) toggle.textContent = collapsed ? '▶' : '▼';
     });

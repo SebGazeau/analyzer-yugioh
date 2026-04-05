@@ -3,6 +3,7 @@
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
+import { ARIA_CONTROLS_ATTR, ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import {
     BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR,
     BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS,
@@ -78,12 +79,12 @@ export function initBuilder(): void {
             if (toggle) {
                 e.preventDefault();
                 const kind = toggle.getAttribute(DATA_COMPOSITION_TOGGLE_ATTR);
-                const controlsId = toggle.getAttribute('aria-controls');
+                const controlsId = toggle.getAttribute(ARIA_CONTROLS_ATTR);
                 const item = toggle.closest(BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR);
                 const detail = controlsId ? document.getElementById(controlsId) : null;
                 if (!item || !detail) return;
                 const expanded = item.classList.toggle(BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS);
-                toggle.setAttribute('aria-expanded', String(expanded));
+                toggle.setAttribute(ARIA_EXPANDED_ATTR, String(expanded));
                 if (expanded) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
                 return;
             }

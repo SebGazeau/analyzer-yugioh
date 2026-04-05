@@ -41,6 +41,7 @@ import {
 } from './analysisDomIds.js';
 import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
+import { ARIA_EXPANDED_ATTR, ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
 import { escapeHtml } from '../utils/html.js';
 import {
     categoryEntriesSorted,
@@ -68,8 +69,8 @@ function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string)
         tr.setAttribute(DATA_SECTION_HEADER_ATTR, sectionId);
         tr.setAttribute('role', 'button');
         tr.setAttribute('tabindex', '0');
-        tr.setAttribute('aria-expanded', 'true');
-        tr.innerHTML = `<td colspan="9"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" aria-hidden="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
+        tr.setAttribute(ARIA_EXPANDED_ATTR, 'true');
+        tr.innerHTML = `<td colspan="9"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
     } else {
         tr.innerHTML = `<td colspan="9"><strong>${escapeHtml(title)}</strong></td>`;
     }
@@ -115,7 +116,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
             const dotClass = analysisCategoryDotClass(dataRowIndex++);
             tr.innerHTML = `
-                    <td><span class="${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(engineName)}</strong></td>
+                    <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span><strong>${escapeHtml(engineName)}</strong></td>
                     <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
                     <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
                     <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
@@ -135,7 +136,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const tr = document.createElement('tr');
             tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_CATEGORIES);
             tr.innerHTML = `
-                    <td><span class="${dotClass}" aria-hidden="true"></span>${escapeHtml(cat)}</td>
+                    <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span>${escapeHtml(cat)}</td>
                     <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
                     <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
                     <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
@@ -160,7 +161,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         const tr = document.createElement('tr');
         tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_GROUPES);
         tr.innerHTML = `
-                <td><span class="${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(groupName)}</strong></td>
+                <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span><strong>${escapeHtml(groupName)}</strong></td>
                 <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
                 <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
                 <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>

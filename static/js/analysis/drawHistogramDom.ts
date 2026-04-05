@@ -27,6 +27,7 @@ import {
     DRAW_HISTOGRAM_MINI_TITLE_CLASS,
     DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
 } from './drawHistogramDomSelectors.js';
+import { ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_SIM_ITERATIONS = 1000;
@@ -62,7 +63,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         .sort((a, b) => a - b);
 
     container.innerHTML = '';
-    container.setAttribute('aria-label', `Distribution sur ${iterations} tirages : ${categoryLabel}`);
+    container.setAttribute(ARIA_LABEL_ATTR, `Distribution sur ${iterations} tirages : ${categoryLabel}`);
 
     if (buckets.length === 0) {
         const msg = document.createElement('p');

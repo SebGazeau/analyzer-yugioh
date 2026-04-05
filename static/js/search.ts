@@ -34,6 +34,7 @@ import {
 import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
+import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
 import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
@@ -92,7 +93,7 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     const imgUrl = card.image_url;
     const thumbContent = imgUrl
         ? `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" loading="lazy" />`
-        : `<span class="${searchResultInitialCellClass(kind)}" aria-hidden="true">${letter}</span>`;
+        : `<span class="${searchResultInitialCellClass(kind)}" ${ARIA_HIDDEN_ATTR}="true">${letter}</span>`;
 
     const row = document.createElement('div');
     row.className = SEARCH_RESULT_ROW_CLASS;
@@ -106,8 +107,8 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
             </div>
         </div>
         <div class="${SEARCH_RESULT_ACTIONS_CLASS}">
-            <button type="button" class="${SEARCH_RESULT_ADD_DECK_CLASS}" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
-            <button type="button" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
+            <button type="button" class="${SEARCH_RESULT_ADD_DECK_CLASS}" title="Ajouter au deck (Main/Extra)" ${ARIA_LABEL_ATTR}="Ajouter au deck">+</button>
+            <button type="button" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" title="Ajouter au Side" ${ARIA_LABEL_ATTR}="Ajouter au Side">Side</button>
             <button type="button" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" title="Cartes associées (catalogue complet)">c. associés</button>
         </div>
     `;
@@ -225,7 +226,7 @@ export function setupSearch(): void {
                 const f = b.getAttribute(DATA_SEARCH_FILTER_ATTR);
                 const active = f === filter;
                 b.classList.toggle(SEARCH_FILTER_BTN_ACTIVE_CLASS, active);
-                b.setAttribute('aria-pressed', String(active));
+                b.setAttribute(ARIA_PRESSED_ATTR, String(active));
             });
             if (lastResults.length > 0) renderResultsList(lastResults, lastQuery, results);
         });

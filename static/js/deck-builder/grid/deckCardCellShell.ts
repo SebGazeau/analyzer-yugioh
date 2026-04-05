@@ -13,6 +13,7 @@ import {
     DECK_CARD_THUMB_PLACEHOLDER_CLASS,
     DECK_CARD_THUMB_WRAPPER_CLASS,
 } from './deckGridDomSelectors.js';
+import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../../utils/ariaAttrs.js';
 import { escapeAttr } from '../../utils/html.js';
 
 export interface DeckCardCellShellRow {
@@ -33,8 +34,8 @@ export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     return `
             <div class="${DECK_CARD_THUMB_WRAPPER_CLASS}">${thumbHtml}</div>
             ${banBadge}
-            <button type="button" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
-                <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <button type="button" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" ${ARIA_LABEL_ATTR}="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
+                <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" viewBox="0 0 24 24" fill="none" ${ARIA_HIDDEN_ATTR}="true">
                     <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
                 </svg>
             </button>

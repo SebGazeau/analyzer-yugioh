@@ -1,5 +1,7 @@
 /** Navigation par onglets (header) — extrait pour éviter les cycles avec insights/panel. */
 
+import { ARIA_SELECTED_ATTR } from './utils/ariaAttrs.js';
+
 export const TAB_ID_BUILDER = 'builder' as const;
 export const TAB_ID_DECKS = 'decks' as const;
 export const TAB_ID_ANALYSIS = 'analysis' as const;
@@ -27,12 +29,12 @@ export const TAB_PANEL_ACTIVE_CLASS = 'tab-panel--active';
 export function setActiveTab(tabId: string): void {
     document.querySelectorAll(APP_TAB_SELECTOR).forEach((a) => {
         a.classList.remove(APP_TAB_ACTIVE_CLASS);
-        a.setAttribute('aria-selected', 'false');
+        a.setAttribute(ARIA_SELECTED_ATTR, 'false');
     });
     const activeTab = document.querySelector(`${APP_TAB_SELECTOR}[${TAB_DATA_ATTR}="${tabId}"]`);
     if (activeTab) {
         activeTab.classList.add(APP_TAB_ACTIVE_CLASS);
-        activeTab.setAttribute('aria-selected', 'true');
+        activeTab.setAttribute(ARIA_SELECTED_ATTR, 'true');
     }
     TAB_PANEL_IDS.forEach((id) => {
         const panel = document.getElementById(id);
