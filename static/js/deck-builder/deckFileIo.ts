@@ -26,16 +26,10 @@ export function rowToDeckJsonEntry(r: DeckFileExportRow): Record<string, unknown
     return o;
 }
 
-export function buildDeckJsonExportPayload(
-    main: DeckFileExportRow[],
-    extra: DeckFileExportRow[],
-    side: DeckFileExportRow[],
-): { main: Record<string, unknown>[]; extra: Record<string, unknown>[]; side: Record<string, unknown>[] } {
-    return {
-        main: main.map(rowToDeckJsonEntry),
-        extra: extra.map(rowToDeckJsonEntry),
-        side: side.map(rowToDeckJsonEntry),
-    };
+export type DeckJsonFilePayload = { [S in DeckSection]: Record<string, unknown>[] };
+
+export function buildDeckJsonExportPayload(sections: Record<DeckSection, DeckFileExportRow[]>): DeckJsonFilePayload {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, sections[s].map(rowToDeckJsonEntry)])) as DeckJsonFilePayload;
 }
 
 export function downloadJsonFile(filename: string, payload: unknown): void {

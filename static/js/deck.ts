@@ -327,7 +327,7 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
 }
 
 export function exportDeckToFile(): void {
-    downloadJsonFile('deck.json', buildDeckJsonExportPayload(mainDeck, extraDeck, sideDeck));
+    downloadJsonFile('deck.json', buildDeckJsonExportPayload({ main: mainDeck, extra: extraDeck, side: sideDeck }));
 }
 
 export function importDeckFromFile(event: Event): void {
