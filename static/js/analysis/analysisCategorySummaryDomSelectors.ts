@@ -18,3 +18,8 @@ export const BUILDER_CATEGORY_LIST_LABEL_CLASS = 'builder-category-list-label';
 export const BUILDER_CATEGORY_LIST_COUNT_CLASS = 'builder-category-list-count';
 export const BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS = 'builder-category-list-bar-wrap';
 export const BUILDER_CATEGORY_LIST_BAR_CLASS = 'builder-category-list-bar';
+
+/** Tooltip ligne de tri par catégorie (liste builder / analysis). */
+export function builderCategorySortRowTitle(categoryName: string): string {
+    return `Trier le Main Deck : ${categoryName} en premier`;
+}

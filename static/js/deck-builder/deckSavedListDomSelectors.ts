@@ -36,6 +36,10 @@ export const DATA_DECK_ID_ATTR = 'data-deck-id';
 export const DATA_DECK_DUPLICATE_ATTR = 'data-deck-duplicate';
 export const DATA_DECK_DELETE_ATTR = 'data-deck-delete';
 
+/** Attribut `title` des boutons d’action sur une ligne « Mes decks ». */
+export const DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE = 'Dupliquer le deck';
+export const DECK_SAVED_ITEM_DELETE_BTN_TITLE = 'Supprimer le deck';
+
 /** SVG complet du bouton supprimer (liste Mes decks). */
 export function htmlDeckSavedItemDeleteActionSvg(): string {
     return `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML}</svg>`;

@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   SEARCH_FETCH_ERROR_MESSAGE,
   SEARCH_HIGHLIGHT_CLASS,
+  SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL,
   SEARCH_RESULT_BTN_ADD_DECK_TITLE,
+  SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL,
   SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
   SEARCH_RESULT_INITIAL_CLASS,
   SEARCH_RESULT_INITIAL_KIND_CLASS,
@@ -28,5 +30,7 @@ describe('searchDomSelectors', () => {
   it('titres boutons ligne résultat recherche', () => {
     expect(SEARCH_RESULT_BTN_ADD_DECK_TITLE).toContain('Main');
     expect(SEARCH_RESULT_BTN_ASSOCIATED_TITLE).toContain('associ');
+    expect(SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL).toBe(SEARCH_RESULT_BTN_ASSOCIATED_TITLE);
+    expect(SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL.length).toBeLessThan(SEARCH_RESULT_BTN_ADD_DECK_TITLE.length);
   });
 });

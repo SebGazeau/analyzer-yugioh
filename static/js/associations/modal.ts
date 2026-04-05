@@ -62,7 +62,11 @@ import {
     ASSOCIATIONS_MODAL_EMPTY_TEXT_CLASS,
     ASSOCIATIONS_MODAL_EMPTY_TITLE_CLASS,
     ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT,
+    ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL,
     ASSOCIATIONS_MODAL_ERROR_CLASS,
+    ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT,
+    ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
+    associationsModalSubtitle,
     ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS,
     ASSOCIATIONS_MODAL_FOOTER_CLASS,
     ASSOCIATIONS_MODAL_HEADER_CLASS,
@@ -161,7 +165,7 @@ function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCat
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
     const art = renderThumbInner(row?.image_url, nm, ASSOCIATIONS_MODAL_TILE_IMG_CLASS, 'lazy');
-    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="Ajouter au deck (clic ou Entrée)"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
+    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="${ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE}"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
 }
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
@@ -280,11 +284,11 @@ function ensureModalElements(): {
                     <div class="${ASSOCIATIONS_MODAL_HEADER_MAIN_CLASS}">
                         <div class="${ASSOCIATIONS_MODAL_ANCHOR_ART_CLASS}" id="${MODAL_ANCHOR_ART_ID}" ${ARIA_HIDDEN_ATTR}="true"></div>
                         <div class="${ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS}">
-                            <h2 id="${MODAL_TITLE_ID}" class="${ASSOCIATIONS_MODAL_TITLE_CLASS}">Cartes associées</h2>
+                            <h2 id="${MODAL_TITLE_ID}" class="${ASSOCIATIONS_MODAL_TITLE_CLASS}">${ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT}</h2>
                             <p id="${MODAL_SUBTITLE_ID}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="Fermer">×</button>
+                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="${ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL}">×</button>
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
                     <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>
@@ -488,11 +492,11 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     els.loading.hidden = false;
     els.body.innerHTML = '';
     const title = document.getElementById(MODAL_TITLE_ID);
-    if (title) title.textContent = `Cartes associées`;
+    if (title) title.textContent = ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT;
     const subtitle = document.getElementById(MODAL_SUBTITLE_ID);
     if (subtitle) {
         const displayName = anchor.name_en?.trim() || anchor.name;
-        subtitle.textContent = `${displayName} · passcode ${anchor.id}`;
+        subtitle.textContent = associationsModalSubtitle(displayName, anchor.id);
     }
     setAnchorArt(anchor);
 

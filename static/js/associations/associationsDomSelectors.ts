@@ -88,6 +88,19 @@ export const ASSOCIATIONS_MODAL_ERROR_CLASS = 'associations-modal__error';
 export const ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT =
     'Impossible de charger le catalogue (réseau ou serveur).';
 
+/** Titre principal du panneau (en-tête). */
+export const ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT = 'Cartes associées';
+
+export function associationsModalSubtitle(displayName: string, passcode: number): string {
+    return `${displayName} · passcode ${passcode}`;
+}
+
+/** Tuile catalogue : ajout deck au clic / clavier. */
+export const ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE = 'Ajouter au deck (clic ou Entrée)';
+
+/** Bouton fermer (croix). */
+export const ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL = 'Fermer';
+
 export const DATA_ASSOCIATION_ANGLE_ATTR = 'data-association-angle';
 
 /** Gravité d’une entrée diagnostics (styles CSS `[data-severity='error'|…]`). */

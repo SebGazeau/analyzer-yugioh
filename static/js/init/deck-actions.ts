@@ -27,8 +27,10 @@ import {
     DECK_SAVED_ITEM_COVER_CLASS,
     DECK_SAVED_ITEM_COVER_IMG_CLASS,
     DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS,
+    DECK_SAVED_ITEM_DELETE_BTN_TITLE,
     DECK_SAVED_ITEM_DELETE_CLASS,
     DECK_SAVED_ITEM_DELETE_SELECTOR,
+    DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
     DECK_SAVED_ITEM_DUPLICATE_CLASS,
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
     htmlDeckSavedItemDeleteActionSvg,
@@ -106,7 +108,7 @@ export async function refreshMyDecksList(): Promise<void> {
         const copySvg = htmlDeckSavedItemDuplicateActionSvg();
         const bodyEl = document.createElement('div');
         bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
-        bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="Dupliquer le deck">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="Supprimer le deck">${trashSvg}</button></div></div>`;
+        bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="${DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE}">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="${DECK_SAVED_ITEM_DELETE_BTN_TITLE}">${trashSvg}</button></div></div>`;
         li.appendChild(bodyEl);
         const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DUPLICATE_SELECTOR);
         duplicateBtn?.addEventListener('click', async (e) => {

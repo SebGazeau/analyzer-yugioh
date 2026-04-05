@@ -24,6 +24,7 @@ import {
     BUILDER_CATEGORY_LIST_COUNT_CLASS,
     BUILDER_CATEGORY_LIST_LABEL_CLASS,
     BUILDER_CATEGORY_LIST_ROW_CLASS,
+    builderCategorySortRowTitle,
     DATA_CATEGORY_ATTR,
     DECK_COMPOSITION_SEGMENT_CLASS,
     DECK_STATS_CATEGORY_SEGMENT_CLASS,
@@ -256,7 +257,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 row.className = BUILDER_CATEGORY_LIST_ROW_CLASS;
                 row.setAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR, name);
                 row.style.cursor = STYLE_CURSOR_POINTER;
-                row.title = `Trier le Main Deck : ${name} en premier`;
+                row.title = builderCategorySortRowTitle(name);
                 row.innerHTML = `<span class="${BUILDER_CATEGORY_LIST_LABEL_CLASS}">${escapeHtml(name)}</span><span class="${BUILDER_CATEGORY_LIST_COUNT_CLASS}">${K}</span><div class="${BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS}"><div class="${BUILDER_CATEGORY_LIST_BAR_CLASS}" style="width:${cssLengthPercent(pct)}"></div></div>`;
                 categoryListEl.appendChild(row);
             });

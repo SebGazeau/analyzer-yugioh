@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS,
+  DECK_SAVED_ITEM_DELETE_BTN_TITLE,
   DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML,
+  DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
   DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML,
   htmlDeckSavedItemDeleteActionSvg,
   htmlDeckSavedItemDuplicateActionSvg,
@@ -23,5 +25,10 @@ describe('deckSavedListDomSelectors', () => {
     expect(htmlDeckSavedItemDeleteActionSvg()).toContain(DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML);
     expect(htmlDeckSavedItemDuplicateActionSvg()).toContain(DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML);
     expect(htmlDeckSavedItemDeleteActionSvg()).toContain('aria-hidden="true"');
+  });
+
+  it('titres boutons dupliquer / supprimer liste Mes decks', () => {
+    expect(DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE).toContain('Dupliquer');
+    expect(DECK_SAVED_ITEM_DELETE_BTN_TITLE).toContain('Supprimer');
   });
 });
