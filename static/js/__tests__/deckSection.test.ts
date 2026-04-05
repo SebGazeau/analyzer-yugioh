@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deckConstants.js';
-import { DECK_SECTIONS, isDeckSection } from '../deckSection.js';
+import { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide } from '../deckSection.js';
 
 describe('deckSection', () => {
   it('DECK_SECTIONS contient les trois zones dans l’ordre builder', () => {
@@ -13,6 +13,13 @@ describe('deckSection', () => {
     expect(isDeckSection('side')).toBe(true);
     expect(isDeckSection('banlist')).toBe(false);
     expect(isDeckSection('')).toBe(false);
+  });
+
+  it('isDeckSectionMainSide exclut extra', () => {
+    expect(isDeckSectionMainSide('main')).toBe(true);
+    expect(isDeckSectionMainSide('side')).toBe(true);
+    expect(isDeckSectionMainSide('extra')).toBe(false);
+    expect(isDeckSectionMainSide('')).toBe(false);
   });
 });
 

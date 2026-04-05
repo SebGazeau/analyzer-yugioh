@@ -1,7 +1,8 @@
 /**
  * Onglet Suggestions : « Chercher » → Builder + recherche ; clic ligne / vignette → ajout deck.
  */
-import { addToDeck, type DeckSection } from '../deck.js';
+import { addToDeck } from '../deck.js';
+import { isDeckSectionMainSide, type DeckSection } from '../deckSection.js';
 import { fetchSearchResultsForQuery, pickBestCardFromSearchResults, runSearchWithQuery } from '../search.js';
 import { setActiveTab } from '../tabs.js';
 
@@ -43,7 +44,7 @@ export function bindSuggestionsAddToDeck(): void {
         if (chip) {
             const name = chip.getAttribute('data-insights-card-name');
             const section = chip.getAttribute('data-insights-section');
-            if (!name || (section !== 'main' && section !== 'side')) return;
+            if (!name || !section || !isDeckSectionMainSide(section)) return;
             e.preventDefault();
             void addSuggestedCardToDeck(name, section);
             return;
@@ -68,7 +69,7 @@ export function bindSuggestionsAddToDeck(): void {
         e.preventDefault();
         const name = chip.getAttribute('data-insights-card-name');
         const section = chip.getAttribute('data-insights-section');
-        if (!name || (section !== 'main' && section !== 'side')) return;
+        if (!name || !section || !isDeckSectionMainSide(section)) return;
         void addSuggestedCardToDeck(name, section);
     });
 }
