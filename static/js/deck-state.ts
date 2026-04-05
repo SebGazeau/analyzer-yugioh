@@ -3,6 +3,7 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
+import { maxCardsForZone } from './deck-move.js';
 import { DECK_SECTIONS, type DeckSection, type DeckSectionCounts } from './deckSection.js';
 
 export type { DeckSection };
@@ -23,9 +24,6 @@ export interface DeckState {
 
 const MAX_COPIES = 3;
 const MIN_MAIN = 40;
-const MAX_MAIN = 60;
-const MAX_EXTRA = 15;
-const MAX_SIDE = 15;
 
 function sectionCount(entries: DeckEntry[]): number {
     return entries.reduce((s, e) => s + e.quantity, 0);
@@ -63,7 +61,12 @@ export function getDeckSize(state: DeckState): number {
 /** Vérifie les limites officielles : main 40–60, extra ≤15, side ≤15. */
 export function isLegal(state: DeckState): boolean {
     const c = Object.fromEntries(DECK_SECTIONS.map((s) => [s, sectionCount(state[s])])) as DeckSectionCounts;
-    return c.main >= MIN_MAIN && c.main <= MAX_MAIN && c.extra <= MAX_EXTRA && c.side <= MAX_SIDE;
+    return (
+        c.main >= MIN_MAIN &&
+        c.main <= maxCardsForZone('main') &&
+        c.extra <= maxCardsForZone('extra') &&
+        c.side <= maxCardsForZone('side')
+    );
 }
 
 /** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte 3 exemplaires et taille de zone. */
@@ -76,12 +79,7 @@ export function addCard(
         /fusion|synchro|xyz|link/i.test(t || '');
     const targetSection: DeckSection = section ?? (isExtra(card.type || '') ? 'extra' : 'main');
 
-    const maxBySection: Record<DeckSection, number> = {
-        main: MAX_MAIN,
-        extra: MAX_EXTRA,
-        side: MAX_SIDE,
-    };
-    const max = maxBySection[targetSection];
+    const max = maxCardsForZone(targetSection);
     const current = state[targetSection];
     const { entries: nextEntries, ok } = addOrIncrement(current, card, max);
     if (!ok) return { state: { ...state }, ok: false };
@@ -129,10 +127,10 @@ export function exportDeckToYDK(state: DeckState): string {
 
 /** Import YDK : parse les blocs #main, #extra, !side et agrège par id. */
 export function importDeckFromYDK(ydk: string): { state: DeckState; error?: string } {
-    const main: DeckEntry[] = [];
-    const extra: DeckEntry[] = [];
-    const side: DeckEntry[] = [];
-    const sections: Record<DeckSection, DeckEntry[]> = { main, extra, side };
+    const sections = Object.fromEntries(DECK_SECTIONS.map((s) => [s, [] as DeckEntry[]])) as Record<
+        DeckSection,
+        DeckEntry[]
+    >;
     let section: DeckSection = 'main';
     const lines = ydk.split(/\r?\n/);
 
@@ -156,5 +154,5 @@ export function importDeckFromYDK(ydk: string): { state: DeckState; error?: stri
         else arr.push({ id, name: '', quantity: 1 });
     }
 
-    return { state: { main, extra, side } };
+    return { state: { ...sections } };
 }
