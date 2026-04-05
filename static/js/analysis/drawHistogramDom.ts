@@ -32,6 +32,7 @@ import {
     STYLE_DISPLAY_BLOCK,
     STYLE_DISPLAY_NONE,
 } from '../utils/cssInlineDisplay.js';
+import { cssLengthPx } from '../utils/cssInlineLength.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_SIM_ITERATIONS = 1000;
@@ -93,7 +94,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         barWrap.className = DRAW_HISTOGRAM_BAR_WRAP_CLASS;
         const barTitle = `${k} carte(s) de la catégorie en main : ${n} simulations (${pct.toFixed(1)} %)`;
         barWrap.innerHTML = `
-            <div class="${DRAW_HISTOGRAM_BAR_CLASS}" style="height: ${heightPx}px" title="${barTitle}"></div>
+            <div class="${DRAW_HISTOGRAM_BAR_CLASS}" style="height: ${cssLengthPx(heightPx)}" title="${barTitle}"></div>
             <span class="${DRAW_HISTOGRAM_LABEL_CLASS}">${k}</span>
             <span class="${DRAW_HISTOGRAM_COUNT_CLASS}">${n}</span>
         `;
@@ -133,7 +134,7 @@ export function appendCategoryMiniHistogram(
         const barWrap = document.createElement('div');
         barWrap.className = DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS;
         barWrap.innerHTML = `
-            <div class="${DRAW_HISTOGRAM_MINI_BAR_CLASS}" style="height:${heightPx}px;background:${color}" title="${k} en main : ${n} / ${iterations}"></div>
+            <div class="${DRAW_HISTOGRAM_MINI_BAR_CLASS}" style="height:${cssLengthPx(heightPx)};background:${color}" title="${k} en main : ${n} / ${iterations}"></div>
             <span class="${DRAW_HISTOGRAM_MINI_LABEL_CLASS}">${k}</span>
             <span class="${DRAW_HISTOGRAM_MINI_COUNT_CLASS}">${n}</span>
         `;

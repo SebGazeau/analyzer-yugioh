@@ -12,6 +12,7 @@ import {
     SEARCH_ACTION_ASSOCIATED,
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
     SEARCH_ERROR_STATE_CLASS,
+    SEARCH_FETCH_ERROR_MESSAGE,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
     SEARCH_HIGHLIGHT_CLASS,
@@ -222,7 +223,7 @@ export function setupSearch(): void {
                 const errEl = document.createElement('div');
                 errEl.className = SEARCH_ERROR_STATE_CLASS;
                 errEl.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
-                errEl.textContent = 'Erreur de recherche. Réessayez.';
+                errEl.textContent = SEARCH_FETCH_ERROR_MESSAGE;
                 results.appendChild(errEl);
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');

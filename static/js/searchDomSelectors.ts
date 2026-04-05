@@ -27,6 +27,9 @@ export const DATA_SEARCH_ARCHETYPE_SOURCE_ATTR = 'data-search-archetype-source';
 export const SEARCH_ERROR_STATE_CLASS = 'search-error-state';
 export const DATA_SEARCH_ERROR_ATTR = 'data-search-error';
 
+/** Message affiché si la requête de recherche échoue (réseau / serveur). */
+export const SEARCH_FETCH_ERROR_MESSAGE = 'Erreur de recherche. Réessayez.';
+
 export const SEARCH_RESULT_ARCH_SOURCE_CLASS = 'search-result-arch-source';
 
 export const SEARCH_RESULT_THUMB_CLASS = 'search-result-thumb';
