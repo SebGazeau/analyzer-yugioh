@@ -2,6 +2,13 @@
  * DOM du panneau « simulation de tirage » (liste + compteur + bouton).
  */
 
+import {
+    DRAW_SIMULATION_COUNT_ID,
+    DRAW_SIMULATION_LIST_ID,
+    DRAW_SIMULATION_MAX_ID,
+    DRAW_SIM_BTN_DRAW_ONE_ID,
+} from './drawSimulationDomIds.js';
+
 export interface DrawSimulationDomInput {
     drawnCardNames: readonly string[];
     handSize: 5 | 6;
@@ -12,12 +19,12 @@ export interface DrawSimulationDomInput {
 
 export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void {
     const { drawnCardNames, handSize, resolveImageUrl, totalMainDeckCards } = input;
-    const container = document.getElementById('draw-simulation-list');
-    const countEl = document.getElementById('draw-simulation-count');
-    const btnDraw = document.getElementById('btn-draw-one') as HTMLButtonElement | null;
+    const container = document.getElementById(DRAW_SIMULATION_LIST_ID);
+    const countEl = document.getElementById(DRAW_SIMULATION_COUNT_ID);
+    const btnDraw = document.getElementById(DRAW_SIM_BTN_DRAW_ONE_ID) as HTMLButtonElement | null;
 
     if (countEl) countEl.textContent = String(drawnCardNames.length);
-    const maxEl = document.getElementById('draw-simulation-max');
+    const maxEl = document.getElementById(DRAW_SIMULATION_MAX_ID);
     if (maxEl) maxEl.textContent = String(handSize);
 
     if (container) {

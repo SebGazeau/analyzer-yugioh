@@ -9,6 +9,15 @@ import {
   DECK_MY_DECKS_LIST_ID,
 } from '../deck-builder/deckConstants.js';
 import {
+  DRAW_SIMULATION_COUNT_ID,
+  DRAW_SIMULATION_LIST_ID,
+  DRAW_SIMULATION_MAX_ID,
+  DRAW_SIM_BTN_DRAW_ONE_ID,
+  DRAW_SIM_BTN_DRAW_RESET_ID,
+  DRAW_SIM_BTN_HAND_5_ID,
+  DRAW_SIM_BTN_HAND_6_ID,
+} from '../analysis/drawSimulationDomIds.js';
+import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
   SEARCH_RESULTS_LIST_ID,
@@ -28,10 +37,10 @@ function minimalDeckDOM() {
     `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:none"></button>` +
     `<div data-page="decks"><button id="${DECK_BTN_REFRESH_DECKS_ID}"></button>` +
     `<ul id="${DECK_MY_DECKS_LIST_ID}"></ul><p id="${DECK_MY_DECKS_EMPTY_ID}"></p></div>` +
-    '<button id="btn-hand-5" class="hand-size-btn" data-hand="5"></button>' +
-    '<button id="btn-hand-6" class="hand-size-btn" data-hand="6"></button>' +
-    '<button id="btn-draw-one"></button><button id="btn-draw-reset"></button>' +
-    '<div id="draw-simulation-list"></div><span id="draw-simulation-count"></span><span id="draw-simulation-max"></span>';
+    `<button id="${DRAW_SIM_BTN_HAND_5_ID}" class="hand-size-btn" data-hand="5"></button>` +
+    `<button id="${DRAW_SIM_BTN_HAND_6_ID}" class="hand-size-btn" data-hand="6"></button>` +
+    `<button id="${DRAW_SIM_BTN_DRAW_ONE_ID}"></button><button id="${DRAW_SIM_BTN_DRAW_RESET_ID}"></button>` +
+    `<div id="${DRAW_SIMULATION_LIST_ID}"></div><span id="${DRAW_SIMULATION_COUNT_ID}"></span><span id="${DRAW_SIMULATION_MAX_ID}"></span>`;
 }
 
 function mockFetchDefault(): ReturnType<typeof vi.fn> {

@@ -1,6 +1,14 @@
 /**
  * Branchement simulation de tirage : hand size (5/6), tirer une carte, reset, run 1000 sims.
  */
+import {
+    DRAW_SIM_BTN_CLEAR_HISTOGRAMS_ID,
+    DRAW_SIM_BTN_DRAW_ONE_ID,
+    DRAW_SIM_BTN_DRAW_RESET_ID,
+    DRAW_SIM_BTN_HAND_5_ID,
+    DRAW_SIM_BTN_HAND_6_ID,
+    DRAW_SIM_BTN_RUN_1000_ID,
+} from '../analysis/drawSimulationDomIds.js';
 import { setHandSize, getHandSize, drawOneCard, resetDrawSimulation, runSimulation1000AndUpdateHistogram, clearHistogramGraphs } from '../stats.js';
 
 export function bindSimulation(): void {
@@ -12,18 +20,18 @@ export function bindSimulation(): void {
         });
     }
 
-    document.getElementById('btn-hand-5')?.addEventListener('click', () => {
+    document.getElementById(DRAW_SIM_BTN_HAND_5_ID)?.addEventListener('click', () => {
         setHandSize(5);
         updateHandSizeButtons();
     });
-    document.getElementById('btn-hand-6')?.addEventListener('click', () => {
+    document.getElementById(DRAW_SIM_BTN_HAND_6_ID)?.addEventListener('click', () => {
         setHandSize(6);
         updateHandSizeButtons();
     });
     updateHandSizeButtons();
 
-    document.getElementById('btn-draw-one')?.addEventListener('click', () => { drawOneCard(); });
-    document.getElementById('btn-draw-reset')?.addEventListener('click', () => { resetDrawSimulation(); });
-    document.getElementById('btn-run-1000-sims')?.addEventListener('click', () => { runSimulation1000AndUpdateHistogram(); });
-    document.getElementById('btn-clear-histograms')?.addEventListener('click', () => { clearHistogramGraphs(); });
+    document.getElementById(DRAW_SIM_BTN_DRAW_ONE_ID)?.addEventListener('click', () => { drawOneCard(); });
+    document.getElementById(DRAW_SIM_BTN_DRAW_RESET_ID)?.addEventListener('click', () => { resetDrawSimulation(); });
+    document.getElementById(DRAW_SIM_BTN_RUN_1000_ID)?.addEventListener('click', () => { runSimulation1000AndUpdateHistogram(); });
+    document.getElementById(DRAW_SIM_BTN_CLEAR_HISTOGRAMS_ID)?.addEventListener('click', () => { clearHistogramGraphs(); });
 }

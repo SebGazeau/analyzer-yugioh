@@ -12,6 +12,12 @@ import {
   simulateDraw,
   simulateDrawCounts,
 } from '../stats.js';
+import {
+  DRAW_SIMULATION_COUNT_ID,
+  DRAW_SIMULATION_LIST_ID,
+  DRAW_SIMULATION_MAX_ID,
+  DRAW_SIM_BTN_DRAW_ONE_ID,
+} from '../analysis/drawSimulationDomIds.js';
 import { htmlCategorySummaryBody, htmlDeckMainGrid } from './helpers/deckTestDom.js';
 
 const DECK_40_THREE_COPIES = [
@@ -216,9 +222,9 @@ describe('stats.ts - hand size', () => {
     document.body.innerHTML =
       htmlDeckMainGrid() +
       htmlCategorySummaryBody() +
-      '<div id="draw-simulation-list"></div>' +
-      '<span id="draw-simulation-count"></span><span id="draw-simulation-max"></span>' +
-      '<button id="btn-draw-one"></button>';
+      `<div id="${DRAW_SIMULATION_LIST_ID}"></div>` +
+      `<span id="${DRAW_SIMULATION_COUNT_ID}"></span><span id="${DRAW_SIMULATION_MAX_ID}"></span>` +
+      `<button id="${DRAW_SIM_BTN_DRAW_ONE_ID}"></button>`;
     setHandSize(6);
     expect(getHandSize()).toBe(6);
     setHandSize(5);
