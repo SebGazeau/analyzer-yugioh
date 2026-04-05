@@ -1,4 +1,4 @@
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js';
 import type {
@@ -377,7 +377,7 @@ export function associationReportToMarkdown(report: AssociationReport, nameById?
     } else {
         for (const g of report.groups) {
             lines.push(`## ${g.displayLabel}`);
-            lines.push(`- **Angle** : \`${g.angleId}\` · **Lien** : ${g.linkStrength}`);
+            lines.push(`- **Angle** : \`${g.angleId}\` ${TEXT_MIDDLE_DOT} **Lien** : ${g.linkStrength}`);
             lines.push(`- **Cartes** : ${g.cardIds.length}`);
             const sample = g.cardIds.slice(0, 15);
             for (const id of sample) {

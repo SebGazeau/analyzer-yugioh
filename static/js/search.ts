@@ -56,6 +56,7 @@ import {
 } from './utils/htmlAttrs.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
+import { TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 4;
@@ -79,8 +80,8 @@ function getSubtypeLine(card: any): string {
         typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
     if (t.includes('monster')) {
         const part = race || card.type || '';
-        const line = level ? `${part} · ${level}★` : part;
-        return arch ? `${line} · ${arch}` : line;
+        const line = level ? `${part} ${TEXT_MIDDLE_DOT} ${level}★` : part;
+        return arch ? `${line} ${TEXT_MIDDLE_DOT} ${arch}` : line;
     }
     return card.type || '';
 }

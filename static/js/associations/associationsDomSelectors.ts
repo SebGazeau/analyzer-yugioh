@@ -2,6 +2,8 @@
  * Attributs `data-*` et classes pour le modal « cartes associées ».
  */
 
+import { TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
+
 export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
 export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
 
@@ -94,7 +96,7 @@ export const ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT =
 export const ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT = 'Cartes associées';
 
 export function associationsModalSubtitle(displayName: string, passcode: number): string {
-    return `${displayName} · passcode ${passcode}`;
+    return `${displayName} ${TEXT_MIDDLE_DOT} passcode ${passcode}`;
 }
 
 /** Tuile catalogue : ajout deck au clic / clavier. */

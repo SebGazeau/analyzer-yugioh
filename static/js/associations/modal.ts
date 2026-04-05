@@ -10,7 +10,7 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import {
     BTN_TYPE_ATTR,
@@ -380,7 +380,7 @@ function renderReportHtml(
     const archParsed = parseArchetypesFromField(anchor.archetype ?? undefined);
     const archLine =
         archParsed.length > 0
-            ? archParsed.join(' · ')
+            ? archParsed.join(` ${TEXT_MIDDLE_DOT} `)
             : `${TEXT_EM_DASH} (aucun archétype structuré dans les données)`;
     const { groupsWithCards, uniqueCardCount } = countAssociationStats(report.groups);
 
@@ -438,7 +438,7 @@ function renderReportHtml(
         parts.push(`<span class="${ASSOCIATIONS_MODAL_ACC_SUMMARY_MAIN_CLASS}">`);
         parts.push(`<span class="${ASSOCIATIONS_MODAL_ACC_TITLE_CLASS}">${escapeHtml(g.displayLabel)}</span>`);
         parts.push(
-            `<span class="${ASSOCIATIONS_MODAL_ACC_META_CLASS}"><span>${escapeHtml(g.linkStrength)}</span> · ${g.cardIds.length} carte(s) · <code>${escapeHtml(g.angleId)}</code></span>`,
+            `<span class="${ASSOCIATIONS_MODAL_ACC_META_CLASS}"><span>${escapeHtml(g.linkStrength)}</span> ${TEXT_MIDDLE_DOT} ${g.cardIds.length} carte(s) ${TEXT_MIDDLE_DOT} <code>${escapeHtml(g.angleId)}</code></span>`,
         );
         parts.push(`</span>`);
         parts.push(
