@@ -3,6 +3,7 @@ import {
     CATEGORY_CONTAINER_CLASS,
     CHIPS_CATEGORIES_CLASS,
     DROPDOWN_ARROW_CLASS,
+    DROPDOWN_ARROW_TEXT,
     DROPDOWN_EMPTY_MESSAGE_CLASS,
     DROPDOWN_LIST_CLASS,
     DROPDOWN_LIST_VISIBLE_CLASS,
@@ -55,7 +56,7 @@ export function createCategorySelector(): CategoryContainer {
     container.appendChild(display);
     const arrow = document.createElement('span');
     arrow.className = DROPDOWN_ARROW_CLASS;
-    arrow.innerHTML = '&#9662;';
+    arrow.textContent = DROPDOWN_ARROW_TEXT;
     display.appendChild(arrow);
     const select = document.createElement('div');
     select.className = DROPDOWN_LIST_CLASS;

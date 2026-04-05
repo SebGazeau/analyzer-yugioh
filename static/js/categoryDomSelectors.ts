@@ -5,6 +5,8 @@
 export const CATEGORY_CONTAINER_CLASS = 'category-container';
 export const CHIPS_CATEGORIES_CLASS = 'chips-categories';
 export const DROPDOWN_ARROW_CLASS = 'dropdown-arrow';
+/** Caractère affiché dans la flèche (équivalent HTML `&#9662;`, U+25BE). */
+export const DROPDOWN_ARROW_TEXT = '\u25BE';
 export const DROPDOWN_LIST_CLASS = 'dropdown-list';
 /** Message « aucune option » (couleur via CSS, pas d’inline). */
 export const DROPDOWN_EMPTY_MESSAGE_CLASS = 'dropdown-list__empty';
