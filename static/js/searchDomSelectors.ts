@@ -26,3 +26,28 @@ export const DATA_SEARCH_ARCHETYPE_SOURCE_ATTR = 'data-search-archetype-source';
 
 export const SEARCH_ERROR_STATE_CLASS = 'search-error-state';
 export const DATA_SEARCH_ERROR_ATTR = 'data-search-error';
+
+export const SEARCH_RESULT_ARCH_SOURCE_CLASS = 'search-result-arch-source';
+
+export const SEARCH_RESULT_THUMB_CLASS = 'search-result-thumb';
+export const SEARCH_RESULT_THUMB_IMG_CLASS = 'search-result-thumb-img';
+
+export const SEARCH_RESULT_INITIAL_CLASS = 'search-result-initial';
+export const SEARCH_RESULT_INITIAL_KIND_CLASS = {
+    monster: `${SEARCH_RESULT_INITIAL_CLASS}--monster`,
+    spell: `${SEARCH_RESULT_INITIAL_CLASS}--spell`,
+    trap: `${SEARCH_RESULT_INITIAL_CLASS}--trap`,
+} as const;
+
+export type SearchResultInitialKind = keyof typeof SEARCH_RESULT_INITIAL_KIND_CLASS;
+
+export function searchResultInitialCellClass(kind: SearchResultInitialKind): string {
+    return `${SEARCH_RESULT_INITIAL_CLASS} ${SEARCH_RESULT_INITIAL_KIND_CLASS[kind]}`;
+}
+
+export const SEARCH_RESULT_INFO_CLASS = 'search-result-info';
+export const SEARCH_RESULT_NAME_CLASS = 'search-result-name';
+export const SEARCH_RESULT_SUBTYPE_CLASS = 'search-result-subtype';
+export const SEARCH_RESULT_ACTIONS_CLASS = 'search-result-actions';
+
+export const SEARCH_HIGHLIGHT_CLASS = 'search-highlight';

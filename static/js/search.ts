@@ -14,17 +14,27 @@ import {
     SEARCH_ERROR_STATE_CLASS,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
+    SEARCH_HIGHLIGHT_CLASS,
+    SEARCH_RESULT_ACTIONS_CLASS,
     SEARCH_RESULT_ADD_DECK_CLASS,
     SEARCH_RESULT_ADD_DECK_SELECTOR,
     SEARCH_RESULT_ADD_SIDE_CLASS,
     SEARCH_RESULT_ADD_SIDE_SELECTOR,
+    SEARCH_RESULT_ARCH_SOURCE_CLASS,
     SEARCH_RESULT_ASSOCIATED_CLASS,
+    SEARCH_RESULT_INFO_CLASS,
     SEARCH_RESULT_META_CLASS,
+    SEARCH_RESULT_NAME_CLASS,
     SEARCH_RESULT_ROW_CLASS,
+    SEARCH_RESULT_SUBTYPE_CLASS,
+    SEARCH_RESULT_THUMB_CLASS,
+    SEARCH_RESULT_THUMB_IMG_CLASS,
+    searchResultInitialCellClass,
 } from './searchDomSelectors.js';
 import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
+import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 
@@ -61,7 +71,7 @@ function archetypeSourceBadgeHtml(card: any): string {
     if (typeof src !== 'string' || !src.trim()) return '';
     const { short, title } = archetypeSourceUi(src.trim());
     if (!short) return '';
-    return `<span class="search-result-arch-source" ${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
+    return `<span class="${SEARCH_RESULT_ARCH_SOURCE_CLASS}" ${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
 }
 
 let lastResults: any[] = [];
@@ -81,21 +91,21 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     const subtype = getSubtypeLine(card);
     const imgUrl = card.image_url;
     const thumbContent = imgUrl
-        ? `<img class="search-result-thumb-img" src="${escapeAttr(imgUrl)}" alt="" loading="lazy" />`
-        : `<span class="search-result-initial search-result-initial--${kind}" aria-hidden="true">${letter}</span>`;
+        ? `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" loading="lazy" />`
+        : `<span class="${searchResultInitialCellClass(kind)}" aria-hidden="true">${letter}</span>`;
 
     const row = document.createElement('div');
     row.className = SEARCH_RESULT_ROW_CLASS;
     row.innerHTML = `
-        <div class="search-result-thumb">${thumbContent}</div>
-        <div class="search-result-info">
-            <span class="search-result-name">${highlightMatch(mainName, query)}</span>
+        <div class="${SEARCH_RESULT_THUMB_CLASS}">${thumbContent}</div>
+        <div class="${SEARCH_RESULT_INFO_CLASS}">
+            <span class="${SEARCH_RESULT_NAME_CLASS}">${highlightMatch(mainName, query)}</span>
             <div class="${SEARCH_RESULT_META_CLASS}">
-                <span class="search-result-subtype">${escapeHtml(subtype)}</span>
+                <span class="${SEARCH_RESULT_SUBTYPE_CLASS}">${escapeHtml(subtype)}</span>
                 ${archetypeSourceBadgeHtml(card)}
             </div>
         </div>
-        <div class="search-result-actions">
+        <div class="${SEARCH_RESULT_ACTIONS_CLASS}">
             <button type="button" class="${SEARCH_RESULT_ADD_DECK_CLASS}" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
             <button type="button" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
             <button type="button" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" title="Cartes associées (catalogue complet)">c. associés</button>
@@ -114,7 +124,7 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         void openAssociatedCardsModal(card as Record<string, unknown>);
     });
     row.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('button')) return;
+        if ((e.target as HTMLElement).closest(NATIVE_BUTTON_SELECTOR)) return;
         addToDeck(card);
     });
     results.appendChild(row);
@@ -243,7 +253,7 @@ export function highlightMatch(text: string, query: string): string {
     if (!query.trim()) return text;
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    return text.replace(regex, `<mark class="${SEARCH_HIGHLIGHT_CLASS}">$1</mark>`);
 }
 
 export function closeSearch(): void {

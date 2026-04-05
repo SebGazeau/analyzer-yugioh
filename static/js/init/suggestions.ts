@@ -15,6 +15,7 @@ import {
 } from '../insights/insightsDomSelectors.js';
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
+import { NATIVE_BUTTON_SELECTOR } from '../utils/dom.js';
 
 export function bindSuggestionsFindCard(): void {
     document.addEventListener('click', (e: Event) => {
@@ -48,7 +49,7 @@ export function bindSuggestionsAddToDeck(): void {
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;
-        if (t.closest('button')) return;
+        if (t.closest(NATIVE_BUTTON_SELECTOR)) return;
 
         const chip = t.closest(INSIGHTS_ADD_DECK_CARD_SELECTOR);
         if (chip) {

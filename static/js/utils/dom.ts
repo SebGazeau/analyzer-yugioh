@@ -2,6 +2,9 @@
  * Type-safe DOM helpers. Use data-* selectors in templates.
  */
 
+/** Balise native `button` — `closest()` pour ignorer clics délégués sur actions explicites. */
+export const NATIVE_BUTTON_SELECTOR = 'button';
+
 export function getElement<T extends HTMLElement>(
   selector: string,
   parent: ParentNode = document

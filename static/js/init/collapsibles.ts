@@ -2,6 +2,7 @@
  * Zones repliables : deck (Main/Extra/Side), table Analysis (Engines/Catégories/Groupes).
  */
 import {
+    analysisTableSectionCollapsedClass,
     ANALYSIS_SECTION_HEADER_ROW_SELECTOR,
     ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR,
     ANALYSIS_TABLE_SELECTOR,
@@ -28,7 +29,7 @@ export function bindCollapsibles(): void {
         if (!id) return;
         const table = (target as HTMLElement).closest(ANALYSIS_TABLE_SELECTOR);
         if (!table) return;
-        const collapsed = table.classList.toggle(`section-${id}-collapsed`);
+        const collapsed = table.classList.toggle(analysisTableSectionCollapsedClass(id));
         target.setAttribute('aria-expanded', String(!collapsed));
         const toggle = target.querySelector(ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR);
         if (toggle) toggle.textContent = collapsed ? '▶' : '▼';

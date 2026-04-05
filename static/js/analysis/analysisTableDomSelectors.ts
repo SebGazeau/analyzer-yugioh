@@ -20,3 +20,8 @@ export const DATA_ANALYSIS_TABLE_SECTION_ATTR = 'data-section';
 export const ANALYSIS_TABLE_SECTION_ENGINES = 'engines';
 export const ANALYSIS_TABLE_SECTION_CATEGORIES = 'categories';
 export const ANALYSIS_TABLE_SECTION_GROUPES = 'groupes';
+
+/** Classe sur `.analysis-table` quand la section `sectionId` est repliée (ex. `section-engines-collapsed`). */
+export function analysisTableSectionCollapsedClass(sectionId: string): string {
+    return `section-${sectionId}-collapsed`;
+}
