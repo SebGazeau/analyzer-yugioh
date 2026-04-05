@@ -89,16 +89,14 @@ export interface DeckRow {
 
 export type DeckBuilderGridState = Record<DeckSection, DeckRow[]>;
 
-let mainDeck: DeckRow[] = [];
-let extraDeck: DeckRow[] = [];
-let sideDeck: DeckRow[] = [];
+function newEmptyDeckGrids(): DeckBuilderGridState {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, [] as DeckRow[]])) as DeckBuilderGridState;
+}
+
+let deckGrids: DeckBuilderGridState = newEmptyDeckGrids();
 
 function getState(section: DeckSection): DeckRow[] {
-    switch (section) {
-        case 'main': return mainDeck;
-        case 'extra': return extraDeck;
-        case 'side': return sideDeck;
-    }
+    return deckGrids[section];
 }
 
 function allDeckRowsFlat(): DeckRow[] {
@@ -205,7 +203,7 @@ deckCardPopoverApi = createDeckCardPopover({
 });
 
 mainDeckSortStore = createMainDeckSortStore({
-    getMainDeck: () => mainDeck,
+    getMainDeck: () => getState('main'),
     renderMain: () => renderDeckSection('main'),
     afterVisualUpdate: () => syncBuilderStatsFromDeck(),
 });
@@ -224,7 +222,7 @@ export function setMainDeckSortByCategory(categoryName: string | null): void {
 
 export function cleanCardTable(): void {
     for (const s of DECK_SECTIONS) {
-        getState(s).length = 0;
+        deckGrids[s].length = 0;
     }
     mainDeckSortStore.resetForCleanTable();
     dispatchDeckSortChanged();
