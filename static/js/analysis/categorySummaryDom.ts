@@ -5,6 +5,7 @@
 import {
     ANALYSIS_SECTION_HEADER_ROW_CLASS,
     ANALYSIS_SECTION_HEADER_TOGGLE_CLASS,
+    ANALYSIS_TABLE_BODY_COLSPAN,
     ANALYSIS_TABLE_SECTION_CATEGORIES,
     ANALYSIS_TABLE_SECTION_ENGINES,
     ANALYSIS_TABLE_SECTION_GROUPES,
@@ -71,9 +72,9 @@ function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string)
         tr.setAttribute(ROLE_ATTR, ROLE_BUTTON);
         tr.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
         tr.setAttribute(ARIA_EXPANDED_ATTR, 'true');
-        tr.innerHTML = `<td colspan="9"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
+        tr.innerHTML = `<td colspan="${ANALYSIS_TABLE_BODY_COLSPAN}"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
     } else {
-        tr.innerHTML = `<td colspan="9"><strong>${escapeHtml(title)}</strong></td>`;
+        tr.innerHTML = `<td colspan="${ANALYSIS_TABLE_BODY_COLSPAN}"><strong>${escapeHtml(title)}</strong></td>`;
     }
     tbody.appendChild(tr);
 }

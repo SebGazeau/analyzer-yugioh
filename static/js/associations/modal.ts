@@ -87,6 +87,7 @@ import {
     ASSOCIATIONS_MODAL_TITLE_CLASS,
     DATA_ASSOCIATION_ANGLE_ATTR,
     DATA_ASSOCIATIONS_ACTION_ATTR,
+    DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR,
     DATA_ASSOCIATIONS_ADD_DECK_ATTR,
     DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR,
     DATA_ASSOCIATIONS_CLOSE_ATTR,
@@ -444,7 +445,7 @@ function renderReportHtml(
         parts.push(`<section class="${ASSOCIATIONS_MODAL_DIAGNOSTICS_CLASS}"><h3>Diagnostics</h3><ul>`);
         for (const d of report.diagnostics) {
             parts.push(
-                `<li data-severity="${escapeAttr(d.severity)}"><strong>${escapeHtml(d.code)}</strong> — ${escapeHtml(d.message)}</li>`,
+                `<li ${DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR}="${escapeAttr(d.severity)}"><strong>${escapeHtml(d.code)}</strong> — ${escapeHtml(d.message)}</li>`,
             );
         }
         parts.push('</ul></section>');

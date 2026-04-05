@@ -3,6 +3,7 @@ import {
   ASSOCIATIONS_MODAL_ROOT_CLASS,
   ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
   DATA_ASSOCIATION_ANGLE_ATTR,
+  DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR,
 } from '../../associations/associationsDomSelectors.js';
 
 describe('associationsDomSelectors', () => {
@@ -10,5 +11,6 @@ describe('associationsDomSelectors', () => {
     expect(ASSOCIATIONS_MODAL_ROOT_CLASS).toBe('associations-modal');
     expect(ASSOCIATIONS_MODAL_TILE_GRID_CLASS).toBe('associations-modal__tile-grid');
     expect(DATA_ASSOCIATION_ANGLE_ATTR).toBe('data-association-angle');
+    expect(DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR).toBe('data-severity');
   });
 });

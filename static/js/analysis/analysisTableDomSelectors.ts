@@ -21,6 +21,9 @@ export const ANALYSIS_TABLE_SECTION_ENGINES = 'engines';
 export const ANALYSIS_TABLE_SECTION_CATEGORIES = 'categories';
 export const ANALYSIS_TABLE_SECTION_GROUPES = 'groupes';
 
+/** Nombre de colonnes du corps du tableau analysis (lignes d’en-tête section : `<td colspan="…">`). */
+export const ANALYSIS_TABLE_BODY_COLSPAN = 9;
+
 /** Classe sur `.analysis-table` quand la section `sectionId` est repliée (ex. `section-engines-collapsed`). */
 export function analysisTableSectionCollapsedClass(sectionId: string): string {
     return `section-${sectionId}-collapsed`;

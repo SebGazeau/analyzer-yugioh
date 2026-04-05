@@ -86,3 +86,6 @@ export const ASSOCIATIONS_MODAL_PRE_CLASS = 'associations-modal__pre';
 export const ASSOCIATIONS_MODAL_ERROR_CLASS = 'associations-modal__error';
 
 export const DATA_ASSOCIATION_ANGLE_ATTR = 'data-association-angle';
+
+/** Gravité d’une entrée diagnostics (styles CSS `[data-severity='error'|…]`). */
+export const DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR = 'data-severity';
