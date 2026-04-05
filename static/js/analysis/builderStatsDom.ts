@@ -2,20 +2,17 @@
  * DOM : compteurs Main (types), barres builder, résumé MAIN/EXTRA/SIDE, panneaux composition.
  */
 
-import { DECK_SECTIONS, type DeckSection, type DeckSectionCounts } from '../deckSection.js';
+import {
+    DECK_SECTIONS,
+    mapDeckSections,
+    type DeckSection,
+    type DeckSectionCounts,
+} from '../deckSection.js';
 import type { MainDeckTypeCounts } from './mainDeckTypeCounts.js';
 
-const DECK_COUNT_LABEL: Record<DeckSection, string> = {
-    main: 'MAIN',
-    extra: 'EXTRA',
-    side: 'SIDE',
-};
+const DECK_COUNT_LABEL: Record<DeckSection, string> = mapDeckSections((s) => s.toUpperCase());
 
-const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = {
-    main: 'deck-main-count',
-    extra: 'deck-extra-count',
-    side: 'deck-side-count',
-};
+const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = mapDeckSections((s) => `deck-${s}-count`);
 
 export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): void {
     const { monsters, spells, traps } = counts;

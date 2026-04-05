@@ -3,6 +3,7 @@ import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deck
 import {
   DECK_SECTIONS,
   deckSectionMainSideShortLabel,
+  deckSectionMainSideSortKey,
   emptyArraysByDeckSection,
   hasTruthyDeckSectionData,
   isDeckSection,
@@ -52,6 +53,10 @@ describe('deckSection', () => {
   it('deckSectionMainSideShortLabel', () => {
     expect(deckSectionMainSideShortLabel('main')).toBe('Main');
     expect(deckSectionMainSideShortLabel('side')).toBe('Side');
+  });
+
+  it('deckSectionMainSideSortKey ordonne Main avant Side', () => {
+    expect(deckSectionMainSideSortKey('main')).toBeLessThan(deckSectionMainSideSortKey('side'));
   });
 });
 

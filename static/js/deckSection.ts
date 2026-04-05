@@ -46,3 +46,13 @@ const MAIN_SIDE_SHORT_LABEL: Record<DeckSectionMainSide, string> = {
 export function deckSectionMainSideShortLabel(section: DeckSectionMainSide): string {
     return MAIN_SIDE_SHORT_LABEL[section];
 }
+
+const MAIN_SIDE_SORT_KEY: Record<DeckSectionMainSide, number> = {
+    main: 0,
+    side: 1,
+};
+
+/** Clé de tri : Main avant Side (tie-break après le nom). */
+export function deckSectionMainSideSortKey(section: DeckSectionMainSide): number {
+    return MAIN_SIDE_SORT_KEY[section];
+}
