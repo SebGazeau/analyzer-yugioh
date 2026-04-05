@@ -3,7 +3,7 @@ import { setAnalysisDeckName, syncBuilderStatsFromDeck } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
 import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
-import { DECK_SECTIONS, mapDeckSections, type DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, emptyArraysByDeckSection, mapDeckSections, type DeckSection } from './deckSection.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -62,7 +62,13 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
 export type { DeckSection, DeckSectionCounts, DeckSectionMainSide } from './deckSection.js';
-export { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide, mapDeckSections } from './deckSection.js';
+export {
+    DECK_SECTIONS,
+    emptyArraysByDeckSection,
+    isDeckSection,
+    isDeckSectionMainSide,
+    mapDeckSections,
+} from './deckSection.js';
 
 export interface DeckRow {
     name: string;
@@ -90,7 +96,7 @@ export interface DeckRow {
 export type DeckBuilderGridState = Record<DeckSection, DeckRow[]>;
 
 function newEmptyDeckGrids(): DeckBuilderGridState {
-    return mapDeckSections(() => [] as DeckRow[]);
+    return emptyArraysByDeckSection<DeckRow>();
 }
 
 let deckGrids: DeckBuilderGridState = newEmptyDeckGrids();

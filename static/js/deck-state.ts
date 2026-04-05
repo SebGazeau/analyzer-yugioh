@@ -4,7 +4,13 @@
  */
 
 import { maxCardsForZone } from './deck-move.js';
-import { DECK_SECTIONS, mapDeckSections, type DeckSection, type DeckSectionCounts } from './deckSection.js';
+import {
+    DECK_SECTIONS,
+    emptyArraysByDeckSection,
+    mapDeckSections,
+    type DeckSection,
+    type DeckSectionCounts,
+} from './deckSection.js';
 
 export type { DeckSection };
 
@@ -127,7 +133,7 @@ export function exportDeckToYDK(state: DeckState): string {
 
 /** Import YDK : parse les blocs #main, #extra, !side et agrège par id. */
 export function importDeckFromYDK(ydk: string): { state: DeckState; error?: string } {
-    const sections = mapDeckSections<DeckEntry[]>(() => []);
+    const sections = emptyArraysByDeckSection<DeckEntry>();
     let section: DeckSection = 'main';
     const lines = ydk.split(/\r?\n/);
 

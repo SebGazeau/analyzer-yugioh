@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deckConstants.js';
-import { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide, mapDeckSections } from '../deckSection.js';
+import {
+  DECK_SECTIONS,
+  emptyArraysByDeckSection,
+  isDeckSection,
+  isDeckSectionMainSide,
+  mapDeckSections,
+} from '../deckSection.js';
 
 describe('deckSection', () => {
   it('DECK_SECTIONS contient les trois zones dans l’ordre builder', () => {
@@ -24,6 +30,14 @@ describe('deckSection', () => {
 
   it('mapDeckSections produit les trois clés dans l’ordre canonique', () => {
     expect(mapDeckSections((s) => s.length)).toEqual({ main: 4, extra: 5, side: 4 });
+  });
+
+  it('emptyArraysByDeckSection donne trois tableaux vides distincts', () => {
+    const e = emptyArraysByDeckSection<number>();
+    expect(e.main).toEqual([]);
+    e.main.push(1);
+    expect(e.extra).toEqual([]);
+    expect(e.side).toEqual([]);
   });
 });
 

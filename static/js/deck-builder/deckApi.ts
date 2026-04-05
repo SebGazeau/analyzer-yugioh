@@ -130,9 +130,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const baseName = String(data.name ?? 'Sans nom').trim() || 'Sans nom';
     const newName = `${baseName} (copie)`;
-    const sections = Object.fromEntries(
-        DECK_SECTIONS.map((s) => [s, Array.isArray(data[s]) ? data[s] : []]),
-    ) as DeckSectionsPayload;
+    const sections = mapDeckSections((s) => (Array.isArray(data[s]) ? data[s] : [])) as DeckSectionsPayload;
     const body = { name: newName, ...sections };
     const postRes = await fetch('/decks', {
         ...DECK_FETCH_INIT,

@@ -8,6 +8,11 @@ export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Rec
     return Object.fromEntries(DECK_SECTIONS.map((s) => [s, perSection(s)])) as Record<DeckSection, T>;
 }
 
+/** Un tableau vide par zone (état initial, import YDK, etc.). */
+export function emptyArraysByDeckSection<T>(): Record<DeckSection, T[]> {
+    return mapDeckSections(() => [] as T[]);
+}
+
 /** Nombre de cartes par zone (builder / résumé). */
 export type DeckSectionCounts = Record<DeckSection, number>;
 
