@@ -3,6 +3,7 @@
  */
 
 import { dispatchDeckSortChanged } from './deckSortEvents.js';
+import { cardTypeKindFromTypeString } from '../utils/cardTypeKind.js';
 
 export type MainDeckSortBy = 'none' | 'type' | 'category';
 export type MainDeckSortDir = 'asc' | 'desc';
@@ -13,11 +14,7 @@ export interface MainDeckSortableRow {
 }
 
 export function deckCardTypeKind(type: string): 'monster' | 'spell' | 'trap' {
-    const t = type.toLowerCase();
-    if (t.includes('monster')) return 'monster';
-    if (t.includes('spell')) return 'spell';
-    if (t.includes('trap')) return 'trap';
-    return 'monster';
+    return cardTypeKindFromTypeString(type);
 }
 
 function typeOrder(row: MainDeckSortableRow): number {

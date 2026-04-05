@@ -2,6 +2,7 @@ import { addToDeck } from './deck.js';
 import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
+import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 4;
@@ -16,14 +17,6 @@ function searchLocaleQuery(): string {
 }
 
 type SearchFilter = 'all' | 'monster' | 'spell' | 'trap';
-
-function getCardTypeKind(card: { type?: string }): 'monster' | 'spell' | 'trap' {
-    const t = (card.type ?? '').toLowerCase();
-    if (t.includes('monster')) return 'monster';
-    if (t.includes('spell')) return 'spell';
-    if (t.includes('trap')) return 'trap';
-    return 'monster';
-}
 
 function getSubtypeLine(card: any): string {
     const t = (card.type ?? '').toLowerCase();
@@ -53,11 +46,11 @@ let activeFilter: SearchFilter = 'all';
 
 function filterCards(cards: any[], filter: SearchFilter): any[] {
     if (filter === 'all') return cards;
-    return cards.filter((c) => getCardTypeKind(c) === filter);
+    return cards.filter((c) => cardTypeKindFromTypeString(c.type) === filter);
 }
 
 function renderResultRow(card: any, query: string, results: HTMLElement): void {
-    const kind = getCardTypeKind(card);
+    const kind = cardTypeKindFromTypeString(card.type);
     const letter = kind === 'monster' ? 'M' : kind === 'spell' ? 'S' : 'T';
     // `name` est la locale demandée quand le backend applique `card_locales` ; `name_en` reste l’anglais si présent.
     const mainName = card.name ?? card.name_en ?? '';
