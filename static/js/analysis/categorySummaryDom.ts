@@ -44,6 +44,7 @@ import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
 import { ARIA_EXPANDED_ATTR, ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
+import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { escapeHtml } from '../utils/html.js';
 import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import {
@@ -255,7 +256,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 row.setAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR, name);
                 row.style.cursor = STYLE_CURSOR_POINTER;
                 row.title = `Trier le Main Deck : ${name} en premier`;
-                row.innerHTML = `<span class="${BUILDER_CATEGORY_LIST_LABEL_CLASS}">${escapeHtml(name)}</span><span class="${BUILDER_CATEGORY_LIST_COUNT_CLASS}">${K}</span><div class="${BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS}"><div class="${BUILDER_CATEGORY_LIST_BAR_CLASS}" style="width:${pct}%"></div></div>`;
+                row.innerHTML = `<span class="${BUILDER_CATEGORY_LIST_LABEL_CLASS}">${escapeHtml(name)}</span><span class="${BUILDER_CATEGORY_LIST_COUNT_CLASS}">${K}</span><div class="${BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS}"><div class="${BUILDER_CATEGORY_LIST_BAR_CLASS}" style="width:${cssLengthPercent(pct)}"></div></div>`;
                 categoryListEl.appendChild(row);
             });
         }

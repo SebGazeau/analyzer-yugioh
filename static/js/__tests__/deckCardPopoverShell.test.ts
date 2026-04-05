@@ -7,6 +7,9 @@ import {
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
+  DECK_CARD_POPOVER_SVG_COVER_INNER_HTML,
+  DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML,
+  DECK_CARD_POPOVER_SVG_PATH_CLOSE_D,
 } from '../deck-builder/card-edit-popover/deckCardPopoverDomSelectors.js';
 
 describe('deckCardPopoverShell', () => {
@@ -21,5 +24,11 @@ describe('deckCardPopoverShell', () => {
 
   it('trois icônes partagent les attributs SVG stroke communs', () => {
     expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_ICON_SVG_ATTRS).length - 1).toBe(3);
+  });
+
+  it('chemins SVG du shell alignés sur les exports domSelectors', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`d="${DECK_CARD_POPOVER_SVG_PATH_CLOSE_D}"`);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SVG_COVER_INNER_HTML);
   });
 });

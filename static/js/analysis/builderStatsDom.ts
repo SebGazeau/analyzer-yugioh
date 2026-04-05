@@ -8,6 +8,7 @@ import {
     type DeckSection,
     type DeckSectionCounts,
 } from '../deckSection.js';
+import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { DECK_COUNT_SUMMARY_ELEMENT_ID } from './builderShellDomIds.js';
 import {
     BUILDER_BAR_MONSTER_ID,
@@ -41,11 +42,11 @@ export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): v
     const total = monsters + spells + traps;
     const pct = (n: number) => (total > 0 ? (n / total) * 100 : 0);
     const barMonster = document.getElementById(BUILDER_BAR_MONSTER_ID);
-    if (barMonster) barMonster.style.width = pct(monsters) + '%';
+    if (barMonster) barMonster.style.width = cssLengthPercent(pct(monsters));
     const barSpell = document.getElementById(BUILDER_BAR_SPELL_ID);
-    if (barSpell) barSpell.style.width = pct(spells) + '%';
+    if (barSpell) barSpell.style.width = cssLengthPercent(pct(spells));
     const barTrap = document.getElementById(BUILDER_BAR_TRAP_ID);
-    if (barTrap) barTrap.style.width = pct(traps) + '%';
+    if (barTrap) barTrap.style.width = cssLengthPercent(pct(traps));
 }
 
 export function applyDeckSectionCountLabels(counts: DeckSectionCounts): void {
