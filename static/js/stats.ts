@@ -137,8 +137,8 @@ export function updateCategorySummary(): void {
 }
 
 /**
- * Rafraîchissement complet pour le builder / contrôles legacy (qty, tri colonnes grille).
- * `updateDeckCount` réinitialise déjà la simu de tirage, probas et tableau catégories.
+ * Point d’entrée unique après mutation du deck (grilles, DnD, popover, import, chargement serveur).
+ * Enchaîne `updateDeckCount` (labels, reset simu tirage, probas, catégories) puis `computeGlobalStats` (composition, insights).
  */
 export function syncBuilderStatsFromDeck(): void {
     updateDeckCount();
