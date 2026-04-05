@@ -53,3 +53,7 @@ export function msgImportCardsNotFound(failedCards: string[]): string {
 export function msgImportParseError(message: string): string {
     return `Erreur à l'import : ${message}`;
 }
+
+/** Message d’erreur si le JSON deck n’a pas la forme attendue (levée puis capturée → alert). */
+export const MSG_IMPORT_JSON_INVALID_FORMAT =
+    'Format JSON invalide (attendu: { main, extra, side } ou tableau)';

@@ -24,6 +24,7 @@ import {
     BUILDER_CATEGORY_LIST_COUNT_CLASS,
     BUILDER_CATEGORY_LIST_LABEL_CLASS,
     BUILDER_CATEGORY_LIST_ROW_CLASS,
+    analysisHeroGroupReferenceLabel,
     builderCategorySortRowTitle,
     DATA_CATEGORY_ATTR,
     DECK_COMPOSITION_SEGMENT_CLASS,
@@ -195,7 +196,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     if (heroGroupEl) {
         heroGroupEl.textContent =
             firstGroupName && totalCards > 0
-                ? `Réf. : ${firstGroupName} (${firstK} / ${totalCards} cartes) — P(≥1) en 5 ou 6 tirages.`
+                ? analysisHeroGroupReferenceLabel(firstGroupName, firstK, totalCards)
                 : '';
     }
 

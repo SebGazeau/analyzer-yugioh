@@ -23,3 +23,12 @@ export const BUILDER_CATEGORY_LIST_BAR_CLASS = 'builder-category-list-bar';
 export function builderCategorySortRowTitle(categoryName: string): string {
     return `Trier le Main Deck : ${categoryName} en premier`;
 }
+
+/** Légende sous le hero probas (référence groupe + effectif deck). */
+export function analysisHeroGroupReferenceLabel(
+    groupName: string,
+    firstK: number,
+    totalCards: number,
+): string {
+    return `Réf. : ${groupName} (${firstK} / ${totalCards} cartes) — P(≥1) en 5 ou 6 tirages.`;
+}

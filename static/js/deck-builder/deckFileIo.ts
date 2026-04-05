@@ -3,7 +3,11 @@
  */
 import type { Card } from '../api.js';
 import { DECK_SECTIONS, hasTruthyDeckSectionData, mapDeckSections, type DeckSection } from '../deckSection.js';
-import { msgImportCardsNotFound, msgImportParseError } from '../utils/userDialogMessages.js';
+import {
+    MSG_IMPORT_JSON_INVALID_FORMAT,
+    msgImportCardsNotFound,
+    msgImportParseError,
+} from '../utils/userDialogMessages.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -133,14 +137,14 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
     } else if (data && typeof data === 'object') {
         const o = data as Partial<Record<DeckSection, unknown>>;
         if (!hasTruthyDeckSectionData(o)) {
-            throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
+            throw new Error(MSG_IMPORT_JSON_INVALID_FORMAT);
         }
         for (const section of DECK_SECTIONS) {
             const raw = o[section];
             await addEntries(Array.isArray(raw) ? raw : [], section);
         }
     } else {
-        throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
+        throw new Error(MSG_IMPORT_JSON_INVALID_FORMAT);
     }
 
     refreshAllGrids();

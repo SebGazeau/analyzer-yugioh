@@ -43,6 +43,8 @@ export const ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS = 'associations-modal__header-
 export const ASSOCIATIONS_MODAL_TITLE_CLASS = 'associations-modal__title';
 export const ASSOCIATIONS_MODAL_SUBTITLE_CLASS = 'associations-modal__subtitle';
 export const ASSOCIATIONS_MODAL_LOADING_CLASS = 'associations-modal__loading';
+/** Texte affiché pendant le chargement catalogue + visuels. */
+export const ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT = 'Chargement des visuels et du catalogue…';
 export const ASSOCIATIONS_MODAL_SPINNER_CLASS = 'associations-modal__spinner';
 export const ASSOCIATIONS_MODAL_BODY_CLASS = 'associations-modal__body';
 

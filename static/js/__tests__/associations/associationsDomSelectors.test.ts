@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT,
   ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT,
+  ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT,
   ASSOCIATIONS_MODAL_ROOT_CLASS,
   ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
   ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
@@ -20,5 +21,6 @@ describe('associationsDomSelectors', () => {
     expect(ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT).toBe('Cartes associées');
     expect(ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE).toContain('deck');
     expect(associationsModalSubtitle('Dark Magician', 123)).toContain('123');
+    expect(ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT).toContain('catalogue');
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  MSG_IMPORT_JSON_INVALID_FORMAT,
   msgAssociationCardNotFound,
   msgConfirmDeleteDeck,
   msgDeckZoneFull,
@@ -23,6 +24,10 @@ describe('userDialogMessages', () => {
 
   it('msgDeckZoneFull inclut la limite', () => {
     expect(msgDeckZoneFull(15)).toContain('15');
+  });
+
+  it('MSG_IMPORT_JSON_INVALID_FORMAT mentionne main/extra/side', () => {
+    expect(MSG_IMPORT_JSON_INVALID_FORMAT).toContain('main');
   });
 
   it('msgImportCardsNotFound résume la liste', () => {

@@ -82,6 +82,7 @@ import {
     ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS,
     ASSOCIATIONS_MODAL_LIVE_CLASS,
     ASSOCIATIONS_MODAL_LOADING_CLASS,
+    ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT,
     ASSOCIATIONS_MODAL_OPEN_CLASS,
     ASSOCIATIONS_MODAL_PANEL_CLASS,
     ASSOCIATIONS_MODAL_PRE_CLASS,
@@ -300,7 +301,7 @@ function ensureModalElements(): {
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
                     <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>
-                    <span>Chargement des visuels et du catalogue…</span>
+                    <span>${ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT}</span>
                 </div>
                 <div id="${MODAL_BODY_ID}" class="${ASSOCIATIONS_MODAL_BODY_CLASS}"></div>
             </div>
