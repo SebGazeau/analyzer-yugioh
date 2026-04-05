@@ -2,6 +2,14 @@
  * Rendu DOM des histogrammes de simulation de tirage (page Analysis).
  */
 
+import {
+    DRAW_HISTOGRAM_ALL_CATEGORIES_ID,
+    DRAW_HISTOGRAM_ALL_TITLE_ID,
+    DRAW_HISTOGRAM_CATEGORY_SELECT_ID,
+    DRAW_HISTOGRAM_EXPLANATION_ID,
+    DRAW_HISTOGRAM_HEADING_ID,
+    DRAW_SIMULATION_HISTOGRAM_CONTAINER_ID,
+} from './drawHistogramDomIds.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_SIM_ITERATIONS = 1000;
@@ -21,7 +29,7 @@ const HISTOGRAM_CATEGORY_COLORS = [
 
 /** Met à jour le &lt;select&gt; des catégories pour l’histogramme (rempli selon le deck). */
 export function updateHistogramCategorySelect(categoryNames: string[]): void {
-    const select = document.getElementById('draw-histogram-category') as HTMLSelectElement | null;
+    const select = document.getElementById(DRAW_HISTOGRAM_CATEGORY_SELECT_ID) as HTMLSelectElement | null;
     if (!select) return;
     const selected = select.value;
     select.innerHTML = '';
@@ -40,7 +48,7 @@ export function updateHistogramCategorySelect(categoryNames: string[]): void {
 
 /** Remplit le conteneur #draw-simulation-histogram avec les barres (0, 1, 2, ...). */
 export function updateHistogramDOM(histogram: Record<number, number>, iterations: number, categoryLabel: string): void {
-    const container = document.getElementById('draw-simulation-histogram');
+    const container = document.getElementById(DRAW_SIMULATION_HISTOGRAM_CONTAINER_ID);
     if (!container) return;
 
     const buckets = Object.keys(histogram)
@@ -126,10 +134,10 @@ export function appendCategoryMiniHistogram(
 
 /** Efface le graphique principal et tous les mini-graphiques par catégorie (à la demande). */
 export function clearHistogramGraphs(): void {
-    const headingEl = document.getElementById('draw-histogram-heading');
-    const explanationEl = document.getElementById('draw-histogram-explanation');
-    const allTitleEl = document.getElementById('draw-histogram-all-title');
-    const allContainer = document.getElementById('draw-histogram-all-categories');
+    const headingEl = document.getElementById(DRAW_HISTOGRAM_HEADING_ID);
+    const explanationEl = document.getElementById(DRAW_HISTOGRAM_EXPLANATION_ID);
+    const allTitleEl = document.getElementById(DRAW_HISTOGRAM_ALL_TITLE_ID);
+    const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
     if (headingEl) headingEl.textContent = 'Distribution (1000 tirages)';
     if (explanationEl) explanationEl.style.display = 'none';
     if (allTitleEl) allTitleEl.style.display = 'none';
@@ -148,7 +156,7 @@ export function runHistogramSimulation1000(input: {
         clearHistogramGraphs();
         return;
     }
-    const select = document.getElementById('draw-histogram-category') as HTMLSelectElement | null;
+    const select = document.getElementById(DRAW_HISTOGRAM_CATEGORY_SELECT_ID) as HTMLSelectElement | null;
     if (select && select.options.length <= 1) {
         updateHistogramCategorySelect(categories);
     }
@@ -158,8 +166,8 @@ export function runHistogramSimulation1000(input: {
         select.value = selectedCategory;
     }
     const iterations = HISTOGRAM_SIM_ITERATIONS;
-    const headingEl = document.getElementById('draw-histogram-heading');
-    const explanationEl = document.getElementById('draw-histogram-explanation');
+    const headingEl = document.getElementById(DRAW_HISTOGRAM_HEADING_ID);
+    const explanationEl = document.getElementById(DRAW_HISTOGRAM_EXPLANATION_ID);
     const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
     if (headingEl) headingEl.textContent = `Distribution (${iterations} tirages) — Catégorie : ${selectedCategory}`;
     if (explanationEl) {
@@ -168,8 +176,8 @@ export function runHistogramSimulation1000(input: {
     }
     updateHistogramDOM(hist, iterations, selectedCategory);
 
-    const allTitleEl = document.getElementById('draw-histogram-all-title');
-    const allContainer = document.getElementById('draw-histogram-all-categories');
+    const allTitleEl = document.getElementById(DRAW_HISTOGRAM_ALL_TITLE_ID);
+    const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
     if (allTitleEl) {
         allTitleEl.style.display = 'block';
         allTitleEl.textContent = `Toutes les catégories (${iterations} tirages chacune)`;

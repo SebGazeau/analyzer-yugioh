@@ -4,13 +4,14 @@
 import { addToDeck } from '../deck.js';
 import { isDeckSectionMainSide, type DeckSection } from '../deckSection.js';
 import { fetchSearchResultsForQuery, pickBestCardFromSearchResults, runSearchWithQuery } from '../search.js';
+import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab } from '../tabs.js';
 
 export function bindSuggestionsFindCard(): void {
     document.addEventListener('click', (e: Event) => {
         const el = (e.target as HTMLElement).closest('[data-insights-find-card]');
         if (!el || !(el instanceof HTMLButtonElement)) return;
-        const panel = document.getElementById('suggestions');
+        const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         if (!panel?.contains(el)) return;
         const name = el.getAttribute('data-insights-find-card');
         if (!name) return;
@@ -35,7 +36,7 @@ async function addSuggestedCardToDeck(name: string, section?: DeckSection): Prom
 /** Clic sur une proposition Number Xyz (ligne) ou sur une vignette Main/Side. */
 export function bindSuggestionsAddToDeck(): void {
     document.addEventListener('click', (e: Event) => {
-        const panel = document.getElementById('suggestions');
+        const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;
         if (t.closest('button')) return;
@@ -61,7 +62,7 @@ export function bindSuggestionsAddToDeck(): void {
 
     document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
-        const panel = document.getElementById('suggestions');
+        const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;
         const chip = t.closest('[data-insights-add-deck-card]');

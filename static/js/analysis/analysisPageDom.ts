@@ -2,11 +2,13 @@
  * DOM léger : en-tête Analysis, hack global pour outils « taille de main ».
  */
 
+import { ANALYSIS_DECK_NAME_ELEMENT_ID } from './analysisDomIds.js';
+
 const WINDOW_DECK_TOTAL_KEY = '__deckTotalForHandSize';
 
 /** Titre « Nom du deck — » dans l’onglet Analysis. */
 export function setAnalysisDeckName(name: string): void {
-    const el = document.getElementById('analysis-deck-name');
+    const el = document.getElementById(ANALYSIS_DECK_NAME_ELEMENT_ID);
     if (!el) return;
     const text = name.trim();
     el.textContent = text ? `${text} — ` : '';

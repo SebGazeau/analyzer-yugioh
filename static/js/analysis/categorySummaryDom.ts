@@ -2,6 +2,18 @@
  * DOM : tableau Analysis (engines, catégories, groupes), hero probas, bandeaux catégories.
  */
 
+import {
+    ANALYSIS_HERO_ENGINE_ID,
+    ANALYSIS_HERO_FIRST_ID,
+    ANALYSIS_HERO_GROUP_ID,
+    ANALYSIS_HERO_SECOND_ID,
+    BUILDER_CATEGORY_LIST_ID,
+    BUILDER_STATS_ENGINE_ID,
+    BUILDER_STATS_FIRST_ID,
+    BUILDER_STATS_SECOND_ID,
+    DECK_COMPOSITION_STRIP_ID,
+    DECK_STATS_CATEGORY_BAR_ID,
+} from './analysisDomIds.js';
 import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
 import { escapeHtml } from '../utils/html.js';
@@ -135,9 +147,9 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const ref = pickFirstReferenceGroup(engineSummary, summary);
     const firstGroupName = ref?.name ?? '';
     const firstK = ref?.K ?? 0;
-    const firstEl = document.getElementById('analysis-hero-first');
-    const secondEl = document.getElementById('analysis-hero-second');
-    const engineEl = document.getElementById('analysis-hero-engine');
+    const firstEl = document.getElementById(ANALYSIS_HERO_FIRST_ID);
+    const secondEl = document.getElementById(ANALYSIS_HERO_SECOND_ID);
+    const engineEl = document.getElementById(ANALYSIS_HERO_ENGINE_ID);
     const enginePct =
         totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : '—';
     if (firstEl)
@@ -147,7 +159,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         secondEl.textContent =
             totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : '—';
     if (engineEl) engineEl.textContent = enginePct;
-    const heroGroupEl = document.getElementById('analysis-hero-group');
+    const heroGroupEl = document.getElementById(ANALYSIS_HERO_GROUP_ID);
     if (heroGroupEl) {
         heroGroupEl.textContent =
             firstGroupName && totalCards > 0
@@ -155,9 +167,9 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 : '';
     }
 
-    const builderFirst = document.getElementById('builder-stats-first');
-    const builderSecond = document.getElementById('builder-stats-second');
-    const builderEngine = document.getElementById('builder-stats-engine');
+    const builderFirst = document.getElementById(BUILDER_STATS_FIRST_ID);
+    const builderSecond = document.getElementById(BUILDER_STATS_SECOND_ID);
+    const builderEngine = document.getElementById(BUILDER_STATS_ENGINE_ID);
     if (builderFirst)
         builderFirst.textContent =
             totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : '—';
@@ -171,7 +183,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const entries = categoryEntriesSorted(summary);
     const sumAll = entries.reduce((s, e) => s + e.K, 0);
 
-    const stripEl = document.getElementById('deck-composition-strip');
+    const stripEl = document.getElementById(DECK_COMPOSITION_STRIP_ID);
     if (stripEl) {
         stripEl.innerHTML = '';
         if (sumAll > 0) {
@@ -187,7 +199,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         }
     }
 
-    const sidebarBarEl = document.getElementById('deck-stats-category-bar');
+    const sidebarBarEl = document.getElementById(DECK_STATS_CATEGORY_BAR_ID);
     if (sidebarBarEl) {
         sidebarBarEl.innerHTML = '';
         if (sumAll > 0) {
@@ -203,7 +215,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         }
     }
 
-    const categoryListEl = document.getElementById('builder-category-list');
+    const categoryListEl = document.getElementById(BUILDER_CATEGORY_LIST_ID);
     if (categoryListEl) {
         categoryListEl.innerHTML = '';
         if (sumAll > 0) {
