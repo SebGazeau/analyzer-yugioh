@@ -223,9 +223,9 @@ export function setMainDeckSortByCategory(categoryName: string | null): void {
 }
 
 export function cleanCardTable(): void {
-    mainDeck = [];
-    extraDeck = [];
-    sideDeck = [];
+    for (const s of DECK_SECTIONS) {
+        getState(s).length = 0;
+    }
     mainDeckSortStore.resetForCleanTable();
     dispatchDeckSortChanged();
     renderAllDeckGridSections();
@@ -324,7 +324,7 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
 }
 
 export function exportDeckToFile(): void {
-    downloadJsonFile('deck.json', buildDeckJsonExportPayload({ main: mainDeck, extra: extraDeck, side: sideDeck }));
+    downloadJsonFile('deck.json', buildDeckJsonExportPayload(getDeckState()));
 }
 
 export function importDeckFromFile(event: Event): void {

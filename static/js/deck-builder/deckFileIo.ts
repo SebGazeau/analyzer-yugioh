@@ -28,7 +28,9 @@ export function rowToDeckJsonEntry(r: DeckFileExportRow): Record<string, unknown
 
 export type DeckJsonFilePayload = { [S in DeckSection]: Record<string, unknown>[] };
 
-export function buildDeckJsonExportPayload(sections: Record<DeckSection, DeckFileExportRow[]>): DeckJsonFilePayload {
+export function buildDeckJsonExportPayload<T extends DeckFileExportRow>(
+    sections: Record<DeckSection, T[]>,
+): DeckJsonFilePayload {
     return Object.fromEntries(DECK_SECTIONS.map((s) => [s, sections[s].map(rowToDeckJsonEntry)])) as DeckJsonFilePayload;
 }
 
