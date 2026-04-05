@@ -87,9 +87,7 @@ export interface DeckRow {
     deckCopyId?: number;
 }
 
-function allDeckRowsFlat(): DeckRow[] {
-    return [...mainDeck, ...extraDeck, ...sideDeck];
-}
+export type DeckBuilderGridState = Record<DeckSection, DeckRow[]>;
 
 let mainDeck: DeckRow[] = [];
 let extraDeck: DeckRow[] = [];
@@ -103,13 +101,13 @@ function getState(section: DeckSection): DeckRow[] {
     }
 }
 
+function allDeckRowsFlat(): DeckRow[] {
+    return DECK_SECTIONS.flatMap((s) => getState(s));
+}
+
 /** Retourne le snapshot du deck pour stats/export. Inclut imageUrl pour getCardImageUrl. */
-export function getDeckState(): { main: DeckRow[]; extra: DeckRow[]; side: DeckRow[] } {
-    return {
-        main: [...mainDeck],
-        extra: [...extraDeck],
-        side: [...sideDeck],
-    };
+export function getDeckState(): DeckBuilderGridState {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, [...getState(s)]])) as DeckBuilderGridState;
 }
 
 function setCurrentLoadedDeck(id: number, name: string): void {
