@@ -65,6 +65,15 @@ import {
 } from '../utils/htmlAttrs.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { escapeHtml, formatDeckDate } from '../utils/html.js';
+import {
+    MSG_DECK_DELETE_FAILED,
+    MSG_DECK_LOAD_FAILED,
+    MSG_DECK_UPDATED,
+    msgConfirmDeleteDeck,
+    msgDeckDuplicated,
+    msgDeckSavedWithId,
+    msgErrorPrefixed,
+} from '../utils/userDialogMessages.js';
 
 /** Rafraîchit la liste « Mes decks » (appelée au load et après save/update). */
 export async function refreshMyDecksList(): Promise<void> {
@@ -115,24 +124,24 @@ export async function refreshMyDecksList(): Promise<void> {
             e.preventDefault();
             e.stopPropagation();
             const r = await duplicateDeckOnServer(d.id);
-            if (r.error) alert('Erreur: ' + r.error);
+            if (r.error) alert(msgErrorPrefixed(r.error));
             else {
                 await refreshMyDecksList();
-                alert(`Deck dupliqué : « ${d.name} (copie) »`);
+                alert(msgDeckDuplicated(d.name));
             }
         });
         const deleteBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DELETE_SELECTOR);
         deleteBtn?.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!confirm(`Supprimer le deck « ${escapeHtml(d.name)} » ?`)) return;
+            if (!confirm(msgConfirmDeleteDeck(d.name))) return;
             const ok = await deleteDeckFromServer(d.id);
-            if (!ok) alert('Impossible de supprimer le deck.');
+            if (!ok) alert(MSG_DECK_DELETE_FAILED);
             else await refreshMyDecksList();
         });
         const loadDeck = async () => {
             const ok = await loadDeckFromServer(d.id);
-            if (!ok) alert('Impossible de charger le deck');
+            if (!ok) alert(MSG_DECK_LOAD_FAILED);
             else {
                 setActiveTab(TAB_ID_BUILDER);
             }
@@ -182,17 +191,17 @@ export function bindDeckToolbar(): void {
 
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.addEventListener('click', async () => {
         const r = await saveDeckToServer();
-        if (r.error) alert('Erreur: ' + r.error);
+        if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.id) {
-            alert('Deck enregistré (id: ' + r.id + ')');
+            alert(msgDeckSavedWithId(r.id));
             await refreshMyDecksList();
         }
     });
     document.getElementById(DECK_BTN_UPDATE_SERVER_ID)?.addEventListener('click', async () => {
         const r = await updateDeckOnServer();
-        if (r.error) alert('Erreur: ' + r.error);
+        if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.ok) {
-            alert('Deck mis à jour.');
+            alert(MSG_DECK_UPDATED);
             await refreshMyDecksList();
         }
     });

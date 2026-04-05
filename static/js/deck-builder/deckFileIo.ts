@@ -3,6 +3,7 @@
  */
 import type { Card } from '../api.js';
 import { DECK_SECTIONS, hasTruthyDeckSectionData, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { msgImportCardsNotFound, msgImportParseError } from '../utils/userDialogMessages.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -159,13 +160,11 @@ export function runDeckImportFromFileInput(event: Event, deps: DeckJsonImportDep
             const failedCards = await applyParsedDeckJson(data, deps);
             if (failedCards.length > 0) {
                 console.warn('Import: cartes non trouvées:', failedCards);
-                alert(
-                    `${failedCards.length} carte(s) non trouvée(s):\n${failedCards.slice(0, 10).join('\n')}${failedCards.length > 10 ? `\n... et ${failedCards.length - 10} autre(s)` : ''}`,
-                );
+                alert(msgImportCardsNotFound(failedCards));
             }
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
-            alert("Erreur à l'import : " + msg);
+            alert(msgImportParseError(msg));
         }
     };
     reader.readAsText(file);

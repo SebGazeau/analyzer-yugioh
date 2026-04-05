@@ -21,6 +21,7 @@ import {
     DATA_DECK_CELL_INDEX_ATTR,
     DATA_DECK_CELL_SECTION_ATTR,
 } from './deckGridDomSelectors.js';
+import { MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN, msgDeckZoneFull } from '../../utils/userDialogMessages.js';
 
 export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
     let data: unknown;
@@ -63,7 +64,7 @@ export function executeDeckRowMove<D extends DeckRowLike>(
 
     const resolved = resolveTargetZone(row, dropSection);
     if (resolved === null) {
-        alert('Cette carte ne peut pas être placée dans l\'Extra Deck.');
+        alert(MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN);
         return false;
     }
 
@@ -90,7 +91,7 @@ export function executeDeckRowMove<D extends DeckRowLike>(
     const toA = getState(resolved);
     const maxT = maxCardsForZone(resolved);
     if (sumQuantities(toA) + row.quantity > maxT) {
-        alert(`Zone pleine (max ${maxT} cartes).`);
+        alert(msgDeckZoneFull(maxT));
         return false;
     }
 

@@ -10,6 +10,7 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
+import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import {
     BTN_TYPE_ATTR,
     BTN_TYPE_BUTTON,
@@ -237,12 +238,12 @@ async function addAssociationTileToDeck(tile: Element): Promise<void> {
         card = pickBestCardFromSearchResults(results, searchName);
     }
     if (!card) {
-        alert(`Carte introuvable pour « ${searchName} » (API /carte ou recherche).`);
+        alert(msgAssociationCardNotFound(searchName));
         return;
     }
     const ok = await addToDeck(card);
     if (!ok) {
-        alert("Impossible d'ajouter (limite d'exemplaires, zone pleine ou type incompatible).");
+        alert(MSG_ADD_CARD_BLOCKED);
         return;
     }
     announceAssociationsModal(`${searchName} ajouté au deck.`);

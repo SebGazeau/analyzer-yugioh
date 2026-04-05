@@ -16,6 +16,7 @@ import {
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { NATIVE_BUTTON_SELECTOR } from '../utils/dom.js';
+import { MSG_ADD_CARD_BLOCKED, MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT } from '../utils/userDialogMessages.js';
 
 export function bindSuggestionsFindCard(): void {
     document.addEventListener('click', (e: Event) => {
@@ -34,12 +35,12 @@ export function bindSuggestionsFindCard(): void {
 async function addSuggestedCardToDeck(name: string, section?: DeckSection): Promise<void> {
     const card = pickBestCardFromSearchResults(await fetchSearchResultsForQuery(name), name);
     if (!card) {
-        alert('Carte introuvable ou nom trop court pour la recherche (minimum 4 caractères).');
+        alert(MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT);
         return;
     }
     const ok = await addToDeck(card, section);
     if (!ok) {
-        alert("Impossible d'ajouter (limite d'exemplaires, zone pleine ou type incompatible).");
+        alert(MSG_ADD_CARD_BLOCKED);
     }
 }
 
