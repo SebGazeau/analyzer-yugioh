@@ -12,6 +12,22 @@ import {
     DATA_SECTION_HEADER_ATTR,
 } from './analysisTableDomSelectors.js';
 import {
+    ANALYSIS_CATEGORY_DOT_CLASS,
+    ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX,
+    ANALYSIS_TD_COUNT_CLASS,
+    ANALYSIS_TD_PCT_CLASS,
+    ANALYSIS_TD_PROB5_CLASS,
+    BUILDER_CATEGORY_LIST_BAR_CLASS,
+    BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS,
+    BUILDER_CATEGORY_LIST_COUNT_CLASS,
+    BUILDER_CATEGORY_LIST_LABEL_CLASS,
+    BUILDER_CATEGORY_LIST_ROW_CLASS,
+    DATA_CATEGORY_ATTR,
+    DECK_COMPOSITION_SEGMENT_CLASS,
+    DECK_STATS_CATEGORY_SEGMENT_CLASS,
+} from './analysisCategorySummaryDomSelectors.js';
+import { DATA_BUILDER_SORT_CATEGORY_ATTR } from '../deck-builder/builderDomSelectors.js';
+import {
     ANALYSIS_HERO_ENGINE_ID,
     ANALYSIS_HERO_FIRST_ID,
     ANALYSIS_HERO_GROUP_ID,
@@ -61,7 +77,7 @@ function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string)
 }
 
 function analysisCategoryDotClass(index: number): string {
-    return 'analysis-category-dot analysis-category-dot--' + ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length];
+    return `${ANALYSIS_CATEGORY_DOT_CLASS} ${ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX}${ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length]}`;
 }
 
 export interface AnalysisCategorySummaryDomInput {
@@ -99,10 +115,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
             const dotClass = analysisCategoryDotClass(dataRowIndex++);
             tr.innerHTML = `
-                    <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(engineName)}</strong></td>
-                    <td class="analysis-td-count">${K}</td>
-                    <td class="analysis-td-pct">${pctDeck(K)}</td>
-                    <td class="analysis-td-prob5">${probs[0]}</td>
+                    <td><span class="${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(engineName)}</strong></td>
+                    <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
+                    <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
+                    <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
                     ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
                 `;
             tbody.appendChild(tr);
@@ -119,10 +135,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const tr = document.createElement('tr');
             tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_CATEGORIES);
             tr.innerHTML = `
-                    <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span>${escapeHtml(cat)}</td>
-                    <td class="analysis-td-count">${K}</td>
-                    <td class="analysis-td-pct">${pctDeck(K)}</td>
-                    <td class="analysis-td-prob5">${probs[0]}</td>
+                    <td><span class="${dotClass}" aria-hidden="true"></span>${escapeHtml(cat)}</td>
+                    <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
+                    <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
+                    <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
                     ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
                 `;
             tbody.appendChild(tr);
@@ -144,10 +160,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         const tr = document.createElement('tr');
         tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_GROUPES);
         tr.innerHTML = `
-                <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(groupName)}</strong></td>
-                <td class="analysis-td-count">${K}</td>
-                <td class="analysis-td-pct">${pctDeck(K)}</td>
-                <td class="analysis-td-prob5">${probs[0]}</td>
+                <td><span class="${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(groupName)}</strong></td>
+                <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
+                <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
+                <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
                 ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
             `;
         tbody.appendChild(tr);
@@ -199,10 +215,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             entries.forEach(({ name, K }) => {
                 const pct = (K / sumAll) * 100;
                 const seg = document.createElement('div');
-                seg.className = 'deck-composition-segment';
+                seg.className = DECK_COMPOSITION_SEGMENT_CLASS;
                 seg.style.flexBasis = `${pct}%`;
                 seg.setAttribute('title', `${name}: ${K} (${pct.toFixed(1)}%)`);
-                seg.setAttribute('data-category', name);
+                seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 stripEl.appendChild(seg);
             });
         }
@@ -215,10 +231,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             entries.forEach(({ name, K }) => {
                 const pct = (K / sumAll) * 100;
                 const seg = document.createElement('div');
-                seg.className = 'deck-stats-category-segment';
+                seg.className = DECK_STATS_CATEGORY_SEGMENT_CLASS;
                 seg.style.flexBasis = `${pct}%`;
                 seg.setAttribute('title', `${name}: ${K} (${pct.toFixed(1)}%)`);
-                seg.setAttribute('data-category', name);
+                seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 sidebarBarEl.appendChild(seg);
             });
         }
@@ -231,11 +247,11 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             entries.forEach(({ name, K }) => {
                 const pct = (K / sumAll) * 100;
                 const row = document.createElement('div');
-                row.className = 'builder-category-list-row';
-                row.setAttribute('data-builder-sort-category', name);
+                row.className = BUILDER_CATEGORY_LIST_ROW_CLASS;
+                row.setAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR, name);
                 row.style.cursor = 'pointer';
                 row.title = `Trier le Main Deck : ${name} en premier`;
-                row.innerHTML = `<span class="builder-category-list-label">${escapeHtml(name)}</span><span class="builder-category-list-count">${K}</span><div class="builder-category-list-bar-wrap"><div class="builder-category-list-bar" style="width:${pct}%"></div></div>`;
+                row.innerHTML = `<span class="${BUILDER_CATEGORY_LIST_LABEL_CLASS}">${escapeHtml(name)}</span><span class="${BUILDER_CATEGORY_LIST_COUNT_CLASS}">${K}</span><div class="${BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS}"><div class="${BUILDER_CATEGORY_LIST_BAR_CLASS}" style="width:${pct}%"></div></div>`;
                 categoryListEl.appendChild(row);
             });
         }

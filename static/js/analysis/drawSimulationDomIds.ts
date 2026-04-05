@@ -16,3 +16,6 @@ export const DRAW_SIM_BTN_CLEAR_HISTOGRAMS_ID = 'btn-clear-histograms';
 /** Boutons taille de main (5/6) : classe commune + attribut pour la valeur. */
 export const DRAW_SIM_HAND_SIZE_BTN_CLASS = 'hand-size-btn';
 export const DRAW_SIM_HAND_DATA_ATTR = 'data-hand';
+
+/** État actif des boutons taille de main (même token que filtres recherche, etc.). */
+export const DRAW_SIM_HAND_BTN_ACTIVE_CLASS = 'active';

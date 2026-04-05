@@ -14,12 +14,20 @@ import {
 import type { DeckSection } from '../../deckSection.js';
 import { deckCellSelector, DECK_CARD_QTY_SELECTOR } from '../grid/deckGridDomSelectors.js';
 import {
+    DATA_DECK_POPOVER_BACKDROP_ATTR,
+    DECK_CARD_POPOVER_ABOVE_CLASS,
+    DECK_CARD_POPOVER_BACKDROP_CLASS,
+    DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR,
     DECK_CARD_POPOVER_CLOSE_SELECTOR,
     DECK_CARD_POPOVER_COVER_SELECTOR,
     DECK_CARD_POPOVER_DELETE_SELECTOR,
     DECK_CARD_POPOVER_ENGINE_SELECTOR,
+    DECK_CARD_POPOVER_OPEN_CLASS,
+    DECK_CARD_POPOVER_QTY_LIMIT_CLASSES,
+    DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX,
     DECK_CARD_POPOVER_QTY_SELECTOR,
+    DECK_CARD_POPOVER_ROOT_CLASS,
 } from './deckCardPopoverDomSelectors.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deckCardPopoverShell.js';
 
@@ -73,7 +81,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
     let popoverIndex = -1;
 
     function isOpen(): boolean {
-        return Boolean(popoverEl?.classList.contains('deck-card-popover--open'));
+        return Boolean(popoverEl?.classList.contains(DECK_CARD_POPOVER_OPEN_CLASS));
     }
 
     function persistEdits(): void {
@@ -105,8 +113,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
     }
 
     function hide(): void {
-        popoverBackdropEl?.classList.remove('deck-card-popover-backdrop--open');
-        if (popoverEl) popoverEl.classList.remove('deck-card-popover--open');
+        popoverBackdropEl?.classList.remove(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
+        if (popoverEl) popoverEl.classList.remove(DECK_CARD_POPOVER_OPEN_CLASS);
         popoverSection = null;
         popoverIndex = -1;
     }
@@ -117,7 +125,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
     }
 
     function repositionPopover(): void {
-        if (!popoverEl || !popoverEl.classList.contains('deck-card-popover--open') || popoverSection == null || popoverIndex < 0)
+        if (!popoverEl || !popoverEl.classList.contains(DECK_CARD_POPOVER_OPEN_CLASS) || popoverSection == null || popoverIndex < 0)
             return;
         const anchor = document.querySelector(deckCellSelector(popoverSection, popoverIndex)) as HTMLElement | null;
         if (!anchor) {
@@ -133,10 +141,10 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         popoverEl.style.left = `${rect.left}px`;
         if (openAbove) {
             popoverEl.style.top = `${rect.top - popoverHeight - DECK_CARD_POPOVER_GAP_PX}px`;
-            popoverEl.classList.add('deck-card-popover--above');
+            popoverEl.classList.add(DECK_CARD_POPOVER_ABOVE_CLASS);
         } else {
             popoverEl.style.top = `${rect.bottom + DECK_CARD_POPOVER_GAP_PX}px`;
-            popoverEl.classList.remove('deck-card-popover--above');
+            popoverEl.classList.remove(DECK_CARD_POPOVER_ABOVE_CLASS);
         }
     }
 
@@ -144,14 +152,14 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         if (popoverEl) return popoverEl;
 
         popoverBackdropEl = document.createElement('div');
-        popoverBackdropEl.className = 'deck-card-popover-backdrop';
-        popoverBackdropEl.setAttribute('data-deck-popover-backdrop', '1');
+        popoverBackdropEl.className = DECK_CARD_POPOVER_BACKDROP_CLASS;
+        popoverBackdropEl.setAttribute(DATA_DECK_POPOVER_BACKDROP_ATTR, '1');
         popoverBackdropEl.setAttribute('aria-hidden', 'true');
         document.body.appendChild(popoverBackdropEl);
         popoverBackdropEl.addEventListener('click', () => dismissSaving());
 
         popoverEl = document.createElement('div');
-        popoverEl.className = 'deck-card-popover';
+        popoverEl.className = DECK_CARD_POPOVER_ROOT_CLASS;
         popoverEl.setAttribute('role', 'dialog');
         popoverEl.setAttribute('aria-modal', 'true');
         popoverEl.setAttribute('aria-label', 'Modifier la carte');
@@ -237,9 +245,9 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
                 qtySelect.appendChild(opt);
             }
             qtySelect.value = String(Math.min(row.quantity, cap));
-            qtySelect.classList.remove('deck-card-popover-qty--limit-0', 'deck-card-popover-qty--limit-1', 'deck-card-popover-qty--limit-2');
+            qtySelect.classList.remove(...DECK_CARD_POPOVER_QTY_LIMIT_CLASSES);
             const limit = row.maxCopies ?? 3;
-            if (limit < 3) qtySelect.classList.add(`deck-card-popover-qty--limit-${limit}`);
+            if (limit < 3) qtySelect.classList.add(`${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}${limit}`);
         }
         if (engineSelect) engineSelect.value = row.engine || '';
         if (catContainer) {
@@ -252,8 +260,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const coverBtnEl = popover.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR) as HTMLElement | null;
         if (coverBtnEl) coverBtnEl.style.display = getCurrentLoadedDeck() ? '' : 'none';
 
-        popoverBackdropEl?.classList.add('deck-card-popover-backdrop--open');
-        popover.classList.add('deck-card-popover--open');
+        popoverBackdropEl?.classList.add(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
+        popover.classList.add(DECK_CARD_POPOVER_OPEN_CLASS);
         repositionPopover();
     }
 

@@ -19,3 +19,20 @@ export const DECK_CARD_POPOVER_CLOSE_SELECTOR = `.${DECK_CARD_POPOVER_CLOSE_CLAS
 
 export const DECK_CARD_POPOVER_COVER_CLASS = 'deck-card-popover-cover';
 export const DECK_CARD_POPOVER_COVER_SELECTOR = `.${DECK_CARD_POPOVER_COVER_CLASS}`;
+
+export const DECK_CARD_POPOVER_BACKDROP_CLASS = 'deck-card-popover-backdrop';
+export const DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS = 'deck-card-popover-backdrop--open';
+
+export const DECK_CARD_POPOVER_ROOT_CLASS = 'deck-card-popover';
+export const DECK_CARD_POPOVER_OPEN_CLASS = 'deck-card-popover--open';
+export const DECK_CARD_POPOVER_ABOVE_CLASS = 'deck-card-popover--above';
+
+/** Modificateurs banlist sur le &lt;select&gt; quantité (0 / 1 / 2 exemplaires max). */
+export const DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX = 'deck-card-popover-qty--limit-';
+export const DECK_CARD_POPOVER_QTY_LIMIT_CLASSES = [
+    `${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}0`,
+    `${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}1`,
+    `${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}2`,
+] as const;
+
+export const DATA_DECK_POPOVER_BACKDROP_ATTR = 'data-deck-popover-backdrop';
