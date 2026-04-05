@@ -48,3 +48,20 @@ export const INSIGHTS_CARD_LINE_DATA_ATTR = 'data-insights-card-line';
 export const INSIGHTS_FIND_CARD_SELECTOR = dataSelector(INSIGHTS_FIND_CARD_DATA_ATTR);
 export const INSIGHTS_ADD_DECK_CARD_SELECTOR = dataSelector(INSIGHTS_ADD_DECK_CARD_DATA_ATTR);
 export const INSIGHTS_SUGGEST_ROW_SELECTOR = dataSelector(INSIGHTS_SUGGEST_ROW_DATA_ATTR);
+
+/** Classes CSS générées dans {@link panel.ts} (alignées sur `static/css`). */
+export const SUGGESTIONS_MAIN_MATCHES_CLASS = 'suggestions-main-matches';
+export const SUGGESTIONS_MAIN_MATCH_QTY_CLASS = 'suggestions-main-match-qty';
+export const SUGGESTIONS_MAIN_MATCH_SECTION_CLASS = 'suggestions-main-match-section';
+export const SUGGESTIONS_MAIN_MATCH_THUMB_CLASS = 'suggestions-main-match-thumb';
+export const SUGGESTIONS_MAIN_MATCH_THUMB_EMPTY_CLASS = `${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}--empty`;
+export const SUGGESTIONS_MAIN_MATCH_CHIP_CLASS = 'suggestions-main-match-chip';
+export const SUGGESTIONS_MAIN_MATCH_NAME_CLASS = 'suggestions-main-match-name';
+export const SUGGESTIONS_TARGET_LIST_CLASS = 'suggestions-target-list';
+
+/** Bouton « Chercher » (ligne Number Xyz) : combo utility + deck button. */
+export const INSIGHTS_FIND_CARD_BUTTON_CLASS = 'btn btn-deck btn-deck-ghost btn-sm';
+
+export function suggestionsMainMatchThumbEmptyClassName(): string {
+    return `${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS} ${SUGGESTIONS_MAIN_MATCH_THUMB_EMPTY_CLASS}`;
+}
