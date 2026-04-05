@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
+import {
+  SEARCH_BOX_ELEMENT_ID,
+  SEARCH_RESULTS_CONTAINER_ID,
+  SEARCH_RESULTS_LIST_ID,
+} from '../searchDomIds.js';
 import results3 from './fixtures/search/results-3-cards.json';
 
 describe('search.ts — helpers purs', () => {
@@ -56,9 +61,9 @@ describe('search.ts — helpers purs', () => {
 describe('search.ts — DOM', () => {
   beforeEach(() => {
     document.body.innerHTML =
-      '<input id="search-box" type="text" />' +
-      '<div id="searchResults" style="display:none">' +
-      '<div id="search-results-list"></div>' +
+      `<input id="${SEARCH_BOX_ELEMENT_ID}" type="text" />` +
+      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:none">` +
+      `<div id="${SEARCH_RESULTS_LIST_ID}"></div>` +
       '</div>';
   });
 
@@ -69,7 +74,7 @@ describe('search.ts — DOM', () => {
   it('input avec moins de 4 caractères ne déclenche pas de fetch', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('[]'));
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'ab';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await Promise.resolve();
@@ -83,7 +88,7 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -101,7 +106,7 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'abcd';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
@@ -117,7 +122,7 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'D';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.value = 'Da';
@@ -139,8 +144,8 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify(results3)),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
@@ -168,8 +173,8 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'XyZz';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
@@ -186,8 +191,8 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([{ name: 'Card', name_en: 'Card' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Card';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
@@ -203,9 +208,9 @@ describe('search.ts — DOM', () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const container = document.getElementById('searchResults')!;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const container = document.getElementById(SEARCH_RESULTS_CONTAINER_ID)!;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
@@ -219,8 +224,8 @@ describe('search.ts — DOM', () => {
 
   it('closeSearch cache le panneau de résultats', () => {
     document.body.innerHTML =
-      '<div id="searchResults" style="display:block"><div id="search-results-list"></div></div>';
-    const el = document.getElementById('searchResults') as HTMLElement;
+      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:block"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>`;
+    const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement;
     expect(el.style.display).toBe('block');
     closeSearch();
     expect(el.style.display).toBe('none');

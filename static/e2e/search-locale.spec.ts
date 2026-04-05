@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { E2E_DECK_GRID } from './deckDomSelectors.js';
+import { E2E_SEARCH_BOX } from './searchDomSelectors.js';
 
 test.describe('Recherche et locale', () => {
     test('une requête /search inclut locale=fr quand html lang est fr', async ({ page }) => {
@@ -18,7 +19,7 @@ test.describe('Recherche et locale', () => {
             { timeout: 12_000 },
         );
 
-        const box = page.locator('#search-box');
+        const box = page.locator(E2E_SEARCH_BOX);
         await expect(box).toBeVisible();
         await box.fill('abcd');
 

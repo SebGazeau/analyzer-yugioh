@@ -2,6 +2,7 @@
  * Raccourcis clavier : Ctrl+F focus recherche, Escape vide/ferme, Enter ajoute premier résultat.
  */
 import { focusSearch, clearSearch } from '../search.js';
+import { SEARCH_BOX_ELEMENT_ID, SEARCH_RESULTS_LIST_ID } from '../searchDomIds.js';
 
 export function bindKeyboard(): void {
     document.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -14,8 +15,10 @@ export function bindKeyboard(): void {
             clearSearch();
             return;
         }
-        if (e.key === 'Enter' && (document.activeElement as HTMLElement)?.id === 'search-box') {
-            const first = document.querySelector('#search-results-list .search-result-add') as HTMLElement | null;
+        if (e.key === 'Enter' && (document.activeElement as HTMLElement)?.id === SEARCH_BOX_ELEMENT_ID) {
+            const first = document.querySelector(
+                `#${SEARCH_RESULTS_LIST_ID} .search-result-add`,
+            ) as HTMLElement | null;
             if (first) first.click();
         }
     });

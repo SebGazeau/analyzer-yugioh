@@ -8,6 +8,11 @@ import {
   DECK_MY_DECKS_EMPTY_ID,
   DECK_MY_DECKS_LIST_ID,
 } from '../deck-builder/deckConstants.js';
+import {
+  SEARCH_BOX_ELEMENT_ID,
+  SEARCH_RESULTS_CONTAINER_ID,
+  SEARCH_RESULTS_LIST_ID,
+} from '../searchDomIds.js';
 import { htmlCategorySummaryBody, htmlDeckCountCells, htmlDeckCountSummary, htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour que main.ts et ses listeners ne plantent pas. */
@@ -17,7 +22,7 @@ function minimalDeckDOM() {
     htmlDeckCountCells() +
     htmlDeckGrids('deck-table-grid') +
     htmlCategorySummaryBody() +
-    '<input id="search-box" /><div id="searchResults"><div id="search-results-list"></div></div>' +
+    `<input id="${SEARCH_BOX_ELEMENT_ID}" /><div id="${SEARCH_RESULTS_CONTAINER_ID}"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>` +
     `<button id="${DECK_BTN_CLEAR_DECK_ID}"></button>` +
     `<button id="${DECK_BTN_SAVE_SERVER_ID}"></button>` +
     `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:none"></button>` +

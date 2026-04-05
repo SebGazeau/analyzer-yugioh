@@ -1,4 +1,9 @@
 import { addToDeck } from './deck.js';
+import {
+    SEARCH_BOX_ELEMENT_ID,
+    SEARCH_RESULTS_CONTAINER_ID,
+    SEARCH_RESULTS_LIST_ID,
+} from './searchDomIds.js';
 import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
@@ -136,7 +141,7 @@ export function pickBestCardFromSearchResults(cards: any[], intendedName: string
 
 /** Remplit la recherche du builder et lance une requête (ex. depuis l’onglet Suggestions). */
 export function runSearchWithQuery(q: string): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     if (!input) return;
     const trimmed = q.trim();
     if (trimmed.length < MIN_QUERY_LENGTH) return;
@@ -145,9 +150,9 @@ export function runSearchWithQuery(q: string): void {
 }
 
 export function setupSearch(): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
-    const resultsContainer = document.getElementById('searchResults') as HTMLElement | null;
-    const results = document.getElementById('search-results-list') as HTMLElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
+    const resultsContainer = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
+    const results = document.getElementById(SEARCH_RESULTS_LIST_ID) as HTMLElement | null;
     if (!input || !resultsContainer || !results) return;
 
     const runSearch = () => {
@@ -224,18 +229,18 @@ export function highlightMatch(text: string, query: string): string {
 }
 
 export function closeSearch(): void {
-    const el = document.getElementById('searchResults') as HTMLElement | null;
+    const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     if (el) el.style.display = 'none';
 }
 
 /** Vide l'input et ferme le panneau (raccourci Escape). */
 export function clearSearch(): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     if (input) input.value = '';
     closeSearch();
 }
 
 /** Focus sur le champ recherche (raccourci Ctrl+F). */
 export function focusSearch(): void {
-    document.getElementById('search-box')?.focus();
+    document.getElementById(SEARCH_BOX_ELEMENT_ID)?.focus();
 }
