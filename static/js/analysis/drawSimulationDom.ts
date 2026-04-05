@@ -2,6 +2,7 @@
  * DOM du panneau « simulation de tirage » (liste + compteur + bouton).
  */
 
+import { IMG_LOADING_LAZY } from '../utils/htmlAttrs.js';
 import {
     DRAW_SIMULATION_COUNT_ID,
     DRAW_SIMULATION_LIST_ID,
@@ -48,7 +49,7 @@ export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void 
                     img.className = DRAW_SIMULATION_THUMB_CLASS;
                     img.src = url;
                     img.alt = name;
-                    img.loading = 'lazy';
+                    img.loading = IMG_LOADING_LAZY;
                     img.title = name;
                     container.appendChild(img);
                 } else {

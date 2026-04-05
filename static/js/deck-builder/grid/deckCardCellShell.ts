@@ -14,6 +14,15 @@ import {
     DECK_CARD_THUMB_WRAPPER_CLASS,
 } from './deckGridDomSelectors.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../../utils/ariaAttrs.js';
+import {
+    BTN_TYPE_ATTR,
+    BTN_TYPE_BUTTON,
+    DRAGGABLE_ATTR,
+    DRAGGABLE_FALSE,
+    IMG_LOADING_ATTR,
+    IMG_LOADING_LAZY,
+    TITLE_ATTR,
+} from '../../utils/htmlAttrs.js';
 import { escapeAttr } from '../../utils/html.js';
 
 export interface DeckCardCellShellRow {
@@ -25,7 +34,7 @@ export interface DeckCardCellShellRow {
 /** Contenu interne de `.deck-card-cell` (hors classe `--monster|spell|trap`). */
 export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     const thumbHtml = row.imageUrl
-        ? `<img class="${DECK_CARD_THUMB_IMG_CLASS}" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
+        ? `<img class="${DECK_CARD_THUMB_IMG_CLASS}" src="${escapeAttr(row.imageUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
         : `<span class="${DECK_CARD_THUMB_PLACEHOLDER_CLASS}">?</span>`;
     const banBadge =
         row.maxCopies != null && row.maxCopies < 3
@@ -34,7 +43,7 @@ export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     return `
             <div class="${DECK_CARD_THUMB_WRAPPER_CLASS}">${thumbHtml}</div>
             ${banBadge}
-            <button type="button" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" ${ARIA_LABEL_ATTR}="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" ${DRAGGABLE_ATTR}="${DRAGGABLE_FALSE}" ${ARIA_LABEL_ATTR}="Retirer 1 exemplaire" ${TITLE_ATTR}="Retirer 1 exemplaire">
                 <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" viewBox="0 0 24 24" fill="none" ${ARIA_HIDDEN_ATTR}="true">
                     <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
                 </svg>

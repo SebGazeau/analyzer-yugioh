@@ -36,6 +36,13 @@ import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
 import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
+import {
+    BTN_TYPE_ATTR,
+    BTN_TYPE_BUTTON,
+    IMG_LOADING_ATTR,
+    IMG_LOADING_LAZY,
+    TITLE_ATTR,
+} from './utils/htmlAttrs.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 
@@ -92,7 +99,7 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     const subtype = getSubtypeLine(card);
     const imgUrl = card.image_url;
     const thumbContent = imgUrl
-        ? `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" loading="lazy" />`
+        ? `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
         : `<span class="${searchResultInitialCellClass(kind)}" ${ARIA_HIDDEN_ATTR}="true">${letter}</span>`;
 
     const row = document.createElement('div');
@@ -107,9 +114,9 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
             </div>
         </div>
         <div class="${SEARCH_RESULT_ACTIONS_CLASS}">
-            <button type="button" class="${SEARCH_RESULT_ADD_DECK_CLASS}" title="Ajouter au deck (Main/Extra)" ${ARIA_LABEL_ATTR}="Ajouter au deck">+</button>
-            <button type="button" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" title="Ajouter au Side" ${ARIA_LABEL_ATTR}="Ajouter au Side">Side</button>
-            <button type="button" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" title="Cartes associées (catalogue complet)">c. associés</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_DECK_CLASS}" ${TITLE_ATTR}="Ajouter au deck (Main/Extra)" ${ARIA_LABEL_ATTR}="Ajouter au deck">+</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" ${TITLE_ATTR}="Ajouter au Side" ${ARIA_LABEL_ATTR}="Ajouter au Side">Side</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" ${TITLE_ATTR}="Cartes associées (catalogue complet)">c. associés</button>
         </div>
     `;
     row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener('click', (e) => {

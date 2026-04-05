@@ -11,6 +11,11 @@ import {
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import {
+    BTN_TYPE_ATTR,
+    BTN_TYPE_BUTTON,
+    IMG_DECODING_ASYNC,
+    IMG_DECODING_ATTR,
+    IMG_LOADING_ATTR,
     ROLE_ATTR,
     ROLE_BUTTON,
     ROLE_DIALOG,
@@ -141,7 +146,7 @@ function renderThumbInner(
 ): string {
     const safeName = escapeHtml(name);
     if (imageUrl && isAllowedImageSrc(imageUrl)) {
-        return `<img class="${imgClass}" src="${escapeAttr(imageUrl)}" alt="${safeName}" width="59" height="86" loading="${loading}" decoding="async" />`;
+        return `<img class="${imgClass}" src="${escapeAttr(imageUrl)}" alt="${safeName}" width="59" height="86" ${IMG_LOADING_ATTR}="${loading}" ${IMG_DECODING_ATTR}="${IMG_DECODING_ASYNC}" />`;
     }
     const initials =
         name
@@ -278,7 +283,7 @@ function ensureModalElements(): {
                             <p id="${MODAL_SUBTITLE_ID}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button type="button" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="Fermer">×</button>
+                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="Fermer">×</button>
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
                     <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>
@@ -434,7 +439,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(`Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe`)}">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(`Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe`)}">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
         }
         parts.push('</ul></div></details>');
@@ -453,7 +458,7 @@ function renderReportHtml(
 
     parts.push(`<div class="${ASSOCIATIONS_MODAL_FOOTER_CLASS}">`);
     parts.push(
-        `<button type="button" class="${ASSOCIATIONS_MODAL_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}">Copier le rapport (Markdown)</button>`,
+        `<button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}">Copier le rapport (Markdown)</button>`,
     );
     parts.push(
         `<details class="${ASSOCIATIONS_MODAL_RAW_CLASS}"><summary>Aperçu Markdown</summary><pre class="${ASSOCIATIONS_MODAL_PRE_CLASS}">${escapeHtml(

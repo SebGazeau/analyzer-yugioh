@@ -16,3 +16,15 @@ export const ROLE_STATUS = 'status';
 
 export const TABINDEX_ZERO = '0';
 export const DRAGGABLE_TRUE = 'true';
+export const DRAGGABLE_FALSE = 'false';
+
+/** `<button type="button">` (évite soumission implicite dans un formulaire). */
+export const BTN_TYPE_ATTR = 'type';
+export const BTN_TYPE_BUTTON = 'button';
+
+/** Attributs `<img>` (lazy-load, décodage). */
+export const IMG_LOADING_ATTR = 'loading';
+export const IMG_LOADING_LAZY = 'lazy';
+export const IMG_LOADING_EAGER = 'eager';
+export const IMG_DECODING_ATTR = 'decoding';
+export const IMG_DECODING_ASYNC = 'async';

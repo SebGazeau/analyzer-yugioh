@@ -45,7 +45,17 @@ import {
     TAB_ID_SUGGESTIONS,
 } from '../tabs.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
-import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO, TITLE_ATTR } from '../utils/htmlAttrs.js';
+import {
+    BTN_TYPE_ATTR,
+    BTN_TYPE_BUTTON,
+    IMG_LOADING_ATTR,
+    IMG_LOADING_LAZY,
+    ROLE_ATTR,
+    ROLE_BUTTON,
+    TABINDEX_ATTR,
+    TABINDEX_ZERO,
+    TITLE_ATTR,
+} from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 
 function severityLabel(sev: string): string {
@@ -84,7 +94,7 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
             const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =
                 c.imageUrl && c.imageUrl.trim() !== ''
-                    ? `<img class="${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} />`
+                    ? `<img class="${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} />`
                     : `<span class="${suggestionsMainMatchThumbEmptyClassName()}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} ${ARIA_HIDDEN_ATTR}="true">?</span>`;
             return `<div class="${SUGGESTIONS_MAIN_MATCH_CHIP_CLASS}" ${INSIGHTS_MAIN_MATCH_DATA_ATTR} ${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="1" ${INSIGHTS_CARD_NAME_DATA_ATTR}="${nameAttr}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}" ${TITLE_ATTR}="Cliquer pour ajouter 1 exemplaire (${deckSectionMainSideShortLabel(c.section)})" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}">
         ${thumb}
@@ -111,7 +121,7 @@ function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
       <td ${INSIGHTS_CELL_DATA_ATTR}="attr-race">${attrRace}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="match">${matchCell}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="action">
-        <button type="button" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="Ouvrir le Builder et rechercher cette carte">Chercher</button>
+        <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="Ouvrir le Builder et rechercher cette carte">Chercher</button>
       </td>
     </tr>`;
         })

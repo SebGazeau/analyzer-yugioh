@@ -51,7 +51,16 @@ import {
 } from '../deck.js';
 import { PAGE_DECKS_SELECTOR } from '../appPageDomSelectors.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
-import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO } from '../utils/htmlAttrs.js';
+import {
+    BTN_TYPE_ATTR,
+    BTN_TYPE_BUTTON,
+    IMG_LOADING_LAZY,
+    ROLE_ATTR,
+    ROLE_BUTTON,
+    TABINDEX_ATTR,
+    TABINDEX_ZERO,
+    TITLE_ATTR,
+} from '../utils/htmlAttrs.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { escapeHtml, formatDeckDate } from '../utils/html.js';
 
@@ -81,7 +90,7 @@ export async function refreshMyDecksList(): Promise<void> {
             img.className = DECK_SAVED_ITEM_COVER_IMG_CLASS;
             img.src = cover.imageUrl;
             img.alt = '';
-            img.loading = 'lazy';
+            img.loading = IMG_LOADING_LAZY;
             coverEl.appendChild(img);
         } else {
             const placeholder = document.createElement('div');
@@ -97,7 +106,7 @@ export async function refreshMyDecksList(): Promise<void> {
         const copySvg = `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${ARIA_HIDDEN_ATTR}="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
         const bodyEl = document.createElement('div');
         bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
-        bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button type="button" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" title="Dupliquer le deck">${copySvg}</button><button type="button" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" title="Supprimer le deck">${trashSvg}</button></div></div>`;
+        bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="Dupliquer le deck">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="Supprimer le deck">${trashSvg}</button></div></div>`;
         li.appendChild(bodyEl);
         const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DUPLICATE_SELECTOR);
         duplicateBtn?.addEventListener('click', async (e) => {
