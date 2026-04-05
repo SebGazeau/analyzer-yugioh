@@ -7,8 +7,8 @@ import {
     sameZoneInsertIndex,
     sumQuantities,
     type DeckRowLike,
-    type DeckSection,
 } from '../../deck-move.js';
+import type { DeckSection } from '../../deckSection.js';
 
 export interface DeckDragMoveContext<D extends DeckRowLike = DeckRowLike> {
     getState: (section: DeckSection) => D[];

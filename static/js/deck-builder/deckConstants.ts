@@ -2,8 +2,10 @@
  * Constantes du deck builder : IDs DOM, clés stockage, fetch, DnD, layout popover.
  */
 
+import type { DeckSection } from '../deckSection.js';
+
 /** IDs des conteneurs grille (alignés sur le template builder). */
-export const DECK_GRID_IDS: Record<'main' | 'extra' | 'side', string> = {
+export const DECK_GRID_IDS: Record<DeckSection, string> = {
     main: 'deck-main-grid',
     extra: 'deck-extra-grid',
     side: 'deck-side-grid',

@@ -2,7 +2,9 @@
  * Logique pure déplacement / réorganisation des cartes (drag-and-drop builder).
  */
 
-export type DeckSection = 'main' | 'extra' | 'side';
+import type { DeckSection } from './deckSection.js';
+
+export type { DeckSection };
 
 export interface DeckRowLike {
     type: string;

@@ -11,9 +11,10 @@ import {
     maxAllowedForDeckLimitGroup,
     totalQtyDeckLimitGroup,
 } from '../deckLimitGroups.js';
+import type { DeckSection } from '../../deckSection.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deckCardPopoverShell.js';
 
-export type DeckSection = 'main' | 'extra' | 'side';
+export type { DeckSection };
 
 /** Ligne deck telle qu’éditée dans le popover (champs mutables + limites). */
 export interface DeckPopoverRow {

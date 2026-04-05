@@ -1,9 +1,10 @@
 /**
  * Rendu des grilles de cartes du deck builder (DOM + événements par cellule).
  */
+import type { DeckSection } from '../../deckSection.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
-export type DeckGridSection = 'main' | 'extra' | 'side';
+export type DeckGridSection = DeckSection;
 
 export interface DeckGridRowForRender extends DeckCardCellShellRow {
     name: string;
@@ -11,12 +12,12 @@ export interface DeckGridRowForRender extends DeckCardCellShellRow {
 }
 
 export function renderDeckGridSection(
-    section: DeckGridSection,
+    section: DeckSection,
     gridId: string,
     rows: DeckGridRowForRender[],
     typeKind: (type: string) => 'monster' | 'spell' | 'trap',
-    onRemoveOne: (section: DeckGridSection, index: number) => void,
-    onOpenCell: (section: DeckGridSection, index: number, cell: HTMLElement) => void,
+    onRemoveOne: (section: DeckSection, index: number) => void,
+    onOpenCell: (section: DeckSection, index: number, cell: HTMLElement) => void,
 ): void {
     const container = document.getElementById(gridId);
     if (!container) return;

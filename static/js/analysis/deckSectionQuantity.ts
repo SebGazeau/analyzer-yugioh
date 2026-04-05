@@ -2,7 +2,9 @@
  * Comptage de cartes par zone du deck (pur).
  */
 
-export type DeckGridSection = 'main' | 'extra' | 'side';
+import type { DeckSection } from '../deckSection.js';
+
+export type DeckGridSection = DeckSection;
 
 export interface DeckStateWithQuantities {
     main: ReadonlyArray<{ quantity: number }>;
@@ -10,6 +12,6 @@ export interface DeckStateWithQuantities {
     side: ReadonlyArray<{ quantity: number }>;
 }
 
-export function countCardsInDeckSection(state: DeckStateWithQuantities, section: DeckGridSection): number {
+export function countCardsInDeckSection(state: DeckStateWithQuantities, section: DeckSection): number {
     return state[section].reduce((sum, r) => sum + r.quantity, 0);
 }

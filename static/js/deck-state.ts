@@ -3,7 +3,9 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
-export type DeckSection = 'main' | 'extra' | 'side';
+import type { DeckSection } from './deckSection.js';
+
+export type { DeckSection };
 
 export interface DeckEntry {
     id: number;

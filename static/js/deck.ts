@@ -3,6 +3,7 @@ import { setAnalysisDeckName, syncBuilderStatsFromDeck } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
 import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
+import type { DeckSection } from './deckSection.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -60,7 +61,7 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
-export type DeckSection = 'main' | 'extra' | 'side';
+export type { DeckSection };
 
 export interface DeckRow {
     name: string;
