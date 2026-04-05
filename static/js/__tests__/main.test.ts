@@ -1,5 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  DECK_BTN_CLEAR_DECK_ID,
+  DECK_BTN_REFRESH_DECKS_ID,
+  DECK_BTN_SAVE_SERVER_ID,
+  DECK_BTN_UPDATE_SERVER_ID,
+  DECK_MY_DECKS_EMPTY_ID,
+  DECK_MY_DECKS_LIST_ID,
+} from '../deck-builder/deckConstants.js';
 import { htmlCategorySummaryBody, htmlDeckCountCells, htmlDeckCountSummary, htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour que main.ts et ses listeners ne plantent pas. */
@@ -10,11 +18,11 @@ function minimalDeckDOM() {
     htmlDeckGrids('deck-table-grid') +
     htmlCategorySummaryBody() +
     '<input id="search-box" /><div id="searchResults"><div id="search-results-list"></div></div>' +
-    '<button id="btn-clear-deck"></button>' +
-    '<button id="btn-save-server"></button>' +
-    '<button id="btn-update-server" style="display:none"></button>' +
-    '<div data-page="decks"><button id="btn-refresh-decks"></button>' +
-    '<ul id="my-decks-list"></ul><p id="my-decks-empty"></p></div>' +
+    `<button id="${DECK_BTN_CLEAR_DECK_ID}"></button>` +
+    `<button id="${DECK_BTN_SAVE_SERVER_ID}"></button>` +
+    `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:none"></button>` +
+    `<div data-page="decks"><button id="${DECK_BTN_REFRESH_DECKS_ID}"></button>` +
+    `<ul id="${DECK_MY_DECKS_LIST_ID}"></ul><p id="${DECK_MY_DECKS_EMPTY_ID}"></p></div>` +
     '<button id="btn-hand-5" class="hand-size-btn" data-hand="5"></button>' +
     '<button id="btn-hand-6" class="hand-size-btn" data-hand="6"></button>' +
     '<button id="btn-draw-one"></button><button id="btn-draw-reset"></button>' +
@@ -60,7 +68,7 @@ describe('main.ts — intégration DOM', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     await Promise.resolve();
     await Promise.resolve();
-    document.getElementById('btn-save-server')?.click();
+    document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
     await Promise.resolve();
     await Promise.resolve();
     expect(postCalls.length).toBeGreaterThanOrEqual(1);
@@ -84,7 +92,7 @@ describe('main.ts — intégration DOM', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     await Promise.resolve();
     await Promise.resolve();
-    document.getElementById('btn-save-server')?.click();
+    document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
     await new Promise((r) => setTimeout(r, 50));
     expect(alertSpy).toHaveBeenCalled();
     expect(alertSpy.mock.calls.some((c) => String(c[0]).includes('Erreur'))).toBe(true);
@@ -107,8 +115,8 @@ describe('main.ts — intégration DOM', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     await Promise.resolve();
     await Promise.resolve();
-    const list = document.getElementById('my-decks-list');
-    const refreshBtn = document.getElementById('btn-refresh-decks');
+    const list = document.getElementById(DECK_MY_DECKS_LIST_ID);
+    const refreshBtn = document.getElementById(DECK_BTN_REFRESH_DECKS_ID);
     refreshBtn?.click();
     await new Promise((r) => setTimeout(r, 50));
     expect(list?.querySelectorAll('li.deck-saved-item').length).toBe(1);

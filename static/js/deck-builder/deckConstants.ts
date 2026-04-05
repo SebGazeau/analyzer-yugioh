@@ -26,6 +26,15 @@ export const DECK_NAME_INPUT_ID = 'deck-name-input';
 export const DECK_BTN_SAVE_SERVER_ID = 'btn-save-server';
 export const DECK_BTN_UPDATE_SERVER_ID = 'btn-update-server';
 
+export const DECK_MY_DECKS_LIST_ID = 'my-decks-list';
+export const DECK_MY_DECKS_EMPTY_ID = 'my-decks-empty';
+export const DECK_BTN_REFRESH_DECKS_ID = 'btn-refresh-decks';
+
+export const DECK_IMPORT_JSON_INPUT_ID = 'import-json';
+export const DECK_BTN_CLEAR_DECK_ID = 'btn-clear-deck';
+export const DECK_BTN_EXPORT_JSON_ID = 'btn-export-json';
+export const DECK_BTN_IMPORT_JSON_TRIGGER_ID = 'btn-import-json-trigger';
+
 /** Espacement popover ↔ ancre (px). */
 export const DECK_CARD_POPOVER_GAP_PX = 4;
 
