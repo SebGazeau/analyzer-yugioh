@@ -26,6 +26,13 @@ import {
     TABINDEX_ZERO,
     TITLE_ATTR,
 } from '../utils/htmlAttrs.js';
+import {
+    ASSOCIATIONS_LIVE_CANNOT_RESOLVE_CARD_NAME,
+    ASSOCIATIONS_LIVE_COPY_FAILED,
+    ASSOCIATIONS_LIVE_NOTHING_TO_COPY,
+    ASSOCIATIONS_LIVE_REPORT_COPIED,
+    associationsLiveCardAddedToDeck,
+} from './associationsLiveMessages.js';
 import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
@@ -228,7 +235,7 @@ async function addAssociationTileToDeck(tile: Element): Promise<void> {
     const row = cat?.find((c) => c.id === id);
     const searchName = row?.name_en?.trim() || row?.name?.trim();
     if (!searchName) {
-        announceAssociationsModal('Impossible de résoudre le nom de cette carte.');
+        announceAssociationsModal(ASSOCIATIONS_LIVE_CANNOT_RESOLVE_CARD_NAME);
         return;
     }
     let card = await fetchCardByName(searchName);
@@ -246,20 +253,20 @@ async function addAssociationTileToDeck(tile: Element): Promise<void> {
         alert(MSG_ADD_CARD_BLOCKED);
         return;
     }
-    announceAssociationsModal(`${searchName} ajouté au deck.`);
+    announceAssociationsModal(associationsLiveCardAddedToDeck(searchName));
 }
 
 async function copyMarkdownToClipboard(): Promise<void> {
     const text = latestAssociationMarkdown;
     if (!text.trim()) {
-        announceAssociationsModal('Rien à copier.');
+        announceAssociationsModal(ASSOCIATIONS_LIVE_NOTHING_TO_COPY);
         return;
     }
     try {
         await navigator.clipboard.writeText(text);
-        announceAssociationsModal('Rapport copié dans le presse-papiers.');
+        announceAssociationsModal(ASSOCIATIONS_LIVE_REPORT_COPIED);
     } catch {
-        announceAssociationsModal('Copie impossible — vérifie les permissions du navigateur.');
+        announceAssociationsModal(ASSOCIATIONS_LIVE_COPY_FAILED);
     }
 }
 

@@ -33,6 +33,7 @@ import {
     DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
     DECK_SAVED_ITEM_DUPLICATE_CLASS,
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
+    deckSavedListItemLoadTitle,
     htmlDeckSavedItemDeleteActionSvg,
     htmlDeckSavedItemDuplicateActionSvg,
     DECK_SAVED_ITEM_FOOTER_CLASS,
@@ -91,7 +92,7 @@ export async function refreshMyDecksList(): Promise<void> {
         li.setAttribute(DATA_DECK_ID_ATTR, String(d.id));
         li.setAttribute(ROLE_ATTR, ROLE_BUTTON);
         li.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
-        li.title = `Charger le deck « ${escapeHtml(d.name)} »`;
+        li.title = deckSavedListItemLoadTitle(d.name);
         const coverFromApi = d.cover_image_url != null ? { imageUrl: d.cover_image_url, name: d.cover_card_name ?? '' } : null;
         const cover = coverFromApi ?? getDeckCover(d.id);
         const coverEl = document.createElement('div');

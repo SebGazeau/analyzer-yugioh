@@ -4,6 +4,7 @@ import {
   DECK_SAVED_ITEM_DELETE_BTN_TITLE,
   DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML,
   DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
+  deckSavedListItemLoadTitle,
   DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML,
   htmlDeckSavedItemDeleteActionSvg,
   htmlDeckSavedItemDuplicateActionSvg,
@@ -30,5 +31,10 @@ describe('deckSavedListDomSelectors', () => {
   it('titres boutons dupliquer / supprimer liste Mes decks', () => {
     expect(DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE).toContain('Dupliquer');
     expect(DECK_SAVED_ITEM_DELETE_BTN_TITLE).toContain('Supprimer');
+  });
+
+  it('title ligne charger deck échappe le nom', () => {
+    expect(deckSavedListItemLoadTitle('Test')).toContain('Test');
+    expect(deckSavedListItemLoadTitle('<')).not.toContain('<');
   });
 });
