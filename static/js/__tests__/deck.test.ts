@@ -10,6 +10,7 @@ import {
 } from '../deck.js';
 import {
   addCard,
+  createEmptyDeckState,
   exportDeckToYDK,
   getDeckSize,
   importDeckFromYDK,
@@ -121,7 +122,15 @@ describe('deck.ts', () => {
 });
 
 describe('deck-state.ts — logique pure', () => {
-  const emptyState: DeckState = { main: [], extra: [], side: [] };
+  const emptyState: DeckState = createEmptyDeckState();
+
+  it('createEmptyDeckState isole les tableaux entre appels', () => {
+    const a = createEmptyDeckState();
+    const b = createEmptyDeckState();
+    a.main.push({ id: 1, name: 'x', quantity: 1 });
+    expect(b.main).toHaveLength(0);
+    expect(getDeckSize(a)).toBe(1);
+  });
 
   it('addCard(deck, card) augmente le count de 1', () => {
     const card = { id: 1, name: 'Test' };

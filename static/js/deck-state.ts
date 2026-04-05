@@ -28,6 +28,11 @@ export interface DeckState {
     side: DeckEntry[];
 }
 
+/** Snapshot neuf : trois zones vides (tests, pas de mutation partagée si rappelé à chaque test). */
+export function createEmptyDeckState(): DeckState {
+    return { ...emptyArraysByDeckSection<DeckEntry>() };
+}
+
 const MAX_COPIES = 3;
 const MIN_MAIN = 40;
 

@@ -294,9 +294,8 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         const rows = await resolveServerDeckListEntriesToRows(entries, fetchCardByName);
         getState(section).push(...rows);
     };
-    const rawBySection = mapDeckSections((s) => data[s]) as Record<DeckSection, unknown>;
     for (const section of DECK_SECTIONS) {
-        await pushSection(rawBySection[section], section);
+        await pushSection(data[section], section);
     }
     renderAllDeckGridSections();
     const loadedName = String(data.name ?? 'Sans nom');

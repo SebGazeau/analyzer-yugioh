@@ -19,10 +19,7 @@ export function deckSectionForGridElementId(
     elementId: string,
     gridIds: Record<DeckSection, string>,
 ): DeckSection | null {
-    for (const s of DECK_SECTIONS) {
-        if (gridIds[s] === elementId) return s;
-    }
-    return null;
+    return DECK_SECTIONS.find((s) => gridIds[s] === elementId) ?? null;
 }
 
 /** Préfixe localStorage pour la carte de couverture par deck (`${key}-${deckId}`). */
