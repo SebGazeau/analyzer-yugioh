@@ -6,7 +6,11 @@ import {
   createCategorySelector,
   getCardsByCategory,
 } from '../category.js';
-import { CATEGORY_CONTAINER_CLASS } from '../categoryDomSelectors.js';
+import {
+  CATEGORY_CONTAINER_CLASS,
+  DROPDOWN_EMPTY_MESSAGE_CLASS,
+  DROPDOWN_LIST_CLASS,
+} from '../categoryDomSelectors.js';
 
 describe('category.ts — données pures', () => {
   it('CATEGORY_GROUPS a des clés et valeurs tableau de chaînes', () => {
@@ -66,6 +70,15 @@ describe('category.ts — createCategorySelector (DOM)', () => {
     el.removeCategory?.('Hand Trap');
     expect(el.getCategories?.()).toEqual(expect.arrayContaining(['Starter']));
     expect(el.getCategories?.()).not.toContain('Hand Trap');
+  });
+
+  it('dropdown sans options affiche le message avec classe (style via CSS)', () => {
+    const el = createCategorySelector();
+    el.setCategories?.([...categoryOptions]);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    const list = el.querySelector(`.${DROPDOWN_LIST_CLASS}`);
+    const empty = list?.querySelector(`.${DROPDOWN_EMPTY_MESSAGE_CLASS}`);
+    expect(empty?.textContent).toBe('Aucune option');
   });
 });
 

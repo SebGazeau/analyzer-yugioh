@@ -23,6 +23,7 @@ import {
 } from '../analysis/drawSimulationDomIds.js';
 import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
 import { TAB_ID_DECKS } from '../tabs.js';
+import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -40,7 +41,7 @@ function minimalDeckDOM() {
     `<input id="${SEARCH_BOX_ELEMENT_ID}" /><div id="${SEARCH_RESULTS_CONTAINER_ID}"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>` +
     `<button id="${DECK_BTN_CLEAR_DECK_ID}"></button>` +
     `<button id="${DECK_BTN_SAVE_SERVER_ID}"></button>` +
-    `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:none"></button>` +
+    `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:${STYLE_DISPLAY_NONE}"></button>` +
     `<div ${DATA_PAGE_ATTR}="${TAB_ID_DECKS}"><button id="${DECK_BTN_REFRESH_DECKS_ID}"></button>` +
     `<ul id="${DECK_MY_DECKS_LIST_ID}"></ul><p id="${DECK_MY_DECKS_EMPTY_ID}"></p></div>` +
     `<button id="${DRAW_SIM_BTN_HAND_5_ID}" class="${DRAW_SIM_HAND_SIZE_BTN_CLASS}" ${DRAW_SIM_HAND_DATA_ATTR}="5"></button>` +

@@ -37,6 +37,10 @@ import { debounce } from './utils/debounce.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
 import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
 import {
+    STYLE_DISPLAY_FLEX,
+    STYLE_DISPLAY_NONE,
+} from './utils/cssInlineDisplay.js';
+import {
     BTN_TYPE_ATTR,
     BTN_TYPE_BUTTON,
     IMG_LOADING_ATTR,
@@ -211,7 +215,7 @@ export function setupSearch(): void {
                 lastResults = cards;
                 lastQuery = query;
                 renderResultsList(cards, query, results);
-                resultsContainer.style.display = 'flex';
+                resultsContainer.style.display = STYLE_DISPLAY_FLEX;
             })
             .catch(() => {
                 results.innerHTML = '';
@@ -220,7 +224,7 @@ export function setupSearch(): void {
                 errEl.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
                 errEl.textContent = 'Erreur de recherche. Réessayez.';
                 results.appendChild(errEl);
-                resultsContainer.style.display = 'flex';
+                resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
             });
     };
@@ -247,7 +251,7 @@ export function setupSearch(): void {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
-            resultsContainer.style.display = 'none';
+            resultsContainer.style.display = STYLE_DISPLAY_NONE;
             resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
             return;
         }
@@ -266,7 +270,7 @@ export function highlightMatch(text: string, query: string): string {
 
 export function closeSearch(): void {
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
-    if (el) el.style.display = 'none';
+    if (el) el.style.display = STYLE_DISPLAY_NONE;
 }
 
 /** Vide l'input et ferme le panneau (raccourci Escape). */

@@ -13,6 +13,7 @@ import {
   SEARCH_RESULT_META_CLASS,
   SEARCH_RESULT_ROW_CLASS,
 } from '../searchDomSelectors.js';
+import { STYLE_DISPLAY_BLOCK, STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
 import results3 from './fixtures/search/results-3-cards.json';
 
 describe('search.ts — helpers purs', () => {
@@ -231,10 +232,10 @@ describe('search.ts — DOM', () => {
 
   it('closeSearch cache le panneau de résultats', () => {
     document.body.innerHTML =
-      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:block"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>`;
+      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:${STYLE_DISPLAY_BLOCK}"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>`;
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement;
-    expect(el.style.display).toBe('block');
+    expect(el.style.display).toBe(STYLE_DISPLAY_BLOCK);
     closeSearch();
-    expect(el.style.display).toBe('none');
+    expect(el.style.display).toBe(STYLE_DISPLAY_NONE);
   });
 }); 

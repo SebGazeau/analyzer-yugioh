@@ -3,6 +3,7 @@ import {
     CATEGORY_CONTAINER_CLASS,
     CHIPS_CATEGORIES_CLASS,
     DROPDOWN_ARROW_CLASS,
+    DROPDOWN_EMPTY_MESSAGE_CLASS,
     DROPDOWN_LIST_CLASS,
     DROPDOWN_LIST_VISIBLE_CLASS,
 } from './categoryDomSelectors.js';
@@ -120,8 +121,8 @@ export function createCategorySelector(): CategoryContainer {
         });
         if (select.innerHTML.trim() === '') {
             const none = document.createElement('div');
+            none.classList.add(DROPDOWN_EMPTY_MESSAGE_CLASS);
             none.textContent = 'Aucune option';
-            none.style.color = '#aaa';
             select.appendChild(none);
         }
     }

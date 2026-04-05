@@ -3,6 +3,7 @@
  */
 import { createCategorySelector } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
+import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
@@ -260,7 +261,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         }
 
         const coverBtnEl = popover.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR) as HTMLElement | null;
-        if (coverBtnEl) coverBtnEl.style.display = getCurrentLoadedDeck() ? '' : 'none';
+        if (coverBtnEl)
+            coverBtnEl.style.display = getCurrentLoadedDeck() ? STYLE_DISPLAY_DEFAULT : STYLE_DISPLAY_NONE;
 
         popoverBackdropEl?.classList.add(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
         popover.classList.add(DECK_CARD_POPOVER_OPEN_CLASS);

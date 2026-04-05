@@ -28,6 +28,10 @@ import {
     DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
 } from './drawHistogramDomSelectors.js';
 import { ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
+import {
+    STYLE_DISPLAY_BLOCK,
+    STYLE_DISPLAY_NONE,
+} from '../utils/cssInlineDisplay.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_SIM_ITERATIONS = 1000;
@@ -146,8 +150,8 @@ export function clearHistogramGraphs(): void {
     const allTitleEl = document.getElementById(DRAW_HISTOGRAM_ALL_TITLE_ID);
     const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
     if (headingEl) headingEl.textContent = 'Distribution (1000 tirages)';
-    if (explanationEl) explanationEl.style.display = 'none';
-    if (allTitleEl) allTitleEl.style.display = 'none';
+    if (explanationEl) explanationEl.style.display = STYLE_DISPLAY_NONE;
+    if (allTitleEl) allTitleEl.style.display = STYLE_DISPLAY_NONE;
     if (allContainer) allContainer.innerHTML = '';
     updateHistogramDOM({}, 0, '—');
 }
@@ -178,7 +182,7 @@ export function runHistogramSimulation1000(input: {
     const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
     if (headingEl) headingEl.textContent = `Distribution (${iterations} tirages) — Catégorie : ${selectedCategory}`;
     if (explanationEl) {
-        explanationEl.style.display = 'block';
+        explanationEl.style.display = STYLE_DISPLAY_BLOCK;
         explanationEl.textContent = `En abscisse : nombre de cartes « ${selectedCategory} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
     }
     updateHistogramDOM(hist, iterations, selectedCategory);
@@ -186,7 +190,7 @@ export function runHistogramSimulation1000(input: {
     const allTitleEl = document.getElementById(DRAW_HISTOGRAM_ALL_TITLE_ID);
     const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
     if (allTitleEl) {
-        allTitleEl.style.display = 'block';
+        allTitleEl.style.display = STYLE_DISPLAY_BLOCK;
         allTitleEl.textContent = `Toutes les catégories (${iterations} tirages chacune)`;
     }
     if (allContainer) {
