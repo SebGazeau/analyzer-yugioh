@@ -2,6 +2,8 @@
  * Classes internes du popover « Modifier la carte ».
  */
 
+import { DECK_CARD_EDIT_DIALOG_TITLE } from '../../utils/deckCardEditLabels.js';
+
 export const DECK_CARD_POPOVER_QTY_CLASS = 'deck-card-popover-qty';
 export const DECK_CARD_POPOVER_QTY_SELECTOR = `.${DECK_CARD_POPOVER_QTY_CLASS}`;
 
@@ -66,7 +68,7 @@ export const DECK_CARD_POPOVER_COVER_BTN_TITLE =
 export const DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL = 'Définir comme couverture du deck';
 
 /** Titre visible (`<h4>`) et `aria-label` du dialogue. */
-export const DECK_CARD_POPOVER_HEADING_TEXT = 'Modifier la carte';
+export const DECK_CARD_POPOVER_HEADING_TEXT = DECK_CARD_EDIT_DIALOG_TITLE;
 
 export const DECK_CARD_POPOVER_BACKDROP_CLASS = 'deck-card-popover-backdrop';
 export const DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS = 'deck-card-popover-backdrop--open';

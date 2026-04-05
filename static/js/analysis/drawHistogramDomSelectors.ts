@@ -2,6 +2,7 @@
  * Classes CSS du rendu histogrammes (simulation tirage, page Analysis).
  */
 
+import { DECK_CARD_EDIT_DIALOG_TITLE } from '../utils/deckCardEditLabels.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 export const DRAW_HISTOGRAM_EMPTY_CLASS = 'draw-histogram-empty';
@@ -59,8 +60,7 @@ export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY = `${TEXT_EM_DASH} Aucune c
 export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK = `${TEXT_EM_DASH} Choisir une catégorie ${TEXT_EM_DASH}`;
 
 /** Message histogramme vide : deck sans catégories assignées. */
-export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG =
-    'Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « Modifier la carte ») pour afficher la distribution.';
+export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG = `Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « ${DECK_CARD_EDIT_DIALOG_TITLE} ») pour afficher la distribution.`;
 
 export function drawHistogramEmptyCategoryMsg(categoryLabel: string): string {
     return `Aucune donnée pour "${categoryLabel}".`;
