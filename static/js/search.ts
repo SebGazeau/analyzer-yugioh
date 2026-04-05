@@ -3,6 +3,7 @@ import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
+import { escapeHtml, escapeAttr } from './utils/html.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 4;
@@ -94,12 +95,6 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         addToDeck(card);
     });
     results.appendChild(row);
-}
-
-function escapeHtml(s: string): string {
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
 }
 
 function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement): void {
@@ -219,9 +214,7 @@ export function setupSearch(): void {
     });
 }
 
-export function escapeAttr(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+export { escapeAttr };
 
 export function highlightMatch(text: string, query: string): string {
     if (!query.trim()) return text;

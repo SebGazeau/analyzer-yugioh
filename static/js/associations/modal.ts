@@ -1,5 +1,6 @@
 import { fetchCardByName } from '../api.js';
 import { addToDeck } from '../deck.js';
+import { escapeAttr, escapeHtml } from '../utils/html.js';
 import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
@@ -372,16 +373,6 @@ function renderReportHtml(
     parts.push(`</div>`);
 
     return parts.join('');
-}
-
-function escapeHtml(s: string): string {
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
-
-function escapeAttr(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
 /**

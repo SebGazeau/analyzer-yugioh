@@ -2,8 +2,7 @@
  * Export / import JSON du deck (fichier local, hors API serveur).
  */
 import type { Card } from '../api.js';
-
-export type DeckFileSection = 'main' | 'extra' | 'side';
+import type { DeckSection } from '../deckSection.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -71,7 +70,7 @@ export interface DeckJsonImportDeps {
     fetchCardByName: (name: string) => Promise<Card | null>;
     banTcgToMaxCopies: (ban: string | undefined) => number;
     resetDeck: () => void;
-    pushRow: (section: DeckFileSection, row: ResolvedImportDeckRow) => void;
+    pushRow: (section: DeckSection, row: ResolvedImportDeckRow) => void;
     refreshAllGrids: () => void;
     afterImportStats: () => void;
 }
@@ -86,7 +85,7 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
 
     const failedCards: string[] = [];
 
-    const addEntries = async (entries: unknown[], section: DeckFileSection): Promise<void> => {
+    const addEntries = async (entries: unknown[], section: DeckSection): Promise<void> => {
         for (const raw of entries) {
             const card = raw as {
                 name?: string;

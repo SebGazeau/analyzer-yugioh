@@ -1,6 +1,16 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getDeckGridRows, getLastGridRow } from '../utils.js';
+import { escapeAttr } from '../utils/html.js';
+
+describe('utils/html escapeAttr', () => {
+  it('échappe & " \' < > pour attributs', () => {
+    expect(escapeAttr('a & b')).toBe('a &amp; b');
+    expect(escapeAttr('say "hi"')).toBe('say &quot;hi&quot;');
+    expect(escapeAttr("<a href='x'>")).toBe('&lt;a href=&#39;x&#39;&gt;');
+    expect(escapeAttr('<img>')).toBe('&lt;img&gt;');
+  });
+});
 
 describe('utils.ts', () => {
   describe('getDeckGridRows', () => {
