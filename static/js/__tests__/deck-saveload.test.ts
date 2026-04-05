@@ -9,14 +9,12 @@ import {
   saveDeckToServer,
   updateDeckOnServer,
 } from '../deck.js';
+import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
+import { htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour loadDeckFromServer (grilles + category-summary). */
 function minimalDOM() {
-  document.body.innerHTML =
-    '<div id="deck-main-grid" class="deck-table-grid"></div>' +
-    '<div id="deck-extra-grid" class="deck-table-grid"></div>' +
-    '<div id="deck-side-grid" class="deck-table-grid"></div>' +
-    '<div id="category-summary-body"></div>';
+  document.body.innerHTML = htmlDeckGrids('deck-table-grid') + '<div id="category-summary-body"></div>';
 }
 
 describe('Save/Load deck — fetch mocké', () => {
@@ -72,7 +70,7 @@ describe('Save/Load deck — fetch mocké', () => {
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);
-    const extraGrid = document.getElementById('deck-extra-grid');
+    const extraGrid = document.getElementById(DECK_GRID_IDS.extra);
     expect(extraGrid?.querySelectorAll('.deck-card-cell').length ?? 0).toBe(0);
   });
 

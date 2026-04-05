@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
+import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
+import { htmlDeckGrids } from './helpers/deckTestDom.js';
 import {
   cleanCardNameFromCell,
   cleanCardTable,
@@ -37,9 +39,7 @@ describe('deck.ts', () => {
   });
 
   it('exportDeckToFile crée un blob et déclenche téléchargement (grille vide)', () => {
-    document.body.innerHTML =
-      '<div id="deck-main-grid"></div><div id="deck-extra-grid"></div><div id="deck-side-grid"></div>' +
-      '<div id="category-summary-body"></div>';
+    document.body.innerHTML = htmlDeckGrids() + '<div id="category-summary-body"></div>';
     const createObjectURL = vi.fn().mockReturnValue('blob:mock');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
@@ -58,16 +58,13 @@ describe('deck.ts', () => {
 
   it('cleanCardTable vide le state et les grilles cartes', () => {
     document.body.innerHTML =
-      '<div id="category-summary-body"></div>' +
-      '<div id="deck-main-grid" class="deck-cards-grid"></div>' +
-      '<div id="deck-extra-grid" class="deck-cards-grid"></div>' +
-      '<div id="deck-side-grid" class="deck-cards-grid"></div>';
+      '<div id="category-summary-body"></div>' + htmlDeckGrids('deck-cards-grid');
     cleanCardTable();
     const state = getDeckState();
     expect(state.main.length).toBe(0);
     expect(state.extra.length).toBe(0);
     expect(state.side.length).toBe(0);
-    expect(document.querySelectorAll('#deck-main-grid .deck-card-cell').length).toBe(0);
+    expect(document.querySelectorAll(`#${DECK_GRID_IDS.main} .deck-card-cell`).length).toBe(0);
   });
 
   it('cleanCardNameFromCell removes placeholder prefix', () => {

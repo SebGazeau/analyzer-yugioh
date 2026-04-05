@@ -62,9 +62,9 @@ describe('deckSection', () => {
 
 describe('deckSectionForGridElementId', () => {
   it('résout les IDs grille du builder', () => {
-    expect(deckSectionForGridElementId('deck-main-grid', DECK_GRID_IDS)).toBe('main');
-    expect(deckSectionForGridElementId('deck-extra-grid', DECK_GRID_IDS)).toBe('extra');
-    expect(deckSectionForGridElementId('deck-side-grid', DECK_GRID_IDS)).toBe('side');
+    expect(deckSectionForGridElementId(DECK_GRID_IDS.main, DECK_GRID_IDS)).toBe('main');
+    expect(deckSectionForGridElementId(DECK_GRID_IDS.extra, DECK_GRID_IDS)).toBe('extra');
+    expect(deckSectionForGridElementId(DECK_GRID_IDS.side, DECK_GRID_IDS)).toBe('side');
     expect(deckSectionForGridElementId('unknown', DECK_GRID_IDS)).toBeNull();
   });
 });
