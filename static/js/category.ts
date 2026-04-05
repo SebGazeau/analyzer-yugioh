@@ -1,10 +1,12 @@
 import {
     CATEGORY_CHIP_CLASS,
+    CATEGORY_CHIP_REMOVE_BUTTON_TEXT,
     CATEGORY_CONTAINER_CLASS,
     CHIPS_CATEGORIES_CLASS,
     DROPDOWN_ARROW_CLASS,
     DROPDOWN_ARROW_TEXT,
     DROPDOWN_EMPTY_MESSAGE_CLASS,
+    DROPDOWN_EMPTY_MESSAGE_TEXT,
     DROPDOWN_LIST_CLASS,
     DROPDOWN_LIST_VISIBLE_CLASS,
 } from './categoryDomSelectors.js';
@@ -96,7 +98,7 @@ export function createCategorySelector(): CategoryContainer {
             chip.className = CATEGORY_CHIP_CLASS;
             chip.textContent = value;
             const btn = document.createElement('button');
-            btn.textContent = '×';
+            btn.textContent = CATEGORY_CHIP_REMOVE_BUTTON_TEXT;
             btn.onclick = (e) => {
                 e.stopPropagation();
                 removeChip(value);
@@ -123,7 +125,7 @@ export function createCategorySelector(): CategoryContainer {
         if (select.innerHTML.trim() === '') {
             const none = document.createElement('div');
             none.classList.add(DROPDOWN_EMPTY_MESSAGE_CLASS);
-            none.textContent = 'Aucune option';
+            none.textContent = DROPDOWN_EMPTY_MESSAGE_TEXT;
             select.appendChild(none);
         }
     }

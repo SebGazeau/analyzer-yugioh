@@ -13,6 +13,9 @@ import {
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
     SEARCH_ERROR_STATE_CLASS,
     SEARCH_FETCH_ERROR_MESSAGE,
+    SEARCH_RESULT_BTN_ADD_DECK_TITLE,
+    SEARCH_RESULT_BTN_ADD_SIDE_TITLE,
+    SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
     SEARCH_HIGHLIGHT_CLASS,
@@ -119,9 +122,9 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
             </div>
         </div>
         <div class="${SEARCH_RESULT_ACTIONS_CLASS}">
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_DECK_CLASS}" ${TITLE_ATTR}="Ajouter au deck (Main/Extra)" ${ARIA_LABEL_ATTR}="Ajouter au deck">+</button>
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" ${TITLE_ATTR}="Ajouter au Side" ${ARIA_LABEL_ATTR}="Ajouter au Side">Side</button>
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" ${TITLE_ATTR}="Cartes associées (catalogue complet)">c. associés</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_DECK_CLASS}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ADD_DECK_TITLE}" ${ARIA_LABEL_ATTR}="Ajouter au deck">+</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ADD_SIDE_TITLE}" ${ARIA_LABEL_ATTR}="Ajouter au Side">Side</button>
+            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ASSOCIATED_TITLE}">c. associés</button>
         </div>
     `;
     row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener('click', (e) => {

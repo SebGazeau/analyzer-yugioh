@@ -9,6 +9,7 @@ import {
 import {
   CATEGORY_CONTAINER_CLASS,
   DROPDOWN_EMPTY_MESSAGE_CLASS,
+  DROPDOWN_EMPTY_MESSAGE_TEXT,
   DROPDOWN_LIST_CLASS,
 } from '../categoryDomSelectors.js';
 
@@ -78,7 +79,7 @@ describe('category.ts — createCategorySelector (DOM)', () => {
     el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     const list = el.querySelector(`.${DROPDOWN_LIST_CLASS}`);
     const empty = list?.querySelector(`.${DROPDOWN_EMPTY_MESSAGE_CLASS}`);
-    expect(empty?.textContent).toBe('Aucune option');
+    expect(empty?.textContent).toBe(DROPDOWN_EMPTY_MESSAGE_TEXT);
   });
 });
 

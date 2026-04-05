@@ -30,6 +30,11 @@ export const DATA_SEARCH_ERROR_ATTR = 'data-search-error';
 /** Message affiché si la requête de recherche échoue (réseau / serveur). */
 export const SEARCH_FETCH_ERROR_MESSAGE = 'Erreur de recherche. Réessayez.';
 
+/** Attribut `title` des boutons d’action par ligne de résultat. */
+export const SEARCH_RESULT_BTN_ADD_DECK_TITLE = 'Ajouter au deck (Main/Extra)';
+export const SEARCH_RESULT_BTN_ADD_SIDE_TITLE = 'Ajouter au Side';
+export const SEARCH_RESULT_BTN_ASSOCIATED_TITLE = 'Cartes associées (catalogue complet)';
+
 export const SEARCH_RESULT_ARCH_SOURCE_CLASS = 'search-result-arch-source';
 
 export const SEARCH_RESULT_THUMB_CLASS = 'search-result-thumb';

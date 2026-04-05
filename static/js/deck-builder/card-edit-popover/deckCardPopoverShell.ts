@@ -6,8 +6,14 @@ import {
     DECK_CARD_POPOVER_ACTIONS_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_CLASS,
     DECK_CARD_POPOVER_CATS_CLASS,
+    DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_CLOSE_BTN_TITLE,
     DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS,
+    DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_COVER_BTN_TITLE,
     DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS,
+    DECK_CARD_POPOVER_DELETE_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_DELETE_BTN_TITLE,
     DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_ENGINE_CLASS,
     DECK_CARD_POPOVER_ICON_CLASS,
@@ -21,7 +27,7 @@ import {
     DECK_CARD_POPOVER_TITLE_CLASS,
 } from './deckCardPopoverDomSelectors.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../../utils/ariaAttrs.js';
-import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON } from '../../utils/htmlAttrs.js';
+import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../../utils/htmlAttrs.js';
 
 export const DECK_CARD_POPOVER_SHELL_HTML = `
         <div class="${DECK_CARD_POPOVER_INNER_CLASS}">
@@ -49,13 +55,13 @@ export const DECK_CARD_POPOVER_SHELL_HTML = `
                 <div class="${DECK_CARD_POPOVER_CAT_CONTAINER_CLASS}"></div>
             </div>
             <div class="${DECK_CARD_POPOVER_ACTIONS_CLASS}">
-                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS}" title="Enregistrer les modifications et fermer" ${ARIA_LABEL_ATTR}="Enregistrer et fermer">
+                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS}" ${TITLE_ATTR}="${DECK_CARD_POPOVER_CLOSE_BTN_TITLE}" ${ARIA_LABEL_ATTR}="${DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL}">
                     <svg class="${DECK_CARD_POPOVER_ICON_CLASS}" ${DECK_CARD_POPOVER_ICON_SVG_ATTRS} ${ARIA_HIDDEN_ATTR}="true"><path d="${DECK_CARD_POPOVER_SVG_PATH_CLOSE_D}"/></svg>
                 </button>
-                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS}" title="Supprimer cette ligne du deck" ${ARIA_LABEL_ATTR}="Supprimer la carte du deck">
+                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS}" ${TITLE_ATTR}="${DECK_CARD_POPOVER_DELETE_BTN_TITLE}" ${ARIA_LABEL_ATTR}="${DECK_CARD_POPOVER_DELETE_BTN_ARIA_LABEL}">
                     <svg class="${DECK_CARD_POPOVER_ICON_CLASS}" ${DECK_CARD_POPOVER_ICON_SVG_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML}</svg>
                 </button>
-                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS}" title="Définir cette carte comme couverture du deck (liste Mes decks)" ${ARIA_LABEL_ATTR}="Définir comme couverture du deck">
+                <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS}" ${TITLE_ATTR}="${DECK_CARD_POPOVER_COVER_BTN_TITLE}" ${ARIA_LABEL_ATTR}="${DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL}">
                     <svg class="${DECK_CARD_POPOVER_ICON_CLASS}" ${DECK_CARD_POPOVER_ICON_SVG_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_CARD_POPOVER_SVG_COVER_INNER_HTML}</svg>
                 </button>
             </div>
