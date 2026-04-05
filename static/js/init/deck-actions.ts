@@ -3,6 +3,7 @@
  * - bindDeckList : interface Decks (liste Mes decks, rafraîchir, charger).
  * - bindDeckToolbar : interface Builder (clear, export, import, save, update).
  */
+import { DECK_COVER_CHANGED_EVENT } from '../deck-builder/deckCoverEvents.js';
 import {
     listMyDecks,
     loadDeckFromServer,
@@ -103,7 +104,7 @@ export function bindDeckList(): void {
     const pageDecks = document.querySelector('[data-page="decks"]');
     if (!pageDecks) return;
     document.getElementById('btn-refresh-decks')?.addEventListener('click', refreshMyDecksList);
-    window.addEventListener('deck-cover-changed', () => refreshMyDecksList());
+    window.addEventListener(DECK_COVER_CHANGED_EVENT, () => refreshMyDecksList());
     refreshMyDecksList();
 
     const newDeckCard = pageDecks.querySelector<HTMLElement>('[data-deck-action="new-deck"]');

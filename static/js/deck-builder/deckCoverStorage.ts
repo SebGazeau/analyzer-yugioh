@@ -3,6 +3,7 @@
  */
 
 import { DECK_COVER_STORAGE_KEY } from './deckConstants.js';
+import { dispatchDeckCoverChanged } from './deckCoverEvents.js';
 
 export interface StoredDeckCover {
     imageUrl: string;
@@ -24,7 +25,7 @@ export function getDeckCover(deckId: number): StoredDeckCover | null {
 export function setDeckCover(deckId: number, imageUrl: string, name: string): void {
     try {
         localStorage.setItem(`${DECK_COVER_STORAGE_KEY}-${deckId}`, JSON.stringify({ imageUrl, name }));
-        window.dispatchEvent(new CustomEvent('deck-cover-changed', { detail: { deckId } }));
+        dispatchDeckCoverChanged(deckId);
     } catch (_) {}
 }
 

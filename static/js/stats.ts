@@ -136,6 +136,15 @@ export function updateCategorySummary(): void {
     }
 }
 
+/**
+ * Rafraîchissement complet pour le builder / contrôles legacy (qty, tri colonnes grille).
+ * `updateDeckCount` réinitialise déjà la simu de tirage, probas et tableau catégories.
+ */
+export function syncBuilderStatsFromDeck(): void {
+    updateDeckCount();
+    computeGlobalStats();
+}
+
 export function runSimulation1000AndUpdateHistogram(): void {
     const snapshot = getDeckMainSnapshot();
     runHistogramSimulation1000({

@@ -3,7 +3,8 @@
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
 import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
-import { updateDeckCount, updateProbabilities, computeGlobalStats } from '../stats.js';
+import { DECK_SORT_CHANGED_EVENT } from '../deck-builder/deckSortEvents.js';
+import { syncBuilderStatsFromDeck } from '../stats.js';
 import { setupSearch } from '../search.js';
 import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons, bindDeckDragAndDrop } from '../deck.js';
 import { bindDeckToolbar } from './deck-actions.js';
@@ -31,8 +32,7 @@ function updateBuilderSortIndicators(): void {
 }
 
 export function initBuilder(): void {
-    updateDeckCount();
-    computeGlobalStats();
+    syncBuilderStatsFromDeck();
     refreshDeckSaveUpdateButtons();
     if (typeof setupSearch === 'function') {
         setupSearch();
@@ -42,18 +42,13 @@ export function initBuilder(): void {
     document.addEventListener('change', (e: Event) => {
         const target = e.target as HTMLElement | null;
         if (target?.classList.contains('qty-select') || target?.classList.contains('engine-select')) {
-            updateDeckCount();
-            computeGlobalStats();
+            syncBuilderStatsFromDeck();
         }
     });
 
-    enableGridRowDeletion('.deck-table-grid', 7, 'remove-row-btn', updateDeckCount);
+    enableGridRowDeletion('.deck-table-grid', 7, 'remove-row-btn', syncBuilderStatsFromDeck);
     ['deck-main-grid', 'deck-extra-grid', 'deck-side-grid'].forEach((id) => {
-        enableColumnSort(id, 7, () => {
-            updateDeckCount();
-            updateProbabilities();
-            computeGlobalStats();
-        });
+        enableColumnSort(id, 7, () => syncBuilderStatsFromDeck());
     });
 
     bindDeckToolbar();
@@ -87,7 +82,7 @@ export function initBuilder(): void {
                 setMainDeckSortByCategory(cat);
             }
         });
-        window.addEventListener('deck-sort-changed', updateBuilderSortIndicators);
+        window.addEventListener(DECK_SORT_CHANGED_EVENT, updateBuilderSortIndicators);
     }
     updateBuilderSortIndicators();
 
