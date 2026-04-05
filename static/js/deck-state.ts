@@ -3,7 +3,7 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
-import type { DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection, type DeckSectionCounts } from './deckSection.js';
 
 export type { DeckSection };
 
@@ -57,15 +57,13 @@ function addOrIncrement(
 
 /** Retourne le nombre total de cartes (main + extra + side). */
 export function getDeckSize(state: DeckState): number {
-    return sectionCount(state.main) + sectionCount(state.extra) + sectionCount(state.side);
+    return DECK_SECTIONS.reduce((sum, s) => sum + sectionCount(state[s]), 0);
 }
 
 /** Vérifie les limites officielles : main 40–60, extra ≤15, side ≤15. */
 export function isLegal(state: DeckState): boolean {
-    const main = sectionCount(state.main);
-    const extra = sectionCount(state.extra);
-    const side = sectionCount(state.side);
-    return main >= MIN_MAIN && main <= MAX_MAIN && extra <= MAX_EXTRA && side <= MAX_SIDE;
+    const c = Object.fromEntries(DECK_SECTIONS.map((s) => [s, sectionCount(state[s])])) as DeckSectionCounts;
+    return c.main >= MIN_MAIN && c.main <= MAX_MAIN && c.extra <= MAX_EXTRA && c.side <= MAX_SIDE;
 }
 
 /** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte 3 exemplaires et taille de zone. */
@@ -111,19 +109,20 @@ export function removeCard(
     return { ...state, [section]: entries };
 }
 
+const YDK_SECTION_OPEN: Record<DeckSection, string> = {
+    main: '#main',
+    extra: '#extra',
+    side: '!side',
+};
+
 /** Export YDK : #main, #extra, !side, une ligne par id de carte (répété quantity fois). */
 export function exportDeckToYDK(state: DeckState): string {
-    const lines: string[] = ['#created by ...', '#main'];
-    for (const e of state.main) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
-    }
-    lines.push('#extra');
-    for (const e of state.extra) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
-    }
-    lines.push('!side');
-    for (const e of state.side) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
+    const lines: string[] = ['#created by ...'];
+    for (const s of DECK_SECTIONS) {
+        lines.push(YDK_SECTION_OPEN[s]);
+        for (const e of state[s]) {
+            for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
+        }
     }
     return lines.join('\n');
 }

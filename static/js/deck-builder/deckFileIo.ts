@@ -128,14 +128,13 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
     if (Array.isArray(data)) {
         await addEntries(data, 'main');
     } else if (data && typeof data === 'object') {
-        const o = data as { main?: unknown; extra?: unknown; side?: unknown };
-        if (o.main || o.extra || o.side) {
-            for (const section of DECK_SECTIONS) {
-                const raw = o[section];
-                await addEntries(Array.isArray(raw) ? raw : [], section);
-            }
-        } else {
+        const o = data as Partial<Record<DeckSection, unknown>>;
+        if (!DECK_SECTIONS.some((s) => Boolean(o[s]))) {
             throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
+        }
+        for (const section of DECK_SECTIONS) {
+            const raw = o[section];
+            await addEntries(Array.isArray(raw) ? raw : [], section);
         }
     } else {
         throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
