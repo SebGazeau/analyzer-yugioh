@@ -20,6 +20,19 @@ export const DECK_CARD_POPOVER_CLOSE_SELECTOR = `.${DECK_CARD_POPOVER_CLOSE_CLAS
 export const DECK_CARD_POPOVER_COVER_CLASS = 'deck-card-popover-cover';
 export const DECK_CARD_POPOVER_COVER_SELECTOR = `.${DECK_CARD_POPOVER_COVER_CLASS}`;
 
+export const DECK_CARD_POPOVER_INNER_CLASS = 'deck-card-popover-inner';
+export const DECK_CARD_POPOVER_TITLE_CLASS = 'deck-card-popover-title';
+export const DECK_CARD_POPOVER_ROW_CLASS = 'deck-card-popover-row';
+export const DECK_CARD_POPOVER_CATS_CLASS = 'deck-card-popover-cats';
+export const DECK_CARD_POPOVER_ACTIONS_CLASS = 'deck-card-popover-actions';
+export const DECK_CARD_POPOVER_ICON_BTN_CLASS = 'deck-card-popover-icon-btn';
+export const DECK_CARD_POPOVER_ICON_CLASS = 'deck-card-popover-icon';
+
+/** Classes complètes des boutons (icon + rôle + utilities `btn-deck`). */
+export const DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_CLOSE_CLASS} btn btn-deck btn-deck-outline`;
+export const DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_DELETE_CLASS} btn btn-deck btn-deck-danger`;
+export const DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_COVER_CLASS} btn btn-deck btn-deck-outline`;
+
 export const DECK_CARD_POPOVER_BACKDROP_CLASS = 'deck-card-popover-backdrop';
 export const DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS = 'deck-card-popover-backdrop--open';
 

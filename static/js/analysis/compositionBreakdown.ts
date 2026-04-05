@@ -2,6 +2,15 @@
  * Répartition Main Deck : monstres / magies / pièges (logique + fragments HTML).
  */
 
+import {
+    BUILDER_COMPOSITION_DETAIL_COUNT_CLASS,
+    BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS,
+    BUILDER_COMPOSITION_DETAIL_GROUP_CLASS,
+    BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS,
+    BUILDER_COMPOSITION_DETAIL_LABEL_CLASS,
+    BUILDER_COMPOSITION_DETAIL_PCT_CLASS,
+    BUILDER_COMPOSITION_DETAIL_ROW_CLASS,
+} from './compositionBreakdownDomSelectors.js';
 import { escapeHtml } from '../utils/html.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 
@@ -61,12 +70,13 @@ function renderBreakdownList(counts: Record<string, number>, total: number): str
     const entries = Object.entries(counts)
         .filter(([, n]) => n > 0)
         .sort((a, b) => b[1] - a[1]);
-    if (entries.length === 0) return '<p class="builder-composition-detail-empty">Aucun détail</p>';
+    if (entries.length === 0)
+        return `<p class="${BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS}">Aucun détail</p>`;
     const pct = (n: number) => (total > 0 ? ((n / total) * 100).toFixed(0) : '0');
     return entries
         .map(
             ([label, n]) =>
-                `<div class="builder-composition-detail-row"><span class="builder-composition-detail-label">${escapeHtml(label)}</span><span class="builder-composition-detail-count">${n}</span><span class="builder-composition-detail-pct">${pct(n)}%</span></div>`,
+                `<div class="${BUILDER_COMPOSITION_DETAIL_ROW_CLASS}"><span class="${BUILDER_COMPOSITION_DETAIL_LABEL_CLASS}">${escapeHtml(label)}</span><span class="${BUILDER_COMPOSITION_DETAIL_COUNT_CLASS}">${n}</span><span class="${BUILDER_COMPOSITION_DETAIL_PCT_CLASS}">${pct(n)}%</span></div>`,
         )
         .join('');
 }
@@ -83,42 +93,42 @@ export function buildCompositionDetailPanelsHtml(breakdown: CompositionBreakdown
     const parts: string[] = [];
     if (Object.keys(breakdown.monsters.byAttribute).length) {
         parts.push(
-            '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Attribut</div>' +
+            `<div class="${BUILDER_COMPOSITION_DETAIL_GROUP_CLASS}"><div class="${BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS}">Attribut</div>` +
                 renderBreakdownList(breakdown.monsters.byAttribute, totalMonsters) +
                 '</div>',
         );
     }
     if (Object.keys(breakdown.monsters.byLevel).length) {
         parts.push(
-            '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Niveau / Rang</div>' +
+            `<div class="${BUILDER_COMPOSITION_DETAIL_GROUP_CLASS}"><div class="${BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS}">Niveau / Rang</div>` +
                 renderBreakdownList(breakdown.monsters.byLevel, totalMonsters) +
                 '</div>',
         );
     }
     if (Object.keys(breakdown.monsters.byRace).length) {
         parts.push(
-            '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Type (race)</div>' +
+            `<div class="${BUILDER_COMPOSITION_DETAIL_GROUP_CLASS}"><div class="${BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS}">Type (race)</div>` +
                 renderBreakdownList(breakdown.monsters.byRace, totalMonsters) +
                 '</div>',
         );
     }
     const monsterDetail = parts.length
         ? parts.join('')
-        : '<p class="builder-composition-detail-empty">Aucun monstre dans le Main</p>';
+        : `<p class="${BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS}">Aucun monstre dans le Main</p>`;
 
     const spellDetail =
         totalSpells > 0
-            ? '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Sous-type</div>' +
+            ? `<div class="${BUILDER_COMPOSITION_DETAIL_GROUP_CLASS}"><div class="${BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS}">Sous-type</div>` +
               renderBreakdownList(breakdown.spells.byRace, totalSpells) +
               '</div>'
-            : '<p class="builder-composition-detail-empty">Aucune magie dans le Main</p>';
+            : `<p class="${BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS}">Aucune magie dans le Main</p>`;
 
     const trapDetail =
         totalTraps > 0
-            ? '<div class="builder-composition-detail-group"><div class="builder-composition-detail-group-title">Sous-type</div>' +
+            ? `<div class="${BUILDER_COMPOSITION_DETAIL_GROUP_CLASS}"><div class="${BUILDER_COMPOSITION_DETAIL_GROUP_TITLE_CLASS}">Sous-type</div>` +
               renderBreakdownList(breakdown.traps.byRace, totalTraps) +
               '</div>'
-            : '<p class="builder-composition-detail-empty">Aucun piège dans le Main</p>';
+            : `<p class="${BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS}">Aucun piège dans le Main</p>`;
 
     return { monsterDetail, spellDetail, trapDetail };
 }
