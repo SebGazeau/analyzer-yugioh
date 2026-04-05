@@ -6,19 +6,67 @@ import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
 import { associationReportToMarkdown, buildAssociationReport, toAssociationCatalog } from './buildReport.js';
 import {
+    ASSOCIATIONS_ACTION_COPY_MARKDOWN,
     ASSOCIATIONS_ACTION_COPY_MARKDOWN_SELECTOR,
+    ASSOCIATIONS_ACTION_EXPAND_TILES,
     ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR,
     ASSOCIATIONS_ADD_DECK_SELECTOR,
     ASSOCIATIONS_CLOSE_SELECTOR,
+    ASSOCIATIONS_MODAL_ACC_BADGE_CLASS,
+    ASSOCIATIONS_MODAL_ACC_CLASS,
+    ASSOCIATIONS_MODAL_ACC_LIST_CLASS,
+    ASSOCIATIONS_MODAL_ACC_META_CLASS,
+    ASSOCIATIONS_MODAL_ACC_PANEL_CLASS,
+    ASSOCIATIONS_MODAL_ACC_SUMMARY_CLASS,
+    ASSOCIATIONS_MODAL_ACC_SUMMARY_MAIN_CLASS,
+    ASSOCIATIONS_MODAL_ACC_TITLE_CLASS,
+    ASSOCIATIONS_MODAL_ADD_HINT_CLASS,
+    ASSOCIATIONS_MODAL_ANCHOR_ART_CLASS,
+    ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS,
+    ASSOCIATIONS_MODAL_ANCHOR_LABEL_CLASS,
+    ASSOCIATIONS_MODAL_ANCHOR_META_CLASS,
+    ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS,
+    ASSOCIATIONS_MODAL_ARCH_SOURCE_CLASS,
+    ASSOCIATIONS_MODAL_ARCH_SOURCE_CODE_CLASS,
+    ASSOCIATIONS_MODAL_BACKDROP_CLASS,
+    ASSOCIATIONS_MODAL_BODY_CLASS,
+    ASSOCIATIONS_MODAL_BTN_CLASS,
+    ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS,
     ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR,
+    ASSOCIATIONS_MODAL_DIAGNOSTICS_CLASS,
+    ASSOCIATIONS_MODAL_EMPTY_CLASS,
+    ASSOCIATIONS_MODAL_EMPTY_TEXT_CLASS,
+    ASSOCIATIONS_MODAL_EMPTY_TITLE_CLASS,
+    ASSOCIATIONS_MODAL_ERROR_CLASS,
+    ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS,
+    ASSOCIATIONS_MODAL_FOOTER_CLASS,
+    ASSOCIATIONS_MODAL_HEADER_CLASS,
+    ASSOCIATIONS_MODAL_HEADER_MAIN_CLASS,
+    ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS,
+    ASSOCIATIONS_MODAL_LIVE_CLASS,
+    ASSOCIATIONS_MODAL_LOADING_CLASS,
     ASSOCIATIONS_MODAL_OPEN_CLASS,
+    ASSOCIATIONS_MODAL_PANEL_CLASS,
+    ASSOCIATIONS_MODAL_PRE_CLASS,
+    ASSOCIATIONS_MODAL_RAW_CLASS,
     ASSOCIATIONS_MODAL_ROOT_CLASS,
+    ASSOCIATIONS_MODAL_SPINNER_CLASS,
+    ASSOCIATIONS_MODAL_STAT_CLASS,
+    ASSOCIATIONS_MODAL_STAT_VALUE_CLASS,
+    ASSOCIATIONS_MODAL_SUBTITLE_CLASS,
+    ASSOCIATIONS_MODAL_SUMMARY_CLASS,
+    ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS,
+    ASSOCIATIONS_MODAL_TILE_ART_CLASS,
+    ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS,
+    ASSOCIATIONS_MODAL_TILE_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
+    ASSOCIATIONS_MODAL_TILE_IMG_CLASS,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
-    ASSOCIATIONS_ACTION_COPY_MARKDOWN,
-    ASSOCIATIONS_ACTION_EXPAND_TILES,
+    ASSOCIATIONS_MODAL_TILE_NAME_CLASS,
+    ASSOCIATIONS_MODAL_TITLE_CLASS,
+    DATA_ASSOCIATION_ANGLE_ATTR,
     DATA_ASSOCIATIONS_ACTION_ATTR,
     DATA_ASSOCIATIONS_ADD_DECK_ATTR,
     DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR,
@@ -80,14 +128,14 @@ function renderThumbInner(
             .replace(/[^a-zA-ZÀ-ÿ0-9]/g, '')
             .slice(0, 2)
             .toUpperCase() || '?';
-    return `<div class="associations-modal__thumb-placeholder" aria-hidden="true"><span>${escapeHtml(initials)}</span></div>`;
+    return `<div class="${ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS}" aria-hidden="true"><span>${escapeHtml(initials)}</span></div>`;
 }
 
 function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCatalogCard>): string {
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
-    const art = renderThumbInner(row?.image_url, nm, 'associations-modal__tile-img', 'lazy');
-    return `<li class="associations-modal__tile" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
+    const art = renderThumbInner(row?.image_url, nm, ASSOCIATIONS_MODAL_TILE_IMG_CLASS, 'lazy');
+    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
 }
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
@@ -116,7 +164,7 @@ function setAnchorArt(card: AssociationCatalogCard): void {
     const el = document.getElementById(MODAL_ANCHOR_ART_ID);
     if (!el) return;
     const name = card.name_en?.trim() || card.name;
-    el.innerHTML = renderThumbInner(card.image_url, name, 'associations-modal__anchor-img', 'eager');
+    el.innerHTML = renderThumbInner(card.image_url, name, ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS, 'eager');
 }
 
 function mergeAnchorWithCatalog(
@@ -199,24 +247,24 @@ function ensureModalElements(): {
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-labelledby', MODAL_TITLE_ID);
         overlay.innerHTML = `
-            <div class="associations-modal__backdrop" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
-            <div class="associations-modal__panel" id="${MODAL_PANEL_ID}" role="document">
-                <div id="${MODAL_LIVE_ID}" class="associations-modal__live" aria-live="polite" aria-atomic="true"></div>
-                <header class="associations-modal__header">
-                    <div class="associations-modal__header-main">
-                        <div class="associations-modal__anchor-art" id="${MODAL_ANCHOR_ART_ID}" aria-hidden="true"></div>
-                        <div class="associations-modal__header-text">
-                            <h2 id="${MODAL_TITLE_ID}" class="associations-modal__title">Cartes associées</h2>
-                            <p id="${MODAL_SUBTITLE_ID}" class="associations-modal__subtitle"></p>
+            <div class="${ASSOCIATIONS_MODAL_BACKDROP_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
+            <div class="${ASSOCIATIONS_MODAL_PANEL_CLASS}" id="${MODAL_PANEL_ID}" role="document">
+                <div id="${MODAL_LIVE_ID}" class="${ASSOCIATIONS_MODAL_LIVE_CLASS}" aria-live="polite" aria-atomic="true"></div>
+                <header class="${ASSOCIATIONS_MODAL_HEADER_CLASS}">
+                    <div class="${ASSOCIATIONS_MODAL_HEADER_MAIN_CLASS}">
+                        <div class="${ASSOCIATIONS_MODAL_ANCHOR_ART_CLASS}" id="${MODAL_ANCHOR_ART_ID}" aria-hidden="true"></div>
+                        <div class="${ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS}">
+                            <h2 id="${MODAL_TITLE_ID}" class="${ASSOCIATIONS_MODAL_TITLE_CLASS}">Cartes associées</h2>
+                            <p id="${MODAL_SUBTITLE_ID}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button type="button" class="associations-modal__close" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" aria-label="Fermer">×</button>
+                    <button type="button" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" aria-label="Fermer">×</button>
                 </header>
-                <div id="${MODAL_LOADING_ID}" class="associations-modal__loading" hidden>
-                    <span class="associations-modal__spinner" aria-hidden="true"></span>
+                <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
+                    <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" aria-hidden="true"></span>
                     <span>Chargement des visuels et du catalogue…</span>
                 </div>
-                <div id="${MODAL_BODY_ID}" class="associations-modal__body"></div>
+                <div id="${MODAL_BODY_ID}" class="${ASSOCIATIONS_MODAL_BODY_CLASS}"></div>
             </div>
         `;
         document.body.appendChild(overlay);
@@ -297,20 +345,20 @@ function renderReportHtml(
     const { groupsWithCards, uniqueCardCount } = countAssociationStats(report.groups);
 
     const parts: string[] = [];
-    parts.push(`<div class="associations-modal__summary" role="status">`);
+    parts.push(`<div class="${ASSOCIATIONS_MODAL_SUMMARY_CLASS}" role="status">`);
     parts.push(
-        `<span class="associations-modal__stat"><span class="associations-modal__stat-value">${groupsWithCards}</span> angle(s) avec cartes</span>`,
+        `<span class="${ASSOCIATIONS_MODAL_STAT_CLASS}"><span class="${ASSOCIATIONS_MODAL_STAT_VALUE_CLASS}">${groupsWithCards}</span> angle(s) avec cartes</span>`,
     );
     parts.push(
-        `<span class="associations-modal__stat"><span class="associations-modal__stat-value">${uniqueCardCount}</span> carte(s) distincte(s)</span>`,
+        `<span class="${ASSOCIATIONS_MODAL_STAT_CLASS}"><span class="${ASSOCIATIONS_MODAL_STAT_VALUE_CLASS}">${uniqueCardCount}</span> carte(s) distincte(s)</span>`,
     );
     parts.push(`</div>`);
     parts.push(
-        `<p class="associations-modal__add-hint">Clique une <strong>vignette</strong> ci-dessous pour <strong>ajouter la carte au deck</strong> (comme le + du builder).</p>`,
+        `<p class="${ASSOCIATIONS_MODAL_ADD_HINT_CLASS}">Clique une <strong>vignette</strong> ci-dessous pour <strong>ajouter la carte au deck</strong> (comme le + du builder).</p>`,
     );
 
-    parts.push(`<div class="associations-modal__anchor-meta">`);
-    parts.push(`<p class="associations-modal__anchor-label">Ancre — métadonnées</p>`);
+    parts.push(`<div class="${ASSOCIATIONS_MODAL_ANCHOR_META_CLASS}">`);
+    parts.push(`<p class="${ASSOCIATIONS_MODAL_ANCHOR_LABEL_CLASS}">Ancre — métadonnées</p>`);
     parts.push(
         `<p><strong>Archétype(s) — champ API</strong> : ${escapeHtml(archLine)}</p>`,
     );
@@ -318,47 +366,47 @@ function renderReportHtml(
     if (srcRaw) {
         const { short, title } = archetypeSourceUi(srcRaw);
         parts.push(
-            `<p><strong>Provenance archétype</strong> : <span class="associations-modal__arch-source" ${DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(
+            `<p><strong>Provenance archétype</strong> : <span class="${ASSOCIATIONS_MODAL_ARCH_SOURCE_CLASS}" ${DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(
                 srcRaw,
-            )}" title="${escapeAttr(title)}">${escapeHtml(short || srcRaw)}</span> <code class="associations-modal__arch-source-code">${escapeHtml(
+            )}" title="${escapeAttr(title)}">${escapeHtml(short || srcRaw)}</span> <code class="${ASSOCIATIONS_MODAL_ARCH_SOURCE_CODE_CLASS}">${escapeHtml(
                 srcRaw,
             )}</code></p>`,
         );
     }
     parts.push(
-        `<p class="associations-modal__anchor-note">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause — pas la logique de regroupement.</p>`,
+        `<p class="${ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS}">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause — pas la logique de regroupement.</p>`,
     );
     parts.push(`</div>`);
 
     if (report.groups.length === 0) {
-        parts.push(`<div class="associations-modal__empty">`);
-        parts.push(`<p class="associations-modal__empty-title">Aucune association détectée</p>`);
+        parts.push(`<div class="${ASSOCIATIONS_MODAL_EMPTY_CLASS}">`);
+        parts.push(`<p class="${ASSOCIATIONS_MODAL_EMPTY_TITLE_CLASS}">Aucune association détectée</p>`);
         parts.push(
-            `<p class="associations-modal__empty-text">Consulte les diagnostics éventuels pour comprendre les angles ignorés (archétype absent, textes vides, etc.).</p>`,
+            `<p class="${ASSOCIATIONS_MODAL_EMPTY_TEXT_CLASS}">Consulte les diagnostics éventuels pour comprendre les angles ignorés (archétype absent, textes vides, etc.).</p>`,
         );
         parts.push(`</div>`);
     }
 
-    parts.push('<div class="associations-modal__acc-list">');
+    parts.push(`<div class="${ASSOCIATIONS_MODAL_ACC_LIST_CLASS}">`);
     for (let gi = 0; gi < report.groups.length; gi++) {
         const g = report.groups[gi];
         const openAttr = gi === 0 ? ' open' : '';
         parts.push(
-            `<details class="associations-modal__acc"${openAttr} data-association-angle="${escapeAttr(g.angleId)}">`,
+            `<details class="${ASSOCIATIONS_MODAL_ACC_CLASS}"${openAttr} ${DATA_ASSOCIATION_ANGLE_ATTR}="${escapeAttr(g.angleId)}">`,
         );
-        parts.push(`<summary class="associations-modal__acc-summary">`);
-        parts.push(`<span class="associations-modal__acc-summary-main">`);
-        parts.push(`<span class="associations-modal__acc-title">${escapeHtml(g.displayLabel)}</span>`);
+        parts.push(`<summary class="${ASSOCIATIONS_MODAL_ACC_SUMMARY_CLASS}">`);
+        parts.push(`<span class="${ASSOCIATIONS_MODAL_ACC_SUMMARY_MAIN_CLASS}">`);
+        parts.push(`<span class="${ASSOCIATIONS_MODAL_ACC_TITLE_CLASS}">${escapeHtml(g.displayLabel)}</span>`);
         parts.push(
-            `<span class="associations-modal__acc-meta"><span>${escapeHtml(g.linkStrength)}</span> · ${g.cardIds.length} carte(s) · <code>${escapeHtml(g.angleId)}</code></span>`,
+            `<span class="${ASSOCIATIONS_MODAL_ACC_META_CLASS}"><span>${escapeHtml(g.linkStrength)}</span> · ${g.cardIds.length} carte(s) · <code>${escapeHtml(g.angleId)}</code></span>`,
         );
         parts.push(`</span>`);
         parts.push(
-            `<span class="associations-modal__acc-badge" aria-hidden="true">${g.cardIds.length}</span>`,
+            `<span class="${ASSOCIATIONS_MODAL_ACC_BADGE_CLASS}" aria-hidden="true">${g.cardIds.length}</span>`,
         );
         parts.push(`</summary>`);
-        parts.push(`<div class="associations-modal__acc-panel">`);
-        parts.push('<ul class="associations-modal__tile-grid">');
+        parts.push(`<div class="${ASSOCIATIONS_MODAL_ACC_PANEL_CLASS}">`);
+        parts.push(`<ul class="${ASSOCIATIONS_MODAL_TILE_GRID_CLASS}">`);
         const { visible, rest } = splitAssociationTileIdsForDisplay(g.cardIds, ASSOCIATIONS_MODAL_TILES_INITIAL);
         for (const id of visible) {
             parts.push(renderTileListItemHtml(id, idToCard));
@@ -366,7 +414,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="associations-modal__expand-tiles" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
         }
         parts.push('</ul></div></details>');
@@ -374,7 +422,7 @@ function renderReportHtml(
     parts.push('</div>');
 
     if (report.diagnostics.length > 0) {
-        parts.push('<section class="associations-modal__diagnostics"><h3>Diagnostics</h3><ul>');
+        parts.push(`<section class="${ASSOCIATIONS_MODAL_DIAGNOSTICS_CLASS}"><h3>Diagnostics</h3><ul>`);
         for (const d of report.diagnostics) {
             parts.push(
                 `<li data-severity="${escapeAttr(d.severity)}"><strong>${escapeHtml(d.code)}</strong> — ${escapeHtml(d.message)}</li>`,
@@ -383,12 +431,12 @@ function renderReportHtml(
         parts.push('</ul></section>');
     }
 
-    parts.push(`<div class="associations-modal__footer">`);
+    parts.push(`<div class="${ASSOCIATIONS_MODAL_FOOTER_CLASS}">`);
     parts.push(
-        `<button type="button" class="associations-modal__btn" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}">Copier le rapport (Markdown)</button>`,
+        `<button type="button" class="${ASSOCIATIONS_MODAL_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}">Copier le rapport (Markdown)</button>`,
     );
     parts.push(
-        `<details class="associations-modal__raw"><summary>Aperçu Markdown</summary><pre class="associations-modal__pre">${escapeHtml(
+        `<details class="${ASSOCIATIONS_MODAL_RAW_CLASS}"><summary>Aperçu Markdown</summary><pre class="${ASSOCIATIONS_MODAL_PRE_CLASS}">${escapeHtml(
             markdown,
         )}</pre></details>`,
     );
@@ -443,8 +491,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     } catch {
         latestAssociationMarkdown = '';
         lastModalCatalogForTiles = null;
-        els.body.innerHTML =
-            '<p class="associations-modal__error">Impossible de charger le catalogue (réseau ou serveur).</p>';
+        els.body.innerHTML = `<p class="${ASSOCIATIONS_MODAL_ERROR_CLASS}">Impossible de charger le catalogue (réseau ou serveur).</p>`;
     } finally {
         els.loading.hidden = true;
         panel?.removeAttribute('aria-busy');
