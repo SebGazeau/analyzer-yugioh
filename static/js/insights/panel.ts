@@ -61,6 +61,7 @@ import {
     TITLE_ATTR,
 } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 function severityLabel(sev: string): string {
     return sev === 'active' ? 'Actif' : 'Info';
@@ -86,7 +87,7 @@ function renderSummaryRows(insights: DeckInsight[]): string {
 }
 
 function renderMatchChips(cards: MatchingCardPreview[]): string {
-    if (cards.length === 0) return `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>—</span>`;
+    if (cards.length === 0) return `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>${TEXT_EM_DASH}</span>`;
     return `<div class="${SUGGESTIONS_MAIN_MATCHES_CLASS}" ${INSIGHTS_MAIN_MATCHES_DATA_ATTR}>${cards
         .map((c) => {
             const nameEsc = escapeHtml(c.name);
@@ -138,7 +139,7 @@ function renderDetailRows(insight: DeckInsight | undefined): string {
         .map((g) => {
             const targetsHtml =
                 g.targets.length === 0
-                    ? `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>—</span>`
+                    ? `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>${TEXT_EM_DASH}</span>`
                     : `<ul class="${SUGGESTIONS_TARGET_LIST_CLASS}">${g.targets
                           .map(
                               (t) =>
