@@ -29,6 +29,20 @@ export const DECK_SECTION_COLLAPSED_CLASS = 'deck-section--collapsed';
 export const DECK_CARD_CELL_CLASS = 'deck-card-cell';
 export const DECK_CARD_CELL_SELECTOR = `.${DECK_CARD_CELL_CLASS}`;
 
+/** Modificateur BEM `--monster` | `--spell` | `--trap` sur la cellule grille. */
+export const DECK_CARD_CELL_TYPE_KIND_CLASS = {
+    monster: `${DECK_CARD_CELL_CLASS}--monster`,
+    spell: `${DECK_CARD_CELL_CLASS}--spell`,
+    trap: `${DECK_CARD_CELL_CLASS}--trap`,
+} as const;
+
+export type DeckCardCellTypeKind = keyof typeof DECK_CARD_CELL_TYPE_KIND_CLASS;
+
+/** Classes complètes du wrapper cellule (base + modificateur type). */
+export function deckCardCellWrapperClassName(kind: DeckCardCellTypeKind): string {
+    return `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS[kind]}`;
+}
+
 export const DECK_CARD_REMOVE_ONE_BTN_CLASS = 'deck-card-remove-one';
 export const DECK_CARD_REMOVE_ONE_BTN_SELECTOR = `.${DECK_CARD_REMOVE_ONE_BTN_CLASS}`;
 

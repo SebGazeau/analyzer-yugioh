@@ -6,6 +6,7 @@ import { DECK_ACTION_REMOVE_ONE_SELECTOR } from '../deckConstants.js';
 import {
     DATA_DECK_CELL_INDEX_ATTR,
     DATA_DECK_CELL_SECTION_ATTR,
+    deckCardCellWrapperClassName,
     DECK_CARD_REMOVE_ONE_BTN_SELECTOR,
 } from './deckGridDomSelectors.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
@@ -29,7 +30,7 @@ export function renderDeckGridSection(
     rows.forEach((row, index) => {
         const kind = typeKind(row.type);
         const cell = document.createElement('div');
-        cell.className = `deck-card-cell deck-card-cell--${kind}`;
+        cell.className = deckCardCellWrapperClassName(kind);
         cell.setAttribute(DATA_DECK_CELL_SECTION_ATTR, section);
         cell.setAttribute(DATA_DECK_CELL_INDEX_ATTR, String(index));
         cell.setAttribute('title', row.name);
