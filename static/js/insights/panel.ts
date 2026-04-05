@@ -1,8 +1,23 @@
 import { getDeckState } from '../deck.js';
 import { deckSectionMainSideShortLabel } from '../deckSection.js';
 import { collectDeckInsights } from './collect.js';
+import {
+    INSIGHTS_DETAIL_TBODY_SELECTOR,
+    INSIGHTS_NAV_TAB_SELECTOR,
+    INSIGHTS_NUMBER_TBODY_SELECTOR,
+    INSIGHTS_PAGE_HELP_SELECTOR,
+    INSIGHTS_SUMMARY_TBODY_SELECTOR,
+    SUGGESTIONS_DETAIL_WRAP_SELECTOR,
+    SUGGESTIONS_NUMBER_WRAP_SELECTOR,
+} from './insightsDomSelectors.js';
 import type { DeckInsight, MatchingCardPreview, NumberXyzSuggestion } from './types.js';
-import { setActiveTab } from '../tabs.js';
+import {
+    APP_TAB_ACTIVE_SELECTOR,
+    setActiveTab,
+    TAB_DATA_ATTR,
+    TAB_ID_BUILDER,
+    TAB_ID_SUGGESTIONS,
+} from '../tabs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 
 function severityLabel(sev: string): string {
@@ -105,25 +120,25 @@ function renderDetailRows(insight: DeckInsight | undefined): string {
  */
 export function refreshInsightsUI(): void {
     const insights = collectDeckInsights(getDeckState());
-    const tab = document.querySelector<HTMLElement>('[data-nav-insights-tab]');
-    const summaryBody = document.querySelector('[data-insights-summary-tbody]');
+    const tab = document.querySelector<HTMLElement>(INSIGHTS_NAV_TAB_SELECTOR);
+    const summaryBody = document.querySelector(INSIGHTS_SUMMARY_TBODY_SELECTOR);
 
     if (!tab || !summaryBody) return;
 
     if (insights.length === 0) {
         tab.hidden = true;
         tab.setAttribute('aria-hidden', 'true');
-        const active = document.querySelector('.app-tab.app-tab--active')?.getAttribute('data-tab');
-        if (active === 'suggestions') setActiveTab('builder');
+        const active = document.querySelector(APP_TAB_ACTIVE_SELECTOR)?.getAttribute(TAB_DATA_ATTR);
+        if (active === TAB_ID_SUGGESTIONS) setActiveTab(TAB_ID_BUILDER);
         summaryBody.innerHTML = '';
-        const detailBody = document.querySelector('[data-insights-detail-tbody]');
-        const detailWrap = document.querySelector<HTMLElement>('[data-suggestions-detail-wrap]');
+        const detailBody = document.querySelector(INSIGHTS_DETAIL_TBODY_SELECTOR);
+        const detailWrap = document.querySelector<HTMLElement>(SUGGESTIONS_DETAIL_WRAP_SELECTOR);
         if (detailBody) detailBody.innerHTML = '';
         if (detailWrap) detailWrap.hidden = true;
-        const helpEl = document.querySelector<HTMLElement>('[data-insights-page-help]');
+        const helpEl = document.querySelector<HTMLElement>(INSIGHTS_PAGE_HELP_SELECTOR);
         if (helpEl) helpEl.textContent = '';
-        const numberWrap = document.querySelector<HTMLElement>('[data-suggestions-number-wrap]');
-        const numberBody = document.querySelector('[data-insights-number-tbody]');
+        const numberWrap = document.querySelector<HTMLElement>(SUGGESTIONS_NUMBER_WRAP_SELECTOR);
+        const numberBody = document.querySelector(INSIGHTS_NUMBER_TBODY_SELECTOR);
         if (numberWrap) numberWrap.hidden = true;
         if (numberBody) numberBody.innerHTML = '';
         return;
@@ -137,10 +152,10 @@ export function refreshInsightsUI(): void {
     const stDetails = stInsight?.details?.seventhTachyon;
     const groups = stDetails?.xyzGroups ?? [];
     const suggested = stDetails?.suggestedNumberXyz;
-    const detailBody = document.querySelector('[data-insights-detail-tbody]');
-    const detailWrap = document.querySelector<HTMLElement>('[data-suggestions-detail-wrap]');
-    const numberWrap = document.querySelector<HTMLElement>('[data-suggestions-number-wrap]');
-    const numberBody = document.querySelector('[data-insights-number-tbody]');
+    const detailBody = document.querySelector(INSIGHTS_DETAIL_TBODY_SELECTOR);
+    const detailWrap = document.querySelector<HTMLElement>(SUGGESTIONS_DETAIL_WRAP_SELECTOR);
+    const numberWrap = document.querySelector<HTMLElement>(SUGGESTIONS_NUMBER_WRAP_SELECTOR);
+    const numberBody = document.querySelector(INSIGHTS_NUMBER_TBODY_SELECTOR);
 
     if (numberWrap && numberBody) {
         if (suggested && suggested.length > 0) {
@@ -163,7 +178,7 @@ export function refreshInsightsUI(): void {
     }
 
     const help = stInsight?.details?.helpLine ?? insights[0]?.details?.helpLine ?? '';
-    const helpEl = document.querySelector<HTMLElement>('[data-insights-page-help]');
+    const helpEl = document.querySelector<HTMLElement>(INSIGHTS_PAGE_HELP_SELECTOR);
     if (helpEl) helpEl.textContent = help;
 }
 

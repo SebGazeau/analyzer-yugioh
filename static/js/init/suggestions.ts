@@ -5,7 +5,7 @@ import { addToDeck } from '../deck.js';
 import { isDeckSectionMainSide, type DeckSection } from '../deckSection.js';
 import { fetchSearchResultsForQuery, pickBestCardFromSearchResults, runSearchWithQuery } from '../search.js';
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
-import { setActiveTab } from '../tabs.js';
+import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 
 export function bindSuggestionsFindCard(): void {
     document.addEventListener('click', (e: Event) => {
@@ -16,7 +16,7 @@ export function bindSuggestionsFindCard(): void {
         const name = el.getAttribute('data-insights-find-card');
         if (!name) return;
         e.preventDefault();
-        setActiveTab('builder');
+        setActiveTab(TAB_ID_BUILDER);
         requestAnimationFrame(() => runSearchWithQuery(name));
     });
 }

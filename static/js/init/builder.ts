@@ -90,7 +90,7 @@ export function initBuilder(): void {
 
     document.getElementById(BTN_ANALYZE_LINK_ID)?.addEventListener('click', (e) => {
         e.preventDefault();
-        import('../main.js').then((m) => m.setActiveTab('analysis'));
+        import('../tabs.js').then((t) => t.setActiveTab(t.TAB_ID_ANALYSIS));
     });
 
     bindKeyboard();

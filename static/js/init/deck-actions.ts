@@ -28,6 +28,7 @@ import {
     importDeckFromFile,
     getDeckCover,
 } from '../deck.js';
+import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { escapeHtml, formatDeckDate } from '../utils/html.js';
 
 /** Rafraîchit la liste « Mes decks » (appelée au load et après save/update). */
@@ -96,8 +97,7 @@ export async function refreshMyDecksList(): Promise<void> {
             const ok = await loadDeckFromServer(d.id);
             if (!ok) alert('Impossible de charger le deck');
             else {
-                const { setActiveTab } = await import('../main.js');
-                setActiveTab('builder');
+                setActiveTab(TAB_ID_BUILDER);
             }
         };
         li.addEventListener('click', loadDeck);
@@ -122,7 +122,7 @@ export function bindDeckList(): void {
     const newDeckCard = pageDecks.querySelector<HTMLElement>('[data-deck-action="new-deck"]');
     newDeckCard?.addEventListener('click', () => {
         cleanCardTable();
-        import('../main.js').then((m) => m.setActiveTab('builder'));
+        setActiveTab(TAB_ID_BUILDER);
         const nameInput = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
         nameInput?.focus();
     });
