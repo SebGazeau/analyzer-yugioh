@@ -1,0 +1,12 @@
+/**
+ * Widget sélecteur de catégories (popover deck / chips).
+ */
+
+export const CATEGORY_CONTAINER_CLASS = 'category-container';
+export const CHIPS_CATEGORIES_CLASS = 'chips-categories';
+export const DROPDOWN_ARROW_CLASS = 'dropdown-arrow';
+export const DROPDOWN_LIST_CLASS = 'dropdown-list';
+/** État ouvert de la liste déroulante. */
+export const DROPDOWN_LIST_VISIBLE_CLASS = 'show';
+
+export const CATEGORY_CHIP_CLASS = 'chip';

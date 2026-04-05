@@ -2,6 +2,7 @@
  * Rendu DOM des histogrammes de simulation de tirage (page Analysis).
  */
 
+import { DATA_CATEGORY_ATTR } from './analysisCategorySummaryDomSelectors.js';
 import {
     DRAW_HISTOGRAM_ALL_CATEGORIES_ID,
     DRAW_HISTOGRAM_ALL_TITLE_ID,
@@ -10,6 +11,21 @@ import {
     DRAW_HISTOGRAM_HEADING_ID,
     DRAW_SIMULATION_HISTOGRAM_CONTAINER_ID,
 } from './drawHistogramDomIds.js';
+import {
+    DRAW_HISTOGRAM_BAR_CLASS,
+    DRAW_HISTOGRAM_BAR_WRAP_CLASS,
+    DRAW_HISTOGRAM_CHART_CLASS,
+    DRAW_HISTOGRAM_COUNT_CLASS,
+    DRAW_HISTOGRAM_EMPTY_CLASS,
+    DRAW_HISTOGRAM_LABEL_CLASS,
+    DRAW_HISTOGRAM_MINI_BAR_CLASS,
+    DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS,
+    DRAW_HISTOGRAM_MINI_CHART_CLASS,
+    DRAW_HISTOGRAM_MINI_CLASS,
+    DRAW_HISTOGRAM_MINI_COUNT_CLASS,
+    DRAW_HISTOGRAM_MINI_LABEL_CLASS,
+    DRAW_HISTOGRAM_MINI_TITLE_CLASS,
+} from './drawHistogramDomSelectors.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
 const HISTOGRAM_SIM_ITERATIONS = 1000;
@@ -60,7 +76,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
 
     if (buckets.length === 0) {
         const msg = document.createElement('p');
-        msg.className = 'draw-histogram-empty';
+        msg.className = DRAW_HISTOGRAM_EMPTY_CLASS;
         msg.textContent =
             categoryLabel === '—'
                 ? 'Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « Modifier la carte ») pour afficher la distribution.'
@@ -71,7 +87,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
 
     const maxCount = Math.max(1, ...Object.values(histogram));
     const wrap = document.createElement('div');
-    wrap.className = 'draw-histogram-chart';
+    wrap.className = DRAW_HISTOGRAM_CHART_CLASS;
 
     buckets.forEach((k) => {
         const n = histogram[k];
@@ -79,12 +95,12 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         const heightPx = maxCount > 0 ? (n / maxCount) * HISTOGRAM_BAR_MAX_HEIGHT_PX : 0;
 
         const barWrap = document.createElement('div');
-        barWrap.className = 'draw-histogram-bar-wrap';
+        barWrap.className = DRAW_HISTOGRAM_BAR_WRAP_CLASS;
         const barTitle = `${k} carte(s) de la catégorie en main : ${n} simulations (${pct.toFixed(1)} %)`;
         barWrap.innerHTML = `
-            <div class="draw-histogram-bar" style="height: ${heightPx}px" title="${barTitle}"></div>
-            <span class="draw-histogram-label">${k}</span>
-            <span class="draw-histogram-count">${n}</span>
+            <div class="${DRAW_HISTOGRAM_BAR_CLASS}" style="height: ${heightPx}px" title="${barTitle}"></div>
+            <span class="${DRAW_HISTOGRAM_LABEL_CLASS}">${k}</span>
+            <span class="${DRAW_HISTOGRAM_COUNT_CLASS}">${n}</span>
         `;
         wrap.appendChild(barWrap);
     });
@@ -107,24 +123,24 @@ export function appendCategoryMiniHistogram(
     const maxCount = Math.max(1, ...Object.values(histogram));
     const color = HISTOGRAM_CATEGORY_COLORS[colorIndex % HISTOGRAM_CATEGORY_COLORS.length];
     const wrap = document.createElement('div');
-    wrap.className = 'draw-histogram-mini';
-    wrap.setAttribute('data-category', categoryName);
+    wrap.className = DRAW_HISTOGRAM_MINI_CLASS;
+    wrap.setAttribute(DATA_CATEGORY_ATTR, categoryName);
     const title = document.createElement('div');
-    title.className = 'draw-histogram-mini-title';
+    title.className = DRAW_HISTOGRAM_MINI_TITLE_CLASS;
     title.textContent = categoryName;
     title.style.color = color;
     wrap.appendChild(title);
     const chart = document.createElement('div');
-    chart.className = 'draw-histogram-mini-chart';
+    chart.className = DRAW_HISTOGRAM_MINI_CHART_CLASS;
     buckets.forEach((k) => {
         const n = histogram[k];
         const heightPx = maxCount > 0 ? (n / maxCount) * HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX : 0;
         const barWrap = document.createElement('div');
-        barWrap.className = 'draw-histogram-mini-bar-wrap';
+        barWrap.className = DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS;
         barWrap.innerHTML = `
-            <div class="draw-histogram-mini-bar" style="height:${heightPx}px;background:${color}" title="${k} en main : ${n} / ${iterations}"></div>
-            <span class="draw-histogram-mini-label">${k}</span>
-            <span class="draw-histogram-mini-count">${n}</span>
+            <div class="${DRAW_HISTOGRAM_MINI_BAR_CLASS}" style="height:${heightPx}px;background:${color}" title="${k} en main : ${n} / ${iterations}"></div>
+            <span class="${DRAW_HISTOGRAM_MINI_LABEL_CLASS}">${k}</span>
+            <span class="${DRAW_HISTOGRAM_MINI_COUNT_CLASS}">${n}</span>
         `;
         chart.appendChild(barWrap);
     });

@@ -6,6 +6,7 @@ import {
   createCategorySelector,
   getCardsByCategory,
 } from '../category.js';
+import { CATEGORY_CONTAINER_CLASS } from '../categoryDomSelectors.js';
 
 describe('category.ts — données pures', () => {
   it('CATEGORY_GROUPS a des clés et valeurs tableau de chaînes', () => {
@@ -28,7 +29,7 @@ describe('category.ts — createCategorySelector (DOM)', () => {
   it('retourne un élément avec la classe category-container', () => {
     const el = createCategorySelector();
     expect(el).toBeInstanceOf(HTMLElement);
-    expect(el.classList.contains('category-container')).toBe(true);
+    expect(el.classList.contains(CATEGORY_CONTAINER_CLASS)).toBe(true);
   });
 
   it('getCategories retourne un tableau vide au départ', () => {

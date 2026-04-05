@@ -8,6 +8,12 @@ import {
     DRAW_SIMULATION_MAX_ID,
     DRAW_SIM_BTN_DRAW_ONE_ID,
 } from './drawSimulationDomIds.js';
+import {
+    DRAW_SIMULATION_EMPTY_CLASS,
+    DRAW_SIMULATION_THUMB_CLASS,
+    DRAW_SIMULATION_THUMB_PLACEHOLDER_CLASS,
+    DRAW_SIMULATION_THUMB_REVEAL_CLASS,
+} from './drawSimulationDomSelectors.js';
 
 export interface DrawSimulationDomInput {
     drawnCardNames: readonly string[];
@@ -31,7 +37,7 @@ export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void 
         container.textContent = '';
         if (drawnCardNames.length === 0) {
             const empty = document.createElement('span');
-            empty.className = 'draw-simulation-empty';
+            empty.className = DRAW_SIMULATION_EMPTY_CLASS;
             empty.textContent = '—';
             container.appendChild(empty);
         } else {
@@ -39,7 +45,7 @@ export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void 
                 const url = resolveImageUrl(name);
                 if (url) {
                     const img = document.createElement('img');
-                    img.className = 'draw-simulation-thumb';
+                    img.className = DRAW_SIMULATION_THUMB_CLASS;
                     img.src = url;
                     img.alt = name;
                     img.loading = 'lazy';
@@ -47,14 +53,14 @@ export function refreshDrawSimulationPanel(input: DrawSimulationDomInput): void 
                     container.appendChild(img);
                 } else {
                     const span = document.createElement('span');
-                    span.className = 'draw-simulation-thumb-placeholder';
+                    span.className = DRAW_SIMULATION_THUMB_PLACEHOLDER_CLASS;
                     span.textContent = name;
                     span.title = name;
                     container.appendChild(span);
                 }
             }
             const lastChild = container.lastElementChild;
-            if (lastChild) lastChild.classList.add('draw-simulation-thumb--reveal');
+            if (lastChild) lastChild.classList.add(DRAW_SIMULATION_THUMB_REVEAL_CLASS);
         }
     }
 

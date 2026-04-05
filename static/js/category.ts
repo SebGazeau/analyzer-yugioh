@@ -1,3 +1,12 @@
+import {
+    CATEGORY_CHIP_CLASS,
+    CATEGORY_CONTAINER_CLASS,
+    CHIPS_CATEGORIES_CLASS,
+    DROPDOWN_ARROW_CLASS,
+    DROPDOWN_LIST_CLASS,
+    DROPDOWN_LIST_VISIBLE_CLASS,
+} from './categoryDomSelectors.js';
+
 // Gestion des catégories de cartes
 
 /** Entrée de deck avec catégories (pour logique pure). */
@@ -39,16 +48,16 @@ interface CategoryContainer extends HTMLElement {
 export function createCategorySelector(): CategoryContainer {
     let catSelected: string[] = [];
     const container = document.createElement('div') as CategoryContainer;
-    container.classList.add('category-container');
+    container.classList.add(CATEGORY_CONTAINER_CLASS);
     const display = document.createElement('div');
-    display.className = 'chips-categories';
+    display.className = CHIPS_CATEGORIES_CLASS;
     container.appendChild(display);
     const arrow = document.createElement('span');
-    arrow.className = 'dropdown-arrow';
+    arrow.className = DROPDOWN_ARROW_CLASS;
     arrow.innerHTML = '&#9662;';
     display.appendChild(arrow);
     const select = document.createElement('div');
-    select.className = 'dropdown-list';
+    select.className = DROPDOWN_LIST_CLASS;
     categoryOptions.forEach(cat => {
         if (!catSelected.includes(cat)) {
         const item = document.createElement('div');
@@ -63,7 +72,7 @@ export function createCategorySelector(): CategoryContainer {
     });
     container.appendChild(select);
     container.addEventListener('click', (e) => {
-        if (select.classList.contains('show')) {
+        if (select.classList.contains(DROPDOWN_LIST_VISIBLE_CLASS)) {
             showDropdown(false);
         } else {
             showDropdown(true);
@@ -82,7 +91,7 @@ export function createCategorySelector(): CategoryContainer {
         display.innerHTML = '';
         catSelected.forEach(value => {
             const chip = document.createElement('span');
-            chip.className = 'chip';
+            chip.className = CATEGORY_CHIP_CLASS;
             chip.textContent = value;
             const btn = document.createElement('button');
             btn.textContent = '×';
@@ -129,9 +138,9 @@ export function createCategorySelector(): CategoryContainer {
     function showDropdown(show: boolean) {
         if (show) {
             renderDropdown();
-            select.classList.add('show');
+            select.classList.add(DROPDOWN_LIST_VISIBLE_CLASS);
         } else {
-            select.classList.remove('show');
+            select.classList.remove(DROPDOWN_LIST_VISIBLE_CLASS);
         }
     }
     container.addCategory = function(cat: string) {
