@@ -11,6 +11,23 @@ import {
 import { deckSectionForGridElementId } from '../deckConstants.js';
 import { isDeckSection, type DeckSection } from '../../deckSection.js';
 
+export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
+    let data: unknown;
+    try {
+        data = JSON.parse(raw);
+    } catch {
+        return null;
+    }
+    if (data === null || typeof data !== 'object') return null;
+    const rec = data as { section?: unknown; index?: unknown };
+    if (typeof rec.section !== 'string' || !isDeckSection(rec.section)) return null;
+    const section = rec.section;
+    if (typeof rec.index !== 'number' || !Number.isFinite(rec.index)) return null;
+    const index = Math.trunc(rec.index);
+    if (index < 0) return null;
+    return { section, index };
+}
+
 export interface DeckDragMoveContext<D extends DeckRowLike = DeckRowLike> {
     getState: (section: DeckSection) => D[];
     renderSection: (section: DeckSection) => void;
@@ -146,12 +163,8 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         grid.classList.remove('deck-cards-grid--dnd-over');
         const raw = e.dataTransfer.getData(dndPayloadType);
         if (!raw) return;
-        let parsed: { section: DeckSection; index: number };
-        try {
-            parsed = JSON.parse(raw) as { section: DeckSection; index: number };
-        } catch {
-            return;
-        }
+        const parsed = parseDeckCellDragPayload(raw);
+        if (!parsed) return;
         const { section: fromSection, index: fromIndex } = parsed;
         const dropSection = deckSectionForGridElementId(grid.id, gridIds);
         if (!dropSection) return;

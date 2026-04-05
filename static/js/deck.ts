@@ -61,7 +61,8 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
-export type { DeckSection };
+export type { DeckSection, DeckSectionMainSide } from './deckSection.js';
+export { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide } from './deckSection.js';
 
 export interface DeckRow {
     name: string;
