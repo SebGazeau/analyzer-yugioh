@@ -3,13 +3,7 @@
  * Les attributs dynamiques (section, index, title) sont posés sur le nœud dans deckGridRender.
  */
 
-export function escapeAttrDeckGrid(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
+import { escapeAttr } from '../../utils/html.js';
 
 export interface DeckCardCellShellRow {
     imageUrl?: string;
@@ -20,7 +14,7 @@ export interface DeckCardCellShellRow {
 /** Contenu interne de `.deck-card-cell` (hors classe `--monster|spell|trap`). */
 export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     const thumbHtml = row.imageUrl
-        ? `<img class="deck-card-thumb-img" src="${escapeAttrDeckGrid(row.imageUrl)}" alt="" loading="lazy" />`
+        ? `<img class="deck-card-thumb-img" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
         : '<span class="deck-card-thumb-placeholder">?</span>';
     const banBadge =
         row.maxCopies != null && row.maxCopies < 3

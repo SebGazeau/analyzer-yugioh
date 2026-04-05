@@ -4,8 +4,6 @@
 
 import type { DeckSection } from '../deckSection.js';
 
-export type DeckGridSection = DeckSection;
-
 export interface DeckStateWithQuantities {
     main: ReadonlyArray<{ quantity: number }>;
     extra: ReadonlyArray<{ quantity: number }>;

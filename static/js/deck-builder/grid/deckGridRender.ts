@@ -4,8 +4,6 @@
 import type { DeckSection } from '../../deckSection.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
-export type DeckGridSection = DeckSection;
-
 export interface DeckGridRowForRender extends DeckCardCellShellRow {
     name: string;
     type: string;
