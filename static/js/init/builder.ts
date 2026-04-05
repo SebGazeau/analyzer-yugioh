@@ -2,6 +2,7 @@
  * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, collapsibles zones.
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
+import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
 import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
 import { DECK_GRID_DOM_IDS } from '../deck-builder/deckConstants.js';
 import { DECK_SORT_CHANGED_EVENT } from '../deck-builder/deckSortEvents.js';
@@ -54,7 +55,7 @@ export function initBuilder(): void {
 
     bindDeckToolbar();
 
-    const liveStats = document.getElementById('live-stats');
+    const liveStats = document.getElementById(LIVE_STATS_CONTAINER_ID);
     if (liveStats) {
         liveStats.addEventListener('click', (e: Event) => {
             const toggle = (e.target as HTMLElement).closest?.('[data-composition-toggle]') as HTMLElement | null;
@@ -87,7 +88,7 @@ export function initBuilder(): void {
     }
     updateBuilderSortIndicators();
 
-    document.getElementById('btn-analyze-link')?.addEventListener('click', (e) => {
+    document.getElementById(BTN_ANALYZE_LINK_ID)?.addEventListener('click', (e) => {
         e.preventDefault();
         import('../main.js').then((m) => m.setActiveTab('analysis'));
     });
