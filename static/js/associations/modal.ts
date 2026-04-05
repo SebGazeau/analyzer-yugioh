@@ -61,6 +61,7 @@ import {
     ASSOCIATIONS_MODAL_EMPTY_CLASS,
     ASSOCIATIONS_MODAL_EMPTY_TEXT_CLASS,
     ASSOCIATIONS_MODAL_EMPTY_TITLE_CLASS,
+    ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT,
     ASSOCIATIONS_MODAL_ERROR_CLASS,
     ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS,
     ASSOCIATIONS_MODAL_FOOTER_CLASS,
@@ -516,7 +517,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     } catch {
         latestAssociationMarkdown = '';
         lastModalCatalogForTiles = null;
-        els.body.innerHTML = `<p class="${ASSOCIATIONS_MODAL_ERROR_CLASS}">Impossible de charger le catalogue (réseau ou serveur).</p>`;
+        els.body.innerHTML = `<p class="${ASSOCIATIONS_MODAL_ERROR_CLASS}">${ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT}</p>`;
     } finally {
         els.loading.hidden = true;
         panel?.removeAttribute(ARIA_BUSY_ATTR);

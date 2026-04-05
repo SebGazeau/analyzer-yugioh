@@ -2,6 +2,8 @@
  * Cartes « Mes decks » (liste sauvegardée) : classes, attributs `data-deck-*`, sélecteurs boutons.
  */
 
+import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+
 export const DECK_SAVED_ITEM_COVER_CLASS = 'deck-saved-item-cover';
 export const DECK_SAVED_ITEM_COVER_IMG_CLASS = 'deck-saved-item-cover-img';
 export const DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS = 'deck-saved-item-cover-placeholder';
@@ -33,3 +35,13 @@ export const DECK_SAVED_ITEM_DELETE_SELECTOR = `.${DECK_SAVED_ITEM_DELETE_CLASS}
 export const DATA_DECK_ID_ATTR = 'data-deck-id';
 export const DATA_DECK_DUPLICATE_ATTR = 'data-deck-duplicate';
 export const DATA_DECK_DELETE_ATTR = 'data-deck-delete';
+
+/** SVG complet du bouton supprimer (liste Mes decks). */
+export function htmlDeckSavedItemDeleteActionSvg(): string {
+    return `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML}</svg>`;
+}
+
+/** SVG complet du bouton dupliquer (liste Mes decks). */
+export function htmlDeckSavedItemDuplicateActionSvg(): string {
+    return `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML}</svg>`;
+}

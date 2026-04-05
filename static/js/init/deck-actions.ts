@@ -28,14 +28,11 @@ import {
     DECK_SAVED_ITEM_COVER_IMG_CLASS,
     DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS,
     DECK_SAVED_ITEM_DELETE_CLASS,
-    DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS,
-    DECK_SAVED_ITEM_DELETE_ICON_CLASS,
-    DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML,
     DECK_SAVED_ITEM_DELETE_SELECTOR,
     DECK_SAVED_ITEM_DUPLICATE_CLASS,
-    DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS,
-    DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML,
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
+    htmlDeckSavedItemDeleteActionSvg,
+    htmlDeckSavedItemDuplicateActionSvg,
     DECK_SAVED_ITEM_FOOTER_CLASS,
     DECK_SAVED_ITEM_META_CLASS,
     DECK_SAVED_ITEM_NAME_CLASS,
@@ -105,8 +102,8 @@ export async function refreshMyDecksList(): Promise<void> {
         const meta = d.created_at
             ? `<span class="${DECK_SAVED_ITEM_META_CLASS}">${formatDeckDate(d.created_at)}</span>`
             : '';
-        const trashSvg = `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML}</svg>`;
-        const copySvg = `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML}</svg>`;
+        const trashSvg = htmlDeckSavedItemDeleteActionSvg();
+        const copySvg = htmlDeckSavedItemDuplicateActionSvg();
         const bodyEl = document.createElement('div');
         bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
         bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="Dupliquer le deck">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="Supprimer le deck">${trashSvg}</button></div></div>`;

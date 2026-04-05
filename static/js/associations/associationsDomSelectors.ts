@@ -84,6 +84,9 @@ export const ASSOCIATIONS_MODAL_BTN_CLASS = 'associations-modal__btn';
 export const ASSOCIATIONS_MODAL_RAW_CLASS = 'associations-modal__raw';
 export const ASSOCIATIONS_MODAL_PRE_CLASS = 'associations-modal__pre';
 export const ASSOCIATIONS_MODAL_ERROR_CLASS = 'associations-modal__error';
+/** Message utilisateur si le catalogue associations ne charge pas. */
+export const ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT =
+    'Impossible de charger le catalogue (réseau ou serveur).';
 
 export const DATA_ASSOCIATION_ANGLE_ATTR = 'data-association-angle';
 
