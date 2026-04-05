@@ -1,5 +1,5 @@
 import { getDeckState } from '../deck.js';
-import type { DeckSectionMainSide } from '../deckSection.js';
+import { deckSectionMainSideShortLabel } from '../deckSection.js';
 import { collectDeckInsights } from './collect.js';
 import type { DeckInsight, MatchingCardPreview, NumberXyzSuggestion } from './types.js';
 import { setActiveTab } from '../tabs.js';
@@ -30,7 +30,6 @@ function renderSummaryRows(insights: DeckInsight[]): string {
 
 function renderMatchChips(cards: MatchingCardPreview[]): string {
     if (cards.length === 0) return '<span data-insights-empty-cell>—</span>';
-    const sectionLabel = (s: DeckSectionMainSide) => (s === 'main' ? 'Main' : 'Side');
     return `<div class="suggestions-main-matches" data-insights-main-matches>${cards
         .map((c) => {
             const nameEsc = escapeHtml(c.name);
@@ -39,12 +38,12 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
                 c.quantity > 1
                     ? `<span class="suggestions-main-match-qty" aria-label="${c.quantity} exemplaires">×${c.quantity}</span>`
                     : '';
-            const sectionBadge = `<span class="suggestions-main-match-section" data-insights-section="${c.section}">${escapeHtml(sectionLabel(c.section))}</span>`;
+            const sectionBadge = `<span class="suggestions-main-match-section" data-insights-section="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =
                 c.imageUrl && c.imageUrl.trim() !== ''
                     ? `<img class="suggestions-main-match-thumb" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" data-insights-match-thumb />`
                     : '<span class="suggestions-main-match-thumb suggestions-main-match-thumb--empty" data-insights-match-thumb aria-hidden="true">?</span>';
-            return `<div class="suggestions-main-match-chip" data-insights-main-match data-insights-add-deck-card="1" data-insights-card-name="${nameAttr}" data-insights-section="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${sectionLabel(c.section)})" role="button" tabindex="0">
+            return `<div class="suggestions-main-match-chip" data-insights-main-match data-insights-add-deck-card="1" data-insights-card-name="${nameAttr}" data-insights-section="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${deckSectionMainSideShortLabel(c.section)})" role="button" tabindex="0">
         ${thumb}
         <span class="suggestions-main-match-name">${nameEsc}</span>
         ${sectionBadge}

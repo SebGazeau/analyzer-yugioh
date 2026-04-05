@@ -64,6 +64,7 @@ export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 export type { DeckSection, DeckSectionCounts, DeckSectionMainSide } from './deckSection.js';
 export {
     DECK_SECTIONS,
+    deckSectionMainSideShortLabel,
     emptyArraysByDeckSection,
     hasTruthyDeckSectionData,
     isDeckSection,

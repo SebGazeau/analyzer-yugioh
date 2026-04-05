@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deckConstants.js';
 import {
   DECK_SECTIONS,
+  deckSectionMainSideShortLabel,
   emptyArraysByDeckSection,
   hasTruthyDeckSectionData,
   isDeckSection,
@@ -46,6 +47,11 @@ describe('deckSection', () => {
     expect(hasTruthyDeckSectionData({ foo: 1 })).toBe(false);
     expect(hasTruthyDeckSectionData({ main: [] })).toBe(true);
     expect(hasTruthyDeckSectionData({ extra: [1], main: null })).toBe(true);
+  });
+
+  it('deckSectionMainSideShortLabel', () => {
+    expect(deckSectionMainSideShortLabel('main')).toBe('Main');
+    expect(deckSectionMainSideShortLabel('side')).toBe('Side');
   });
 });
 

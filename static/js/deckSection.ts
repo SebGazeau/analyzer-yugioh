@@ -36,3 +36,13 @@ export function isDeckSection(value: string): value is DeckSection {
 export function isDeckSectionMainSide(value: string): value is DeckSectionMainSide {
     return value === 'main' || value === 'side';
 }
+
+const MAIN_SIDE_SHORT_LABEL: Record<DeckSectionMainSide, string> = {
+    main: 'Main',
+    side: 'Side',
+};
+
+/** Libellé court UI pour puce / tooltip (Suggestions, etc.). */
+export function deckSectionMainSideShortLabel(section: DeckSectionMainSide): string {
+    return MAIN_SIDE_SHORT_LABEL[section];
+}
