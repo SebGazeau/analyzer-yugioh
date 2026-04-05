@@ -20,5 +20,11 @@ export const DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR = 'data-associations-archet
 export const DATA_ASSOCIATIONS_TILE_MORE_ATTR = 'data-associations-tile-more';
 
 export const ASSOCIATIONS_MODAL_TILE_GRID_CLASS = 'associations-modal__tile-grid';
+/** `<ul>` des vignettes d’un groupe (expansion tuiles). */
+export const ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR = `ul.${ASSOCIATIONS_MODAL_TILE_GRID_CLASS}`;
+
+export const ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS = 'associations-modal__tile-more';
+export const ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR = `li.${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}`;
+
 export const ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS = 'associations-modal__close';
 export const ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR = `.${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}`;

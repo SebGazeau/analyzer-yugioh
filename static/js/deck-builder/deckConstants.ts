@@ -63,3 +63,10 @@ export const DECK_ACTION_REMOVE_ONE_SELECTOR = deckActionSelector(DECK_ACTION_RE
 
 /** Élément liste « Mes decks » (carte deck sauvegardé). */
 export const DECK_SAVED_ITEM_CLASS = 'deck-saved-item';
+
+/** Grille type « table » sur les conteneurs cartes (builder legacy + utils). */
+export const DECK_TABLE_GRID_CLASS = 'deck-table-grid';
+export const DECK_TABLE_GRID_SELECTOR = `.${DECK_TABLE_GRID_CLASS}`;
+
+export const REMOVE_ROW_BTN_CLASS = 'remove-row-btn';
+export const REMOVE_ROW_BTN_SELECTOR = `.${REMOVE_ROW_BTN_CLASS}`;

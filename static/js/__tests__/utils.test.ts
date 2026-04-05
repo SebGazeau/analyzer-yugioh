@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
+import { DECK_TABLE_GRID_CLASS, DECK_TABLE_GRID_SELECTOR } from '../deck-builder/deckConstants.js';
 import { getDeckGridRows, getLastGridRow } from '../utils.js';
 import { escapeAttr } from '../utils/html.js';
 
@@ -16,7 +17,7 @@ describe('utils.ts', () => {
   describe('getDeckGridRows', () => {
     beforeEach(() => {
       document.body.innerHTML =
-        '<div class="deck-table-grid">' +
+        `<div class="${DECK_TABLE_GRID_CLASS}">` +
         '<div></div>'.repeat(7) + // header
         '<div></div>'.repeat(7) + // row 1
         '<div></div>'.repeat(7) + // row 2
@@ -24,7 +25,7 @@ describe('utils.ts', () => {
     });
 
     it('returns correct number of rows', () => {
-      const rows = getDeckGridRows('.deck-table-grid', 7);
+      const rows = getDeckGridRows(DECK_TABLE_GRID_SELECTOR, 7);
       expect(rows.length).toBe(2);
       expect(rows[0].length).toBe(7);
       expect(rows[1].length).toBe(7);

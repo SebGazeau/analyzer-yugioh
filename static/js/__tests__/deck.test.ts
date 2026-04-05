@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
+import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 import {
   cleanCardNameFromCell,
@@ -64,7 +65,7 @@ describe('deck.ts', () => {
     expect(state.main.length).toBe(0);
     expect(state.extra.length).toBe(0);
     expect(state.side.length).toBe(0);
-    expect(document.querySelectorAll(`#${DECK_GRID_IDS.main} .deck-card-cell`).length).toBe(0);
+    expect(document.querySelectorAll(`#${DECK_GRID_IDS.main} ${DECK_CARD_CELL_SELECTOR}`).length).toBe(0);
   });
 
   it('cleanCardNameFromCell removes placeholder prefix', () => {

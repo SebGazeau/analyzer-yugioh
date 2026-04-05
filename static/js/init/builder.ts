@@ -14,7 +14,7 @@ import {
     DATA_COMPOSITION_TOGGLE_ATTR,
 } from '../deck-builder/builderDomSelectors.js';
 import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
-import { DECK_GRID_DOM_IDS } from '../deck-builder/deckConstants.js';
+import { DECK_GRID_DOM_IDS, DECK_TABLE_GRID_SELECTOR, REMOVE_ROW_BTN_CLASS } from '../deck-builder/deckConstants.js';
 import { DECK_SORT_CHANGED_EVENT } from '../deck-builder/deckSortEvents.js';
 import { syncBuilderStatsFromDeck } from '../stats.js';
 import { setupSearch } from '../search.js';
@@ -58,7 +58,7 @@ export function initBuilder(): void {
         }
     });
 
-    enableGridRowDeletion('.deck-table-grid', 7, 'remove-row-btn', syncBuilderStatsFromDeck);
+    enableGridRowDeletion(DECK_TABLE_GRID_SELECTOR, 7, REMOVE_ROW_BTN_CLASS, syncBuilderStatsFromDeck);
     DECK_GRID_DOM_IDS.forEach((id) => {
         enableColumnSort(id, 7, () => syncBuilderStatsFromDeck());
     });

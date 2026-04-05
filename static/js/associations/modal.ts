@@ -12,6 +12,9 @@ import {
     ASSOCIATIONS_CLOSE_SELECTOR,
     ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
+    ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
+    ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS,
+    ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
     ASSOCIATIONS_ACTION_COPY_MARKDOWN,
     ASSOCIATIONS_ACTION_EXPAND_TILES,
     DATA_ASSOCIATIONS_ACTION_ATTR,
@@ -95,12 +98,12 @@ function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
         .map(Number)
         .filter((n) => Number.isFinite(n));
     if (rest.length === 0) return;
-    const ul = btn.closest('ul');
-    if (!ul?.classList.contains('associations-modal__tile-grid')) return;
+    const ul = btn.closest(ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR);
+    if (!ul) return;
     const idToCard = new Map<number, AssociationCatalogCard>();
     for (const c of cat) idToCard.set(c.id, c);
     const html = rest.map((id) => renderTileListItemHtml(id, idToCard)).join('');
-    const liWrap = btn.closest('li');
+    const liWrap = btn.closest(ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR);
     if (liWrap) {
         liWrap.insertAdjacentHTML('beforebegin', html);
         liWrap.remove();
@@ -361,7 +364,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="associations-modal__tile-more" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="associations-modal__expand-tiles" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="associations-modal__expand-tiles" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
         }
         parts.push('</ul></div></details>');

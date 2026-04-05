@@ -8,6 +8,7 @@ import {
   DECK_MY_DECKS_EMPTY_ID,
   DECK_MY_DECKS_LIST_ID,
   DECK_SAVED_ITEM_CLASS,
+  DECK_TABLE_GRID_CLASS,
 } from '../deck-builder/deckConstants.js';
 import {
   DRAW_SIMULATION_COUNT_ID,
@@ -34,7 +35,7 @@ function minimalDeckDOM() {
   document.body.innerHTML =
     htmlDeckCountSummary() +
     htmlDeckCountCells() +
-    htmlDeckGrids('deck-table-grid') +
+    htmlDeckGrids(DECK_TABLE_GRID_CLASS) +
     htmlCategorySummaryBody() +
     `<input id="${SEARCH_BOX_ELEMENT_ID}" /><div id="${SEARCH_RESULTS_CONTAINER_ID}"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>` +
     `<button id="${DECK_BTN_CLEAR_DECK_ID}"></button>` +

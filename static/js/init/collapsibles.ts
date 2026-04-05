@@ -1,7 +1,12 @@
 /**
  * Zones repliables : deck (Main/Extra/Side), table Analysis (Engines/Catégories/Groupes).
  */
-import { ANALYSIS_SECTION_HEADER_ROW_SELECTOR, ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR, ANALYSIS_TABLE_SELECTOR, DATA_SECTION_HEADER_ATTR } from '../analysis/analysisTableDomSelectors.js';
+import {
+    ANALYSIS_SECTION_HEADER_ROW_SELECTOR,
+    ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR,
+    ANALYSIS_TABLE_SELECTOR,
+    DATA_SECTION_HEADER_ATTR,
+} from '../analysis/analysisTableDomSelectors.js';
 import { DECK_ACTION_TOGGLE_ZONE_SELECTOR } from '../deck-builder/deckConstants.js';
 import { DECK_SECTION_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 
@@ -21,7 +26,7 @@ export function bindCollapsibles(): void {
         if (!target) return;
         const id = target.getAttribute(DATA_SECTION_HEADER_ATTR);
         if (!id) return;
-        const table = (target as HTMLElement).closest('table');
+        const table = (target as HTMLElement).closest(ANALYSIS_TABLE_SELECTOR);
         if (!table) return;
         const collapsed = table.classList.toggle(`section-${id}-collapsed`);
         target.setAttribute('aria-expanded', String(!collapsed));
