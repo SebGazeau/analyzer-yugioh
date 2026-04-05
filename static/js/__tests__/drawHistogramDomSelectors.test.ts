@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import {
   DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
   DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY,
@@ -23,5 +24,7 @@ describe('drawHistogramDomSelectors', () => {
     expect(drawHistogramHeadingActive(1000, 'Starter')).toContain('Starter');
     expect(drawHistogramContainerAriaLabel(1000, 'X')).toContain('1000');
     expect(DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY).toContain('Aucune');
+    expect(DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY.split(TEXT_EM_DASH).length - 1).toBe(2);
+    expect(drawHistogramHeadingActive(1000, 'X').includes(TEXT_EM_DASH)).toBe(true);
   });
 });

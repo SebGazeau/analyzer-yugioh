@@ -2,6 +2,8 @@
  * Classes CSS du rendu histogrammes (simulation tirage, page Analysis).
  */
 
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+
 export const DRAW_HISTOGRAM_EMPTY_CLASS = 'draw-histogram-empty';
 export const DRAW_HISTOGRAM_CHART_CLASS = 'draw-histogram-chart';
 export const DRAW_HISTOGRAM_BAR_WRAP_CLASS = 'draw-histogram-bar-wrap';
@@ -40,7 +42,7 @@ export function drawHistogramHeadingIdle(iterations: number): string {
 }
 
 export function drawHistogramHeadingActive(iterations: number, category: string): string {
-    return `Distribution (${iterations} tirages) — Catégorie : ${category}`;
+    return `Distribution (${iterations} tirages) ${TEXT_EM_DASH} Catégorie : ${category}`;
 }
 
 export function drawHistogramExplanationText(iterations: number, category: string): string {
@@ -52,9 +54,9 @@ export function drawHistogramAllCategoriesTitle(iterations: number): string {
 }
 
 /** Option placeholder du select catégorie (aucune dans le deck). */
-export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY = '— Aucune catégorie —';
+export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY = `${TEXT_EM_DASH} Aucune catégorie ${TEXT_EM_DASH}`;
 /** Option placeholder du select catégorie (choix requis). */
-export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK = '— Choisir une catégorie —';
+export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK = `${TEXT_EM_DASH} Choisir une catégorie ${TEXT_EM_DASH}`;
 
 /** Message histogramme vide : deck sans catégories assignées. */
 export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG =
