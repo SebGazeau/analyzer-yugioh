@@ -2,7 +2,7 @@
  * Constantes du deck builder : IDs DOM, clés stockage, fetch, DnD, layout popover.
  */
 
-import type { DeckSection } from '../deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from '../deckSection.js';
 
 /** IDs des conteneurs grille (alignés sur le template builder). */
 export const DECK_GRID_IDS: Record<DeckSection, string> = {
@@ -10,6 +10,9 @@ export const DECK_GRID_IDS: Record<DeckSection, string> = {
     extra: 'deck-extra-grid',
     side: 'deck-side-grid',
 };
+
+/** Même ordre que {@link DECK_SECTIONS} (pour boucles DOM). */
+export const DECK_GRID_DOM_IDS: readonly string[] = DECK_SECTIONS.map((s) => DECK_GRID_IDS[s]);
 
 /** Préfixe localStorage pour la carte de couverture par deck (`${key}-${deckId}`). */
 export const DECK_COVER_STORAGE_KEY = 'yugioh-deck-cover';

@@ -1,3 +1,4 @@
-/** Zones deck officielles : Main, Extra, Side. */
+/** Zones deck officielles : Main, Extra, Side (ordre d’itération = affichage builder). */
 
-export type DeckSection = 'main' | 'extra' | 'side';
+export const DECK_SECTIONS = ['main', 'extra', 'side'] as const;
+export type DeckSection = (typeof DECK_SECTIONS)[number];

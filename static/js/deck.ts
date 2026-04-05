@@ -3,7 +3,7 @@ import { setAnalysisDeckName, syncBuilderStatsFromDeck } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
 import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
-import type { DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSection.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -162,6 +162,12 @@ function renderDeckSection(section: DeckSection): void {
     );
 }
 
+function renderAllDeckGridSections(): void {
+    for (const s of DECK_SECTIONS) {
+        renderDeckSection(s);
+    }
+}
+
 function removeOneDeckCopy(section: DeckSection, index: number): void {
     if (deckCardPopoverApi.isOpen()) {
         deckCardPopoverApi.persistEdits();
@@ -223,9 +229,7 @@ export function cleanCardTable(): void {
     sideDeck = [];
     mainDeckSortStore.resetForCleanTable();
     dispatchDeckSortChanged();
-    renderDeckSection('main');
-    renderDeckSection('extra');
-    renderDeckSection('side');
+    renderAllDeckGridSections();
     clearCategorySummaryTableBody();
     clearCurrentLoadedDeck();
     setDeckName('');
@@ -287,12 +291,15 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         const rows = await resolveServerDeckListEntriesToRows(entries, fetchCardByName);
         getState(section).push(...rows);
     };
-    await pushSection(data.main, 'main');
-    await pushSection(data.extra, 'extra');
-    await pushSection(data.side, 'side');
-    renderDeckSection('main');
-    renderDeckSection('extra');
-    renderDeckSection('side');
+    const rawBySection: Record<DeckSection, unknown> = {
+        main: data.main,
+        extra: data.extra,
+        side: data.side,
+    };
+    for (const section of DECK_SECTIONS) {
+        await pushSection(rawBySection[section], section);
+    }
+    renderAllDeckGridSections();
     const loadedName = String(data.name ?? 'Sans nom');
     const deckId = typeof data.id === 'number' ? data.id : id;
     setCurrentLoadedDeck(deckId, loadedName);
@@ -331,9 +338,7 @@ export function importDeckFromFile(event: Event): void {
             getState(section).push(row as DeckRow);
         },
         refreshAllGrids: () => {
-            renderDeckSection('main');
-            renderDeckSection('extra');
-            renderDeckSection('side');
+            renderAllDeckGridSections();
         },
         afterImportStats: () => syncBuilderStatsFromDeck(),
     });
