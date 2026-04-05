@@ -43,8 +43,16 @@ export function deckCardCellWrapperClassName(kind: DeckCardCellTypeKind): string
     return `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS[kind]}`;
 }
 
+/** Conteneur vignette dans une cellule grille. */
+export const DECK_CARD_THUMB_WRAPPER_CLASS = 'deck-card-thumb';
+export const DECK_CARD_THUMB_IMG_CLASS = 'deck-card-thumb-img';
+export const DECK_CARD_THUMB_PLACEHOLDER_CLASS = 'deck-card-thumb-placeholder';
+
+export const DECK_CARD_BAN_BADGE_CLASS = 'deck-card-ban-badge';
+
 export const DECK_CARD_REMOVE_ONE_BTN_CLASS = 'deck-card-remove-one';
 export const DECK_CARD_REMOVE_ONE_BTN_SELECTOR = `.${DECK_CARD_REMOVE_ONE_BTN_CLASS}`;
+export const DECK_CARD_REMOVE_ONE_ICON_CLASS = 'deck-card-remove-one-icon';
 
 export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
 export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;

@@ -4,6 +4,15 @@
  */
 
 import { DATA_DECK_ACTION_ATTR, DECK_ACTION_REMOVE_ONE } from '../deckConstants.js';
+import {
+    DECK_CARD_BAN_BADGE_CLASS,
+    DECK_CARD_QTY_CLASS,
+    DECK_CARD_REMOVE_ONE_BTN_CLASS,
+    DECK_CARD_REMOVE_ONE_ICON_CLASS,
+    DECK_CARD_THUMB_IMG_CLASS,
+    DECK_CARD_THUMB_PLACEHOLDER_CLASS,
+    DECK_CARD_THUMB_WRAPPER_CLASS,
+} from './deckGridDomSelectors.js';
 import { escapeAttr } from '../../utils/html.js';
 
 export interface DeckCardCellShellRow {
@@ -15,20 +24,20 @@ export interface DeckCardCellShellRow {
 /** Contenu interne de `.deck-card-cell` (hors classe `--monster|spell|trap`). */
 export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     const thumbHtml = row.imageUrl
-        ? `<img class="deck-card-thumb-img" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
-        : '<span class="deck-card-thumb-placeholder">?</span>';
+        ? `<img class="${DECK_CARD_THUMB_IMG_CLASS}" src="${escapeAttr(row.imageUrl)}" alt="" loading="lazy" />`
+        : `<span class="${DECK_CARD_THUMB_PLACEHOLDER_CLASS}">?</span>`;
     const banBadge =
         row.maxCopies != null && row.maxCopies < 3
-            ? `<span class="deck-card-ban-badge" title="Banlist TCG : max ${row.maxCopies} exemplaire(s)">lt. ${row.maxCopies}</span>`
+            ? `<span class="${DECK_CARD_BAN_BADGE_CLASS}" title="Banlist TCG : max ${row.maxCopies} exemplaire(s)">lt. ${row.maxCopies}</span>`
             : '';
     return `
-            <div class="deck-card-thumb">${thumbHtml}</div>
+            <div class="${DECK_CARD_THUMB_WRAPPER_CLASS}">${thumbHtml}</div>
             ${banBadge}
-            <button type="button" class="deck-card-remove-one" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
-                <svg class="deck-card-remove-one-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <button type="button" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
+                <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
                 </svg>
             </button>
-            <span class="deck-card-qty">x${row.quantity}</span>
+            <span class="${DECK_CARD_QTY_CLASS}">x${row.quantity}</span>
         `;
 }
