@@ -1,10 +1,9 @@
 /**
- * Snippets HTML pour tests jsdom — IDs alignés sur {@link DECK_GRID_IDS} et compteurs `deck-{section}-count`.
+ * Snippets HTML pour tests jsdom — IDs alignés sur {@link DECK_GRID_IDS} et {@link DECK_COUNT_ELEMENT_ID}.
  */
+import { DECK_COUNT_ELEMENT_ID } from '../../analysis/builderStatsDom.js';
 import { DECK_GRID_IDS } from '../../deck-builder/deckConstants.js';
-import { DECK_SECTIONS, mapDeckSections } from '../../deckSection.js';
-
-const DECK_COUNT_ELEMENT_IDS = mapDeckSections((s) => `deck-${s}-count`);
+import { DECK_SECTIONS } from '../../deckSection.js';
 
 /** Grille Main uniquement (stats / scénarios partiels). */
 export function htmlDeckMainGrid(className?: string): string {
@@ -26,5 +25,5 @@ export function htmlDeckGrids(className?: string): string {
 
 /** Les trois cellules de comptage builder (`deck-main-count`, …). */
 export function htmlDeckCountCells(): string {
-    return DECK_SECTIONS.map((s) => `<div id="${DECK_COUNT_ELEMENT_IDS[s]}"></div>`).join('');
+    return DECK_SECTIONS.map((s) => `<div id="${DECK_COUNT_ELEMENT_ID[s]}"></div>`).join('');
 }

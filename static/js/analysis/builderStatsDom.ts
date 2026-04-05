@@ -12,7 +12,10 @@ import type { MainDeckTypeCounts } from './mainDeckTypeCounts.js';
 
 const DECK_COUNT_LABEL: Record<DeckSection, string> = mapDeckSections((s) => s.toUpperCase());
 
-const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = mapDeckSections((s) => `deck-${s}-count`);
+/** IDs `#deck-main-count`, etc. — réutilisable par les tests (jsdom). */
+export const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = mapDeckSections(
+    (s) => `deck-${s}-count`,
+);
 
 export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): void {
     const { monsters, spells, traps } = counts;
