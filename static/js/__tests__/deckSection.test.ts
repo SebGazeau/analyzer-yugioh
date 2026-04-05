@@ -3,6 +3,7 @@ import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deck
 import {
   DECK_SECTIONS,
   emptyArraysByDeckSection,
+  hasTruthyDeckSectionData,
   isDeckSection,
   isDeckSectionMainSide,
   mapDeckSections,
@@ -38,6 +39,13 @@ describe('deckSection', () => {
     e.main.push(1);
     expect(e.extra).toEqual([]);
     expect(e.side).toEqual([]);
+  });
+
+  it('hasTruthyDeckSectionData détecte au moins une zone truthy', () => {
+    expect(hasTruthyDeckSectionData({})).toBe(false);
+    expect(hasTruthyDeckSectionData({ foo: 1 })).toBe(false);
+    expect(hasTruthyDeckSectionData({ main: [] })).toBe(true);
+    expect(hasTruthyDeckSectionData({ extra: [1], main: null })).toBe(true);
   });
 });
 

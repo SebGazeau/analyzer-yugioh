@@ -13,6 +13,15 @@ export function emptyArraysByDeckSection<T>(): Record<DeckSection, T[]> {
     return mapDeckSections(() => [] as T[]);
 }
 
+/**
+ * Au moins une clé `main` / `extra` / `side` a une valeur truthy (ex. import JSON).
+ * Note : `[]` est truthy en JS ; un objet `{ main: [] }` est donc accepté comme « présent ».
+ */
+export function hasTruthyDeckSectionData(o: object): boolean {
+    const r = o as Partial<Record<DeckSection, unknown>>;
+    return DECK_SECTIONS.some((s) => Boolean(r[s]));
+}
+
 /** Nombre de cartes par zone (builder / résumé). */
 export type DeckSectionCounts = Record<DeckSection, number>;
 

@@ -2,7 +2,7 @@
  * Export / import JSON du deck (fichier local, hors API serveur).
  */
 import type { Card } from '../api.js';
-import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { DECK_SECTIONS, hasTruthyDeckSectionData, mapDeckSections, type DeckSection } from '../deckSection.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -131,7 +131,7 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
         await addEntries(data, 'main');
     } else if (data && typeof data === 'object') {
         const o = data as Partial<Record<DeckSection, unknown>>;
-        if (!DECK_SECTIONS.some((s) => Boolean(o[s]))) {
+        if (!hasTruthyDeckSectionData(o)) {
             throw new Error('Format JSON invalide (attendu: { main, extra, side } ou tableau)');
         }
         for (const section of DECK_SECTIONS) {

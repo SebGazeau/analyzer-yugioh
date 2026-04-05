@@ -65,6 +65,7 @@ export type { DeckSection, DeckSectionCounts, DeckSectionMainSide } from './deck
 export {
     DECK_SECTIONS,
     emptyArraysByDeckSection,
+    hasTruthyDeckSectionData,
     isDeckSection,
     isDeckSectionMainSide,
     mapDeckSections,
