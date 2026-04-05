@@ -3,6 +3,11 @@
 export const DECK_SECTIONS = ['main', 'extra', 'side'] as const;
 export type DeckSection = (typeof DECK_SECTIONS)[number];
 
+/** Construit un `Record<DeckSection, T>` dans l’ordre canonique (évite de dupliquer `Object.fromEntries` + `map`). */
+export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Record<DeckSection, T> {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, perSection(s)])) as Record<DeckSection, T>;
+}
+
 /** Nombre de cartes par zone (builder / résumé). */
 export type DeckSectionCounts = Record<DeckSection, number>;
 

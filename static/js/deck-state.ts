@@ -4,7 +4,7 @@
  */
 
 import { maxCardsForZone } from './deck-move.js';
-import { DECK_SECTIONS, type DeckSection, type DeckSectionCounts } from './deckSection.js';
+import { DECK_SECTIONS, mapDeckSections, type DeckSection, type DeckSectionCounts } from './deckSection.js';
 
 export type { DeckSection };
 
@@ -60,7 +60,7 @@ export function getDeckSize(state: DeckState): number {
 
 /** Vérifie les limites officielles : main 40–60, extra ≤15, side ≤15. */
 export function isLegal(state: DeckState): boolean {
-    const c = Object.fromEntries(DECK_SECTIONS.map((s) => [s, sectionCount(state[s])])) as DeckSectionCounts;
+    const c: DeckSectionCounts = mapDeckSections((s) => sectionCount(state[s]));
     return (
         c.main >= MIN_MAIN &&
         c.main <= maxCardsForZone('main') &&
@@ -127,10 +127,7 @@ export function exportDeckToYDK(state: DeckState): string {
 
 /** Import YDK : parse les blocs #main, #extra, !side et agrège par id. */
 export function importDeckFromYDK(ydk: string): { state: DeckState; error?: string } {
-    const sections = Object.fromEntries(DECK_SECTIONS.map((s) => [s, [] as DeckEntry[]])) as Record<
-        DeckSection,
-        DeckEntry[]
-    >;
+    const sections = mapDeckSections<DeckEntry[]>(() => []);
     let section: DeckSection = 'main';
     const lines = ydk.split(/\r?\n/);
 

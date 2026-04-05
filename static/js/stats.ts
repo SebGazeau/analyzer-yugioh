@@ -29,7 +29,7 @@ import { runHistogramSimulation1000 } from './analysis/drawHistogramDom.js';
 import { refreshDrawSimulationPanel } from './analysis/drawSimulationDom.js';
 import { buildRemainingDrawPool, pickRandomFromPool } from './analysis/drawSimulationPile.js';
 import { computeMainDeckTypeCounts } from './analysis/mainDeckTypeCounts.js';
-import { DECK_SECTIONS, type DeckSectionCounts } from './deckSection.js';
+import { mapDeckSections, type DeckSectionCounts } from './deckSection.js';
 
 export type { CompositionBreakdown } from './analysis/compositionBreakdown.js';
 export type { ProbabilityCardEntry } from './analysis/probabilityMath.js';
@@ -110,7 +110,7 @@ export function computeGlobalStats(): void {
 
 export function updateDeckCount(): void {
     const state = getDeckState();
-    const counts = Object.fromEntries(DECK_SECTIONS.map((s) => [s, countCardsInDeckSection(state, s)])) as DeckSectionCounts;
+    const counts: DeckSectionCounts = mapDeckSections((s) => countCardsInDeckSection(state, s));
     applyDeckSectionCountLabels(counts);
     resetDrawSimulation();
     updateProbabilities();

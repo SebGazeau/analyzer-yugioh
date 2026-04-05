@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deckConstants.js';
-import { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide } from '../deckSection.js';
+import { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide, mapDeckSections } from '../deckSection.js';
 
 describe('deckSection', () => {
   it('DECK_SECTIONS contient les trois zones dans l’ordre builder', () => {
@@ -20,6 +20,10 @@ describe('deckSection', () => {
     expect(isDeckSectionMainSide('side')).toBe(true);
     expect(isDeckSectionMainSide('extra')).toBe(false);
     expect(isDeckSectionMainSide('')).toBe(false);
+  });
+
+  it('mapDeckSections produit les trois clés dans l’ordre canonique', () => {
+    expect(mapDeckSections((s) => s.length)).toEqual({ main: 4, extra: 5, side: 4 });
   });
 });
 

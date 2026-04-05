@@ -2,7 +2,7 @@
  * Export / import JSON du deck (fichier local, hors API serveur).
  */
 import type { Card } from '../api.js';
-import { DECK_SECTIONS, type DeckSection } from '../deckSection.js';
+import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -31,7 +31,7 @@ export type DeckJsonFilePayload = { [S in DeckSection]: Record<string, unknown>[
 export function buildDeckJsonExportPayload<T extends DeckFileExportRow>(
     sections: Record<DeckSection, T[]>,
 ): DeckJsonFilePayload {
-    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, sections[s].map(rowToDeckJsonEntry)])) as DeckJsonFilePayload;
+    return mapDeckSections((s) => sections[s].map(rowToDeckJsonEntry)) as DeckJsonFilePayload;
 }
 
 export function downloadJsonFile(filename: string, payload: unknown): void {

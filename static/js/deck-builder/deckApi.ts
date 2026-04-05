@@ -2,7 +2,7 @@
  * Appels HTTP et sérialisation JSON pour les decks (/decks).
  * L’état du builder et le DOM restent dans deck.ts.
  */
-import { DECK_SECTIONS, type DeckSection } from '../deckSection.js';
+import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
 
 export type DeckEntryPayload = {
@@ -49,7 +49,7 @@ export function deckRowToEntryPayload(r: DeckRowPayloadSource): DeckEntryPayload
 export type DeckSectionsPayload = { [S in DeckSection]: DeckEntryPayload[] };
 
 export function buildDeckSectionsPayload(sections: Record<DeckSection, DeckRowPayloadSource[]>): DeckSectionsPayload {
-    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, sections[s].map(deckRowToEntryPayload)])) as DeckSectionsPayload;
+    return mapDeckSections((s) => sections[s].map(deckRowToEntryPayload)) as DeckSectionsPayload;
 }
 
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {

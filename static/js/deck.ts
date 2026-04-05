@@ -3,7 +3,7 @@ import { setAnalysisDeckName, syncBuilderStatsFromDeck } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
 import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
-import { DECK_SECTIONS, type DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, mapDeckSections, type DeckSection } from './deckSection.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -62,7 +62,7 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
 export type { DeckSection, DeckSectionCounts, DeckSectionMainSide } from './deckSection.js';
-export { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide } from './deckSection.js';
+export { DECK_SECTIONS, isDeckSection, isDeckSectionMainSide, mapDeckSections } from './deckSection.js';
 
 export interface DeckRow {
     name: string;
@@ -90,7 +90,7 @@ export interface DeckRow {
 export type DeckBuilderGridState = Record<DeckSection, DeckRow[]>;
 
 function newEmptyDeckGrids(): DeckBuilderGridState {
-    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, [] as DeckRow[]])) as DeckBuilderGridState;
+    return mapDeckSections(() => [] as DeckRow[]);
 }
 
 let deckGrids: DeckBuilderGridState = newEmptyDeckGrids();
@@ -105,7 +105,7 @@ function allDeckRowsFlat(): DeckRow[] {
 
 /** Retourne le snapshot du deck pour stats/export. Inclut imageUrl pour getCardImageUrl. */
 export function getDeckState(): DeckBuilderGridState {
-    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, [...getState(s)]])) as DeckBuilderGridState;
+    return mapDeckSections((s) => [...getState(s)]);
 }
 
 function setCurrentLoadedDeck(id: number, name: string): void {
@@ -288,10 +288,7 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         const rows = await resolveServerDeckListEntriesToRows(entries, fetchCardByName);
         getState(section).push(...rows);
     };
-    const rawBySection = Object.fromEntries(DECK_SECTIONS.map((s) => [s, data[s]])) as Record<
-        DeckSection,
-        unknown
-    >;
+    const rawBySection = mapDeckSections((s) => data[s]) as Record<DeckSection, unknown>;
     for (const section of DECK_SECTIONS) {
         await pushSection(rawBySection[section], section);
     }
