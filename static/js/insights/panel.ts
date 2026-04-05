@@ -1,4 +1,5 @@
 import { getDeckState } from '../deck.js';
+import type { DeckSectionMainSide } from '../deckSection.js';
 import { collectDeckInsights } from './collect.js';
 import type { DeckInsight, MatchingCardPreview, NumberXyzSuggestion } from './types.js';
 import { setActiveTab } from '../tabs.js';
@@ -29,7 +30,7 @@ function renderSummaryRows(insights: DeckInsight[]): string {
 
 function renderMatchChips(cards: MatchingCardPreview[]): string {
     if (cards.length === 0) return '<span data-insights-empty-cell>—</span>';
-    const sectionLabel = (s: 'main' | 'side') => (s === 'main' ? 'Main' : 'Side');
+    const sectionLabel = (s: DeckSectionMainSide) => (s === 'main' ? 'Main' : 'Side');
     return `<div class="suggestions-main-matches" data-insights-main-matches>${cards
         .map((c) => {
             const nameEsc = escapeHtml(c.name);
