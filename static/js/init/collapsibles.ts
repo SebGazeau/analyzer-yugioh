@@ -1,8 +1,10 @@
 /**
  * Zones repliables : deck (Main/Extra/Side), table Analysis (Engines/Catégories/Groupes).
  */
+import { DECK_ACTION_TOGGLE_ZONE_SELECTOR } from '../deck-builder/deckConstants.js';
+
 export function bindCollapsibles(): void {
-    document.querySelectorAll('[data-deck-action="toggle-zone"]').forEach((el) => {
+    document.querySelectorAll(DECK_ACTION_TOGGLE_ZONE_SELECTOR).forEach((el) => {
         el.addEventListener('click', () => {
             const section = el.closest('.deck-section');
             if (!section) return;

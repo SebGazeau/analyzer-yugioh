@@ -3,6 +3,12 @@
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
+import {
+    BUILDER_SORT_CLICK_ZONE_SELECTOR,
+    BUILDER_STATS_CATEGORIES_TITLE_SELECTOR,
+    BUILDER_STATS_COMPOSITION_TITLE_SELECTOR,
+    COMPOSITION_TOGGLE_SELECTOR,
+} from '../deck-builder/builderDomSelectors.js';
 import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
 import { DECK_GRID_DOM_IDS } from '../deck-builder/deckConstants.js';
 import { DECK_SORT_CHANGED_EVENT } from '../deck-builder/deckSortEvents.js';
@@ -20,8 +26,8 @@ const TITLE_CATEGORIES = 'Catégories (Main)';
 
 function updateBuilderSortIndicators(): void {
     const { by, category, dir } = getMainDeckSortState();
-    const compBlock = document.querySelector('[data-builder-stats="composition"] .builder-stats-block-title');
-    const catBlock = document.querySelector('[data-builder-stats="categories"] .builder-stats-block-title');
+    const compBlock = document.querySelector(BUILDER_STATS_COMPOSITION_TITLE_SELECTOR);
+    const catBlock = document.querySelector(BUILDER_STATS_CATEGORIES_TITLE_SELECTOR);
     if (compBlock) {
         const arrow = by === 'type' ? (dir === 'asc' ? SORT_ARROW_ASC : SORT_ARROW_DESC) : '';
         compBlock.textContent = TITLE_COMPOSITION + arrow;
@@ -58,7 +64,7 @@ export function initBuilder(): void {
     const liveStats = document.getElementById(LIVE_STATS_CONTAINER_ID);
     if (liveStats) {
         liveStats.addEventListener('click', (e: Event) => {
-            const toggle = (e.target as HTMLElement).closest?.('[data-composition-toggle]') as HTMLElement | null;
+            const toggle = (e.target as HTMLElement).closest?.(COMPOSITION_TOGGLE_SELECTOR) as HTMLElement | null;
             if (toggle) {
                 e.preventDefault();
                 const kind = toggle.getAttribute('data-composition-toggle');
@@ -71,7 +77,7 @@ export function initBuilder(): void {
                 if (expanded) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
                 return;
             }
-            const target = (e.target as HTMLElement).closest?.('[data-builder-sort], [data-builder-sort-category]') as HTMLElement | null;
+            const target = (e.target as HTMLElement).closest?.(BUILDER_SORT_CLICK_ZONE_SELECTOR) as HTMLElement | null;
             if (!target) return;
             e.preventDefault();
             const sort = target.getAttribute('data-builder-sort');

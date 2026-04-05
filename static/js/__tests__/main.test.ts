@@ -16,7 +16,11 @@ import {
   DRAW_SIM_BTN_DRAW_RESET_ID,
   DRAW_SIM_BTN_HAND_5_ID,
   DRAW_SIM_BTN_HAND_6_ID,
+  DRAW_SIM_HAND_DATA_ATTR,
+  DRAW_SIM_HAND_SIZE_BTN_CLASS,
 } from '../analysis/drawSimulationDomIds.js';
+import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
+import { TAB_ID_DECKS } from '../tabs.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -35,10 +39,10 @@ function minimalDeckDOM() {
     `<button id="${DECK_BTN_CLEAR_DECK_ID}"></button>` +
     `<button id="${DECK_BTN_SAVE_SERVER_ID}"></button>` +
     `<button id="${DECK_BTN_UPDATE_SERVER_ID}" style="display:none"></button>` +
-    `<div data-page="decks"><button id="${DECK_BTN_REFRESH_DECKS_ID}"></button>` +
+    `<div ${DATA_PAGE_ATTR}="${TAB_ID_DECKS}"><button id="${DECK_BTN_REFRESH_DECKS_ID}"></button>` +
     `<ul id="${DECK_MY_DECKS_LIST_ID}"></ul><p id="${DECK_MY_DECKS_EMPTY_ID}"></p></div>` +
-    `<button id="${DRAW_SIM_BTN_HAND_5_ID}" class="hand-size-btn" data-hand="5"></button>` +
-    `<button id="${DRAW_SIM_BTN_HAND_6_ID}" class="hand-size-btn" data-hand="6"></button>` +
+    `<button id="${DRAW_SIM_BTN_HAND_5_ID}" class="${DRAW_SIM_HAND_SIZE_BTN_CLASS}" ${DRAW_SIM_HAND_DATA_ATTR}="5"></button>` +
+    `<button id="${DRAW_SIM_BTN_HAND_6_ID}" class="${DRAW_SIM_HAND_SIZE_BTN_CLASS}" ${DRAW_SIM_HAND_DATA_ATTR}="6"></button>` +
     `<button id="${DRAW_SIM_BTN_DRAW_ONE_ID}"></button><button id="${DRAW_SIM_BTN_DRAW_RESET_ID}"></button>` +
     `<div id="${DRAW_SIMULATION_LIST_ID}"></div><span id="${DRAW_SIMULATION_COUNT_ID}"></span><span id="${DRAW_SIMULATION_MAX_ID}"></span>`;
 }

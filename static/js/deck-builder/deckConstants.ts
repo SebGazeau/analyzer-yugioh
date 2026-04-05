@@ -46,3 +46,15 @@ export const DECK_FETCH_INIT: RequestInit = { credentials: 'same-origin' };
 
 /** Type MIME du payload drag-and-drop entre cellules du deck. */
 export const DECK_DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
+
+/** Actions déléguées sur le deck (boutons / zones cliquables). */
+export const DATA_DECK_ACTION_ATTR = 'data-deck-action';
+export const DECK_ACTION_NEW_DECK = 'new-deck';
+export const DECK_ACTION_TOGGLE_ZONE = 'toggle-zone';
+
+function deckActionSelector(action: string): string {
+    return `[${DATA_DECK_ACTION_ATTR}="${action}"]`;
+}
+
+export const DECK_ACTION_NEW_DECK_SELECTOR = deckActionSelector(DECK_ACTION_NEW_DECK);
+export const DECK_ACTION_TOGGLE_ZONE_SELECTOR = deckActionSelector(DECK_ACTION_TOGGLE_ZONE);

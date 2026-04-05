@@ -5,6 +5,7 @@
  */
 import { DECK_COVER_CHANGED_EVENT } from '../deck-builder/deckCoverEvents.js';
 import {
+    DECK_ACTION_NEW_DECK_SELECTOR,
     DECK_BTN_CLEAR_DECK_ID,
     DECK_BTN_EXPORT_JSON_ID,
     DECK_BTN_IMPORT_JSON_TRIGGER_ID,
@@ -28,6 +29,7 @@ import {
     importDeckFromFile,
     getDeckCover,
 } from '../deck.js';
+import { PAGE_DECKS_SELECTOR } from '../appPageDomSelectors.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { escapeHtml, formatDeckDate } from '../utils/html.js';
 
@@ -113,13 +115,13 @@ export async function refreshMyDecksList(): Promise<void> {
 
 /** Interface Decks : liste Mes decks (rafraîchir, clic sur carte = charger) + carte New Deck. */
 export function bindDeckList(): void {
-    const pageDecks = document.querySelector('[data-page="decks"]');
+    const pageDecks = document.querySelector(PAGE_DECKS_SELECTOR);
     if (!pageDecks) return;
     document.getElementById(DECK_BTN_REFRESH_DECKS_ID)?.addEventListener('click', refreshMyDecksList);
     window.addEventListener(DECK_COVER_CHANGED_EVENT, () => refreshMyDecksList());
     refreshMyDecksList();
 
-    const newDeckCard = pageDecks.querySelector<HTMLElement>('[data-deck-action="new-deck"]');
+    const newDeckCard = pageDecks.querySelector<HTMLElement>(DECK_ACTION_NEW_DECK_SELECTOR);
     newDeckCard?.addEventListener('click', () => {
         cleanCardTable();
         setActiveTab(TAB_ID_BUILDER);

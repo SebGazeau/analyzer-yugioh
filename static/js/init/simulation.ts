@@ -8,15 +8,17 @@ import {
     DRAW_SIM_BTN_HAND_5_ID,
     DRAW_SIM_BTN_HAND_6_ID,
     DRAW_SIM_BTN_RUN_1000_ID,
+    DRAW_SIM_HAND_DATA_ATTR,
+    DRAW_SIM_HAND_SIZE_BTN_CLASS,
 } from '../analysis/drawSimulationDomIds.js';
 import { setHandSize, getHandSize, drawOneCard, resetDrawSimulation, runSimulation1000AndUpdateHistogram, clearHistogramGraphs } from '../stats.js';
 
 export function bindSimulation(): void {
     function updateHandSizeButtons(): void {
         const current = getHandSize();
-        document.querySelectorAll('.hand-size-btn').forEach((btn) => {
+        document.querySelectorAll(`.${DRAW_SIM_HAND_SIZE_BTN_CLASS}`).forEach((btn) => {
             const b = btn as HTMLButtonElement;
-            b.classList.toggle('active', parseInt(b.getAttribute('data-hand') || '5', 10) === current);
+            b.classList.toggle('active', parseInt(b.getAttribute(DRAW_SIM_HAND_DATA_ATTR) || '5', 10) === current);
         });
     }
 
