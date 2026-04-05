@@ -53,6 +53,8 @@ export const DECK_CARD_BAN_BADGE_CLASS = 'deck-card-ban-badge';
 export const DECK_CARD_REMOVE_ONE_BTN_CLASS = 'deck-card-remove-one';
 export const DECK_CARD_REMOVE_ONE_BTN_SELECTOR = `.${DECK_CARD_REMOVE_ONE_BTN_CLASS}`;
 export const DECK_CARD_REMOVE_ONE_ICON_CLASS = 'deck-card-remove-one-icon';
+/** Racine SVG « moins » sur la cellule grille. */
+export const DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS = 'viewBox="0 0 24 24" fill="none"';
 
 export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
 export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;

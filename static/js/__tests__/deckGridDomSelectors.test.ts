@@ -3,6 +3,7 @@ import {
   DECK_CARD_CELL_CLASS,
   DECK_CARD_CELL_TYPE_KIND_CLASS,
   DECK_CARD_REMOVE_ONE_BTN_CLASS,
+  DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
   DECK_CARD_THUMB_WRAPPER_CLASS,
   deckCardCellWrapperClassName,
 } from '../deck-builder/grid/deckGridDomSelectors.js';
@@ -29,5 +30,9 @@ describe('deckGridDomSelectors', () => {
   it('shell cellule : classes thumb / remove-one alignées CSS builder', () => {
     expect(DECK_CARD_THUMB_WRAPPER_CLASS).toBe('deck-card-thumb');
     expect(DECK_CARD_REMOVE_ONE_BTN_CLASS).toBe('deck-card-remove-one');
+  });
+
+  it('icône remove-one SVG viewBox', () => {
+    expect(DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS).toBe('viewBox="0 0 24 24" fill="none"');
   });
 });

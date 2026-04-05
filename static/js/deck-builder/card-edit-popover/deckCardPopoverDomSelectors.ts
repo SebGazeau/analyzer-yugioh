@@ -28,6 +28,10 @@ export const DECK_CARD_POPOVER_ACTIONS_CLASS = 'deck-card-popover-actions';
 export const DECK_CARD_POPOVER_ICON_BTN_CLASS = 'deck-card-popover-icon-btn';
 export const DECK_CARD_POPOVER_ICON_CLASS = 'deck-card-popover-icon';
 
+/** Attributs communs des `<svg class="…popover-icon">` (traits UI). */
+export const DECK_CARD_POPOVER_ICON_SVG_ATTRS =
+    'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+
 /** Classes complètes des boutons (icon + rôle + utilities `btn-deck`). */
 export const DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_CLOSE_CLASS} btn btn-deck btn-deck-outline`;
 export const DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_DELETE_CLASS} btn btn-deck btn-deck-danger`;

@@ -28,6 +28,7 @@ import {
     DECK_SAVED_ITEM_COVER_IMG_CLASS,
     DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS,
     DECK_SAVED_ITEM_DELETE_CLASS,
+    DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS,
     DECK_SAVED_ITEM_DELETE_ICON_CLASS,
     DECK_SAVED_ITEM_DELETE_SELECTOR,
     DECK_SAVED_ITEM_DUPLICATE_CLASS,
@@ -102,8 +103,8 @@ export async function refreshMyDecksList(): Promise<void> {
         const meta = d.created_at
             ? `<span class="${DECK_SAVED_ITEM_META_CLASS}">${formatDeckDate(d.created_at)}</span>`
             : '';
-        const trashSvg = `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${ARIA_HIDDEN_ATTR}="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
-        const copySvg = `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${ARIA_HIDDEN_ATTR}="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+        const trashSvg = `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+        const copySvg = `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
         const bodyEl = document.createElement('div');
         bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
         bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="Dupliquer le deck">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="Supprimer le deck">${trashSvg}</button></div></div>`;

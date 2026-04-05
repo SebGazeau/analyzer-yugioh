@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
+  DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
+  DECK_CARD_POPOVER_ICON_SVG_ATTRS,
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
-  DECK_CARD_POPOVER_CATS_CLASS,
 } from '../deck-builder/card-edit-popover/deckCardPopoverDomSelectors.js';
 
 describe('deckCardPopoverShell', () => {
@@ -16,5 +17,9 @@ describe('deckCardPopoverShell', () => {
     const catsRow = `${DECK_CARD_POPOVER_ROW_CLASS} ${DECK_CARD_POPOVER_CATS_CLASS}`;
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${catsRow}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_CATS_CLASS).length - 1).toBe(1);
+  });
+
+  it('trois icônes partagent les attributs SVG stroke communs', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_ICON_SVG_ATTRS).length - 1).toBe(3);
   });
 });

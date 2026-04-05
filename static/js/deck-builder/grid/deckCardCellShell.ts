@@ -9,6 +9,7 @@ import {
     DECK_CARD_QTY_CLASS,
     DECK_CARD_REMOVE_ONE_BTN_CLASS,
     DECK_CARD_REMOVE_ONE_ICON_CLASS,
+    DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
     DECK_CARD_THUMB_IMG_CLASS,
     DECK_CARD_THUMB_PLACEHOLDER_CLASS,
     DECK_CARD_THUMB_WRAPPER_CLASS,
@@ -44,7 +45,7 @@ export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
             <div class="${DECK_CARD_THUMB_WRAPPER_CLASS}">${thumbHtml}</div>
             ${banBadge}
             <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_CARD_REMOVE_ONE_BTN_CLASS}" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" ${DRAGGABLE_ATTR}="${DRAGGABLE_FALSE}" ${ARIA_LABEL_ATTR}="Retirer 1 exemplaire" ${TITLE_ATTR}="Retirer 1 exemplaire">
-                <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" viewBox="0 0 24 24" fill="none" ${ARIA_HIDDEN_ATTR}="true">
+                <svg class="${DECK_CARD_REMOVE_ONE_ICON_CLASS}" ${DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS} ${ARIA_HIDDEN_ATTR}="true">
                     <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
                 </svg>
             </button>
