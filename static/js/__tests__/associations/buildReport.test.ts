@@ -9,6 +9,7 @@ import {
     patternMatchesInCitableText,
     toAssociationCatalog,
 } from '../../associations/buildReport.js';
+import { TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
 import type { AssociationCatalogCard } from '../../associations/types.js';
@@ -325,5 +326,6 @@ describe('associationReportToMarkdown', () => {
         expect(md).toContain('Même archétype : Z');
         expect(md).toContain('Diagnostics');
         expect(md).toContain('Two');
+        expect(md.split(TEXT_EM_DASH).length - 1).toBeGreaterThanOrEqual(2);
     });
 });

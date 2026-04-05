@@ -2,6 +2,8 @@
  * Classes DOM du résumé catégories / composition (page Analysis + miroir builder).
  */
 
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+
 export const ANALYSIS_CATEGORY_DOT_CLASS = 'analysis-category-dot';
 export const ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX = `${ANALYSIS_CATEGORY_DOT_CLASS}--`;
 
@@ -30,5 +32,5 @@ export function analysisHeroGroupReferenceLabel(
     firstK: number,
     totalCards: number,
 ): string {
-    return `Réf. : ${groupName} (${firstK} / ${totalCards} cartes) — P(≥1) en 5 ou 6 tirages.`;
+    return `Réf. : ${groupName} (${firstK} / ${totalCards} cartes) ${TEXT_EM_DASH} P(≥1) en 5 ou 6 tirages.`;
 }

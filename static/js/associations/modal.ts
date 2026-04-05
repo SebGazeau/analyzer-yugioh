@@ -10,6 +10,7 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import {
     BTN_TYPE_ATTR,
@@ -380,7 +381,7 @@ function renderReportHtml(
     const archLine =
         archParsed.length > 0
             ? archParsed.join(' · ')
-            : '— (aucun archétype structuré dans les données)';
+            : `${TEXT_EM_DASH} (aucun archétype structuré dans les données)`;
     const { groupsWithCards, uniqueCardCount } = countAssociationStats(report.groups);
 
     const parts: string[] = [];
@@ -397,9 +398,9 @@ function renderReportHtml(
     );
 
     parts.push(`<div class="${ASSOCIATIONS_MODAL_ANCHOR_META_CLASS}">`);
-    parts.push(`<p class="${ASSOCIATIONS_MODAL_ANCHOR_LABEL_CLASS}">Ancre — métadonnées</p>`);
+    parts.push(`<p class="${ASSOCIATIONS_MODAL_ANCHOR_LABEL_CLASS}">Ancre ${TEXT_EM_DASH} métadonnées</p>`);
     parts.push(
-        `<p><strong>Archétype(s) — champ API</strong> : ${escapeHtml(archLine)}</p>`,
+        `<p><strong>Archétype(s) ${TEXT_EM_DASH} champ API</strong> : ${escapeHtml(archLine)}</p>`,
     );
     const srcRaw = anchor.archetype_source?.trim();
     if (srcRaw) {
@@ -413,7 +414,7 @@ function renderReportHtml(
         );
     }
     parts.push(
-        `<p class="${ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS}">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause — pas la logique de regroupement.</p>`,
+        `<p class="${ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS}">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause ${TEXT_EM_DASH} pas la logique de regroupement.</p>`,
     );
     parts.push(`</div>`);
 
@@ -464,7 +465,7 @@ function renderReportHtml(
         parts.push(`<section class="${ASSOCIATIONS_MODAL_DIAGNOSTICS_CLASS}"><h3>Diagnostics</h3><ul>`);
         for (const d of report.diagnostics) {
             parts.push(
-                `<li ${DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR}="${escapeAttr(d.severity)}"><strong>${escapeHtml(d.code)}</strong> — ${escapeHtml(d.message)}</li>`,
+                `<li ${DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR}="${escapeAttr(d.severity)}"><strong>${escapeHtml(d.code)}</strong> ${TEXT_EM_DASH} ${escapeHtml(d.message)}</li>`,
             );
         }
         parts.push('</ul></section>');

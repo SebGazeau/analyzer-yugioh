@@ -1,3 +1,4 @@
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js';
 import type {
@@ -368,7 +369,7 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
 
 export function associationReportToMarkdown(report: AssociationReport, nameById?: Map<number, string>): string {
     const lines: string[] = [];
-    lines.push(`# Cartes associées — ${report.anchorName} (id ${report.anchorId})`);
+    lines.push(`# Cartes associées ${TEXT_EM_DASH} ${report.anchorName} (id ${report.anchorId})`);
     lines.push(`_Généré : ${report.generatedAt}_`);
     lines.push('');
     if (report.groups.length === 0) {
@@ -390,7 +391,7 @@ export function associationReportToMarkdown(report: AssociationReport, nameById?
     if (report.diagnostics.length > 0) {
         lines.push('## Diagnostics');
         for (const d of report.diagnostics) {
-            lines.push(`- **[${d.severity}]** \`${d.code}\` — ${d.message}`);
+            lines.push(`- **[${d.severity}]** \`${d.code}\` ${TEXT_EM_DASH} ${d.message}`);
         }
     }
     return lines.join('\n');
