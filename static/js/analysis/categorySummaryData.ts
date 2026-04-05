@@ -2,6 +2,8 @@
  * Agrégats catégories / engines pour l’onglet Analysis (sans DOM).
  */
 
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+
 export type CategoryEngineSummaryMap = Record<string, Map<string, number>>;
 
 export interface MainRowForCategorySummary {
@@ -12,7 +14,7 @@ export interface MainRowForCategorySummary {
 }
 
 export function cleanDeckCardDisplayName(s: string): string {
-    return s.replace(/^—\s*/, '').trim();
+    return s.replace(new RegExp(`^${TEXT_EM_DASH}\\s*`), '').trim();
 }
 
 export function countNameOccurrences(names: readonly string[]): Map<string, number> {

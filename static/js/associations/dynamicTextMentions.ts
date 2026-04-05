@@ -2,6 +2,7 @@
  * Règles « citation texte » dérivées de l’ancre (archétypes + mots du nom),
  * pour balayer le catalogue de façon pertinente sans liste fixe type Blue-Eyes uniquement.
  */
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import type { AssociationCatalogCard, TextMentionRule } from './types.js';
 
@@ -202,7 +203,7 @@ function extractNameWords(
     const order: string[] = [];
     const sources = [anchor.name_en, anchor.name].filter((s): s is string => typeof s === 'string' && s.trim().length > 0);
     for (const n of sources) {
-        const parts = n.split(/[\s/|–—\-]+/u);
+        const parts = n.split(new RegExp(`[\\s/|–${TEXT_EM_DASH}\\-]+`, 'u'));
         for (const raw of parts) {
             const w = stripCombiningMarks(
                 raw

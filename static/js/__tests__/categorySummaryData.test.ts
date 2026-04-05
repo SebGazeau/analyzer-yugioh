@@ -8,10 +8,11 @@ import {
     pickFirstReferenceGroup,
     remainingDrawCountForProbTable,
 } from '../analysis/categorySummaryData.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 describe('categorySummaryData', () => {
     it('cleanDeckCardDisplayName enlève le préfixe —', () => {
-        expect(cleanDeckCardDisplayName('— Foo')).toBe('Foo');
+        expect(cleanDeckCardDisplayName(`${TEXT_EM_DASH} Foo`)).toBe('Foo');
     });
 
     it('countNameOccurrences agrège les doublons', () => {

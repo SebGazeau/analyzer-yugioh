@@ -22,6 +22,7 @@ import {
   type DeckEntry,
   type DeckState,
 } from '../deck-state.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 describe('deck.ts', () => {
   it('isExtraDeckCard identifies Fusion, Synchro, XYZ, Link', () => {
@@ -69,7 +70,7 @@ describe('deck.ts', () => {
   });
 
   it('cleanCardNameFromCell removes placeholder prefix', () => {
-    expect(cleanCardNameFromCell('— Dark Magician')).toBe('Dark Magician');
+    expect(cleanCardNameFromCell(`${TEXT_EM_DASH} Dark Magician`)).toBe('Dark Magician');
     expect(cleanCardNameFromCell('Blue-Eyes White Dragon')).toBe('Blue-Eyes White Dragon');
   });
 
