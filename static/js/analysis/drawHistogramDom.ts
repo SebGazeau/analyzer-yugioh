@@ -17,6 +17,7 @@ import {
     DRAW_HISTOGRAM_CHART_CLASS,
     DRAW_HISTOGRAM_COUNT_CLASS,
     DRAW_HISTOGRAM_EMPTY_CLASS,
+    DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG,
     DRAW_HISTOGRAM_LABEL_CLASS,
     DRAW_HISTOGRAM_MINI_BAR_CLASS,
     DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS,
@@ -26,6 +27,15 @@ import {
     DRAW_HISTOGRAM_MINI_LABEL_CLASS,
     DRAW_HISTOGRAM_MINI_TITLE_CLASS,
     DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
+    DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY,
+    DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK,
+    DRAW_HISTOGRAM_SIM_ITERATIONS,
+    drawHistogramAllCategoriesTitle,
+    drawHistogramContainerAriaLabel,
+    drawHistogramEmptyCategoryMsg,
+    drawHistogramExplanationText,
+    drawHistogramHeadingActive,
+    drawHistogramHeadingIdle,
 } from './drawHistogramDomSelectors.js';
 import { ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import {
@@ -34,8 +44,6 @@ import {
 } from '../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../utils/cssInlineLength.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
-
-const HISTOGRAM_SIM_ITERATIONS = 1000;
 
 const HISTOGRAM_BAR_MAX_HEIGHT_PX = 120;
 const HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX = 56;
@@ -47,7 +55,8 @@ export function updateHistogramCategorySelect(categoryNames: string[]): void {
     select.innerHTML = '';
     const opt0 = document.createElement('option');
     opt0.value = '';
-    opt0.textContent = categoryNames.length === 0 ? '— Aucune catégorie —' : '— Choisir une catégorie —';
+    opt0.textContent =
+        categoryNames.length === 0 ? DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY : DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK;
     select.appendChild(opt0);
     categoryNames.forEach((name) => {
         const opt = document.createElement('option');
@@ -68,15 +77,15 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         .sort((a, b) => a - b);
 
     container.innerHTML = '';
-    container.setAttribute(ARIA_LABEL_ATTR, `Distribution sur ${iterations} tirages : ${categoryLabel}`);
+    container.setAttribute(ARIA_LABEL_ATTR, drawHistogramContainerAriaLabel(iterations, categoryLabel));
 
     if (buckets.length === 0) {
         const msg = document.createElement('p');
         msg.className = DRAW_HISTOGRAM_EMPTY_CLASS;
         msg.textContent =
             categoryLabel === '—'
-                ? 'Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « Modifier la carte ») pour afficher la distribution.'
-                : `Aucune donnée pour "${categoryLabel}".`;
+                ? DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG
+                : drawHistogramEmptyCategoryMsg(categoryLabel);
         container.appendChild(msg);
         return;
     }
@@ -150,14 +159,14 @@ export function clearHistogramGraphs(): void {
     const explanationEl = document.getElementById(DRAW_HISTOGRAM_EXPLANATION_ID);
     const allTitleEl = document.getElementById(DRAW_HISTOGRAM_ALL_TITLE_ID);
     const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
-    if (headingEl) headingEl.textContent = 'Distribution (1000 tirages)';
+    if (headingEl) headingEl.textContent = drawHistogramHeadingIdle(DRAW_HISTOGRAM_SIM_ITERATIONS);
     if (explanationEl) explanationEl.style.display = STYLE_DISPLAY_NONE;
     if (allTitleEl) allTitleEl.style.display = STYLE_DISPLAY_NONE;
     if (allContainer) allContainer.innerHTML = '';
     updateHistogramDOM({}, 0, '—');
 }
 
-/** Lance 1000 simulations et met à jour l’histogramme principal + mini-graphs par catégorie. */
+/** Lance `DRAW_HISTOGRAM_SIM_ITERATIONS` simulations et met à jour l’histogramme principal + mini-graphs. */
 export function runHistogramSimulation1000(input: {
     cards: ProbabilityCardEntry[];
     handSize: 5 | 6;
@@ -177,14 +186,14 @@ export function runHistogramSimulation1000(input: {
     if (select && selectedCategory) {
         select.value = selectedCategory;
     }
-    const iterations = HISTOGRAM_SIM_ITERATIONS;
+    const iterations = DRAW_HISTOGRAM_SIM_ITERATIONS;
     const headingEl = document.getElementById(DRAW_HISTOGRAM_HEADING_ID);
     const explanationEl = document.getElementById(DRAW_HISTOGRAM_EXPLANATION_ID);
     const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
-    if (headingEl) headingEl.textContent = `Distribution (${iterations} tirages) — Catégorie : ${selectedCategory}`;
+    if (headingEl) headingEl.textContent = drawHistogramHeadingActive(iterations, selectedCategory);
     if (explanationEl) {
         explanationEl.style.display = STYLE_DISPLAY_BLOCK;
-        explanationEl.textContent = `En abscisse : nombre de cartes « ${selectedCategory} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
+        explanationEl.textContent = drawHistogramExplanationText(iterations, selectedCategory);
     }
     updateHistogramDOM(hist, iterations, selectedCategory);
 
@@ -192,7 +201,7 @@ export function runHistogramSimulation1000(input: {
     const allContainer = document.getElementById(DRAW_HISTOGRAM_ALL_CATEGORIES_ID);
     if (allTitleEl) {
         allTitleEl.style.display = STYLE_DISPLAY_BLOCK;
-        allTitleEl.textContent = `Toutes les catégories (${iterations} tirages chacune)`;
+        allTitleEl.textContent = drawHistogramAllCategoriesTitle(iterations);
     }
     if (allContainer) {
         allContainer.innerHTML = '';

@@ -31,3 +31,39 @@ export const DRAW_HISTOGRAM_CATEGORY_FILL_VARS: readonly string[] = [
     'var(--color-amber)',
     'var(--color-danger)',
 ];
+
+/** Nombre de simulations pour un run histogramme (UI + logique). */
+export const DRAW_HISTOGRAM_SIM_ITERATIONS = 1000;
+
+export function drawHistogramHeadingIdle(iterations: number): string {
+    return `Distribution (${iterations} tirages)`;
+}
+
+export function drawHistogramHeadingActive(iterations: number, category: string): string {
+    return `Distribution (${iterations} tirages) — Catégorie : ${category}`;
+}
+
+export function drawHistogramExplanationText(iterations: number, category: string): string {
+    return `En abscisse : nombre de cartes « ${category} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
+}
+
+export function drawHistogramAllCategoriesTitle(iterations: number): string {
+    return `Toutes les catégories (${iterations} tirages chacune)`;
+}
+
+/** Option placeholder du select catégorie (aucune dans le deck). */
+export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY = '— Aucune catégorie —';
+/** Option placeholder du select catégorie (choix requis). */
+export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK = '— Choisir une catégorie —';
+
+/** Message histogramme vide : deck sans catégories assignées. */
+export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG =
+    'Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « Modifier la carte ») pour afficher la distribution.';
+
+export function drawHistogramEmptyCategoryMsg(categoryLabel: string): string {
+    return `Aucune donnée pour "${categoryLabel}".`;
+}
+
+export function drawHistogramContainerAriaLabel(iterations: number, categoryLabel: string): string {
+    return `Distribution sur ${iterations} tirages : ${categoryLabel}`;
+}
