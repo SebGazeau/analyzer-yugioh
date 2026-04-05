@@ -168,9 +168,13 @@ function matchingCardsForCatalogEntry(
         }
     };
 
+    const mainSideOrder = (s: DeckSectionMainSide) => (s === 'main' ? 0 : 1);
     collect(main, 'main');
     collect(side, 'side');
-    out.sort((a, b) => a.name.localeCompare(b.name) || (a.section === 'main' && b.section === 'side' ? -1 : a.section === 'side' && b.section === 'main' ? 1 : 0));
+    out.sort(
+        (a, b) =>
+            a.name.localeCompare(b.name) || mainSideOrder(a.section) - mainSideOrder(b.section),
+    );
     return out;
 }
 

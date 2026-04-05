@@ -249,7 +249,7 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
 export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
     const name = getDeckName() || prompt('Nom du deck ?') || '';
     if (!name.trim()) return {};
-    const sections = buildDeckSectionsPayload({ main: mainDeck, extra: extraDeck, side: sideDeck });
+    const sections = buildDeckSectionsPayload(getDeckState());
     const result = await apiCreateDeck(name, sections);
     if (result.id != null) {
         setCurrentLoadedDeck(result.id, name.trim());
@@ -261,7 +261,7 @@ export async function saveDeckToServer(): Promise<{ id?: number; error?: string 
 export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
     const deck = getCurrentLoadedDeck();
     if (!deck) return { error: 'Aucun deck chargé. Chargez un deck ou sauvegardez-en un nouveau.' };
-    const sections = buildDeckSectionsPayload({ main: mainDeck, extra: extraDeck, side: sideDeck });
+    const sections = buildDeckSectionsPayload(getDeckState());
     const name = getDeckName() || deck.name;
     const cover = getDeckCover(deck.id);
     const result = await apiUpdateDeck(deck.id, name, sections, cover);
@@ -290,11 +290,10 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         const rows = await resolveServerDeckListEntriesToRows(entries, fetchCardByName);
         getState(section).push(...rows);
     };
-    const rawBySection: Record<DeckSection, unknown> = {
-        main: data.main,
-        extra: data.extra,
-        side: data.side,
-    };
+    const rawBySection = Object.fromEntries(DECK_SECTIONS.map((s) => [s, data[s]])) as Record<
+        DeckSection,
+        unknown
+    >;
     for (const section of DECK_SECTIONS) {
         await pushSection(rawBySection[section], section);
     }
