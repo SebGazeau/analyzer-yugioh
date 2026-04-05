@@ -37,4 +37,11 @@ describe('compositionBreakdown', () => {
         expect(b.traps.byRace.Counter).toBe(2);
         expect(Object.keys(b.monsters.byAttribute).length).toBe(0);
     });
+
+    it('ignore les lignes sans type reconnu (comme mainDeckTypeCounts)', () => {
+        const b = computeCompositionBreakdown([{ type: 'Token', quantity: 5, race: '?' }]);
+        expect(Object.keys(b.monsters.byAttribute).length).toBe(0);
+        expect(Object.keys(b.spells.byRace).length).toBe(0);
+        expect(Object.keys(b.traps.byRace).length).toBe(0);
+    });
 });

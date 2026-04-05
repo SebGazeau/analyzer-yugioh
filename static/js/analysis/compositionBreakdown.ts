@@ -3,6 +3,7 @@
  */
 
 import { escapeHtml } from '../utils/html.js';
+import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 
 export interface CompositionBreakdown {
     monsters: {
@@ -33,20 +34,21 @@ export function computeCompositionBreakdown(main: CompositionBreakdownRow[]): Co
     const traps = { byRace: {} as Record<string, number> };
 
     main.forEach((row) => {
-        const type = (row.type || '').toLowerCase();
+        const kind = cardTypeKindFromTypeStringOrNull(row.type);
+        if (kind === null) return;
         const qty = row.quantity;
         const key = (v: string) => v || '—';
-        if (type.includes('monster')) {
+        if (kind === 'monster') {
             const attr = key(row.attribute ?? '');
             monsters.byAttribute[attr] = (monsters.byAttribute[attr] || 0) + qty;
             const lvl = row.level != null ? `Niveau ${row.level}` : '—';
             monsters.byLevel[lvl] = (monsters.byLevel[lvl] || 0) + qty;
             const race = key(row.race ?? '');
             monsters.byRace[race] = (monsters.byRace[race] || 0) + qty;
-        } else if (type.includes('spell')) {
+        } else if (kind === 'spell') {
             const race = key(row.race ?? '');
             spells.byRace[race] = (spells.byRace[race] || 0) + qty;
-        } else if (type.includes('trap')) {
+        } else {
             const race = key(row.race ?? '');
             traps.byRace[race] = (traps.byRace[race] || 0) + qty;
         }

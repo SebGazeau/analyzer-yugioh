@@ -2,6 +2,8 @@
  * Comptage monstres / magies / pièges dans le Main (pur).
  */
 
+import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+
 export interface MainDeckTypeCounts {
     monsters: number;
     spells: number;
@@ -15,11 +17,12 @@ export function computeMainDeckTypeCounts(
     let spells = 0;
     let traps = 0;
     for (const row of main) {
-        const type = (row.type || '').toLowerCase();
+        const kind = cardTypeKindFromTypeStringOrNull(row.type);
+        if (kind === null) continue;
         const qty = row.quantity;
-        if (type.includes('monster')) monsters += qty;
-        else if (type.includes('spell')) spells += qty;
-        else if (type.includes('trap')) traps += qty;
+        if (kind === 'monster') monsters += qty;
+        else if (kind === 'spell') spells += qty;
+        else traps += qty;
     }
     return { monsters, spells, traps };
 }
