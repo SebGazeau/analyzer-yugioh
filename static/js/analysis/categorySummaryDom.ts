@@ -221,7 +221,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const pct = (K / sumAll) * 100;
                 const seg = document.createElement('div');
                 seg.className = DECK_COMPOSITION_SEGMENT_CLASS;
-                seg.style.flexBasis = `${pct}%`;
+                seg.style.flexBasis = cssLengthPercent(pct);
                 seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 stripEl.appendChild(seg);
@@ -237,7 +237,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const pct = (K / sumAll) * 100;
                 const seg = document.createElement('div');
                 seg.className = DECK_STATS_CATEGORY_SEGMENT_CLASS;
-                seg.style.flexBasis = `${pct}%`;
+                seg.style.flexBasis = cssLengthPercent(pct);
                 seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 sidebarBarEl.appendChild(seg);

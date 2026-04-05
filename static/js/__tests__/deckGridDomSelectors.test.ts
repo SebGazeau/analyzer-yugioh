@@ -4,6 +4,7 @@ import {
   DECK_CARD_CELL_TYPE_KIND_CLASS,
   DECK_CARD_REMOVE_ONE_BTN_CLASS,
   DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
+  DECK_CARD_REMOVE_ONE_PATH_HTML,
   DECK_CARD_THUMB_WRAPPER_CLASS,
   deckCardCellWrapperClassName,
 } from '../deck-builder/grid/deckGridDomSelectors.js';
@@ -34,5 +35,10 @@ describe('deckGridDomSelectors', () => {
 
   it('icône remove-one SVG viewBox', () => {
     expect(DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS).toBe('viewBox="0 0 24 24" fill="none"');
+  });
+
+  it('icône remove-one : path horizontal centralisé', () => {
+    expect(DECK_CARD_REMOVE_ONE_PATH_HTML).toContain('d="M4 12h16"');
+    expect(DECK_CARD_REMOVE_ONE_PATH_HTML).toContain('stroke-width="3.5"');
   });
 });
