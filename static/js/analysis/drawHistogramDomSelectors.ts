@@ -16,3 +16,18 @@ export const DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS = 'draw-histogram-mini-bar-wrap'
 export const DRAW_HISTOGRAM_MINI_BAR_CLASS = 'draw-histogram-mini-bar';
 export const DRAW_HISTOGRAM_MINI_LABEL_CLASS = 'draw-histogram-mini-label';
 export const DRAW_HISTOGRAM_MINI_COUNT_CLASS = 'draw-histogram-mini-count';
+
+/**
+ * Couleurs de remplissage des barres mini (références `var(--*)` depuis tokens.css).
+ * Ordre stable : cyclé par index de catégorie.
+ */
+export const DRAW_HISTOGRAM_CATEGORY_FILL_VARS: readonly string[] = [
+    'var(--color-zone-main)',
+    'var(--color-zone-extra)',
+    'var(--color-zone-side)',
+    'var(--color-gold)',
+    'var(--color-info)',
+    'var(--color-success)',
+    'var(--color-amber)',
+    'var(--color-danger)',
+];

@@ -25,6 +25,7 @@ import {
     DRAW_HISTOGRAM_MINI_COUNT_CLASS,
     DRAW_HISTOGRAM_MINI_LABEL_CLASS,
     DRAW_HISTOGRAM_MINI_TITLE_CLASS,
+    DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
 } from './drawHistogramDomSelectors.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
@@ -32,17 +33,6 @@ const HISTOGRAM_SIM_ITERATIONS = 1000;
 
 const HISTOGRAM_BAR_MAX_HEIGHT_PX = 120;
 const HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX = 56;
-const HISTOGRAM_CATEGORY_COLORS = [
-    'var(--color-zone-main)',
-    'var(--color-zone-extra)',
-    'var(--color-zone-side)',
-    'var(--color-gold)',
-    'var(--color-info)',
-    'var(--color-success)',
-    'var(--color-amber)',
-    'var(--color-danger)',
-];
-
 /** Met à jour le &lt;select&gt; des catégories pour l’histogramme (rempli selon le deck). */
 export function updateHistogramCategorySelect(categoryNames: string[]): void {
     const select = document.getElementById(DRAW_HISTOGRAM_CATEGORY_SELECT_ID) as HTMLSelectElement | null;
@@ -121,7 +111,7 @@ export function appendCategoryMiniHistogram(
         .sort((a, b) => a - b);
     if (buckets.length === 0) return;
     const maxCount = Math.max(1, ...Object.values(histogram));
-    const color = HISTOGRAM_CATEGORY_COLORS[colorIndex % HISTOGRAM_CATEGORY_COLORS.length];
+    const color = DRAW_HISTOGRAM_CATEGORY_FILL_VARS[colorIndex % DRAW_HISTOGRAM_CATEGORY_FILL_VARS.length];
     const wrap = document.createElement('div');
     wrap.className = DRAW_HISTOGRAM_MINI_CLASS;
     wrap.setAttribute(DATA_CATEGORY_ATTR, categoryName);
