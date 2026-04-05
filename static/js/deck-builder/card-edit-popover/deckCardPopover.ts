@@ -4,6 +4,7 @@
 import { createCategorySelector } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
+import { cssLengthPx } from '../../utils/cssInlineLength.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
@@ -141,12 +142,12 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             window.innerHeight - rect.bottom - DECK_CARD_POPOVER_GAP_PX - DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX;
         const openAbove = spaceBelow < popoverHeight;
 
-        popoverEl.style.left = `${rect.left}px`;
+        popoverEl.style.left = cssLengthPx(rect.left);
         if (openAbove) {
-            popoverEl.style.top = `${rect.top - popoverHeight - DECK_CARD_POPOVER_GAP_PX}px`;
+            popoverEl.style.top = cssLengthPx(rect.top - popoverHeight - DECK_CARD_POPOVER_GAP_PX);
             popoverEl.classList.add(DECK_CARD_POPOVER_ABOVE_CLASS);
         } else {
-            popoverEl.style.top = `${rect.bottom + DECK_CARD_POPOVER_GAP_PX}px`;
+            popoverEl.style.top = cssLengthPx(rect.bottom + DECK_CARD_POPOVER_GAP_PX);
             popoverEl.classList.remove(DECK_CARD_POPOVER_ABOVE_CLASS);
         }
     }
