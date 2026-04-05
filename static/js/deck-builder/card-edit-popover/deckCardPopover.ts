@@ -3,6 +3,7 @@
  */
 import { createCategorySelector } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
+import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
     DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
@@ -161,7 +162,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
 
         popoverEl = document.createElement('div');
         popoverEl.className = DECK_CARD_POPOVER_ROOT_CLASS;
-        popoverEl.setAttribute('role', 'dialog');
+        popoverEl.setAttribute(ROLE_ATTR, ROLE_DIALOG);
         popoverEl.setAttribute(ARIA_MODAL_ATTR, 'true');
         popoverEl.setAttribute(ARIA_LABEL_ATTR, 'Modifier la carte');
         popoverEl.innerHTML = DECK_CARD_POPOVER_SHELL_HTML;

@@ -4,6 +4,7 @@
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
 import { ARIA_CONTROLS_ATTR, ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
+import { HIDDEN_ATTR } from '../utils/htmlAttrs.js';
 import {
     BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR,
     BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS,
@@ -85,7 +86,7 @@ export function initBuilder(): void {
                 if (!item || !detail) return;
                 const expanded = item.classList.toggle(BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS);
                 toggle.setAttribute(ARIA_EXPANDED_ATTR, String(expanded));
-                if (expanded) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
+                if (expanded) detail.removeAttribute(HIDDEN_ATTR); else detail.setAttribute(HIDDEN_ATTR, '');
                 return;
             }
             const target = (e.target as HTMLElement).closest?.(BUILDER_SORT_CLICK_ZONE_SELECTOR) as HTMLElement | null;

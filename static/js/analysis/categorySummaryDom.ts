@@ -42,6 +42,7 @@ import {
 import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
 import { ARIA_EXPANDED_ATTR, ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import { escapeHtml } from '../utils/html.js';
 import {
     categoryEntriesSorted,
@@ -67,8 +68,8 @@ function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string)
     tr.className = ANALYSIS_SECTION_HEADER_ROW_CLASS;
     if (sectionId) {
         tr.setAttribute(DATA_SECTION_HEADER_ATTR, sectionId);
-        tr.setAttribute('role', 'button');
-        tr.setAttribute('tabindex', '0');
+        tr.setAttribute(ROLE_ATTR, ROLE_BUTTON);
+        tr.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
         tr.setAttribute(ARIA_EXPANDED_ATTR, 'true');
         tr.innerHTML = `<td colspan="9"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
     } else {
@@ -218,7 +219,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const seg = document.createElement('div');
                 seg.className = DECK_COMPOSITION_SEGMENT_CLASS;
                 seg.style.flexBasis = `${pct}%`;
-                seg.setAttribute('title', `${name}: ${K} (${pct.toFixed(1)}%)`);
+                seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 stripEl.appendChild(seg);
             });
@@ -234,7 +235,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const seg = document.createElement('div');
                 seg.className = DECK_STATS_CATEGORY_SEGMENT_CLASS;
                 seg.style.flexBasis = `${pct}%`;
-                seg.setAttribute('title', `${name}: ${K} (${pct.toFixed(1)}%)`);
+                seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 sidebarBarEl.appendChild(seg);
             });

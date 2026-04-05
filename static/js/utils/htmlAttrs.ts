@@ -1,0 +1,18 @@
+/**
+ * Noms d'attributs HTML récurrents côté JS (complète `ariaAttrs.ts`).
+ */
+
+export const ROLE_ATTR = 'role';
+export const TABINDEX_ATTR = 'tabindex';
+export const HIDDEN_ATTR = 'hidden';
+export const TITLE_ATTR = 'title';
+export const DRAGGABLE_ATTR = 'draggable';
+
+/** Valeurs usuelles de `role`. */
+export const ROLE_BUTTON = 'button';
+export const ROLE_DIALOG = 'dialog';
+export const ROLE_DOCUMENT = 'document';
+export const ROLE_STATUS = 'status';
+
+export const TABINDEX_ZERO = '0';
+export const DRAGGABLE_TRUE = 'true';

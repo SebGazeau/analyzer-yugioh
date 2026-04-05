@@ -51,6 +51,7 @@ import {
 } from '../deck.js';
 import { PAGE_DECKS_SELECTOR } from '../appPageDomSelectors.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO } from '../utils/htmlAttrs.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { escapeHtml, formatDeckDate } from '../utils/html.js';
 
@@ -68,8 +69,8 @@ export async function refreshMyDecksList(): Promise<void> {
         const li = document.createElement('li');
         li.className = DECK_SAVED_ITEM_CLASS;
         li.setAttribute(DATA_DECK_ID_ATTR, String(d.id));
-        li.setAttribute('role', 'button');
-        li.setAttribute('tabindex', '0');
+        li.setAttribute(ROLE_ATTR, ROLE_BUTTON);
+        li.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
         li.title = `Charger le deck « ${escapeHtml(d.name)} »`;
         const coverFromApi = d.cover_image_url != null ? { imageUrl: d.cover_image_url, name: d.cover_card_name ?? '' } : null;
         const cover = coverFromApi ?? getDeckCover(d.id);

@@ -10,6 +10,16 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
+import {
+    ROLE_ATTR,
+    ROLE_BUTTON,
+    ROLE_DIALOG,
+    ROLE_DOCUMENT,
+    ROLE_STATUS,
+    TABINDEX_ATTR,
+    TABINDEX_ZERO,
+    TITLE_ATTR,
+} from '../utils/htmlAttrs.js';
 import { archetypeSourceUi } from './archetypeSourceUi.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
@@ -144,7 +154,7 @@ function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCat
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
     const art = renderThumbInner(row?.image_url, nm, ASSOCIATIONS_MODAL_TILE_IMG_CLASS, 'lazy');
-    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
+    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="Ajouter au deck (clic ou Entrée)"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
 }
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
@@ -252,12 +262,12 @@ function ensureModalElements(): {
         overlay = created;
         overlay.id = MODAL_ID;
         overlay.className = ASSOCIATIONS_MODAL_ROOT_CLASS;
-        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute(ROLE_ATTR, ROLE_DIALOG);
         overlay.setAttribute(ARIA_MODAL_ATTR, 'true');
         overlay.setAttribute(ARIA_LABELLEDBY_ATTR, MODAL_TITLE_ID);
         overlay.innerHTML = `
             <div class="${ASSOCIATIONS_MODAL_BACKDROP_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
-            <div class="${ASSOCIATIONS_MODAL_PANEL_CLASS}" id="${MODAL_PANEL_ID}" role="document">
+            <div class="${ASSOCIATIONS_MODAL_PANEL_CLASS}" id="${MODAL_PANEL_ID}" ${ROLE_ATTR}="${ROLE_DOCUMENT}">
                 <div id="${MODAL_LIVE_ID}" class="${ASSOCIATIONS_MODAL_LIVE_CLASS}" ${ARIA_LIVE_ATTR}="polite" ${ARIA_ATOMIC_ATTR}="true"></div>
                 <header class="${ASSOCIATIONS_MODAL_HEADER_CLASS}">
                     <div class="${ASSOCIATIONS_MODAL_HEADER_MAIN_CLASS}">
@@ -354,7 +364,7 @@ function renderReportHtml(
     const { groupsWithCards, uniqueCardCount } = countAssociationStats(report.groups);
 
     const parts: string[] = [];
-    parts.push(`<div class="${ASSOCIATIONS_MODAL_SUMMARY_CLASS}" role="status">`);
+    parts.push(`<div class="${ASSOCIATIONS_MODAL_SUMMARY_CLASS}" ${ROLE_ATTR}="${ROLE_STATUS}">`);
     parts.push(
         `<span class="${ASSOCIATIONS_MODAL_STAT_CLASS}"><span class="${ASSOCIATIONS_MODAL_STAT_VALUE_CLASS}">${groupsWithCards}</span> angle(s) avec cartes</span>`,
     );
