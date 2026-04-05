@@ -2,6 +2,7 @@
  * Appels HTTP et sérialisation JSON pour les decks (/decks).
  * L’état du builder et le DOM restent dans deck.ts.
  */
+import { DECK_SECTIONS, type DeckSection } from '../deckSection.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
 
 export type DeckEntryPayload = {
@@ -45,16 +46,10 @@ export function deckRowToEntryPayload(r: DeckRowPayloadSource): DeckEntryPayload
     });
 }
 
-export function buildDeckSectionsPayload(
-    main: DeckRowPayloadSource[],
-    extra: DeckRowPayloadSource[],
-    side: DeckRowPayloadSource[],
-): { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] } {
-    return {
-        main: main.map(deckRowToEntryPayload),
-        extra: extra.map(deckRowToEntryPayload),
-        side: side.map(deckRowToEntryPayload),
-    };
+export type DeckSectionsPayload = { [S in DeckSection]: DeckEntryPayload[] };
+
+export function buildDeckSectionsPayload(sections: Record<DeckSection, DeckRowPayloadSource[]>): DeckSectionsPayload {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, sections[s].map(deckRowToEntryPayload)])) as DeckSectionsPayload;
 }
 
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
@@ -85,10 +80,7 @@ export async function apiListMyDecks(): Promise<DeckListItem[]> {
     return res.json();
 }
 
-export async function apiCreateDeck(
-    name: string,
-    sections: { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] },
-): Promise<{ id?: number; error?: string }> {
+export async function apiCreateDeck(name: string, sections: DeckSectionsPayload): Promise<{ id?: number; error?: string }> {
     const body = { name: name.trim(), ...sections };
     const res = await fetch('/decks', {
         ...DECK_FETCH_INIT,
@@ -107,7 +99,7 @@ export async function apiCreateDeck(
 export async function apiUpdateDeck(
     deckId: number,
     name: string,
-    sections: { main: DeckEntryPayload[]; extra: DeckEntryPayload[]; side: DeckEntryPayload[] },
+    sections: DeckSectionsPayload,
     cover: { name: string; imageUrl: string } | null,
 ): Promise<{ ok?: boolean; error?: string }> {
     const body: Record<string, unknown> = { name, ...sections };

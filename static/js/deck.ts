@@ -51,7 +51,7 @@ import {
     type MainDeckSortStore,
 } from './deck-builder/mainDeckSort.js';
 
-export type { DeckEntryPayload } from './deck-builder/deckApi.js';
+export type { DeckEntryPayload, DeckSectionsPayload } from './deck-builder/deckApi.js';
 export { toDeckEntryPayload } from './deck-builder/deckApi.js';
 
 export type { MainDeckSortBy, MainDeckSortDir } from './deck-builder/mainDeckSort.js';
@@ -251,7 +251,7 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
 export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
     const name = getDeckName() || prompt('Nom du deck ?') || '';
     if (!name.trim()) return {};
-    const sections = buildDeckSectionsPayload(mainDeck, extraDeck, sideDeck);
+    const sections = buildDeckSectionsPayload({ main: mainDeck, extra: extraDeck, side: sideDeck });
     const result = await apiCreateDeck(name, sections);
     if (result.id != null) {
         setCurrentLoadedDeck(result.id, name.trim());
@@ -263,7 +263,7 @@ export async function saveDeckToServer(): Promise<{ id?: number; error?: string 
 export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
     const deck = getCurrentLoadedDeck();
     if (!deck) return { error: 'Aucun deck chargé. Chargez un deck ou sauvegardez-en un nouveau.' };
-    const sections = buildDeckSectionsPayload(mainDeck, extraDeck, sideDeck);
+    const sections = buildDeckSectionsPayload({ main: mainDeck, extra: extraDeck, side: sideDeck });
     const name = getDeckName() || deck.name;
     const cover = getDeckCover(deck.id);
     const result = await apiUpdateDeck(deck.id, name, sections, cover);
