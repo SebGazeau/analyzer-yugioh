@@ -2,6 +2,9 @@
  * Attributs `data-*` et classes pour le modal « cartes associées ».
  */
 
+export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
+export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
+
 export const DATA_ASSOCIATIONS_ADD_DECK_ATTR = 'data-associations-add-deck';
 export const DATA_ASSOCIATIONS_CLOSE_ATTR = 'data-associations-close';
 export const DATA_ASSOCIATIONS_ACTION_ATTR = 'data-associations-action';

@@ -18,22 +18,26 @@ export type TabPanelId = (typeof TAB_PANEL_IDS)[number];
 export const TAB_DATA_ATTR = 'data-tab';
 
 export const APP_TAB_SELECTOR = '.app-tab';
-export const APP_TAB_ACTIVE_SELECTOR = '.app-tab.app-tab--active';
+export const APP_TAB_ACTIVE_CLASS = 'app-tab--active';
+/** Lien d’onglet actif : `.app-tab.app-tab--active`. */
+export const APP_TAB_ACTIVE_SELECTOR = `${APP_TAB_SELECTOR}.${APP_TAB_ACTIVE_CLASS}`;
+
+export const TAB_PANEL_ACTIVE_CLASS = 'tab-panel--active';
 
 export function setActiveTab(tabId: string): void {
     document.querySelectorAll(APP_TAB_SELECTOR).forEach((a) => {
-        a.classList.remove('app-tab--active');
+        a.classList.remove(APP_TAB_ACTIVE_CLASS);
         a.setAttribute('aria-selected', 'false');
     });
     const activeTab = document.querySelector(`${APP_TAB_SELECTOR}[${TAB_DATA_ATTR}="${tabId}"]`);
     if (activeTab) {
-        activeTab.classList.add('app-tab--active');
+        activeTab.classList.add(APP_TAB_ACTIVE_CLASS);
         activeTab.setAttribute('aria-selected', 'true');
     }
     TAB_PANEL_IDS.forEach((id) => {
         const panel = document.getElementById(id);
         if (panel) {
-            panel.classList.toggle('tab-panel--active', id === tabId);
+            panel.classList.toggle(TAB_PANEL_ACTIVE_CLASS, id === tabId);
         }
     });
 }

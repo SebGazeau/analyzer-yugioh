@@ -8,14 +8,14 @@ import {
     DATA_SECTION_HEADER_ATTR,
 } from '../analysis/analysisTableDomSelectors.js';
 import { DECK_ACTION_TOGGLE_ZONE_SELECTOR } from '../deck-builder/deckConstants.js';
-import { DECK_SECTION_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
+import { DECK_SECTION_COLLAPSED_CLASS, DECK_SECTION_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 
 export function bindCollapsibles(): void {
     document.querySelectorAll(DECK_ACTION_TOGGLE_ZONE_SELECTOR).forEach((el) => {
         el.addEventListener('click', () => {
             const section = el.closest(DECK_SECTION_SELECTOR);
             if (!section) return;
-            const expanded = section.classList.toggle('deck-section--collapsed');
+            const expanded = section.classList.toggle(DECK_SECTION_COLLAPSED_CLASS);
             (el as HTMLElement).setAttribute('aria-expanded', String(!expanded));
         });
     });

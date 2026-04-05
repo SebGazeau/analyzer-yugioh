@@ -5,6 +5,7 @@
 export const SEARCH_RESULT_ROW_CLASS = 'search-result-row';
 export const SEARCH_RESULT_META_CLASS = 'search-result-meta';
 export const SEARCH_FILTER_BTN_CLASS = 'search-filter-btn';
+export const SEARCH_FILTER_BTN_ACTIVE_CLASS = 'active';
 
 export const SEARCH_RESULT_ADD_DECK_CLASS = 'search-result-add search-result-add--deck';
 export const SEARCH_RESULT_ADD_SIDE_CLASS = 'search-result-add search-result-add--side';

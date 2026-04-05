@@ -5,6 +5,9 @@
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
 import {
     BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR,
+    BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS,
+    BUILDER_ENGINE_SELECT_CLASS,
+    BUILDER_QTY_SELECT_CLASS,
     BUILDER_SORT_CLICK_ZONE_SELECTOR,
     BUILDER_STATS_CATEGORIES_TITLE_SELECTOR,
     BUILDER_STATS_COMPOSITION_TITLE_SELECTOR,
@@ -53,7 +56,10 @@ export function initBuilder(): void {
 
     document.addEventListener('change', (e: Event) => {
         const target = e.target as HTMLElement | null;
-        if (target?.classList.contains('qty-select') || target?.classList.contains('engine-select')) {
+        if (
+            target?.classList.contains(BUILDER_QTY_SELECT_CLASS) ||
+            target?.classList.contains(BUILDER_ENGINE_SELECT_CLASS)
+        ) {
             syncBuilderStatsFromDeck();
         }
     });
@@ -76,7 +82,7 @@ export function initBuilder(): void {
                 const item = toggle.closest(BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR);
                 const detail = controlsId ? document.getElementById(controlsId) : null;
                 if (!item || !detail) return;
-                const expanded = item.classList.toggle('builder-composition-item--expanded');
+                const expanded = item.classList.toggle(BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS);
                 toggle.setAttribute('aria-expanded', String(expanded));
                 if (expanded) detail.removeAttribute('hidden'); else detail.setAttribute('hidden', '');
                 return;

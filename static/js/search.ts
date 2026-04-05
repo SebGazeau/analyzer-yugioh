@@ -12,6 +12,7 @@ import {
     SEARCH_ACTION_ASSOCIATED,
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
     SEARCH_ERROR_STATE_CLASS,
+    SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
     SEARCH_RESULT_ADD_DECK_CLASS,
     SEARCH_RESULT_ADD_DECK_SELECTOR,
@@ -213,7 +214,7 @@ export function setupSearch(): void {
             document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((b) => {
                 const f = b.getAttribute(DATA_SEARCH_FILTER_ATTR);
                 const active = f === filter;
-                b.classList.toggle('active', active);
+                b.classList.toggle(SEARCH_FILTER_BTN_ACTIVE_CLASS, active);
                 b.setAttribute('aria-pressed', String(active));
             });
             if (lastResults.length > 0) renderResultsList(lastResults, lastQuery, results);

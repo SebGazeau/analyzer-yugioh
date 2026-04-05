@@ -26,3 +26,8 @@ export const BUILDER_SORT_CLICK_ZONE_SELECTOR = `[${DATA_BUILDER_SORT_ATTR}], [$
 
 export const BUILDER_COMPOSITION_ACCORDION_ITEM_CLASS = 'builder-composition-accordion-item';
 export const BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR = `.${BUILDER_COMPOSITION_ACCORDION_ITEM_CLASS}`;
+export const BUILDER_COMPOSITION_ITEM_EXPANDED_CLASS = 'builder-composition-item--expanded';
+
+/** Sélects grille deck (popover) — écoutés pour resync stats. */
+export const BUILDER_QTY_SELECT_CLASS = 'qty-select';
+export const BUILDER_ENGINE_SELECT_CLASS = 'engine-select';

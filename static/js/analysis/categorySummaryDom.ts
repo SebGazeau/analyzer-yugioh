@@ -3,6 +3,15 @@
  */
 
 import {
+    ANALYSIS_SECTION_HEADER_ROW_CLASS,
+    ANALYSIS_SECTION_HEADER_TOGGLE_CLASS,
+    ANALYSIS_TABLE_SECTION_CATEGORIES,
+    ANALYSIS_TABLE_SECTION_ENGINES,
+    ANALYSIS_TABLE_SECTION_GROUPES,
+    DATA_ANALYSIS_TABLE_SECTION_ATTR,
+    DATA_SECTION_HEADER_ATTR,
+} from './analysisTableDomSelectors.js';
+import {
     ANALYSIS_HERO_ENGINE_ID,
     ANALYSIS_HERO_FIRST_ID,
     ANALYSIS_HERO_GROUP_ID,
@@ -38,13 +47,13 @@ const ANALYSIS_DOT_COLORS = [
 
 function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string): void {
     const tr = document.createElement('tr');
-    tr.className = 'analysis-section-header';
+    tr.className = ANALYSIS_SECTION_HEADER_ROW_CLASS;
     if (sectionId) {
-        tr.setAttribute('data-section-header', sectionId);
+        tr.setAttribute(DATA_SECTION_HEADER_ATTR, sectionId);
         tr.setAttribute('role', 'button');
         tr.setAttribute('tabindex', '0');
         tr.setAttribute('aria-expanded', 'true');
-        tr.innerHTML = `<td colspan="9"><span class="analysis-section-header-toggle" aria-hidden="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
+        tr.innerHTML = `<td colspan="9"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" aria-hidden="true">▼</span> <strong>${escapeHtml(title)}</strong></td>`;
     } else {
         tr.innerHTML = `<td colspan="9"><strong>${escapeHtml(title)}</strong></td>`;
     }
@@ -80,12 +89,12 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + '%' : '—');
     let dataRowIndex = 0;
 
-    addSectionHeader(tbody, 'Engines', 'engines');
+    addSectionHeader(tbody, 'Engines', ANALYSIS_TABLE_SECTION_ENGINES);
     Object.entries(engineSummary)
         .sort(([a], [b]) => a.localeCompare(b))
         .forEach(([engineName, cardMap]) => {
             const tr = document.createElement('tr');
-            tr.setAttribute('data-section', 'engines');
+            tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_ENGINES);
             const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
             const dotClass = analysisCategoryDotClass(dataRowIndex++);
@@ -99,7 +108,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             tbody.appendChild(tr);
         });
 
-    addSectionHeader(tbody, 'Catégories', 'categories');
+    addSectionHeader(tbody, 'Catégories', ANALYSIS_TABLE_SECTION_CATEGORIES);
     Object.keys(summary)
         .sort()
         .forEach((cat) => {
@@ -108,7 +117,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
             const dotClass = analysisCategoryDotClass(dataRowIndex++);
             const tr = document.createElement('tr');
-            tr.setAttribute('data-section', 'categories');
+            tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_CATEGORIES);
             tr.innerHTML = `
                     <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span>${escapeHtml(cat)}</td>
                     <td class="analysis-td-count">${K}</td>
@@ -119,7 +128,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             tbody.appendChild(tr);
         });
 
-    addSectionHeader(tbody, 'Groupes de catégories', 'groupes');
+    addSectionHeader(tbody, 'Groupes de catégories', ANALYSIS_TABLE_SECTION_GROUPES);
     Object.entries(CATEGORY_GROUPS).forEach(([groupName, includedCats]) => {
         const cardSet = new Map<string, number>();
         includedCats.forEach((cat) => {
@@ -133,7 +142,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
         const dotClass = analysisCategoryDotClass(dataRowIndex++);
         const tr = document.createElement('tr');
-        tr.setAttribute('data-section', 'groupes');
+        tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_GROUPES);
         tr.innerHTML = `
                 <td><span class="analysis-category-dot ${dotClass}" aria-hidden="true"></span><strong>${escapeHtml(groupName)}</strong></td>
                 <td class="analysis-td-count">${K}</td>

@@ -11,6 +11,8 @@ import {
     ASSOCIATIONS_ADD_DECK_SELECTOR,
     ASSOCIATIONS_CLOSE_SELECTOR,
     ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR,
+    ASSOCIATIONS_MODAL_OPEN_CLASS,
+    ASSOCIATIONS_MODAL_ROOT_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS,
@@ -192,7 +194,7 @@ function ensureModalElements(): {
         const created = document.createElement('div');
         overlay = created;
         overlay.id = MODAL_ID;
-        overlay.className = 'associations-modal';
+        overlay.className = ASSOCIATIONS_MODAL_ROOT_CLASS;
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-labelledby', MODAL_TITLE_ID);
@@ -266,7 +268,7 @@ export function closeAssociationsModal(): void {
     const el = document.getElementById(MODAL_ID);
     if (el) {
         el.hidden = true;
-        el.classList.remove('associations-modal--open');
+        el.classList.remove(ASSOCIATIONS_MODAL_OPEN_CLASS);
     }
     document.getElementById(MODAL_PANEL_ID)?.removeAttribute('aria-busy');
     if (associationsReturnFocus && typeof associationsReturnFocus.focus === 'function') {
@@ -408,7 +410,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     associationsReturnFocus = document.activeElement as HTMLElement | null;
 
     els.overlay.hidden = false;
-    els.overlay.classList.add('associations-modal--open');
+    els.overlay.classList.add(ASSOCIATIONS_MODAL_OPEN_CLASS);
     els.loading.hidden = false;
     els.body.innerHTML = '';
     const title = document.getElementById(MODAL_TITLE_ID);

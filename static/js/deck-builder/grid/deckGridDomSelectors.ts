@@ -24,6 +24,7 @@ export function deckCellSelector(section: string, index: number): string {
 
 export const DECK_SECTION_CLASS = 'deck-section';
 export const DECK_SECTION_SELECTOR = `.${DECK_SECTION_CLASS}`;
+export const DECK_SECTION_COLLAPSED_CLASS = 'deck-section--collapsed';
 
 export const DECK_CARD_CELL_CLASS = 'deck-card-cell';
 export const DECK_CARD_CELL_SELECTOR = `.${DECK_CARD_CELL_CLASS}`;
