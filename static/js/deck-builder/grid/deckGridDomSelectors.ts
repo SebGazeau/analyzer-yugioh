@@ -69,3 +69,5 @@ export function deckCardBanBadgeTitle(maxCopies: number): string {
 
 export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
 export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;
+/** Préfixe affiché devant la quantité (grille + popover, ex. « x3 »). */
+export const DECK_CARD_QTY_DISPLAY_PREFIX = 'x';

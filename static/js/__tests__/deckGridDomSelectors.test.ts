@@ -4,6 +4,7 @@ import {
   DECK_CARD_CELL_TYPE_KIND_CLASS,
   DECK_CARD_REMOVE_ONE_BTN_CLASS,
   DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
+  DECK_CARD_QTY_DISPLAY_PREFIX,
   DECK_CARD_REMOVE_ONE_BTN_LABEL,
   DECK_CARD_REMOVE_ONE_PATH_HTML,
   deckCardBanBadgeTitle,
@@ -48,5 +49,9 @@ describe('deckGridDomSelectors', () => {
     expect(deckCardBanBadgeTitle(1)).toContain('1');
     expect(deckCardBanBadgeTitle(1)).toContain('Banlist');
     expect(DECK_CARD_REMOVE_ONE_BTN_LABEL).toContain('1 exemplaire');
+  });
+
+  it('préfixe affichage quantité grille', () => {
+    expect(DECK_CARD_QTY_DISPLAY_PREFIX).toBe('x');
   });
 });

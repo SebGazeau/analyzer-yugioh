@@ -65,3 +65,14 @@ export const INSIGHTS_FIND_CARD_BUTTON_CLASS = 'btn btn-deck btn-deck-ghost btn-
 export function suggestionsMainMatchThumbEmptyClassName(): string {
     return `${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS} ${SUGGESTIONS_MAIN_MATCH_THUMB_EMPTY_CLASS}`;
 }
+
+/** `title` des puces « match » (section affichée entre parenthèses). */
+export function insightsMainMatchChipTitle(sectionShortLabel: string): string {
+    return `Cliquer pour ajouter 1 exemplaire (${sectionShortLabel})`;
+}
+
+/** `title` d’une ligne suggestion Number Xyz. */
+export const INSIGHTS_SUGGEST_ROW_TITLE = 'Cliquer pour ajouter cette carte au deck (Extra si Xyz)';
+
+/** `title` du bouton « Chercher » (ouvre Builder + recherche). */
+export const INSIGHTS_FIND_CARD_BUTTON_TITLE = 'Ouvrir le Builder et rechercher cette carte';

@@ -16,7 +16,11 @@ import {
     totalQtyDeckLimitGroup,
 } from '../deckLimitGroups.js';
 import type { DeckSection } from '../../deckSection.js';
-import { deckCellSelector, DECK_CARD_QTY_SELECTOR } from '../grid/deckGridDomSelectors.js';
+import {
+    deckCellSelector,
+    DECK_CARD_QTY_DISPLAY_PREFIX,
+    DECK_CARD_QTY_SELECTOR,
+} from '../grid/deckGridDomSelectors.js';
 import {
     DATA_DECK_POPOVER_BACKDROP_ATTR,
     DECK_CARD_POPOVER_ABOVE_CLASS,
@@ -113,7 +117,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         afterDeckDataChange();
         const cell = document.querySelector(deckCellSelector(popoverSection, popoverIndex));
         const badge = cell?.querySelector(DECK_CARD_QTY_SELECTOR);
-        if (badge) badge.textContent = 'x' + row.quantity;
+        if (badge) badge.textContent = DECK_CARD_QTY_DISPLAY_PREFIX + row.quantity;
     }
 
     function hide(): void {
