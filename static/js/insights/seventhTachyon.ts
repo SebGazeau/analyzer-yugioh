@@ -5,6 +5,7 @@
  * - Le numéro « Number 101 » … « Number 107 » est extrait du nom anglais via regex (supporte « Number C101 », etc.).
  * - Le rang des Xyz est lu depuis `level` (champ YGOPro / API : rang stocké comme level pour les Xyz).
  */
+import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 import type {
     DeckInsight,
     InsightCardRef,
@@ -34,7 +35,7 @@ export function extractNumberIndexFromName(name: string): number | null {
 }
 
 function isSpell(row: InsightDeckRow): boolean {
-    return (row.type || '').toLowerCase().includes('spell');
+    return cardTypeKindFromTypeStringOrNull(row.type) === 'spell';
 }
 
 function isXyzMonster(row: InsightDeckRow): boolean {
@@ -45,8 +46,8 @@ function isXyzMonster(row: InsightDeckRow): boolean {
 }
 
 function isMainDeckMonster(row: InsightDeckRow): boolean {
+    if (cardTypeKindFromTypeStringOrNull(row.type) !== 'monster') return false;
     const t = (row.type || '').toLowerCase();
-    if (!t.includes('monster')) return false;
     if (t.includes('fusion') || t.includes('synchro') || t.includes('xyz') || t.includes('link')) return false;
     const f = (row as { frame_type?: string }).frame_type?.toLowerCase() ?? '';
     if (f === 'fusion' || f === 'synchro' || f === 'xyz' || f === 'link') return false;

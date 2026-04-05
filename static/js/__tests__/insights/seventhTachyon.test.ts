@@ -148,6 +148,34 @@ describe('computeSeventhTachyonInsight', () => {
         expect(i!.details?.seventhTachyon?.uniqueTargetCount).toBe(3);
     });
 
+    it('monstre dont le type contient « spell » (ex. tuner) reste une cible Main, pas une magie', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [
+                row({
+                    name: 'Spell Tuner Body',
+                    type: 'Effect Spell Tuner Monster',
+                    level: 4,
+                    race: 'Spellcaster',
+                    attribute: 'LIGHT',
+                }),
+            ],
+            extra: [
+                row({
+                    name: 'Number 104: Masquerade',
+                    type: 'Xyz Monster',
+                    level: 4,
+                    race: 'Spellcaster',
+                    attribute: 'LIGHT',
+                }),
+            ],
+            side: [row({ name: 'Seventh Tachyon', type: 'Normal Spell Card' })],
+        };
+        const i = computeSeventhTachyonInsight(deck);
+        expect(i!.severity).toBe('active');
+        const targets = i!.details?.seventhTachyon?.xyzGroups?.[0]?.targets.map((t) => t.name) ?? [];
+        expect(targets).toContain('Spell Tuner Body');
+    });
+
     it('agrège plusieurs Numbers distincts et compte les cibles uniques', () => {
         const deck: InsightDeckSnapshot = {
             main: [
