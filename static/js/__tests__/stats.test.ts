@@ -12,7 +12,7 @@ import {
   simulateDraw,
   simulateDrawCounts,
 } from '../stats.js';
-import { htmlDeckMainGrid } from './helpers/deckTestDom.js';
+import { htmlCategorySummaryBody, htmlDeckMainGrid } from './helpers/deckTestDom.js';
 
 const DECK_40_THREE_COPIES = [
   { name: 'Target Card', qty: 3, categories: ['engine'], engine: 'Engine A' },
@@ -215,7 +215,7 @@ describe('stats.ts - hand size', () => {
   it('setHandSize puis getHandSize reflète la taille', () => {
     document.body.innerHTML =
       htmlDeckMainGrid() +
-      '<div id="category-summary-body"></div>' +
+      htmlCategorySummaryBody() +
       '<div id="draw-simulation-list"></div>' +
       '<span id="draw-simulation-count"></span><span id="draw-simulation-max"></span>' +
       '<button id="btn-draw-one"></button>';

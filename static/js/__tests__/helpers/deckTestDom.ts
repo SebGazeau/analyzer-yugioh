@@ -1,6 +1,10 @@
 /**
- * Snippets HTML pour tests jsdom — IDs alignés sur {@link DECK_GRID_IDS} et {@link DECK_COUNT_ELEMENT_ID}.
+ * Snippets HTML pour tests jsdom — IDs alignés sur {@link DECK_GRID_IDS}, {@link DECK_COUNT_ELEMENT_ID}, {@link builderShellDomIds}.
  */
+import {
+    CATEGORY_SUMMARY_BODY_ELEMENT_ID,
+    DECK_COUNT_SUMMARY_ELEMENT_ID,
+} from '../../analysis/builderShellDomIds.js';
 import { DECK_COUNT_ELEMENT_ID } from '../../analysis/builderStatsDom.js';
 import { DECK_GRID_IDS } from '../../deck-builder/deckConstants.js';
 import { DECK_SECTIONS } from '../../deckSection.js';
@@ -26,4 +30,14 @@ export function htmlDeckGrids(className?: string): string {
 /** Les trois cellules de comptage builder (`deck-main-count`, …). */
 export function htmlDeckCountCells(): string {
     return DECK_SECTIONS.map((s) => `<div id="${DECK_COUNT_ELEMENT_ID[s]}"></div>`).join('');
+}
+
+/** Résumé texte MAIN / EXTRA / SIDE (ligne stats builder). */
+export function htmlDeckCountSummary(): string {
+    return `<span id="${DECK_COUNT_SUMMARY_ELEMENT_ID}"></span>`;
+}
+
+/** Tbody du tableau catégories (analysis). */
+export function htmlCategorySummaryBody(): string {
+    return `<div id="${CATEGORY_SUMMARY_BODY_ELEMENT_ID}"></div>`;
 }

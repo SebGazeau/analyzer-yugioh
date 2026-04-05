@@ -10,11 +10,11 @@ import {
   updateDeckOnServer,
 } from '../deck.js';
 import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
-import { htmlDeckGrids } from './helpers/deckTestDom.js';
+import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour loadDeckFromServer (grilles + category-summary). */
 function minimalDOM() {
-  document.body.innerHTML = htmlDeckGrids('deck-table-grid') + '<div id="category-summary-body"></div>';
+  document.body.innerHTML = htmlDeckGrids('deck-table-grid') + htmlCategorySummaryBody();
 }
 
 describe('Save/Load deck — fetch mocké', () => {

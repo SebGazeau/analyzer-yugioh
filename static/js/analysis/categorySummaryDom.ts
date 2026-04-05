@@ -2,6 +2,7 @@
  * DOM : tableau Analysis (engines, catégories, groupes), hero probas, bandeaux catégories.
  */
 
+import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
 import { escapeHtml } from '../utils/html.js';
 import {
@@ -54,7 +55,7 @@ export interface AnalysisCategorySummaryDomInput {
 }
 
 export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryDomInput): void {
-    const tbody = document.getElementById('category-summary-body');
+    const tbody = document.getElementById(CATEGORY_SUMMARY_BODY_ELEMENT_ID);
     if (!tbody) return;
 
     tbody.innerHTML = '';
@@ -222,6 +223,6 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
 
 /** Vide le tbody du tableau catégories (ex. reset deck avant rechargement). */
 export function clearCategorySummaryTableBody(): void {
-    const tbody = document.getElementById('category-summary-body');
+    const tbody = document.getElementById(CATEGORY_SUMMARY_BODY_ELEMENT_ID);
     if (tbody) tbody.innerHTML = '';
 }

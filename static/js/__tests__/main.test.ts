@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { htmlDeckCountCells, htmlDeckGrids } from './helpers/deckTestDom.js';
+import { htmlCategorySummaryBody, htmlDeckCountCells, htmlDeckCountSummary, htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour que main.ts et ses listeners ne plantent pas. */
 function minimalDeckDOM() {
   document.body.innerHTML =
-    '<span id="deck-count-summary"></span>' +
+    htmlDeckCountSummary() +
     htmlDeckCountCells() +
     htmlDeckGrids('deck-table-grid') +
-    '<div id="category-summary-body"></div>' +
+    htmlCategorySummaryBody() +
     '<input id="search-box" /><div id="searchResults"><div id="search-results-list"></div></div>' +
     '<button id="btn-clear-deck"></button>' +
     '<button id="btn-save-server"></button>' +

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
-import { htmlDeckGrids } from './helpers/deckTestDom.js';
+import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 import {
   cleanCardNameFromCell,
   cleanCardTable,
@@ -39,7 +39,7 @@ describe('deck.ts', () => {
   });
 
   it('exportDeckToFile crée un blob et déclenche téléchargement (grille vide)', () => {
-    document.body.innerHTML = htmlDeckGrids() + '<div id="category-summary-body"></div>';
+    document.body.innerHTML = htmlDeckGrids() + htmlCategorySummaryBody();
     const createObjectURL = vi.fn().mockReturnValue('blob:mock');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
@@ -58,7 +58,7 @@ describe('deck.ts', () => {
 
   it('cleanCardTable vide le state et les grilles cartes', () => {
     document.body.innerHTML =
-      '<div id="category-summary-body"></div>' + htmlDeckGrids('deck-cards-grid');
+      htmlCategorySummaryBody() + htmlDeckGrids('deck-cards-grid');
     cleanCardTable();
     const state = getDeckState();
     expect(state.main.length).toBe(0);

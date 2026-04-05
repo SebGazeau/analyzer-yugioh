@@ -8,6 +8,7 @@ import {
     type DeckSection,
     type DeckSectionCounts,
 } from '../deckSection.js';
+import { DECK_COUNT_SUMMARY_ELEMENT_ID } from './builderShellDomIds.js';
 import type { MainDeckTypeCounts } from './mainDeckTypeCounts.js';
 
 const DECK_COUNT_LABEL: Record<DeckSection, string> = mapDeckSections((s) => s.toUpperCase());
@@ -37,7 +38,7 @@ export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): v
 }
 
 export function applyDeckSectionCountLabels(counts: DeckSectionCounts): void {
-    const summaryEl = document.getElementById('deck-count-summary');
+    const summaryEl = document.getElementById(DECK_COUNT_SUMMARY_ELEMENT_ID);
     if (summaryEl) {
         summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${DECK_COUNT_LABEL[s]}`).join(' / ');
     }
