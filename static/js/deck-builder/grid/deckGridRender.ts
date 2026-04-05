@@ -2,6 +2,11 @@
  * Rendu des grilles de cartes du deck builder (DOM + événements par cellule).
  */
 import type { DeckSection } from '../../deckSection.js';
+import { DECK_ACTION_REMOVE_ONE_SELECTOR } from '../deckConstants.js';
+import {
+    DATA_DECK_CELL_INDEX_ATTR,
+    DATA_DECK_CELL_SECTION_ATTR,
+} from './deckGridDomSelectors.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
 export interface DeckGridRowForRender extends DeckCardCellShellRow {
@@ -24,15 +29,15 @@ export function renderDeckGridSection(
         const kind = typeKind(row.type);
         const cell = document.createElement('div');
         cell.className = `deck-card-cell deck-card-cell--${kind}`;
-        cell.setAttribute('data-deck-cell-section', section);
-        cell.setAttribute('data-deck-cell-index', String(index));
+        cell.setAttribute(DATA_DECK_CELL_SECTION_ATTR, section);
+        cell.setAttribute(DATA_DECK_CELL_INDEX_ATTR, String(index));
         cell.setAttribute('title', row.name);
         cell.setAttribute('draggable', 'true');
         cell.innerHTML = buildDeckCardCellInnerHtml(row);
         cell.querySelector('.deck-card-remove-one')?.addEventListener('dragstart', (e) => e.preventDefault());
         cell.addEventListener('click', (e) => {
             const t = e.target as HTMLElement;
-            if (t.closest('[data-deck-action="remove-one"]')) {
+            if (t.closest(DECK_ACTION_REMOVE_ONE_SELECTOR)) {
                 e.preventDefault();
                 e.stopPropagation();
                 onRemoveOne(section, index);

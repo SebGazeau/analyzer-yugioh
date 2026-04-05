@@ -31,6 +31,7 @@ import {
     runDeckImportFromFileInput,
 } from './deck-builder/deckFileIo.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
+import { deckCellSelector } from './deck-builder/grid/deckGridDomSelectors.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
 import { readDeckNameFromBuilderInput, writeDeckNameToBuilderInput } from './deck-builder/deckNameInputDom.js';
 import { dispatchDeckSortChanged } from './deck-builder/deckSortEvents.js';
@@ -188,9 +189,7 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
         renderDeckSection(section);
         syncBuilderStatsFromDeck();
         if (wasEditingHere) {
-            const cell = document.querySelector(
-                `[data-deck-cell-section="${section}"][data-deck-cell-index="${index}"]`,
-            ) as HTMLElement | null;
+            const cell = document.querySelector(deckCellSelector(section, index)) as HTMLElement | null;
             if (cell) deckCardPopoverApi.openPopover(section, index, cell);
         }
     } else {

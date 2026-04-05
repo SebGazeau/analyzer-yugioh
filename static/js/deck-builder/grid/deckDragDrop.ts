@@ -10,6 +10,17 @@ import {
 } from '../../deck-move.js';
 import { deckSectionForGridElementId } from '../deckConstants.js';
 import { isDeckSection, type DeckSection } from '../../deckSection.js';
+import {
+    DECK_CARD_CELL_DRAGGING_CLASS,
+    DECK_CARDS_GRID_DND_OVER_CLASS,
+    DECK_CARDS_GRID_DND_OVER_SELECTOR,
+    DECK_CARDS_GRID_SELECTOR,
+    DECK_CELL_HAS_INDEX_SELECTOR,
+    DECK_CELL_HAS_SECTION_SELECTOR,
+    DECK_SECTIONS_ROOT_SELECTOR,
+    DATA_DECK_CELL_INDEX_ATTR,
+    DATA_DECK_CELL_SECTION_ATTR,
+} from './deckGridDomSelectors.js';
 
 export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
     let data: unknown;
@@ -110,7 +121,7 @@ export interface BindDeckDragAndDropOptions {
 /** Branche drag-and-drop sur `.deck-sections` (délégation, survit aux re-rendus de grille). */
 export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): void {
     const { moveRow, hidePopover, getSectionLength, gridIds, dndPayloadType } = options;
-    const el = document.querySelector('.deck-sections');
+    const el = document.querySelector(DECK_SECTIONS_ROOT_SELECTOR);
     if (!el || !(el instanceof HTMLElement)) return;
     const root = el;
     if (root.dataset.deckDndBound === '1') return;
@@ -119,27 +130,27 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
     let suppressClickUntil = 0;
 
     root.addEventListener('dragstart', (e: DragEvent) => {
-        const cell = (e.target as HTMLElement).closest('[data-deck-cell-section]');
+        const cell = (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR);
         if (!cell || !e.dataTransfer) return;
-        const section = cell.getAttribute('data-deck-cell-section') as DeckSection;
-        const index = parseInt(cell.getAttribute('data-deck-cell-index') || '-1', 10);
+        const section = cell.getAttribute(DATA_DECK_CELL_SECTION_ATTR) as DeckSection;
+        const index = parseInt(cell.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '-1', 10);
         if (index < 0 || !isDeckSection(section)) return;
         e.dataTransfer.setData(dndPayloadType, JSON.stringify({ section, index }));
         e.dataTransfer.effectAllowed = 'move';
-        cell.classList.add('deck-card-cell--dragging');
+        cell.classList.add(DECK_CARD_CELL_DRAGGING_CLASS);
         hidePopover();
     });
 
     root.addEventListener('dragend', (e: DragEvent) => {
-        (e.target as HTMLElement).closest('[data-deck-cell-section]')?.classList.remove('deck-card-cell--dragging');
-        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((n) => n.classList.remove('deck-cards-grid--dnd-over'));
+        (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR)?.classList.remove(DECK_CARD_CELL_DRAGGING_CLASS);
+        document.querySelectorAll(DECK_CARDS_GRID_DND_OVER_SELECTOR).forEach((n) => n.classList.remove(DECK_CARDS_GRID_DND_OVER_CLASS));
         suppressClickUntil = Date.now() + 200;
     });
 
     root.addEventListener(
         'click',
         (e: MouseEvent) => {
-            if (Date.now() < suppressClickUntil && (e.target as HTMLElement).closest('.deck-sections')) {
+            if (Date.now() < suppressClickUntil && (e.target as HTMLElement).closest(DECK_SECTIONS_ROOT_SELECTOR)) {
                 e.preventDefault();
                 e.stopPropagation();
             }
@@ -148,19 +159,19 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
     );
 
     root.addEventListener('dragover', (e: DragEvent) => {
-        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
+        const grid = (e.target as HTMLElement).closest(DECK_CARDS_GRID_SELECTOR);
         if (!grid || !e.dataTransfer?.types.includes(dndPayloadType)) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.deck-cards-grid--dnd-over').forEach((n) => n.classList.remove('deck-cards-grid--dnd-over'));
-        grid.classList.add('deck-cards-grid--dnd-over');
+        document.querySelectorAll(DECK_CARDS_GRID_DND_OVER_SELECTOR).forEach((n) => n.classList.remove(DECK_CARDS_GRID_DND_OVER_CLASS));
+        grid.classList.add(DECK_CARDS_GRID_DND_OVER_CLASS);
     });
 
     root.addEventListener('drop', (e: DragEvent) => {
-        const grid = (e.target as HTMLElement).closest('.deck-cards-grid');
+        const grid = (e.target as HTMLElement).closest(DECK_CARDS_GRID_SELECTOR);
         if (!grid || !e.dataTransfer) return;
         e.preventDefault();
-        grid.classList.remove('deck-cards-grid--dnd-over');
+        grid.classList.remove(DECK_CARDS_GRID_DND_OVER_CLASS);
         const raw = e.dataTransfer.getData(dndPayloadType);
         if (!raw) return;
         const parsed = parseDeckCellDragPayload(raw);
@@ -169,11 +180,11 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         const dropSection = deckSectionForGridElementId(grid.id, gridIds);
         if (!dropSection) return;
 
-        const hit = (e.target as HTMLElement).closest('[data-deck-cell-index]');
+        const hit = (e.target as HTMLElement).closest(DECK_CELL_HAS_INDEX_SELECTOR);
         const len = getSectionLength(dropSection);
         let dropOnIdx: number;
         if (hit && grid.contains(hit)) {
-            dropOnIdx = parseInt(hit.getAttribute('data-deck-cell-index') || '0', 10);
+            dropOnIdx = parseInt(hit.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '0', 10);
         } else {
             dropOnIdx = len;
         }

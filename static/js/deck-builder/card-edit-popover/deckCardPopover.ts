@@ -12,6 +12,7 @@ import {
     totalQtyDeckLimitGroup,
 } from '../deckLimitGroups.js';
 import type { DeckSection } from '../../deckSection.js';
+import { deckCellSelector } from '../grid/deckGridDomSelectors.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deckCardPopoverShell.js';
 
 export type { DeckSection };
@@ -90,9 +91,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             row.categories = (catContainer.firstElementChild as any).getCategories();
         }
         afterDeckDataChange();
-        const cell = document.querySelector(
-            `[data-deck-cell-section="${popoverSection}"][data-deck-cell-index="${popoverIndex}"]`,
-        );
+        const cell = document.querySelector(deckCellSelector(popoverSection, popoverIndex));
         const badge = cell?.querySelector('.deck-card-qty');
         if (badge) badge.textContent = 'x' + row.quantity;
     }
@@ -112,9 +111,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
     function repositionPopover(): void {
         if (!popoverEl || !popoverEl.classList.contains('deck-card-popover--open') || popoverSection == null || popoverIndex < 0)
             return;
-        const anchor = document.querySelector(
-            `[data-deck-cell-section="${popoverSection}"][data-deck-cell-index="${popoverIndex}"]`,
-        ) as HTMLElement | null;
+        const anchor = document.querySelector(deckCellSelector(popoverSection, popoverIndex)) as HTMLElement | null;
         if (!anchor) {
             hide();
             return;

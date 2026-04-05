@@ -4,6 +4,23 @@ import {
     SEARCH_RESULTS_CONTAINER_ID,
     SEARCH_RESULTS_LIST_ID,
 } from './searchDomIds.js';
+import {
+    DATA_SEARCH_ACTION_ATTR,
+    DATA_SEARCH_ARCHETYPE_SOURCE_ATTR,
+    DATA_SEARCH_ERROR_ATTR,
+    DATA_SEARCH_FILTER_ATTR,
+    SEARCH_ACTION_ASSOCIATED,
+    SEARCH_ACTION_ASSOCIATED_SELECTOR,
+    SEARCH_ERROR_STATE_CLASS,
+    SEARCH_FILTER_BTN_CLASS,
+    SEARCH_RESULT_ADD_DECK_CLASS,
+    SEARCH_RESULT_ADD_DECK_SELECTOR,
+    SEARCH_RESULT_ADD_SIDE_CLASS,
+    SEARCH_RESULT_ADD_SIDE_SELECTOR,
+    SEARCH_RESULT_ASSOCIATED_CLASS,
+    SEARCH_RESULT_META_CLASS,
+    SEARCH_RESULT_ROW_CLASS,
+} from './searchDomSelectors.js';
 import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
 import { debounce } from './utils/debounce.js';
@@ -43,7 +60,7 @@ function archetypeSourceBadgeHtml(card: any): string {
     if (typeof src !== 'string' || !src.trim()) return '';
     const { short, title } = archetypeSourceUi(src.trim());
     if (!short) return '';
-    return `<span class="search-result-arch-source" data-search-archetype-source="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
+    return `<span class="search-result-arch-source" ${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
 }
 
 let lastResults: any[] = [];
@@ -67,31 +84,31 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         : `<span class="search-result-initial search-result-initial--${kind}" aria-hidden="true">${letter}</span>`;
 
     const row = document.createElement('div');
-    row.className = 'search-result-row';
+    row.className = SEARCH_RESULT_ROW_CLASS;
     row.innerHTML = `
         <div class="search-result-thumb">${thumbContent}</div>
         <div class="search-result-info">
             <span class="search-result-name">${highlightMatch(mainName, query)}</span>
-            <div class="search-result-meta">
+            <div class="${SEARCH_RESULT_META_CLASS}">
                 <span class="search-result-subtype">${escapeHtml(subtype)}</span>
                 ${archetypeSourceBadgeHtml(card)}
             </div>
         </div>
         <div class="search-result-actions">
-            <button type="button" class="search-result-add search-result-add--deck" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
-            <button type="button" class="search-result-add search-result-add--side" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
-            <button type="button" class="search-result-associated" data-search-action="associated" title="Cartes associées (catalogue complet)">c. associés</button>
+            <button type="button" class="${SEARCH_RESULT_ADD_DECK_CLASS}" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
+            <button type="button" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
+            <button type="button" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" title="Cartes associées (catalogue complet)">c. associés</button>
         </div>
     `;
-    row.querySelector('.search-result-add--deck')?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener('click', (e) => {
         e.stopPropagation();
         addToDeck(card);
     });
-    row.querySelector('.search-result-add--side')?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_RESULT_ADD_SIDE_SELECTOR)?.addEventListener('click', (e) => {
         e.stopPropagation();
         addToDeck(card, 'side');
     });
-    row.querySelector('[data-search-action="associated"]')?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_ACTION_ASSOCIATED_SELECTOR)?.addEventListener('click', (e) => {
         e.stopPropagation();
         void openAssociatedCardsModal(card as Record<string, unknown>);
     });
@@ -157,7 +174,7 @@ export function setupSearch(): void {
 
     const runSearch = () => {
         const query = input.value.trim();
-        resultsContainer.removeAttribute('data-search-error');
+        resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
         if (query.length < MIN_QUERY_LENGTH) {
             results.innerHTML = '';
             lastResults = [];
@@ -180,21 +197,21 @@ export function setupSearch(): void {
             .catch(() => {
                 results.innerHTML = '';
                 const errEl = document.createElement('div');
-                errEl.className = 'search-error-state';
-                errEl.setAttribute('data-search-error', 'true');
+                errEl.className = SEARCH_ERROR_STATE_CLASS;
+                errEl.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
                 errEl.textContent = 'Erreur de recherche. Réessayez.';
                 results.appendChild(errEl);
                 resultsContainer.style.display = 'flex';
-                resultsContainer.setAttribute('data-search-error', 'true');
+                resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
             });
     };
 
-    document.querySelectorAll('.search-filter-btn').forEach((btn) => {
+    document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((btn) => {
         btn.addEventListener('click', () => {
-            const filter = (btn.getAttribute('data-search-filter') ?? 'all') as SearchFilter;
+            const filter = (btn.getAttribute(DATA_SEARCH_FILTER_ATTR) ?? 'all') as SearchFilter;
             activeFilter = filter;
-            document.querySelectorAll('.search-filter-btn').forEach((b) => {
-                const f = b.getAttribute('data-search-filter');
+            document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((b) => {
+                const f = b.getAttribute(DATA_SEARCH_FILTER_ATTR);
                 const active = f === filter;
                 b.classList.toggle('active', active);
                 b.setAttribute('aria-pressed', String(active));
@@ -212,7 +229,7 @@ export function setupSearch(): void {
             lastResults = [];
             lastQuery = '';
             resultsContainer.style.display = 'none';
-            resultsContainer.removeAttribute('data-search-error');
+            resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
             return;
         }
         debouncedSearch();

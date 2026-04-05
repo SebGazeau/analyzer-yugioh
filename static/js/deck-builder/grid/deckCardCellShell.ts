@@ -3,6 +3,7 @@
  * Les attributs dynamiques (section, index, title) sont posés sur le nœud dans deckGridRender.
  */
 
+import { DATA_DECK_ACTION_ATTR, DECK_ACTION_REMOVE_ONE } from '../deckConstants.js';
 import { escapeAttr } from '../../utils/html.js';
 
 export interface DeckCardCellShellRow {
@@ -23,7 +24,7 @@ export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     return `
             <div class="deck-card-thumb">${thumbHtml}</div>
             ${banBadge}
-            <button type="button" class="deck-card-remove-one" data-deck-action="remove-one" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
+            <button type="button" class="deck-card-remove-one" ${DATA_DECK_ACTION_ATTR}="${DECK_ACTION_REMOVE_ONE}" draggable="false" aria-label="Retirer 1 exemplaire" title="Retirer 1 exemplaire">
                 <svg class="deck-card-remove-one-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
                 </svg>

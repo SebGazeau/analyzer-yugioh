@@ -51,6 +51,7 @@ export const DECK_DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
 export const DATA_DECK_ACTION_ATTR = 'data-deck-action';
 export const DECK_ACTION_NEW_DECK = 'new-deck';
 export const DECK_ACTION_TOGGLE_ZONE = 'toggle-zone';
+export const DECK_ACTION_REMOVE_ONE = 'remove-one';
 
 function deckActionSelector(action: string): string {
     return `[${DATA_DECK_ACTION_ATTR}="${action}"]`;
@@ -58,3 +59,4 @@ function deckActionSelector(action: string): string {
 
 export const DECK_ACTION_NEW_DECK_SELECTOR = deckActionSelector(DECK_ACTION_NEW_DECK);
 export const DECK_ACTION_TOGGLE_ZONE_SELECTOR = deckActionSelector(DECK_ACTION_TOGGLE_ZONE);
+export const DECK_ACTION_REMOVE_ONE_SELECTOR = deckActionSelector(DECK_ACTION_REMOVE_ONE);

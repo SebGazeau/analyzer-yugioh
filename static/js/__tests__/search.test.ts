@@ -6,6 +6,13 @@ import {
   SEARCH_RESULTS_CONTAINER_ID,
   SEARCH_RESULTS_LIST_ID,
 } from '../searchDomIds.js';
+import {
+  DATA_SEARCH_ARCHETYPE_SOURCE_ATTR,
+  DATA_SEARCH_ERROR_ATTR,
+  SEARCH_ERROR_STATE_CLASS,
+  SEARCH_RESULT_META_CLASS,
+  SEARCH_RESULT_ROW_CLASS,
+} from '../searchDomSelectors.js';
 import results3 from './fixtures/search/results-3-cards.json';
 
 describe('search.ts — helpers purs', () => {
@@ -151,16 +158,16 @@ describe('search.ts — DOM', () => {
     await vi.advanceTimersByTimeAsync(350);
     await Promise.resolve();
     await Promise.resolve();
-    const items = list.querySelectorAll('.search-result-row');
+    const items = list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`);
     expect(items.length).toBe(3);
     // Affichage prioritaire sur `name` (locale API), puis `name_en`.
     expect(list.textContent).toContain('Magicien Sombre');
     expect(list.textContent).toContain('Dragon Blanc aux Yeux Bleus');
     expect(list.textContent).toContain('Trou Noir');
-    const firstRow = list.querySelector('.search-result-row');
-    const meta = firstRow?.querySelector('.search-result-meta');
+    const firstRow = list.querySelector(`.${SEARCH_RESULT_ROW_CLASS}`);
+    const meta = firstRow?.querySelector(`.${SEARCH_RESULT_META_CLASS}`);
     expect(meta?.textContent).toContain('Magician');
-    const badge = firstRow?.querySelector('[data-search-archetype-source="ygorg_effect_en"]');
+    const badge = firstRow?.querySelector(`[${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="ygorg_effect_en"]`);
     expect(badge).not.toBeNull();
     expect(badge?.textContent).toContain('YGOrg');
     vi.useRealTimers();
@@ -179,7 +186,7 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
     await Promise.resolve();
-    expect(list.querySelectorAll('.search-result-row').length).toBe(0);
+    expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(0);
     expect(list.innerHTML).toBe('');
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -197,7 +204,7 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
     await Promise.resolve();
-    expect(list.querySelectorAll('.search-result-row').length).toBe(1);
+    expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(1);
     input.value = 'ab';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(list.innerHTML).toBe('');
@@ -215,8 +222,8 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
     await Promise.resolve();
-    expect(container.getAttribute('data-search-error')).toBe('true');
-    expect(list.querySelector('.search-error-state')).not.toBeNull();
+    expect(container.getAttribute(DATA_SEARCH_ERROR_ATTR)).toBe('true');
+    expect(list.querySelector(`.${SEARCH_ERROR_STATE_CLASS}`)).not.toBeNull();
     expect(list.textContent).toContain('Erreur');
     vi.useRealTimers();
     fetchSpy.mockRestore();
