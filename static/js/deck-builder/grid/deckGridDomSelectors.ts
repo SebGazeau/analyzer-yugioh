@@ -21,3 +21,15 @@ export const DECK_CARDS_GRID_DND_OVER_SELECTOR = `.${DECK_CARDS_GRID_DND_OVER_CL
 export function deckCellSelector(section: string, index: number): string {
     return `[${DATA_DECK_CELL_SECTION_ATTR}="${section}"][${DATA_DECK_CELL_INDEX_ATTR}="${index}"]`;
 }
+
+export const DECK_SECTION_CLASS = 'deck-section';
+export const DECK_SECTION_SELECTOR = `.${DECK_SECTION_CLASS}`;
+
+export const DECK_CARD_CELL_CLASS = 'deck-card-cell';
+export const DECK_CARD_CELL_SELECTOR = `.${DECK_CARD_CELL_CLASS}`;
+
+export const DECK_CARD_REMOVE_ONE_BTN_CLASS = 'deck-card-remove-one';
+export const DECK_CARD_REMOVE_ONE_BTN_SELECTOR = `.${DECK_CARD_REMOVE_ONE_BTN_CLASS}`;
+
+export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
+export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;

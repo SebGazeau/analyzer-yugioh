@@ -13,3 +13,7 @@ function dataPageSelector(pageId: string): string {
 export const PAGE_BUILDER_SELECTOR = dataPageSelector(TAB_ID_BUILDER);
 export const PAGE_DECKS_SELECTOR = dataPageSelector(TAB_ID_DECKS);
 export const PAGE_ANALYSIS_SELECTOR = dataPageSelector(TAB_ID_ANALYSIS);
+
+/** Avatar en-tête (initiales depuis `data-pseudo`). */
+export const DATA_PSEUDO_ATTR = 'data-pseudo';
+export const HEADER_AVATAR_SELECTOR = `.header-avatar[${DATA_PSEUDO_ATTR}]`;

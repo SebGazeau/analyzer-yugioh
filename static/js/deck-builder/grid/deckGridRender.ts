@@ -6,6 +6,7 @@ import { DECK_ACTION_REMOVE_ONE_SELECTOR } from '../deckConstants.js';
 import {
     DATA_DECK_CELL_INDEX_ATTR,
     DATA_DECK_CELL_SECTION_ATTR,
+    DECK_CARD_REMOVE_ONE_BTN_SELECTOR,
 } from './deckGridDomSelectors.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
@@ -34,7 +35,7 @@ export function renderDeckGridSection(
         cell.setAttribute('title', row.name);
         cell.setAttribute('draggable', 'true');
         cell.innerHTML = buildDeckCardCellInnerHtml(row);
-        cell.querySelector('.deck-card-remove-one')?.addEventListener('dragstart', (e) => e.preventDefault());
+        cell.querySelector(DECK_CARD_REMOVE_ONE_BTN_SELECTOR)?.addEventListener('dragstart', (e) => e.preventDefault());
         cell.addEventListener('click', (e) => {
             const t = e.target as HTMLElement;
             if (t.closest(DECK_ACTION_REMOVE_ONE_SELECTOR)) {

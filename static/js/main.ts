@@ -2,6 +2,7 @@
 // Interfaces : Decks | Builder | Analysis | Suggestions (onglet Suggestions dynamique).
 import { addToDeck, cleanCardTable, exportDeckToFile, importDeckFromFile } from './deck.js';
 import { updateDeckCount, computeGlobalStats } from './stats.js';
+import { DATA_PSEUDO_ATTR, HEADER_AVATAR_SELECTOR } from './appPageDomSelectors.js';
 import { bindAppTabs } from './tabs.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
@@ -16,8 +17,8 @@ function getInitials(pseudo: string | null): string {
 }
 
 function bindAvatarInitials(): void {
-    document.querySelectorAll<HTMLElement>('.header-avatar[data-pseudo]').forEach((el) => {
-        el.textContent = getInitials(el.getAttribute('data-pseudo'));
+    document.querySelectorAll<HTMLElement>(HEADER_AVATAR_SELECTOR).forEach((el) => {
+        el.textContent = getInitials(el.getAttribute(DATA_PSEUDO_ATTR));
     });
 }
 

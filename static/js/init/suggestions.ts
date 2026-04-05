@@ -4,16 +4,25 @@
 import { addToDeck } from '../deck.js';
 import { isDeckSectionMainSide, type DeckSection } from '../deckSection.js';
 import { fetchSearchResultsForQuery, pickBestCardFromSearchResults, runSearchWithQuery } from '../search.js';
+import {
+    INSIGHTS_ADD_DECK_CARD_SELECTOR,
+    INSIGHTS_CARD_NAME_DATA_ATTR,
+    INSIGHTS_FIND_CARD_DATA_ATTR,
+    INSIGHTS_FIND_CARD_SELECTOR,
+    INSIGHTS_SECTION_DATA_ATTR,
+    INSIGHTS_SUGGEST_NAME_DATA_ATTR,
+    INSIGHTS_SUGGEST_ROW_SELECTOR,
+} from '../insights/insightsDomSelectors.js';
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 
 export function bindSuggestionsFindCard(): void {
     document.addEventListener('click', (e: Event) => {
-        const el = (e.target as HTMLElement).closest('[data-insights-find-card]');
+        const el = (e.target as HTMLElement).closest(INSIGHTS_FIND_CARD_SELECTOR);
         if (!el || !(el instanceof HTMLButtonElement)) return;
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         if (!panel?.contains(el)) return;
-        const name = el.getAttribute('data-insights-find-card');
+        const name = el.getAttribute(INSIGHTS_FIND_CARD_DATA_ATTR);
         if (!name) return;
         e.preventDefault();
         setActiveTab(TAB_ID_BUILDER);
@@ -41,19 +50,19 @@ export function bindSuggestionsAddToDeck(): void {
         if (!panel?.contains(t)) return;
         if (t.closest('button')) return;
 
-        const chip = t.closest('[data-insights-add-deck-card]');
+        const chip = t.closest(INSIGHTS_ADD_DECK_CARD_SELECTOR);
         if (chip) {
-            const name = chip.getAttribute('data-insights-card-name');
-            const section = chip.getAttribute('data-insights-section');
+            const name = chip.getAttribute(INSIGHTS_CARD_NAME_DATA_ATTR);
+            const section = chip.getAttribute(INSIGHTS_SECTION_DATA_ATTR);
             if (!name || !section || !isDeckSectionMainSide(section)) return;
             e.preventDefault();
             void addSuggestedCardToDeck(name, section);
             return;
         }
 
-        const row = t.closest('[data-insights-suggest-row]');
+        const row = t.closest(INSIGHTS_SUGGEST_ROW_SELECTOR);
         if (row) {
-            const name = row.getAttribute('data-insights-suggest-name');
+            const name = row.getAttribute(INSIGHTS_SUGGEST_NAME_DATA_ATTR);
             if (!name) return;
             e.preventDefault();
             void addSuggestedCardToDeck(name);
@@ -65,11 +74,11 @@ export function bindSuggestionsAddToDeck(): void {
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;
-        const chip = t.closest('[data-insights-add-deck-card]');
+        const chip = t.closest(INSIGHTS_ADD_DECK_CARD_SELECTOR);
         if (!chip) return;
         e.preventDefault();
-        const name = chip.getAttribute('data-insights-card-name');
-        const section = chip.getAttribute('data-insights-section');
+        const name = chip.getAttribute(INSIGHTS_CARD_NAME_DATA_ATTR);
+        const section = chip.getAttribute(INSIGHTS_SECTION_DATA_ATTR);
         if (!name || !section || !isDeckSectionMainSide(section)) return;
         void addSuggestedCardToDeck(name, section);
     });

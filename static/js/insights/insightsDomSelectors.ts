@@ -21,3 +21,30 @@ export const INSIGHTS_NUMBER_TBODY_SELECTOR = dataSelector(INSIGHTS_NUMBER_TBODY
 export const INSIGHTS_PAGE_HELP_SELECTOR = dataSelector(INSIGHTS_PAGE_HELP_DATA_ATTR);
 export const SUGGESTIONS_DETAIL_WRAP_SELECTOR = dataSelector(SUGGESTIONS_DETAIL_WRAP_DATA_ATTR);
 export const SUGGESTIONS_NUMBER_WRAP_SELECTOR = dataSelector(SUGGESTIONS_NUMBER_WRAP_DATA_ATTR);
+
+/** Lignes / cellules générées dans {@link panel.ts} (alignées sur templates Suggestions). */
+export const INSIGHTS_SUMMARY_ROW_DATA_ATTR = 'data-insights-summary-row';
+export const INSIGHTS_KIND_DATA_ATTR = 'data-insights-kind';
+export const INSIGHTS_SEVERITY_DATA_ATTR = 'data-insights-severity';
+export const INSIGHTS_CELL_DATA_ATTR = 'data-insights-cell';
+
+export const INSIGHTS_EMPTY_CELL_DATA_ATTR = 'data-insights-empty-cell';
+export const INSIGHTS_MAIN_MATCHES_DATA_ATTR = 'data-insights-main-matches';
+export const INSIGHTS_MATCH_THUMB_DATA_ATTR = 'data-insights-match-thumb';
+export const INSIGHTS_MAIN_MATCH_DATA_ATTR = 'data-insights-main-match';
+
+export const INSIGHTS_ADD_DECK_CARD_DATA_ATTR = 'data-insights-add-deck-card';
+export const INSIGHTS_CARD_NAME_DATA_ATTR = 'data-insights-card-name';
+export const INSIGHTS_SECTION_DATA_ATTR = 'data-insights-section';
+
+export const INSIGHTS_SUGGEST_ROW_DATA_ATTR = 'data-insights-suggest-row';
+export const INSIGHTS_MATCHES_MAIN_DATA_ATTR = 'data-insights-matches-main';
+export const INSIGHTS_SUGGEST_NAME_DATA_ATTR = 'data-insights-suggest-name';
+export const INSIGHTS_FIND_CARD_DATA_ATTR = 'data-insights-find-card';
+
+export const INSIGHTS_DETAIL_ROW_DATA_ATTR = 'data-insights-detail-row';
+export const INSIGHTS_CARD_LINE_DATA_ATTR = 'data-insights-card-line';
+
+export const INSIGHTS_FIND_CARD_SELECTOR = dataSelector(INSIGHTS_FIND_CARD_DATA_ATTR);
+export const INSIGHTS_ADD_DECK_CARD_SELECTOR = dataSelector(INSIGHTS_ADD_DECK_CARD_DATA_ATTR);
+export const INSIGHTS_SUGGEST_ROW_SELECTOR = dataSelector(INSIGHTS_SUGGEST_ROW_DATA_ATTR);

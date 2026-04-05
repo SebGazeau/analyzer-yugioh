@@ -60,3 +60,6 @@ function deckActionSelector(action: string): string {
 export const DECK_ACTION_NEW_DECK_SELECTOR = deckActionSelector(DECK_ACTION_NEW_DECK);
 export const DECK_ACTION_TOGGLE_ZONE_SELECTOR = deckActionSelector(DECK_ACTION_TOGGLE_ZONE);
 export const DECK_ACTION_REMOVE_ONE_SELECTOR = deckActionSelector(DECK_ACTION_REMOVE_ONE);
+
+/** Élément liste « Mes decks » (carte deck sauvegardé). */
+export const DECK_SAVED_ITEM_CLASS = 'deck-saved-item';

@@ -12,7 +12,15 @@ import {
     totalQtyDeckLimitGroup,
 } from '../deckLimitGroups.js';
 import type { DeckSection } from '../../deckSection.js';
-import { deckCellSelector } from '../grid/deckGridDomSelectors.js';
+import { deckCellSelector, DECK_CARD_QTY_SELECTOR } from '../grid/deckGridDomSelectors.js';
+import {
+    DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR,
+    DECK_CARD_POPOVER_CLOSE_SELECTOR,
+    DECK_CARD_POPOVER_COVER_SELECTOR,
+    DECK_CARD_POPOVER_DELETE_SELECTOR,
+    DECK_CARD_POPOVER_ENGINE_SELECTOR,
+    DECK_CARD_POPOVER_QTY_SELECTOR,
+} from './deckCardPopoverDomSelectors.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deckCardPopoverShell.js';
 
 export type { DeckSection };
@@ -70,9 +78,9 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
 
     function persistEdits(): void {
         if (!popoverEl || popoverSection == null || popoverIndex < 0) return;
-        const qtySelect = popoverEl.querySelector('.deck-card-popover-qty') as HTMLSelectElement | null;
-        const engineSelect = popoverEl.querySelector('.deck-card-popover-engine') as HTMLSelectElement | null;
-        const catContainer = popoverEl.querySelector('.deck-card-popover-cat-container') as HTMLElement | null;
+        const qtySelect = popoverEl.querySelector(DECK_CARD_POPOVER_QTY_SELECTOR) as HTMLSelectElement | null;
+        const engineSelect = popoverEl.querySelector(DECK_CARD_POPOVER_ENGINE_SELECTOR) as HTMLSelectElement | null;
+        const catContainer = popoverEl.querySelector(DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR) as HTMLElement | null;
         const arr = getState(popoverSection);
         const row = arr[popoverIndex];
         if (!row) return;
@@ -92,7 +100,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         }
         afterDeckDataChange();
         const cell = document.querySelector(deckCellSelector(popoverSection, popoverIndex));
-        const badge = cell?.querySelector('.deck-card-qty');
+        const badge = cell?.querySelector(DECK_CARD_QTY_SELECTOR);
         if (badge) badge.textContent = 'x' + row.quantity;
     }
 
@@ -150,12 +158,12 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         popoverEl.innerHTML = DECK_CARD_POPOVER_SHELL_HTML;
         document.body.appendChild(popoverEl);
 
-        const qtySelect = popoverEl.querySelector('.deck-card-popover-qty') as HTMLSelectElement;
-        const engineSelect = popoverEl.querySelector('.deck-card-popover-engine') as HTMLSelectElement;
-        const catContainer = popoverEl.querySelector('.deck-card-popover-cat-container') as HTMLElement;
-        const deleteBtn = popoverEl.querySelector('.deck-card-popover-delete');
-        const closeBtn = popoverEl.querySelector('.deck-card-popover-close');
-        const coverBtn = popoverEl.querySelector('.deck-card-popover-cover');
+        const qtySelect = popoverEl.querySelector(DECK_CARD_POPOVER_QTY_SELECTOR) as HTMLSelectElement;
+        const engineSelect = popoverEl.querySelector(DECK_CARD_POPOVER_ENGINE_SELECTOR) as HTMLSelectElement;
+        const catContainer = popoverEl.querySelector(DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR) as HTMLElement;
+        const deleteBtn = popoverEl.querySelector(DECK_CARD_POPOVER_DELETE_SELECTOR);
+        const closeBtn = popoverEl.querySelector(DECK_CARD_POPOVER_CLOSE_SELECTOR);
+        const coverBtn = popoverEl.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR);
 
         qtySelect?.addEventListener('change', () => persistEdits());
         engineSelect?.addEventListener('change', () => persistEdits());
@@ -212,9 +220,9 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         popoverSection = section;
         popoverIndex = index;
 
-        const qtySelect = popover.querySelector('.deck-card-popover-qty') as HTMLSelectElement;
-        const engineSelect = popover.querySelector('.deck-card-popover-engine') as HTMLSelectElement;
-        const catContainer = popover.querySelector('.deck-card-popover-cat-container') as HTMLElement;
+        const qtySelect = popover.querySelector(DECK_CARD_POPOVER_QTY_SELECTOR) as HTMLSelectElement;
+        const engineSelect = popover.querySelector(DECK_CARD_POPOVER_ENGINE_SELECTOR) as HTMLSelectElement;
+        const catContainer = popover.querySelector(DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR) as HTMLElement;
         if (qtySelect) {
             const key = deckLimitGroupKeyRow(row);
             const flat = allDeckRowsFlat();
@@ -241,7 +249,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             catContainer.appendChild(selector);
         }
 
-        const coverBtnEl = popover.querySelector('.deck-card-popover-cover') as HTMLElement | null;
+        const coverBtnEl = popover.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR) as HTMLElement | null;
         if (coverBtnEl) coverBtnEl.style.display = getCurrentLoadedDeck() ? '' : 'none';
 
         popoverBackdropEl?.classList.add('deck-card-popover-backdrop--open');

@@ -7,6 +7,7 @@ import {
   DECK_BTN_UPDATE_SERVER_ID,
   DECK_MY_DECKS_EMPTY_ID,
   DECK_MY_DECKS_LIST_ID,
+  DECK_SAVED_ITEM_CLASS,
 } from '../deck-builder/deckConstants.js';
 import {
   DRAW_SIMULATION_COUNT_ID,
@@ -137,7 +138,7 @@ describe('main.ts — intégration DOM', () => {
     const refreshBtn = document.getElementById(DECK_BTN_REFRESH_DECKS_ID);
     refreshBtn?.click();
     await new Promise((r) => setTimeout(r, 50));
-    expect(list?.querySelectorAll('li.deck-saved-item').length).toBe(1);
+    expect(list?.querySelectorAll(`li.${DECK_SAVED_ITEM_CLASS}`).length).toBe(1);
     expect(list?.textContent).toContain('Mon deck');
   });
 }); 

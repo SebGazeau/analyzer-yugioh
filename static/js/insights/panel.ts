@@ -2,10 +2,27 @@ import { getDeckState } from '../deck.js';
 import { deckSectionMainSideShortLabel } from '../deckSection.js';
 import { collectDeckInsights } from './collect.js';
 import {
+    INSIGHTS_ADD_DECK_CARD_DATA_ATTR,
+    INSIGHTS_CARD_LINE_DATA_ATTR,
+    INSIGHTS_CARD_NAME_DATA_ATTR,
+    INSIGHTS_CELL_DATA_ATTR,
+    INSIGHTS_DETAIL_ROW_DATA_ATTR,
     INSIGHTS_DETAIL_TBODY_SELECTOR,
+    INSIGHTS_EMPTY_CELL_DATA_ATTR,
+    INSIGHTS_FIND_CARD_DATA_ATTR,
+    INSIGHTS_KIND_DATA_ATTR,
+    INSIGHTS_MAIN_MATCH_DATA_ATTR,
+    INSIGHTS_MAIN_MATCHES_DATA_ATTR,
+    INSIGHTS_MATCH_THUMB_DATA_ATTR,
+    INSIGHTS_MATCHES_MAIN_DATA_ATTR,
     INSIGHTS_NAV_TAB_SELECTOR,
     INSIGHTS_NUMBER_TBODY_SELECTOR,
     INSIGHTS_PAGE_HELP_SELECTOR,
+    INSIGHTS_SECTION_DATA_ATTR,
+    INSIGHTS_SEVERITY_DATA_ATTR,
+    INSIGHTS_SUGGEST_NAME_DATA_ATTR,
+    INSIGHTS_SUGGEST_ROW_DATA_ATTR,
+    INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUMMARY_TBODY_SELECTOR,
     SUGGESTIONS_DETAIL_WRAP_SELECTOR,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
@@ -33,19 +50,19 @@ function renderSummaryRows(insights: DeckInsight[]): string {
     return insights
         .map(
             (i) => `
-    <tr data-insights-summary-row data-insights-kind="${escapeHtml(i.kind)}" data-insights-severity="${escapeHtml(i.severity)}">
-      <td data-insights-cell="kind">${escapeHtml(kindLabel(i.kind))}</td>
-      <td data-insights-cell="severity">${escapeHtml(severityLabel(i.severity))}</td>
-      <td data-insights-cell="title">${escapeHtml(i.title)}</td>
-      <td data-insights-cell="summary">${escapeHtml(i.summary)}</td>
+    <tr ${INSIGHTS_SUMMARY_ROW_DATA_ATTR} ${INSIGHTS_KIND_DATA_ATTR}="${escapeHtml(i.kind)}" ${INSIGHTS_SEVERITY_DATA_ATTR}="${escapeHtml(i.severity)}">
+      <td ${INSIGHTS_CELL_DATA_ATTR}="kind">${escapeHtml(kindLabel(i.kind))}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="severity">${escapeHtml(severityLabel(i.severity))}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="title">${escapeHtml(i.title)}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="summary">${escapeHtml(i.summary)}</td>
     </tr>`,
         )
         .join('');
 }
 
 function renderMatchChips(cards: MatchingCardPreview[]): string {
-    if (cards.length === 0) return '<span data-insights-empty-cell>—</span>';
-    return `<div class="suggestions-main-matches" data-insights-main-matches>${cards
+    if (cards.length === 0) return `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>—</span>`;
+    return `<div class="suggestions-main-matches" ${INSIGHTS_MAIN_MATCHES_DATA_ATTR}>${cards
         .map((c) => {
             const nameEsc = escapeHtml(c.name);
             const nameAttr = escapeAttr(c.name);
@@ -53,12 +70,12 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
                 c.quantity > 1
                     ? `<span class="suggestions-main-match-qty" aria-label="${c.quantity} exemplaires">×${c.quantity}</span>`
                     : '';
-            const sectionBadge = `<span class="suggestions-main-match-section" data-insights-section="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
+            const sectionBadge = `<span class="suggestions-main-match-section" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =
                 c.imageUrl && c.imageUrl.trim() !== ''
-                    ? `<img class="suggestions-main-match-thumb" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" data-insights-match-thumb />`
-                    : '<span class="suggestions-main-match-thumb suggestions-main-match-thumb--empty" data-insights-match-thumb aria-hidden="true">?</span>';
-            return `<div class="suggestions-main-match-chip" data-insights-main-match data-insights-add-deck-card="1" data-insights-card-name="${nameAttr}" data-insights-section="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${deckSectionMainSideShortLabel(c.section)})" role="button" tabindex="0">
+                    ? `<img class="suggestions-main-match-thumb" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" loading="lazy" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} />`
+                    : `<span class="suggestions-main-match-thumb suggestions-main-match-thumb--empty" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} aria-hidden="true">?</span>`;
+            return `<div class="suggestions-main-match-chip" ${INSIGHTS_MAIN_MATCH_DATA_ATTR} ${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="1" ${INSIGHTS_CARD_NAME_DATA_ATTR}="${nameAttr}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}" title="Cliquer pour ajouter 1 exemplaire (${deckSectionMainSideShortLabel(c.section)})" role="button" tabindex="0">
         ${thumb}
         <span class="suggestions-main-match-name">${nameEsc}</span>
         ${sectionBadge}
@@ -76,14 +93,14 @@ function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
             const attrRace = `${escapeHtml(s.attribute)} / ${escapeHtml(s.race)}`;
             const matchCell = renderMatchChips(s.matchingCards);
             return `
-    <tr data-insights-suggest-row data-insights-matches-main="${s.matchesDeck ? 'true' : 'false'}" data-insights-suggest-name="${nameAttr}" title="Cliquer pour ajouter cette carte au deck (Extra si Xyz)">
-      <td data-insights-cell="name">${nameEsc}</td>
-      <td data-insights-cell="num">${s.numberIndex}</td>
-      <td data-insights-cell="rank">${s.rank}</td>
-      <td data-insights-cell="attr-race">${attrRace}</td>
-      <td data-insights-cell="match">${matchCell}</td>
-      <td data-insights-cell="action">
-        <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" data-insights-find-card="${nameAttr}" title="Ouvrir le Builder et rechercher cette carte">Chercher</button>
+    <tr ${INSIGHTS_SUGGEST_ROW_DATA_ATTR} ${INSIGHTS_MATCHES_MAIN_DATA_ATTR}="${s.matchesDeck ? 'true' : 'false'}" ${INSIGHTS_SUGGEST_NAME_DATA_ATTR}="${nameAttr}" title="Cliquer pour ajouter cette carte au deck (Extra si Xyz)">
+      <td ${INSIGHTS_CELL_DATA_ATTR}="name">${nameEsc}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="num">${s.numberIndex}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="rank">${s.rank}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="attr-race">${attrRace}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="match">${matchCell}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="action">
+        <button type="button" class="btn btn-deck btn-deck-ghost btn-sm" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" title="Ouvrir le Builder et rechercher cette carte">Chercher</button>
       </td>
     </tr>`;
         })
@@ -96,19 +113,19 @@ function renderDetailRows(insight: DeckInsight | undefined): string {
         .map((g) => {
             const targetsHtml =
                 g.targets.length === 0
-                    ? '<span data-insights-empty-cell>—</span>'
+                    ? `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>—</span>`
                     : `<ul class="suggestions-target-list">${g.targets
                           .map(
                               (t) =>
-                                  `<li data-insights-card-line>${escapeHtml(t.name)}${t.quantity > 1 ? ` ×${t.quantity}` : ''}</li>`,
+                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > 1 ? ` ×${t.quantity}` : ''}</li>`,
                           )
                           .join('')}</ul>`;
             return `
-    <tr data-insights-detail-row>
-      <td data-insights-cell="xyz">${escapeHtml(g.xyzName)}</td>
-      <td data-insights-cell="num">${g.numberIndex}</td>
-      <td data-insights-cell="rank">${g.rank}</td>
-      <td data-insights-cell="targets">${targetsHtml}</td>
+    <tr ${INSIGHTS_DETAIL_ROW_DATA_ATTR}>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="xyz">${escapeHtml(g.xyzName)}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="num">${g.numberIndex}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="rank">${g.rank}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="targets">${targetsHtml}</td>
     </tr>`;
         })
         .join('');

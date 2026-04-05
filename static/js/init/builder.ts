@@ -4,10 +4,14 @@
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
 import {
+    BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR,
     BUILDER_SORT_CLICK_ZONE_SELECTOR,
     BUILDER_STATS_CATEGORIES_TITLE_SELECTOR,
     BUILDER_STATS_COMPOSITION_TITLE_SELECTOR,
     COMPOSITION_TOGGLE_SELECTOR,
+    DATA_BUILDER_SORT_ATTR,
+    DATA_BUILDER_SORT_CATEGORY_ATTR,
+    DATA_COMPOSITION_TOGGLE_ATTR,
 } from '../deck-builder/builderDomSelectors.js';
 import { prefetchAssociationCatalogWhenIdle } from '../associations/associationFetchCache.js';
 import { DECK_GRID_DOM_IDS } from '../deck-builder/deckConstants.js';
@@ -67,9 +71,9 @@ export function initBuilder(): void {
             const toggle = (e.target as HTMLElement).closest?.(COMPOSITION_TOGGLE_SELECTOR) as HTMLElement | null;
             if (toggle) {
                 e.preventDefault();
-                const kind = toggle.getAttribute('data-composition-toggle');
+                const kind = toggle.getAttribute(DATA_COMPOSITION_TOGGLE_ATTR);
                 const controlsId = toggle.getAttribute('aria-controls');
-                const item = toggle.closest('.builder-composition-accordion-item');
+                const item = toggle.closest(BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR);
                 const detail = controlsId ? document.getElementById(controlsId) : null;
                 if (!item || !detail) return;
                 const expanded = item.classList.toggle('builder-composition-item--expanded');
@@ -80,8 +84,8 @@ export function initBuilder(): void {
             const target = (e.target as HTMLElement).closest?.(BUILDER_SORT_CLICK_ZONE_SELECTOR) as HTMLElement | null;
             if (!target) return;
             e.preventDefault();
-            const sort = target.getAttribute('data-builder-sort');
-            const cat = target.getAttribute('data-builder-sort-category');
+            const sort = target.getAttribute(DATA_BUILDER_SORT_ATTR);
+            const cat = target.getAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR);
             if (sort === 'composition') {
                 setMainDeckSortByType();
             } else if (sort === 'categories') {

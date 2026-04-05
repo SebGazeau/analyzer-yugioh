@@ -16,6 +16,7 @@ import {
     DECK_MY_DECKS_EMPTY_ID,
     DECK_MY_DECKS_LIST_ID,
     DECK_NAME_INPUT_ID,
+    DECK_SAVED_ITEM_CLASS,
 } from '../deck-builder/deckConstants.js';
 import {
     listMyDecks,
@@ -45,7 +46,7 @@ export async function refreshMyDecksList(): Promise<void> {
     }
     for (const d of decks) {
         const li = document.createElement('li');
-        li.className = 'deck-saved-item';
+        li.className = DECK_SAVED_ITEM_CLASS;
         li.setAttribute('data-deck-id', String(d.id));
         li.setAttribute('role', 'button');
         li.setAttribute('tabindex', '0');

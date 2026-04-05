@@ -6,6 +6,23 @@ import { parseArchetypesFromField } from './archetype.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
 import { associationReportToMarkdown, buildAssociationReport, toAssociationCatalog } from './buildReport.js';
 import {
+    ASSOCIATIONS_ACTION_COPY_MARKDOWN_SELECTOR,
+    ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR,
+    ASSOCIATIONS_ADD_DECK_SELECTOR,
+    ASSOCIATIONS_CLOSE_SELECTOR,
+    ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR,
+    ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
+    ASSOCIATIONS_ACTION_COPY_MARKDOWN,
+    ASSOCIATIONS_ACTION_EXPAND_TILES,
+    DATA_ASSOCIATIONS_ACTION_ATTR,
+    DATA_ASSOCIATIONS_ADD_DECK_ATTR,
+    DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR,
+    DATA_ASSOCIATIONS_CLOSE_ATTR,
+    DATA_ASSOCIATIONS_REST_IDS_ATTR,
+    DATA_ASSOCIATIONS_TILE_MORE_ATTR,
+    DATA_CARD_ID_ATTR,
+} from './associationsDomSelectors.js';
+import {
     ASSOCIATIONS_MODAL_TILES_INITIAL,
     splitAssociationTileIdsForDisplay,
 } from './modalTileLimit.js';
@@ -65,13 +82,13 @@ function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCat
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
     const art = renderThumbInner(row?.image_url, nm, 'associations-modal__tile-img', 'lazy');
-    return `<li class="associations-modal__tile" data-card-id="${id}" data-associations-add-deck="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
+    return `<li class="associations-modal__tile" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" role="button" tabindex="0" title="Ajouter au deck (clic ou Entrée)"><div class="associations-modal__tile-art">${art}</div><div class="associations-modal__tile-caption"><span class="associations-modal__tile-name">${escapeHtml(nm)}</span></div></li>`;
 }
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
     const cat = lastModalCatalogForTiles;
     if (!cat) return;
-    const raw = btn.getAttribute('data-rest-ids') ?? '';
+    const raw = btn.getAttribute(DATA_ASSOCIATIONS_REST_IDS_ATTR) ?? '';
     const rest = raw
         .split(',')
         .map((s) => s.trim())
@@ -120,7 +137,7 @@ function announceAssociationsModal(message: string): void {
 }
 
 async function addAssociationTileToDeck(tile: Element): Promise<void> {
-    const idStr = tile.getAttribute('data-card-id');
+    const idStr = tile.getAttribute(DATA_CARD_ID_ATTR);
     const id = idStr ? parseInt(idStr, 10) : NaN;
     if (!Number.isFinite(id)) return;
     const cat = lastModalCatalogForTiles;
@@ -177,7 +194,7 @@ function ensureModalElements(): {
         overlay.setAttribute('aria-modal', 'true');
         overlay.setAttribute('aria-labelledby', MODAL_TITLE_ID);
         overlay.innerHTML = `
-            <div class="associations-modal__backdrop" data-associations-close="1"></div>
+            <div class="associations-modal__backdrop" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
             <div class="associations-modal__panel" id="${MODAL_PANEL_ID}" role="document">
                 <div id="${MODAL_LIVE_ID}" class="associations-modal__live" aria-live="polite" aria-atomic="true"></div>
                 <header class="associations-modal__header">
@@ -188,7 +205,7 @@ function ensureModalElements(): {
                             <p id="${MODAL_SUBTITLE_ID}" class="associations-modal__subtitle"></p>
                         </div>
                     </div>
-                    <button type="button" class="associations-modal__close" data-associations-close="1" aria-label="Fermer">×</button>
+                    <button type="button" class="associations-modal__close" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" aria-label="Fermer">×</button>
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="associations-modal__loading" hidden>
                     <span class="associations-modal__spinner" aria-hidden="true"></span>
@@ -200,21 +217,21 @@ function ensureModalElements(): {
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => {
             const el = e.target as HTMLElement;
-            const addTile = el.closest('[data-associations-add-deck]');
+            const addTile = el.closest(ASSOCIATIONS_ADD_DECK_SELECTOR);
             if (addTile) {
                 e.preventDefault();
                 e.stopPropagation();
                 void addAssociationTileToDeck(addTile);
                 return;
             }
-            if (el.closest('[data-associations-close]')) {
+            if (el.closest(ASSOCIATIONS_CLOSE_SELECTOR)) {
                 closeAssociationsModal();
             }
-            if (el.closest('[data-associations-action="copy-markdown"]')) {
+            if (el.closest(ASSOCIATIONS_ACTION_COPY_MARKDOWN_SELECTOR)) {
                 e.preventDefault();
                 void copyMarkdownToClipboard();
             }
-            const expandBtn = el.closest('[data-associations-action="expand-tiles"]') as HTMLButtonElement | null;
+            const expandBtn = el.closest(ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR) as HTMLButtonElement | null;
             if (expandBtn) {
                 e.preventDefault();
                 handleExpandAssociationTiles(expandBtn);
@@ -229,7 +246,7 @@ function ensureModalElements(): {
             }
             if (e.key !== 'Enter' && e.key !== ' ') return;
             const t = e.target as HTMLElement;
-            const tile = t.closest('[data-associations-add-deck]');
+            const tile = t.closest(ASSOCIATIONS_ADD_DECK_SELECTOR);
             if (!tile || !mod.contains(tile)) return;
             e.preventDefault();
             void addAssociationTileToDeck(tile);
@@ -296,7 +313,7 @@ function renderReportHtml(
     if (srcRaw) {
         const { short, title } = archetypeSourceUi(srcRaw);
         parts.push(
-            `<p><strong>Provenance archétype</strong> : <span class="associations-modal__arch-source" data-associations-archetype-source="${escapeAttr(
+            `<p><strong>Provenance archétype</strong> : <span class="associations-modal__arch-source" ${DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(
                 srcRaw,
             )}" title="${escapeAttr(title)}">${escapeHtml(short || srcRaw)}</span> <code class="associations-modal__arch-source-code">${escapeHtml(
                 srcRaw,
@@ -344,7 +361,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="associations-modal__tile-more" data-associations-tile-more="1"><button type="button" class="associations-modal__expand-tiles" data-associations-action="expand-tiles" data-rest-ids="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="associations-modal__tile-more" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button type="button" class="associations-modal__expand-tiles" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" aria-label="Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
             );
         }
         parts.push('</ul></div></details>');
@@ -363,7 +380,7 @@ function renderReportHtml(
 
     parts.push(`<div class="associations-modal__footer">`);
     parts.push(
-        `<button type="button" class="associations-modal__btn" data-associations-action="copy-markdown">Copier le rapport (Markdown)</button>`,
+        `<button type="button" class="associations-modal__btn" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}">Copier le rapport (Markdown)</button>`,
     );
     parts.push(
         `<details class="associations-modal__raw"><summary>Aperçu Markdown</summary><pre class="associations-modal__pre">${escapeHtml(
@@ -427,7 +444,7 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
         els.loading.hidden = true;
         panel?.removeAttribute('aria-busy');
         requestAnimationFrame(() => {
-            const closeBtn = els.overlay.querySelector('.associations-modal__close') as HTMLButtonElement | null;
+            const closeBtn = els.overlay.querySelector(ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR) as HTMLButtonElement | null;
             closeBtn?.focus();
         });
     }
