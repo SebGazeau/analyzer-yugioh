@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { searchApiUrl } from '../cardSearchApiRoutes.js';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
@@ -101,7 +102,7 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(fetchSpy).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(350);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('/search?q=Dark'));
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });
@@ -118,7 +119,7 @@ describe('search.ts — DOM', () => {
     input.value = 'abcd';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringMatching(/\/search\?q=abcd&locale=fr/));
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('abcd', '&locale=fr')));
     document.documentElement.lang = prevLang;
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -141,7 +142,7 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(350);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('/search?q=Dark'));
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });

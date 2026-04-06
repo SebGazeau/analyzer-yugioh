@@ -9,6 +9,7 @@ import {
   saveDeckToServer,
   updateDeckOnServer,
 } from '../deck.js';
+import { CARD_API_PATH } from '../cardSearchApiRoutes.js';
 import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
 import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
 import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
@@ -60,7 +61,7 @@ describe('Save/Load deck — fetch mocké', () => {
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Card A', type: 'Effect Monster' }),
@@ -134,7 +135,7 @@ describe('Save/Load deck — fetch mocké', () => {
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
           new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: 200 }),
         );
@@ -200,7 +201,7 @@ describe('Save/Load deck — fetch mocké', () => {
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         cardCalls += 1;
         return Promise.resolve(
           new Response(

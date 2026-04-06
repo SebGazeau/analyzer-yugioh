@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchCardByName } from '../api.js';
+import { CARD_API_PATH, SEARCH_API_PATH } from '../cardSearchApiRoutes.js';
 
 describe('api.ts', () => {
   beforeEach(() => {
@@ -21,7 +22,7 @@ describe('api.ts', () => {
   it('fetchCardByName returns card when /card?name= succeeds', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.includes('/card?name=')) {
+      if (u.includes(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
           new Response(JSON.stringify({ id: 1, name: 'Dark Magician', type: 'Normal Monster' }), { status: 200 }),
         );
@@ -54,8 +55,8 @@ describe('api.ts', () => {
   it('fetchCardByName falls back to /search when length >= 4 and no exact match', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.startsWith('/card?')) return Promise.resolve(new Response('', { status: 404 }) as any);
-      if (u.startsWith('/search?')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) return Promise.resolve(new Response('', { status: 404 }) as any);
+      if (u.startsWith(`${SEARCH_API_PATH}?`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify([{ id: 3, name: 'Raigeki', name_en: 'Raigeki', type: 'Spell' }]),
@@ -72,7 +73,7 @@ describe('api.ts', () => {
   it('fetchCardByName returns null when /card returns invalid JSON (no card.name)', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.includes('/card?')) {
+      if (u.includes(`${CARD_API_PATH}?`)) {
         return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 })); // no name
       }
       return Promise.resolve(new Response('[]', { status: 200 }));

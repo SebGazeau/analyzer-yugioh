@@ -32,13 +32,14 @@ import {
     STYLE_DISPLAY_NONE,
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
+import { searchApiUrl } from './cardSearchApiRoutes.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 import { TEXT_BLACK_STAR, TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_QUERY_LENGTH = 4;
 
-/** Query `locale` pour `/search` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
+/** Query `locale` pour `SEARCH_API_PATH` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
 function searchLocaleQuery(): string {
     const raw = document.documentElement.lang?.trim().toLowerCase() || '';
     if (!raw || raw.startsWith('en')) return '';
@@ -111,11 +112,11 @@ function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement):
     filtered.forEach((card) => renderResultRow(card, query, resultsEl));
 }
 
-/** Requête brute `/search` (même locale que le builder). */
+/** Requête brute recherche (même locale que le builder). */
 export async function fetchSearchResultsForQuery(q: string): Promise<any[]> {
     const t = q.trim();
     if (t.length < MIN_QUERY_LENGTH) return [];
-    const res = await fetch(`/search?q=${encodeURIComponent(t)}${searchLocaleQuery()}`);
+    const res = await fetch(searchApiUrl(t, searchLocaleQuery()));
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : [];
@@ -168,7 +169,7 @@ export function setupSearch(): void {
             return;
         }
 
-        fetch(`/search?q=${encodeURIComponent(query)}${searchLocaleQuery()}`)
+        fetch(searchApiUrl(query, searchLocaleQuery()))
             .then((res) => {
                 if (!res.ok) throw new Error(String(res.status));
                 return res.json();
