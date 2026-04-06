@@ -1,33 +1,19 @@
 import { getDeckState } from '../deck.js';
 import { collectDeckInsights } from './collect.js';
 import {
-    INSIGHTS_CARD_LINE_DATA_ATTR,
-    INSIGHTS_CARD_NAME_DATA_ATTR,
-    INSIGHTS_CELL_DATA_ATTR,
-    INSIGHTS_DETAIL_ROW_DATA_ATTR,
     INSIGHTS_DETAIL_TBODY_SELECTOR,
-    INSIGHTS_EMPTY_CELL_DATA_ATTR,
-    INSIGHTS_FIND_CARD_BUTTON_CLASS,
-    INSIGHTS_FIND_CARD_DATA_ATTR,
-    INSIGHTS_KIND_DATA_ATTR,
-    INSIGHTS_MATCHES_MAIN_DATA_ATTR,
     INSIGHTS_NAV_TAB_SELECTOR,
     INSIGHTS_NUMBER_TBODY_SELECTOR,
     INSIGHTS_PAGE_HELP_SELECTOR,
-    INSIGHTS_SEVERITY_DATA_ATTR,
-    INSIGHTS_SUGGEST_NAME_DATA_ATTR,
-    INSIGHTS_SUGGEST_ROW_DATA_ATTR,
-    INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUMMARY_TBODY_SELECTOR,
     SUGGESTIONS_DETAIL_WRAP_SELECTOR,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
-    SUGGESTIONS_TARGET_LIST_CLASS,
-    INSIGHTS_FIND_CARD_BUTTON_LABEL,
-    INSIGHTS_FIND_CARD_BUTTON_TITLE,
-    INSIGHTS_SUGGEST_ROW_TITLE,
 } from './insightsDomSelectors.js';
-import { insightsMainMatchChipsHtml } from './insightsMainMatchChipsHtml.js';
-import type { DeckInsight, NumberXyzSuggestion } from './types.js';
+import {
+    insightsNumberSuggestionRowsHtml,
+    insightsSeventhTachyonDetailRowsHtml,
+    insightsSummaryRowsHtml,
+} from './insightsPanelTableHtml.js';
 import {
     APP_TAB_ACTIVE_SELECTOR,
     setActiveTab,
@@ -36,78 +22,6 @@ import {
     TAB_ID_SUGGESTIONS,
 } from '../tabs.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
-import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../utils/htmlAttrs.js';
-import { escapeAttr, escapeHtml } from '../utils/html.js';
-import { TEXT_EM_DASH, TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
-
-function severityLabel(sev: string): string {
-    return sev === 'active' ? 'Actif' : 'Info';
-}
-
-function kindLabel(kind: string): string {
-    if (kind === 'seventh_tachyon') return 'Seventh Tachyon';
-    return kind;
-}
-
-function renderSummaryRows(insights: DeckInsight[]): string {
-    return insights
-        .map(
-            (i) => `
-    <tr ${INSIGHTS_SUMMARY_ROW_DATA_ATTR} ${INSIGHTS_KIND_DATA_ATTR}="${escapeHtml(i.kind)}" ${INSIGHTS_SEVERITY_DATA_ATTR}="${escapeHtml(i.severity)}">
-      <td ${INSIGHTS_CELL_DATA_ATTR}="kind">${escapeHtml(kindLabel(i.kind))}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="severity">${escapeHtml(severityLabel(i.severity))}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="title">${escapeHtml(i.title)}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="summary">${escapeHtml(i.summary)}</td>
-    </tr>`,
-        )
-        .join('');
-}
-
-function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
-    return suggested
-        .map((s) => {
-            const nameEsc = escapeHtml(s.name);
-            const nameAttr = escapeAttr(s.name);
-            const attrRace = `${escapeHtml(s.attribute)} / ${escapeHtml(s.race)}`;
-            const matchCell = insightsMainMatchChipsHtml(s.matchingCards);
-            return `
-    <tr ${INSIGHTS_SUGGEST_ROW_DATA_ATTR} ${INSIGHTS_MATCHES_MAIN_DATA_ATTR}="${s.matchesDeck ? 'true' : 'false'}" ${INSIGHTS_SUGGEST_NAME_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_SUGGEST_ROW_TITLE}">
-      <td ${INSIGHTS_CELL_DATA_ATTR}="name">${nameEsc}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="num">${s.numberIndex}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="rank">${s.rank}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="attr-race">${attrRace}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="match">${matchCell}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="action">
-        <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_FIND_CARD_BUTTON_TITLE}">${INSIGHTS_FIND_CARD_BUTTON_LABEL}</button>
-      </td>
-    </tr>`;
-        })
-        .join('');
-}
-
-function renderDetailRows(insight: DeckInsight | undefined): string {
-    const groups = insight?.details?.seventhTachyon?.xyzGroups ?? [];
-    return groups
-        .map((g) => {
-            const targetsHtml =
-                g.targets.length === 0
-                    ? `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>${TEXT_EM_DASH}</span>`
-                    : `<ul class="${SUGGESTIONS_TARGET_LIST_CLASS}">${g.targets
-                          .map(
-                              (t) =>
-                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > 1 ? ` ${TEXT_MULTIPLICATION_SIGN}${t.quantity}` : ''}</li>`,
-                          )
-                          .join('')}</ul>`;
-            return `
-    <tr ${INSIGHTS_DETAIL_ROW_DATA_ATTR}>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="xyz">${escapeHtml(g.xyzName)}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="num">${g.numberIndex}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="rank">${g.rank}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="targets">${targetsHtml}</td>
-    </tr>`;
-        })
-        .join('');
-}
 
 /**
  * Synchronise l’onglet Suggestions (header) + page tableaux avec le deck courant.
@@ -141,7 +55,7 @@ export function refreshInsightsUI(): void {
 
     tab.hidden = false;
     tab.setAttribute(ARIA_HIDDEN_ATTR, 'false');
-    summaryBody.innerHTML = renderSummaryRows(insights);
+    summaryBody.innerHTML = insightsSummaryRowsHtml(insights);
 
     const stInsight = insights.find((i) => i.kind === 'seventh_tachyon');
     const stDetails = stInsight?.details?.seventhTachyon;
@@ -155,7 +69,7 @@ export function refreshInsightsUI(): void {
     if (numberWrap && numberBody) {
         if (suggested && suggested.length > 0) {
             numberWrap.hidden = false;
-            numberBody.innerHTML = renderNumberSuggestionRows(suggested);
+            numberBody.innerHTML = insightsNumberSuggestionRowsHtml(suggested);
         } else {
             numberWrap.hidden = true;
             numberBody.innerHTML = '';
@@ -165,7 +79,7 @@ export function refreshInsightsUI(): void {
     if (detailBody && detailWrap) {
         if (groups.length > 0) {
             detailWrap.hidden = false;
-            detailBody.innerHTML = renderDetailRows(stInsight);
+            detailBody.innerHTML = insightsSeventhTachyonDetailRowsHtml(groups);
         } else {
             detailWrap.hidden = true;
             detailBody.innerHTML = '';
