@@ -9,6 +9,7 @@ import {
   saveDeckToServer,
   updateDeckOnServer,
 } from '../deck.js';
+import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
 import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
 import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
@@ -28,7 +29,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let postBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks' && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === 'POST') {
         postBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
       }
@@ -45,7 +46,7 @@ describe('Save/Load deck — fetch mocké', () => {
   it('load deck avec 0 extra ne plante pas (fetch mocké retourne deck sans extra)', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/')) {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -78,7 +79,7 @@ describe('Save/Load deck — fetch mocké', () => {
   it('listMyDecks retourne la liste quand fetch ok', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks') {
+      if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -120,12 +121,12 @@ describe('Save/Load deck — fetch mocké', () => {
     let putBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/') && init?.method === 'PUT') {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`) && init?.method === 'PUT') {
         putUrl = u;
         putBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
       }
-      if (u === '/decks') {
+      if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Deck', main: [{ name: 'C', quantity: 1 }], extra: [], side: [] }),
@@ -145,7 +146,7 @@ describe('Save/Load deck — fetch mocké', () => {
     const updateResult = await updateDeckOnServer();
     expect(updateResult.error).toBeUndefined();
     expect(updateResult.ok).toBe(true);
-    expect(putUrl).toContain('/decks/1');
+    expect(putUrl).toBe(deckApiDeckByIdUrl(1));
     expect(putBody).toHaveProperty('main');
   });
 
@@ -153,7 +154,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let postBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks/7' && !init?.method) {
+      if (u === deckApiDeckByIdUrl(7) && !init?.method) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -167,7 +168,7 @@ describe('Save/Load deck — fetch mocké', () => {
           ),
         );
       }
-      if (u === '/decks' && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === 'POST') {
         postBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
       }
@@ -185,7 +186,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let cardCalls = 0;
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/')) {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({

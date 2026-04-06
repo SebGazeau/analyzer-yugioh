@@ -10,6 +10,7 @@ import {
   DECK_SAVED_ITEM_CLASS,
   DECK_TABLE_GRID_CLASS,
 } from '../deck-builder/deckConstants.js';
+import { DECK_API_COLLECTION_URL } from '../deck-builder/deckApiRoutes.js';
 import {
   DRAW_SIMULATION_COUNT_ID,
   DRAW_SIMULATION_LIST_ID,
@@ -53,7 +54,7 @@ function minimalDeckDOM() {
 function mockFetchDefault(): ReturnType<typeof vi.fn> {
   return vi.fn((url: string | URL, init?: RequestInit) => {
     const u = typeof url === 'string' ? url : url.toString();
-    if (u.includes('/decks') && init?.method === 'POST') {
+    if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
       return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
@@ -79,7 +80,7 @@ describe('main.ts — intégration DOM', () => {
     const postCalls: RequestInit[] = [];
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.includes('/decks') && init?.method === 'POST') {
+      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
         postCalls.push(init);
         return Promise.resolve(new Response(JSON.stringify({ id: 42 }), { status: 200 }));
       }
@@ -104,7 +105,7 @@ describe('main.ts — intégration DOM', () => {
     const alertSpy = vi.mocked(alert);
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.includes('/decks') && init?.method === 'POST') {
+      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
         return Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
       }
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
@@ -122,7 +123,7 @@ describe('main.ts — intégration DOM', () => {
   it('clic sur btn-refresh-decks remplit la liste des decks', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks') {
+      if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify([{ id: 10, name: 'Mon deck', is_public: false, created_at: '2024-01-01' }]),

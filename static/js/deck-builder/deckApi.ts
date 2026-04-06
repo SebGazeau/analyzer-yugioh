@@ -1,5 +1,5 @@
 /**
- * Appels HTTP et sérialisation JSON pour les decks (/decks).
+ * Appels HTTP et sérialisation JSON pour les decks (`DECK_API_COLLECTION_URL`).
  * L’état du builder et le DOM restent dans deck.ts.
  */
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
@@ -10,6 +10,7 @@ import {
     MSG_DECK_API_DECK_NOT_FOUND,
 } from '../utils/userDialogMessages.js';
 import { DECK_API_VALIDATION_ERRORS_JOIN } from './deckApiCopy.js';
+import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from './deckApiRoutes.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
 
 export type DeckEntryPayload = {
@@ -82,14 +83,14 @@ export type DeckListItem = {
 };
 
 export async function apiListMyDecks(): Promise<DeckListItem[]> {
-    const res = await fetch('/decks', DECK_FETCH_INIT);
+    const res = await fetch(DECK_API_COLLECTION_URL, DECK_FETCH_INIT);
     if (!res.ok) return [];
     return res.json();
 }
 
 export async function apiCreateDeck(name: string, sections: DeckSectionsPayload): Promise<{ id?: number; error?: string }> {
     const body = { name: name.trim(), ...sections };
-    const res = await fetch('/decks', {
+    const res = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,7 +115,7 @@ export async function apiUpdateDeck(
         body.cover_card_name = cover.name;
         body.cover_image_url = cover.imageUrl || undefined;
     }
-    const res = await fetch(`/decks/${deckId}`, {
+    const res = await fetch(deckApiDeckByIdUrl(deckId), {
         ...DECK_FETCH_INIT,
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -128,7 +129,7 @@ export async function apiUpdateDeck(
 }
 
 export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error?: string }> {
-    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
+    const res = await fetch(deckApiDeckByIdUrl(id), DECK_FETCH_INIT);
     if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
         if (res.status === 401) return { error: deckApiErrorMessage(res, data) };
@@ -139,7 +140,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     const newName = `${baseName}${DECK_DUPLICATE_NAME_SUFFIX}`;
     const sections = mapDeckSections((s) => (Array.isArray(data[s]) ? data[s] : [])) as DeckSectionsPayload;
     const body = { name: newName, ...sections };
-    const postRes = await fetch('/decks', {
+    const postRes = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -153,15 +154,15 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     return newId != null ? { id: newId } : {};
 }
 
-/** GET /decks/:id — corps JSON ou null si échec HTTP. */
+/** GET deck par id — corps JSON ou null si échec HTTP. */
 export async function apiFetchDeckById(id: number): Promise<Record<string, unknown> | null> {
-    const res = await fetch(`/decks/${id}`, DECK_FETCH_INIT);
+    const res = await fetch(deckApiDeckByIdUrl(id), DECK_FETCH_INIT);
     if (!res.ok) return null;
     const data = await res.json().catch(() => null);
     return data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
 }
 
 export async function apiDeleteDeck(id: number): Promise<boolean> {
-    const res = await fetch(`/decks/${id}`, { ...DECK_FETCH_INIT, method: 'DELETE' });
+    const res = await fetch(deckApiDeckByIdUrl(id), { ...DECK_FETCH_INIT, method: 'DELETE' });
     return res.ok;
 }
