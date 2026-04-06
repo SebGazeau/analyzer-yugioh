@@ -2,11 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { DECK_GRID_IDS, deckSectionForGridElementId } from '../deck-builder/deckConstants.js';
 import {
   DECK_SECTIONS,
-  deckSectionMainSideSortKey,
   emptyArraysByDeckSection,
   hasTruthyDeckSectionData,
   isDeckSection,
-  isDeckSectionMainSide,
   mapDeckSections,
 } from '../deckSection.js';
 
@@ -21,13 +19,6 @@ describe('deckSection', () => {
     expect(isDeckSection('side')).toBe(true);
     expect(isDeckSection('banlist')).toBe(false);
     expect(isDeckSection('')).toBe(false);
-  });
-
-  it('isDeckSectionMainSide exclut extra', () => {
-    expect(isDeckSectionMainSide('main')).toBe(true);
-    expect(isDeckSectionMainSide('side')).toBe(true);
-    expect(isDeckSectionMainSide('extra')).toBe(false);
-    expect(isDeckSectionMainSide('')).toBe(false);
   });
 
   it('mapDeckSections produit les trois clés dans l’ordre canonique', () => {
@@ -49,9 +40,6 @@ describe('deckSection', () => {
     expect(hasTruthyDeckSectionData({ extra: [1], main: null })).toBe(true);
   });
 
-  it('deckSectionMainSideSortKey ordonne Main avant Side', () => {
-    expect(deckSectionMainSideSortKey('main')).toBeLessThan(deckSectionMainSideSortKey('side'));
-  });
 });
 
 describe('deckSectionForGridElementId', () => {

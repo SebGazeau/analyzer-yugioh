@@ -77,13 +77,15 @@ export type { DeckSectionCounts } from './deckSection.js';
 export type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
 export type { DeckSection } from './deckSectionOrder.js';
 export { DECK_SECTIONS } from './deckSectionOrder.js';
-export { deckSectionMainSideShortLabel } from './deckSectionMainSideShortCopy.js';
 export {
+    deckSectionMainSideShortLabel,
     deckSectionMainSideSortKey,
+    isDeckSectionMainSide,
+} from './deckSectionMainSideShortCopy.js';
+export {
     emptyArraysByDeckSection,
     hasTruthyDeckSectionData,
     isDeckSection,
-    isDeckSectionMainSide,
     mapDeckSections,
 } from './deckSection.js';
 

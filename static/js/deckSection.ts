@@ -1,4 +1,3 @@
-import type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
 import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 
 export { DECK_SECTIONS, type DeckSection };
@@ -30,16 +29,3 @@ export function isDeckSection(value: string): value is DeckSection {
     return (DECK_SECTIONS as readonly string[]).includes(value);
 }
 
-export function isDeckSectionMainSide(value: string): value is DeckSectionMainSide {
-    return value === DECK_SECTIONS[0] || value === DECK_SECTIONS[2];
-}
-
-const MAIN_SIDE_SORT_KEY: Record<DeckSectionMainSide, number> = {
-    [DECK_SECTIONS[0]]: 0,
-    [DECK_SECTIONS[2]]: 1,
-};
-
-/** Clé de tri : Main avant Side (tie-break après le nom). */
-export function deckSectionMainSideSortKey(section: DeckSectionMainSide): number {
-    return MAIN_SIDE_SORT_KEY[section];
-}
