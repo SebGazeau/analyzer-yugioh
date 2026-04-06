@@ -23,3 +23,6 @@ export const TEXT_ELLIPSIS = '\u2026';
 /** Guillemet français ouvrant / fermant (U+00AB / U+00BB). */
 export const TEXT_GUILLEMET_OPEN = '\u00AB';
 export const TEXT_GUILLEMET_CLOSE = '\u00BB';
+
+/** Symbole pourcentage (U+0025), suffixe d’affichage après `toFixed`. */
+export const TEXT_PERCENT_SIGN = '%';

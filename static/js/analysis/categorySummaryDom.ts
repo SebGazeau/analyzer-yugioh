@@ -47,7 +47,7 @@ import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../categoryData.js';
 import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_PERCENT_SIGN } from '../utils/textPlaceholders.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { escapeHtml } from '../utils/html.js';
 import { ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO, TITLE_ATTR } from '../utils/htmlAttrs.js';
@@ -96,7 +96,8 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         addSectionHeader(tbody, simulationBanner);
     }
 
-    const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + '%' : TEXT_EM_DASH);
+    const pctDeck = (K: number) =>
+        totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + TEXT_PERCENT_SIGN : TEXT_EM_DASH;
     let dataRowIndex = 0;
 
     addSectionHeader(tbody, ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES, ANALYSIS_TABLE_SECTION_ENGINES);

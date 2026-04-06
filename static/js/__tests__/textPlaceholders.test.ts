@@ -8,6 +8,7 @@ import {
   TEXT_GUILLEMET_OPEN,
   TEXT_MIDDLE_DOT,
   TEXT_MULTIPLICATION_SIGN,
+  TEXT_PERCENT_SIGN,
 } from '../utils/textPlaceholders.js';
 
 describe('textPlaceholders', () => {
@@ -41,5 +42,10 @@ describe('textPlaceholders', () => {
   it('guillemets français', () => {
     expect(TEXT_GUILLEMET_OPEN).toBe('\u00AB');
     expect(TEXT_GUILLEMET_CLOSE).toBe('\u00BB');
+  });
+
+  it('TEXT_PERCENT_SIGN = pourcent', () => {
+    expect(TEXT_PERCENT_SIGN).toBe('%');
+    expect(TEXT_PERCENT_SIGN.codePointAt(0)).toBe(0x0025);
   });
 });

@@ -2,7 +2,7 @@
  * Textes d’infobulles / légendes du résumé catégories (Analysis + miroir builder).
  */
 
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_PERCENT_SIGN } from '../utils/textPlaceholders.js';
 
 /** Tooltip ligne de tri par catégorie (liste builder / analysis). */
 export function builderCategorySortRowTitle(categoryName: string): string {
@@ -20,5 +20,5 @@ export function analysisHeroGroupReferenceLabel(
 
 /** `title` d’un segment de la bande composition / barre catégories (pourcentage arrondi 1 décimale). */
 export function categoryCompositionSegmentTooltip(name: string, K: number, pct: number): string {
-    return `${name}: ${K} (${pct.toFixed(1)}%)`;
+    return `${name}: ${K} (${pct.toFixed(1)}${TEXT_PERCENT_SIGN})`;
 }
