@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { insightsMainMatchChipsHtml } from '../../insights/insightsMainMatchChipsHtml.js';
 import {
     INSIGHTS_ADD_DECK_CARD_DATA_ATTR,
+    INSIGHTS_ADD_DECK_CARD_DATA_ATTR_VALUE,
     INSIGHTS_CARD_NAME_DATA_ATTR,
     INSIGHTS_EMPTY_CELL_DATA_ATTR,
     INSIGHTS_MAIN_MATCH_DATA_ATTR,
@@ -31,7 +32,9 @@ describe('insightsMainMatchChipsHtml', () => {
         expect(html).toContain(`class="${SUGGESTIONS_MAIN_MATCHES_CLASS}"`);
         expect(html).toContain(INSIGHTS_MAIN_MATCHES_DATA_ATTR);
         expect(html).toContain(`${INSIGHTS_MAIN_MATCH_DATA_ATTR}`);
-        expect(html).toContain(`${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="1"`);
+        expect(html).toContain(
+            `${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="${INSIGHTS_ADD_DECK_CARD_DATA_ATTR_VALUE}"`,
+        );
         expect(html).toContain(`${INSIGHTS_CARD_NAME_DATA_ATTR}="Dark Magician"`);
         expect(html).toContain(`${INSIGHTS_SECTION_DATA_ATTR}="main"`);
         expect(html).toContain(`class="${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}"`);

@@ -34,6 +34,8 @@ export const INSIGHTS_MATCH_THUMB_DATA_ATTR = 'data-insights-match-thumb';
 export const INSIGHTS_MAIN_MATCH_DATA_ATTR = 'data-insights-main-match';
 
 export const INSIGHTS_ADD_DECK_CARD_DATA_ATTR = 'data-insights-add-deck-card';
+/** Valeur de l’attribut (présence pour le sélecteur `[data-insights-add-deck-card]`). */
+export const INSIGHTS_ADD_DECK_CARD_DATA_ATTR_VALUE = '1';
 export const INSIGHTS_CARD_NAME_DATA_ATTR = 'data-insights-card-name';
 export const INSIGHTS_SECTION_DATA_ATTR = 'data-insights-section';
 
