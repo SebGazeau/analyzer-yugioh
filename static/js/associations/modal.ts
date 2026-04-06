@@ -13,7 +13,7 @@ import {
     ASSOCIATIONS_LIVE_NOTHING_TO_COPY,
     ASSOCIATIONS_LIVE_REPORT_COPIED,
     associationsLiveCardAddedToDeck,
-} from './associationsLiveMessages.js';
+} from './associationsLiveCopy.js';
 import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
 import { associationReportToMarkdown, buildAssociationReport, toAssociationCatalog } from './buildReport.js';
 import {
