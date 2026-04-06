@@ -3,7 +3,7 @@
  */
 
 import { DECK_DEFAULT_ROW_QUANTITY } from '../deck-builder/deckConstants.js';
-import { deckSectionMainSideShortLabel } from '../deckSection.js';
+import { deckSectionMainSideShortLabel } from '../deckSectionMainSideShortCopy.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import {

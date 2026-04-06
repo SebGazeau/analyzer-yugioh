@@ -1,7 +1,9 @@
-import { DECK_SECTION_MAIN_SIDE_SHORT_LABEL } from './deckSectionMainSideShortCopy.js';
+import type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
 import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 
 export { DECK_SECTIONS, type DeckSection };
+export type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
+export { deckSectionMainSideShortLabel } from './deckSectionMainSideShortCopy.js';
 
 /** Construit un `Record<DeckSection, T>` dans l’ordre canonique (évite de dupliquer `Object.fromEntries` + `map`). */
 export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Record<DeckSection, T> {
@@ -25,9 +27,6 @@ export function hasTruthyDeckSectionData(o: object): boolean {
 /** Nombre de cartes par zone (builder / résumé). */
 export type DeckSectionCounts = Record<DeckSection, number>;
 
-/** Main ou Side uniquement (pas Extra) — cibles d’ajout depuis Suggestions / insights. */
-export type DeckSectionMainSide = Extract<DeckSection, 'main' | 'side'>;
-
 /** Valide une chaîne issue du DOM (`data-deck-cell-section`, JSON DnD, etc.). */
 export function isDeckSection(value: string): value is DeckSection {
     return (DECK_SECTIONS as readonly string[]).includes(value);
@@ -35,11 +34,6 @@ export function isDeckSection(value: string): value is DeckSection {
 
 export function isDeckSectionMainSide(value: string): value is DeckSectionMainSide {
     return value === DECK_SECTIONS[0] || value === DECK_SECTIONS[2];
-}
-
-/** Libellé court UI pour puce / tooltip (Suggestions, etc.). */
-export function deckSectionMainSideShortLabel(section: DeckSectionMainSide): string {
-    return DECK_SECTION_MAIN_SIDE_SHORT_LABEL[section];
 }
 
 const MAIN_SIDE_SORT_KEY: Record<DeckSectionMainSide, number> = {
