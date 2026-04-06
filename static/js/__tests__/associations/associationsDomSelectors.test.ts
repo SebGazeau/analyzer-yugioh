@@ -6,11 +6,10 @@ import {
   ASSOCIATIONS_MODAL_ROOT_CLASS,
   ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
   ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
-  associationsModalSubtitle,
   DATA_ASSOCIATION_ANGLE_ATTR,
   DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR,
 } from '../../associations/associationsDomSelectors.js';
-import { TEXT_ELLIPSIS, TEXT_MIDDLE_DOT } from '../../utils/textPlaceholders.js';
+import { TEXT_ELLIPSIS } from '../../utils/textPlaceholders.js';
 
 describe('associationsDomSelectors', () => {
   it('contrats modal + grille tuiles', () => {
@@ -21,8 +20,6 @@ describe('associationsDomSelectors', () => {
     expect(ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT.length).toBeGreaterThan(10);
     expect(ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT).toBe('Cartes associées');
     expect(ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE).toContain('deck');
-    expect(associationsModalSubtitle('Dark Magician', 123)).toContain('123');
-    expect(associationsModalSubtitle('X', 1)).toContain(TEXT_MIDDLE_DOT);
     expect(ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT).toContain('catalogue');
     expect(ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT).toContain(TEXT_ELLIPSIS);
   });

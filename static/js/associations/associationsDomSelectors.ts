@@ -2,7 +2,7 @@
  * Attributs `data-*` et classes pour le modal « cartes associées ».
  */
 
-import { TEXT_ELLIPSIS, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
+import { TEXT_ELLIPSIS } from '../utils/textPlaceholders.js';
 
 export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
 export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
@@ -95,10 +95,6 @@ export const ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT =
 /** Titre principal du panneau (en-tête). */
 export const ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT = 'Cartes associées';
 
-export function associationsModalSubtitle(displayName: string, passcode: number): string {
-    return `${displayName} ${TEXT_MIDDLE_DOT} passcode ${passcode}`;
-}
-
 /** Tuile catalogue : ajout deck au clic / clavier. */
 export const ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE = 'Ajouter au deck (clic ou Entrée)';
 
@@ -109,3 +105,5 @@ export const DATA_ASSOCIATION_ANGLE_ATTR = 'data-association-angle';
 
 /** Gravité d’une entrée diagnostics (styles CSS `[data-severity='error'|…]`). */
 export const DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR = 'data-severity';
+
+export { associationsModalSubtitle } from './associationsModalSubtitleCopy.js';
