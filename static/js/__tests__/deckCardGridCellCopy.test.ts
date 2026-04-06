@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    DECK_CARD_QTY_DISPLAY_PREFIX,
     DECK_CARD_REMOVE_ONE_BTN_LABEL,
     DECK_CARD_THUMB_PLACEHOLDER_TEXT,
     deckCardBanBadgeTitle,
@@ -20,5 +21,9 @@ describe('deckCardGridCellCopy', () => {
         expect(deckCardBanBadgeTitle(1)).toContain('1');
         expect(deckCardBanBadgeTitle(1)).toContain('Banlist');
         expect(DECK_CARD_REMOVE_ONE_BTN_LABEL).toContain('1 exemplaire');
+    });
+
+    it('préfixe affichage quantité grille / popover', () => {
+        expect(DECK_CARD_QTY_DISPLAY_PREFIX).toBe('x');
     });
 });

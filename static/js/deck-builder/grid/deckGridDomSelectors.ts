@@ -62,7 +62,9 @@ export const DECK_CARD_REMOVE_ONE_PATH_HTML =
 
 export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
 export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;
-/** Préfixe affiché devant la quantité (grille + popover, ex. « x3 »). */
-export const DECK_CARD_QTY_DISPLAY_PREFIX = 'x';
 
-export { DECK_CARD_REMOVE_ONE_BTN_LABEL, deckCardBanBadgeTitle } from './deckCardGridCellCopy.js';
+export {
+    DECK_CARD_QTY_DISPLAY_PREFIX,
+    DECK_CARD_REMOVE_ONE_BTN_LABEL,
+    deckCardBanBadgeTitle,
+} from './deckCardGridCellCopy.js';

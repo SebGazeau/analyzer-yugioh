@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
-  DECK_CARD_CELL_CLASS,
-  DECK_CARD_CELL_TYPE_KIND_CLASS,
-  DECK_CARD_REMOVE_ONE_BTN_CLASS,
-  DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
-  DECK_CARD_QTY_DISPLAY_PREFIX,
-  DECK_CARD_REMOVE_ONE_PATH_HTML,
-  DECK_CARD_THUMB_WRAPPER_CLASS,
-  deckCardCellWrapperClassName,
+    DECK_CARD_CELL_CLASS,
+    DECK_CARD_CELL_TYPE_KIND_CLASS,
+    DECK_CARD_REMOVE_ONE_BTN_CLASS,
+    DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS,
+    DECK_CARD_REMOVE_ONE_PATH_HTML,
+    DECK_CARD_THUMB_WRAPPER_CLASS,
+    deckCardCellWrapperClassName,
 } from '../deck-builder/grid/deckGridDomSelectors.js';
 
 describe('deckGridDomSelectors', () => {
@@ -41,9 +40,5 @@ describe('deckGridDomSelectors', () => {
   it('icône remove-one : path horizontal centralisé', () => {
     expect(DECK_CARD_REMOVE_ONE_PATH_HTML).toContain('d="M4 12h16"');
     expect(DECK_CARD_REMOVE_ONE_PATH_HTML).toContain('stroke-width="3.5"');
-  });
-
-  it('préfixe affichage quantité grille', () => {
-    expect(DECK_CARD_QTY_DISPLAY_PREFIX).toBe('x');
   });
 });

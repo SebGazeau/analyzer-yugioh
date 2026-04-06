@@ -5,6 +5,9 @@
 /** Caractère affiché quand la carte n’a pas d’image. */
 export const DECK_CARD_THUMB_PLACEHOLDER_TEXT = '?';
 
+/** Préfixe affiché devant la quantité (grille + popover, ex. « x3 »). */
+export const DECK_CARD_QTY_DISPLAY_PREFIX = 'x';
+
 /** Libellé `title` / `aria-label` du bouton « retirer 1 exemplaire ». */
 export const DECK_CARD_REMOVE_ONE_BTN_LABEL = 'Retirer 1 exemplaire';
 
