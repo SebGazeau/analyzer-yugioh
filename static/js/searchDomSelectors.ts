@@ -27,19 +27,6 @@ export const DATA_SEARCH_ARCHETYPE_SOURCE_ATTR = 'data-search-archetype-source';
 export const SEARCH_ERROR_STATE_CLASS = 'search-error-state';
 export const DATA_SEARCH_ERROR_ATTR = 'data-search-error';
 
-/** Message affiché si la requête de recherche échoue (réseau / serveur). */
-export const SEARCH_FETCH_ERROR_MESSAGE = 'Erreur de recherche. Réessayez.';
-
-/** Attribut `title` des boutons d’action par ligne de résultat. */
-export const SEARCH_RESULT_BTN_ADD_DECK_TITLE = 'Ajouter au deck (Main/Extra)';
-export const SEARCH_RESULT_BTN_ADD_SIDE_TITLE = 'Ajouter au Side';
-export const SEARCH_RESULT_BTN_ASSOCIATED_TITLE = 'Cartes associées (catalogue complet)';
-
-/** Attribut `aria-label` (cohérent avec les `title` quand pertinent). */
-export const SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL = 'Ajouter au deck';
-export const SEARCH_RESULT_BTN_ADD_SIDE_ARIA_LABEL = 'Ajouter au Side';
-export const SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL = SEARCH_RESULT_BTN_ASSOCIATED_TITLE;
-
 export const SEARCH_RESULT_ARCH_SOURCE_CLASS = 'search-result-arch-source';
 
 export const SEARCH_RESULT_THUMB_CLASS = 'search-result-thumb';
@@ -64,3 +51,13 @@ export const SEARCH_RESULT_SUBTYPE_CLASS = 'search-result-subtype';
 export const SEARCH_RESULT_ACTIONS_CLASS = 'search-result-actions';
 
 export const SEARCH_HIGHLIGHT_CLASS = 'search-highlight';
+
+export {
+    SEARCH_FETCH_ERROR_MESSAGE,
+    SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL,
+    SEARCH_RESULT_BTN_ADD_DECK_TITLE,
+    SEARCH_RESULT_BTN_ADD_SIDE_ARIA_LABEL,
+    SEARCH_RESULT_BTN_ADD_SIDE_TITLE,
+    SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL,
+    SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
+} from './searchWidgetCopy.js';

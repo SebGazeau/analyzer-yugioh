@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  SEARCH_FETCH_ERROR_MESSAGE,
   SEARCH_HIGHLIGHT_CLASS,
-  SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL,
-  SEARCH_RESULT_BTN_ADD_DECK_TITLE,
-  SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL,
-  SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
   SEARCH_RESULT_INITIAL_CLASS,
   SEARCH_RESULT_INITIAL_KIND_CLASS,
   searchResultInitialCellClass,
@@ -20,17 +15,5 @@ describe('searchDomSelectors', () => {
 
   it('SEARCH_HIGHLIGHT_CLASS aligné sur le CSS dashboard', () => {
     expect(SEARCH_HIGHLIGHT_CLASS).toBe('search-highlight');
-  });
-
-  it('message erreur fetch recherche stable', () => {
-    expect(SEARCH_FETCH_ERROR_MESSAGE).toContain('Erreur');
-    expect(SEARCH_FETCH_ERROR_MESSAGE.length).toBeGreaterThan(15);
-  });
-
-  it('titres boutons ligne résultat recherche', () => {
-    expect(SEARCH_RESULT_BTN_ADD_DECK_TITLE).toContain('Main');
-    expect(SEARCH_RESULT_BTN_ASSOCIATED_TITLE).toContain('associ');
-    expect(SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL).toBe(SEARCH_RESULT_BTN_ASSOCIATED_TITLE);
-    expect(SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL.length).toBeLessThan(SEARCH_RESULT_BTN_ADD_DECK_TITLE.length);
   });
 });
