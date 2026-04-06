@@ -30,6 +30,7 @@ import {
     DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY,
     DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK,
     DRAW_HISTOGRAM_BAR_SCALE_FLOOR,
+    DRAW_HISTOGRAM_CATEGORY_SELECT_REBUILD_MAX_OPTIONS,
     DRAW_HISTOGRAM_SIM_ITERATIONS,
     drawHistogramAllCategoriesTitle,
     drawHistogramContainerAriaLabel,
@@ -181,7 +182,7 @@ export function runHistogramSimulation1000(input: {
         return;
     }
     const select = document.getElementById(DRAW_HISTOGRAM_CATEGORY_SELECT_ID) as HTMLSelectElement | null;
-    if (select && select.options.length <= 1) {
+    if (select && select.options.length <= DRAW_HISTOGRAM_CATEGORY_SELECT_REBUILD_MAX_OPTIONS) {
         updateHistogramCategorySelect(categories);
     }
     const selectedCategory =

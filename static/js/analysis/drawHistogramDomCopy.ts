@@ -16,6 +16,12 @@ export const DRAW_HISTOGRAM_SIM_ITERATIONS = 1000;
 /** Plancher du max compté pour l’échelle des hauteurs de barres (évite division par zéro). */
 export const DRAW_HISTOGRAM_BAR_SCALE_FLOOR = 1;
 
+/**
+ * Reconstruire le `<select>` des catégories si son `options.length` est ≤ cette valeur
+ * (ex. seulement le placeholder avant remplissage).
+ */
+export const DRAW_HISTOGRAM_CATEGORY_SELECT_REBUILD_MAX_OPTIONS = 1;
+
 export function drawHistogramHeadingIdle(iterations: number): string {
     return `Distribution (${iterations} tirages)`;
 }

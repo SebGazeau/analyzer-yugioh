@@ -129,7 +129,7 @@ export function removeCard(
 ): DeckState {
     const entries = state[section].map((e) => {
         if (e.id !== cardId) return e;
-        if (e.quantity <= 1) return null;
+        if (e.quantity <= DECK_DEFAULT_ROW_QUANTITY) return null;
         return { ...e, quantity: e.quantity - 1 };
     }).filter((e): e is DeckEntry => e !== null);
     return { ...state, [section]: entries };
@@ -156,19 +156,19 @@ export function exportDeckToYDK(state: DeckState): string {
 /** Import YDK : parse les blocs #main, #extra, !side et agrège par id. */
 export function importDeckFromYDK(ydk: string): { state: DeckState; error?: string } {
     const sections = emptyArraysByDeckSection<DeckEntry>();
-    let section: DeckSection = 'main';
+    let section: DeckSection = DECK_SECTIONS[0];
     const lines = ydk.split(/\r?\n/);
 
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.startsWith('#')) {
             const low = trimmed.toLowerCase();
-            if (low === YDK_SECTION_MARKER_EXTRA.toLowerCase()) section = 'extra';
-            else if (low === YDK_SECTION_MARKER_MAIN.toLowerCase()) section = 'main';
+            if (low === YDK_SECTION_MARKER_EXTRA.toLowerCase()) section = DECK_SECTIONS[1];
+            else if (low === YDK_SECTION_MARKER_MAIN.toLowerCase()) section = DECK_SECTIONS[0];
             continue;
         }
         if (trimmed.toLowerCase() === YDK_SECTION_MARKER_SIDE_OPEN.toLowerCase()) {
-            section = 'side';
+            section = DECK_SECTIONS[2];
             continue;
         }
         const id = parseInt(trimmed, INTEGER_STRING_DECIMAL_RADIX);
