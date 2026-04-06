@@ -1,4 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import {
+  DECK_CARD_POPOVER_LABEL_CATEGORIES,
+  DECK_CARD_POPOVER_LABEL_ENGINE,
+  DECK_CARD_POPOVER_LABEL_QTY,
+} from '../deck-builder/card-edit-popover/deckCardPopoverFormCopy.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
   DECK_CARD_POPOVER_CATS_CLASS,
@@ -16,6 +21,9 @@ import {
 
 describe('deckCardPopoverShell', () => {
   it('structure Quantité / Engine / Catégories inchangée', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_QTY);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_ENGINE);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_CATEGORIES);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${DECK_CARD_POPOVER_INNER_CLASS}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${DECK_CARD_POPOVER_QTY_CLASS}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${DECK_CARD_POPOVER_ENGINE_CLASS}"`);

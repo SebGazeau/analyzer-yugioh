@@ -27,32 +27,46 @@ import {
     DECK_CARD_POPOVER_SVG_PATH_CLOSE_D,
     DECK_CARD_POPOVER_TITLE_CLASS,
 } from './deckCardPopoverDomSelectors.js';
+import {
+    DECK_CARD_POPOVER_ENGINE_CHOICES,
+    DECK_CARD_POPOVER_ENGINE_OPTION_EMPTY_LABEL,
+    DECK_CARD_POPOVER_LABEL_CATEGORIES,
+    DECK_CARD_POPOVER_LABEL_ENGINE,
+    DECK_CARD_POPOVER_LABEL_QTY,
+    DECK_CARD_POPOVER_SHELL_QTY_OPTION_COUNT,
+} from './deckCardPopoverFormCopy.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../../utils/ariaAttrs.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../../utils/htmlAttrs.js';
+import { escapeAttr, escapeHtml } from '../../utils/html.js';
+
+const deckCardPopoverQtyOptionsHtml = Array.from({ length: DECK_CARD_POPOVER_SHELL_QTY_OPTION_COUNT }, (_, i) => {
+    const v = String(i + 1);
+    return `<option value="${v}">${v}</option>`;
+}).join('');
+
+const deckCardPopoverEngineOptionsHtml =
+    `<option value="">${escapeHtml(DECK_CARD_POPOVER_ENGINE_OPTION_EMPTY_LABEL)}</option>` +
+    DECK_CARD_POPOVER_ENGINE_CHOICES.map(
+        (e) => `<option value="${escapeAttr(e)}">${escapeHtml(e)}</option>`,
+    ).join('');
 
 export const DECK_CARD_POPOVER_SHELL_HTML = `
         <div class="${DECK_CARD_POPOVER_INNER_CLASS}">
             <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS}">${DECK_CARD_POPOVER_HEADING_TEXT}</h4>
             <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
-                <label>Quantité</label>
+                <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_QTY)}</label>
                 <select class="${DECK_CARD_POPOVER_QTY_CLASS}">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
+                    ${deckCardPopoverQtyOptionsHtml}
                 </select>
             </div>
             <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
-                <label>Engine</label>
+                <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_ENGINE)}</label>
                 <select class="${DECK_CARD_POPOVER_ENGINE_CLASS}">
-                    <option value="">-</option>
-                    <option value="Engine 1">Engine 1</option>
-                    <option value="Engine 2">Engine 2</option>
-                    <option value="Engine 3">Engine 3</option>
-                    <option value="Staple">Staple</option>
+                    ${deckCardPopoverEngineOptionsHtml}
                 </select>
             </div>
             <div class="${DECK_CARD_POPOVER_ROW_CLASS} ${DECK_CARD_POPOVER_CATS_CLASS}">
-                <label>Catégories</label>
+                <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_CATEGORIES)}</label>
                 <div class="${DECK_CARD_POPOVER_CAT_CONTAINER_CLASS}"></div>
             </div>
             <div class="${DECK_CARD_POPOVER_ACTIONS_CLASS}">
