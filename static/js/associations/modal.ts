@@ -38,6 +38,7 @@ import {
     ASSOCIATIONS_MODAL_ROOT_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
+    ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR,
     DATA_ASSOCIATIONS_REST_IDS_ATTR,
     DATA_CARD_ID_ATTR,
 } from './associationsDomSelectors.js';
@@ -63,7 +64,7 @@ function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
     if (!cat) return;
     const raw = btn.getAttribute(DATA_ASSOCIATIONS_REST_IDS_ATTR) ?? '';
     const rest = raw
-        .split(',')
+        .split(ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR)
         .map((s) => s.trim())
         .map(Number)
         .filter((n) => Number.isFinite(n));

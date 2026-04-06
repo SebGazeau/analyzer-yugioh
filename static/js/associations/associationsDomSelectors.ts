@@ -17,6 +17,8 @@ export const ASSOCIATIONS_ACTION_COPY_MARKDOWN_SELECTOR = `[${DATA_ASSOCIATIONS_
 export const ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR = `[${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}"]`;
 
 export const DATA_ASSOCIATIONS_REST_IDS_ATTR = 'data-rest-ids';
+/** Séparateur des ids dans la valeur CSV de `data-rest-ids` (join côté HTML, split côté modal). */
+export const ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR = ',';
 export const DATA_CARD_ID_ATTR = 'data-card-id';
 
 export const DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR = 'data-associations-archetype-source';

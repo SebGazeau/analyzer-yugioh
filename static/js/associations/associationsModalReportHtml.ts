@@ -70,6 +70,7 @@ import {
     DATA_ASSOCIATIONS_ACTION_ATTR,
     DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR,
     DATA_ASSOCIATIONS_ARCHETYPE_SOURCE_ATTR,
+    ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR,
     DATA_ASSOCIATIONS_REST_IDS_ATTR,
     DATA_ASSOCIATIONS_TILE_MORE_ATTR,
 } from './associationsDomSelectors.js';
@@ -175,7 +176,7 @@ export function associationsModalReportBodyHtml(
             parts.push(associationsModalTileListItemHtml(id, idToCard));
         }
         if (rest.length > 0) {
-            const idsAttr = rest.join(',');
+            const idsAttr = rest.join(ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR);
             parts.push(
                 `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(associationsModalReportExpandTilesAriaLabel(rest.length))}">${associationsModalReportExpandTilesButtonCaption(rest.length)}</button></li>`,
             );
