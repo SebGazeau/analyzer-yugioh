@@ -3,6 +3,7 @@
  */
 
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { FETCH_CREDENTIALS_SAME_ORIGIN } from '../utils/httpMime.js';
 
 /** IDs des conteneurs grille (`deck-{section}-grid`, alignés sur le template builder). */
 export const DECK_GRID_IDS: Record<DeckSection, string> = mapDeckSections((s) => `deck-${s}-grid`);
@@ -42,7 +43,7 @@ export const DECK_CARD_POPOVER_GAP_PX = 4;
 export const DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX = 16;
 
 /** Options communes aux requêtes deck (cookies de session). */
-export const DECK_FETCH_INIT: RequestInit = { credentials: 'same-origin' };
+export const DECK_FETCH_INIT: RequestInit = { credentials: FETCH_CREDENTIALS_SAME_ORIGIN };
 
 /** Type MIME du payload drag-and-drop entre cellules du deck. */
 export const DECK_DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';

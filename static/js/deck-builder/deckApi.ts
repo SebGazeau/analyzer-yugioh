@@ -7,6 +7,7 @@ import {
     HTTP_METHOD_DELETE,
     HTTP_METHOD_POST,
     HTTP_METHOD_PUT,
+    HTTP_STATUS_UNAUTHORIZED,
 } from '../utils/httpMime.js';
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import {
@@ -67,7 +68,7 @@ export function buildDeckSectionsPayload(sections: Record<DeckSection, DeckRowPa
 }
 
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
-    if (res.status === 401) {
+    if (res.status === HTTP_STATUS_UNAUTHORIZED) {
         return typeof data.error === 'string' ? data.error : MSG_DECK_API_AUTH_REQUIRED;
     }
     return (
@@ -138,7 +139,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     const res = await fetch(deckApiDeckByIdUrl(id), DECK_FETCH_INIT);
     if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        if (res.status === 401) return { error: deckApiErrorMessage(res, data) };
+        if (res.status === HTTP_STATUS_UNAUTHORIZED) return { error: deckApiErrorMessage(res, data) };
         return { error: typeof data.error === 'string' ? data.error : MSG_DECK_API_DECK_NOT_FOUND };
     }
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;

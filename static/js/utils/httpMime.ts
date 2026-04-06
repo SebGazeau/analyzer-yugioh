@@ -1,6 +1,12 @@
 /**
- * MIME, méthodes et en-têtes HTTP récurrents pour `fetch` / `Blob`.
+ * MIME, méthodes, statuts, credentials et en-têtes HTTP récurrents pour `fetch` / `Blob`.
  */
+
+/** `RequestInit.credentials` pour cookies de session (API même origine). */
+export const FETCH_CREDENTIALS_SAME_ORIGIN: RequestCredentials = 'same-origin';
+
+/** HTTP 401 Unauthorized — session absente ou expirée. */
+export const HTTP_STATUS_UNAUTHORIZED = 401;
 
 export const HTTP_METHOD_POST = 'POST';
 export const HTTP_METHOD_PUT = 'PUT';

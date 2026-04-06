@@ -12,7 +12,7 @@ import {
 import { CARD_API_PATH } from '../cardSearchApiRoutes.js';
 import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
 import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
-import { HTTP_METHOD_POST, HTTP_METHOD_PUT } from '../utils/httpMime.js';
+import { HTTP_METHOD_POST, HTTP_METHOD_PUT, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
 import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 
@@ -101,7 +101,7 @@ describe('Save/Load deck — fetch mocké', () => {
   });
 
   it('listMyDecks retourne [] quand fetch !ok', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: HTTP_STATUS_UNAUTHORIZED })));
     const decks = await listMyDecks();
     expect(decks).toEqual([]);
   });

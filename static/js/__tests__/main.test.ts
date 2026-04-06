@@ -25,7 +25,7 @@ import {
 import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
 import { TAB_ID_DECKS } from '../tabs.js';
 import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
-import { HTTP_METHOD_POST } from '../utils/httpMime.js';
+import { HTTP_METHOD_POST, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -107,7 +107,9 @@ describe('main.ts — intégration DOM', () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
       if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
-        return Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: 'Unauthorized' }), { status: HTTP_STATUS_UNAUTHORIZED }),
+        );
       }
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
     }));
