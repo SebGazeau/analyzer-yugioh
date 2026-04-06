@@ -9,8 +9,6 @@ import {
     DATA_SEARCH_ERROR_ATTR,
     DATA_SEARCH_FILTER_ATTR,
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
-    SEARCH_ERROR_STATE_CLASS,
-    SEARCH_FETCH_ERROR_MESSAGE,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
     SEARCH_HIGHLIGHT_CLASS,
@@ -25,6 +23,7 @@ import {
     searchResultRowFragmentHtml,
     searchResultThumbInnerHtml,
 } from './searchResultRowHtml.js';
+import { searchResultsFetchErrorRowHtml } from './searchFetchErrorHtml.js';
 import { debounce } from './utils/debounce.js';
 import { ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
 import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
@@ -182,12 +181,7 @@ export function setupSearch(): void {
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
             })
             .catch(() => {
-                results.innerHTML = '';
-                const errEl = document.createElement('div');
-                errEl.className = SEARCH_ERROR_STATE_CLASS;
-                errEl.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
-                errEl.textContent = SEARCH_FETCH_ERROR_MESSAGE;
-                results.appendChild(errEl);
+                results.innerHTML = searchResultsFetchErrorRowHtml();
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
             });

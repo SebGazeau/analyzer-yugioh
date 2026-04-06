@@ -26,6 +26,11 @@ import {
     SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
     searchResultInitialCellClass,
 } from './searchDomSelectors.js';
+import {
+    SEARCH_RESULT_THUMB_LETTER_MONSTER,
+    SEARCH_RESULT_THUMB_LETTER_SPELL,
+    SEARCH_RESULT_THUMB_LETTER_TRAP,
+} from './searchResultThumbCopy.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from './utils/ariaAttrs.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, IMG_LOADING_ATTR, IMG_LOADING_LAZY, TITLE_ATTR } from './utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from './utils/html.js';
@@ -47,7 +52,12 @@ export function searchResultThumbInnerHtml(imageUrl: unknown, kind: SearchResult
     if (imgUrl) {
         return `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`;
     }
-    const letter = kind === 'monster' ? 'M' : kind === 'spell' ? 'S' : 'T';
+    const letter =
+        kind === 'monster'
+            ? SEARCH_RESULT_THUMB_LETTER_MONSTER
+            : kind === 'spell'
+              ? SEARCH_RESULT_THUMB_LETTER_SPELL
+              : SEARCH_RESULT_THUMB_LETTER_TRAP;
     return `<span class="${searchResultInitialCellClass(kind)}" ${ARIA_HIDDEN_ATTR}="true">${letter}</span>`;
 }
 

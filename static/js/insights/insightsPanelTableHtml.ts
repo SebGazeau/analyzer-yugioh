@@ -21,19 +21,11 @@ import {
     INSIGHTS_SUGGEST_ROW_TITLE,
 } from './insightsDomSelectors.js';
 import { insightsMainMatchChipsHtml } from './insightsMainMatchChipsHtml.js';
+import { insightsTableKindLabel, insightsTableSeverityLabel } from './insightsPanelTableCopy.js';
 import type { DeckInsight, NumberXyzSuggestion, SeventhTachyonXyzGroup } from './types.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import { TEXT_EM_DASH, TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
-
-function severityLabel(sev: string): string {
-    return sev === 'active' ? 'Actif' : 'Info';
-}
-
-function kindLabel(kind: string): string {
-    if (kind === 'seventh_tachyon') return 'Seventh Tachyon';
-    return kind;
-}
 
 /** Lignes du tableau résumé (liste des insights). */
 export function insightsSummaryRowsHtml(insights: DeckInsight[]): string {
@@ -41,8 +33,8 @@ export function insightsSummaryRowsHtml(insights: DeckInsight[]): string {
         .map(
             (i) => `
     <tr ${INSIGHTS_SUMMARY_ROW_DATA_ATTR} ${INSIGHTS_KIND_DATA_ATTR}="${escapeHtml(i.kind)}" ${INSIGHTS_SEVERITY_DATA_ATTR}="${escapeHtml(i.severity)}">
-      <td ${INSIGHTS_CELL_DATA_ATTR}="kind">${escapeHtml(kindLabel(i.kind))}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="severity">${escapeHtml(severityLabel(i.severity))}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="kind">${escapeHtml(insightsTableKindLabel(i.kind))}</td>
+      <td ${INSIGHTS_CELL_DATA_ATTR}="severity">${escapeHtml(insightsTableSeverityLabel(i.severity))}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="title">${escapeHtml(i.title)}</td>
       <td ${INSIGHTS_CELL_DATA_ATTR}="summary">${escapeHtml(i.summary)}</td>
     </tr>`,
