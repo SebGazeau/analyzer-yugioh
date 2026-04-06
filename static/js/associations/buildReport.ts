@@ -6,6 +6,8 @@ import {
     ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR,
     ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN,
 } from './associationsDiagnosticCodes.js';
 import {
     ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
@@ -213,7 +215,7 @@ export function buildAssociationReport(
         pushDiagnostic(diagnostics, {
             code: ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
             message: ASSOCIATION_DIAGNOSTIC_EMPTY_CATALOG_MESSAGE,
-            severity: 'warn',
+            severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN,
         });
         return {
             anchorId: anchor.id,
@@ -236,7 +238,7 @@ export function buildAssociationReport(
         pushDiagnostic(diagnostics, {
             code: ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
             message: associationDiagnosticYgorgEffectEnCountMessage(nYgorgFx),
-            severity: 'info',
+            severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
         });
     }
 
@@ -245,7 +247,7 @@ export function buildAssociationReport(
         pushDiagnostic(diagnostics, {
             code: ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR,
             message: associationDiagnosticNoArchetypeOnAnchorMessage(),
-            severity: 'info',
+            severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
         });
     } else {
         for (const arch of anchorArchetypes) {
@@ -262,7 +264,7 @@ export function buildAssociationReport(
                 pushDiagnostic(diagnostics, {
                     code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                     message: associationDiagnosticArchetypeGroupTruncatedMessage(arch, unique.length, maxGroupSize),
-                    severity: 'info',
+                    severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
                 });
             }
             if (cardIds.length > 0) {
@@ -287,7 +289,7 @@ export function buildAssociationReport(
             pushDiagnostic(diagnostics, {
                 code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                 message: associationDiagnosticQaGroupTruncatedMessage(qaCardIds.length, maxGroupSize),
-                severity: 'info',
+                severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
             });
         }
         groups.push({
@@ -311,7 +313,7 @@ export function buildAssociationReport(
         pushDiagnostic(diagnostics, {
             code: ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG,
             message: associationDiagnosticNoDescInCatalogMessage(),
-            severity: 'info',
+            severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
         });
     } else {
         for (const rule of textMentionRules) {
@@ -337,7 +339,7 @@ export function buildAssociationReport(
                         unique.length,
                         maxNameWordCitationMatches,
                     ),
-                    severity: 'info',
+                    severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
                 });
                 continue;
             }
@@ -347,7 +349,7 @@ export function buildAssociationReport(
                 pushDiagnostic(diagnostics, {
                     code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                     message: associationDiagnosticMentionGroupTruncatedMessage(rule.displayLabel, unique.length),
-                    severity: 'info',
+                    severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
                 });
             }
             if (cardIds.length > 0) {
@@ -380,7 +382,7 @@ export function buildAssociationReport(
                     pushDiagnostic(diagnostics, {
                         code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                         message: associationDiagnosticAnchorNameInDescTruncatedMessage(unique.length),
-                        severity: 'info',
+                        severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
                     });
                 }
                 if (cardIds.length > 0) {

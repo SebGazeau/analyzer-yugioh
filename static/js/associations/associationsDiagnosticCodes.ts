@@ -1,6 +1,14 @@
 /**
- * Codes stables des entrées `Diagnostic` du rapport associations (logique + tests + UI).
+ * Codes et gravités stables des entrées `Diagnostic` du rapport associations (logique + tests + UI).
  */
+
+import type { DiagnosticSeverity } from './types.js';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO: DiagnosticSeverity = 'info';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN: DiagnosticSeverity = 'warn';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_ERROR: DiagnosticSeverity = 'error';
 
 export const ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG = 'EMPTY_CATALOG';
 

@@ -6,9 +6,18 @@ import {
     ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR,
     ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_ERROR,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN,
 } from '../../associations/associationsDiagnosticCodes.js';
 
 describe('associationsDiagnosticCodes', () => {
+    it('gravités stables', () => {
+        expect(ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO).toBe('info');
+        expect(ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN).toBe('warn');
+        expect(ASSOCIATION_DIAGNOSTIC_SEVERITY_ERROR).toBe('error');
+    });
+
     it('codes distincts et stables (contrat rapport / UI)', () => {
         const all = [
             ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,

@@ -17,6 +17,7 @@ import {
     ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
     ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
+    ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO,
 } from '../../associations/associationsDiagnosticCodes.js';
 import {
     ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
@@ -351,7 +352,7 @@ describe('associationReportToMarkdown', () => {
                     cardIds: [2, 3],
                 },
             ],
-            diagnostics: [{ code: 'X', message: 'y', severity: 'info' as const }],
+            diagnostics: [{ code: 'X', message: 'y', severity: ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO }],
         };
         const md = associationReportToMarkdown(report, new Map([[2, 'Two'], [3, 'Three']]));
         expect(md).toContain('Même archétype : Z');
