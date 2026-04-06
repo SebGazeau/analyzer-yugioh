@@ -2,7 +2,7 @@
  * DOM léger : en-tête Analysis, hack global pour outils « taille de main ».
  */
 
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { analysisDeckNameHeaderText } from './analysisDeckNameTitleCopy.js';
 import { ANALYSIS_DECK_NAME_ELEMENT_ID } from './analysisDomIds.js';
 
 const WINDOW_DECK_TOTAL_KEY = '__deckTotalForHandSize';
@@ -11,8 +11,7 @@ const WINDOW_DECK_TOTAL_KEY = '__deckTotalForHandSize';
 export function setAnalysisDeckName(name: string): void {
     const el = document.getElementById(ANALYSIS_DECK_NAME_ELEMENT_ID);
     if (!el) return;
-    const text = name.trim();
-    el.textContent = text ? `${text} ${TEXT_EM_DASH} ` : '';
+    el.textContent = analysisDeckNameHeaderText(name);
 }
 
 /** Expose le nombre de cartes Main pour d’éventuels scripts (clé historique). */
