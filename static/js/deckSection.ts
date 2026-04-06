@@ -2,8 +2,6 @@ import type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
 import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 
 export { DECK_SECTIONS, type DeckSection };
-export type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
-export { deckSectionMainSideShortLabel } from './deckSectionMainSideShortCopy.js';
 
 /** Construit un `Record<DeckSection, T>` dans l’ordre canonique (évite de dupliquer `Object.fromEntries` + `map`). */
 export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Record<DeckSection, T> {
