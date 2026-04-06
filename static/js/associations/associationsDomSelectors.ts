@@ -2,8 +2,6 @@
  * Attributs `data-*` et classes pour le modal « cartes associées ».
  */
 
-import { TEXT_ELLIPSIS } from '../utils/textPlaceholders.js';
-
 export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
 export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
 
@@ -45,8 +43,6 @@ export const ASSOCIATIONS_MODAL_HEADER_TEXT_CLASS = 'associations-modal__header-
 export const ASSOCIATIONS_MODAL_TITLE_CLASS = 'associations-modal__title';
 export const ASSOCIATIONS_MODAL_SUBTITLE_CLASS = 'associations-modal__subtitle';
 export const ASSOCIATIONS_MODAL_LOADING_CLASS = 'associations-modal__loading';
-/** Texte affiché pendant le chargement catalogue + visuels. */
-export const ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT = `Chargement des visuels et du catalogue${TEXT_ELLIPSIS}`;
 export const ASSOCIATIONS_MODAL_SPINNER_CLASS = 'associations-modal__spinner';
 export const ASSOCIATIONS_MODAL_BODY_CLASS = 'associations-modal__body';
 
@@ -88,22 +84,18 @@ export const ASSOCIATIONS_MODAL_BTN_CLASS = 'associations-modal__btn';
 export const ASSOCIATIONS_MODAL_RAW_CLASS = 'associations-modal__raw';
 export const ASSOCIATIONS_MODAL_PRE_CLASS = 'associations-modal__pre';
 export const ASSOCIATIONS_MODAL_ERROR_CLASS = 'associations-modal__error';
-/** Message utilisateur si le catalogue associations ne charge pas. */
-export const ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT =
-    'Impossible de charger le catalogue (réseau ou serveur).';
-
-/** Titre principal du panneau (en-tête). */
-export const ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT = 'Cartes associées';
-
-/** Tuile catalogue : ajout deck au clic / clavier. */
-export const ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE = 'Ajouter au deck (clic ou Entrée)';
-
-/** Bouton fermer (croix). */
-export const ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL = 'Fermer';
 
 export const DATA_ASSOCIATION_ANGLE_ATTR = 'data-association-angle';
 
 /** Gravité d’une entrée diagnostics (styles CSS `[data-severity='error'|…]`). */
 export const DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR = 'data-severity';
+
+export {
+    ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT,
+    ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL,
+    ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT,
+    ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT,
+    ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
+} from './associationsModalChromeCopy.js';
 
 export { associationsModalSubtitle } from './associationsModalSubtitleCopy.js';
