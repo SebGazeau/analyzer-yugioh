@@ -3,6 +3,7 @@ import {
     MAX_EXTRA_CARDS,
     MAX_MAIN_CARDS,
     MAX_SIDE_CARDS,
+    MIN_MAIN_CARDS,
     isExtraDeckRowLike,
     maxCardsForZone,
     resolveTargetZone,
@@ -46,6 +47,7 @@ describe('deck-move', () => {
     });
 
     it('sumQuantities et maxCardsForZone', () => {
+        expect(MIN_MAIN_CARDS).toBe(40);
         expect(sumQuantities([{ quantity: 2 }, { quantity: 3 }])).toBe(5);
         expect(maxCardsForZone('main')).toBe(MAX_MAIN_CARDS);
         expect(maxCardsForZone('extra')).toBe(MAX_EXTRA_CARDS);

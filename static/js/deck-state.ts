@@ -3,7 +3,8 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
-import { maxCardsForZone } from './deck-move.js';
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deck-builder/deckConstants.js';
+import { maxCardsForZone, MIN_MAIN_CARDS } from './deck-move.js';
 import {
     DECK_SECTIONS,
     emptyArraysByDeckSection,
@@ -39,9 +40,6 @@ export function createEmptyDeckState(): DeckState {
     return { ...emptyArraysByDeckSection<DeckEntry>() };
 }
 
-const MAX_COPIES = 3;
-const MIN_MAIN = 40;
-
 function sectionCount(entries: DeckEntry[]): number {
     return entries.reduce((s, e) => s + e.quantity, 0);
 }
@@ -61,7 +59,7 @@ function addOrIncrement(
 
     const existing = entries.find((x) => x.id === card.id);
     const currentQty = existing ? existing.quantity : 0;
-    if (currentQty >= MAX_COPIES) return { entries: [...entries], ok: false };
+    if (currentQty >= DECK_DEFAULT_MAX_COPIES_PER_CARD) return { entries: [...entries], ok: false };
 
     const newQty = currentQty + 1;
     const newEntries = existing
@@ -75,18 +73,18 @@ export function getDeckSize(state: DeckState): number {
     return DECK_SECTIONS.reduce((sum, s) => sum + sectionCount(state[s]), 0);
 }
 
-/** Vérifie les limites officielles : main 40–60, extra ≤15, side ≤15. */
+/** Vérifie les limites officielles : Main ≥ {@link MIN_MAIN_CARDS} et ≤ max zone, Extra/Side ≤ plafonds. */
 export function isLegal(state: DeckState): boolean {
     const c: DeckSectionCounts = mapDeckSections((s) => sectionCount(state[s]));
     return (
-        c.main >= MIN_MAIN &&
+        c.main >= MIN_MAIN_CARDS &&
         c.main <= maxCardsForZone('main') &&
         c.extra <= maxCardsForZone('extra') &&
         c.side <= maxCardsForZone('side')
     );
 }
 
-/** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte 3 exemplaires et taille de zone. */
+/** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte le max exemplaires TCG et la taille de zone. */
 export function addCard(
     state: DeckState,
     card: { id: number; name: string; type?: string; engine?: string; categories?: string[] },

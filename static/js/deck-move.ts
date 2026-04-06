@@ -12,6 +12,9 @@ export interface DeckRowLike {
     quantity: number;
 }
 
+/** Minimum de cartes en Main pour un deck légal (construction classique). */
+export const MIN_MAIN_CARDS = 40;
+
 export const MAX_MAIN_CARDS = 60;
 export const MAX_EXTRA_CARDS = 15;
 export const MAX_SIDE_CARDS = 15;
