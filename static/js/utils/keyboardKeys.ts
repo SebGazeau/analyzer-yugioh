@@ -4,6 +4,8 @@
 
 export const KEY_ESCAPE = 'Escape';
 
+export const KEY_TAB = 'Tab';
+
 export const KEY_ENTER = 'Enter';
 
 /** Barre d’espace — `event.key` vaut U+0020. */

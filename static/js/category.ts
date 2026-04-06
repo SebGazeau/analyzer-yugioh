@@ -11,6 +11,7 @@ import {
     DROPDOWN_LIST_VISIBLE_CLASS,
 } from './categoryDomSelectors.js';
 import { categoryOptions } from './categoryData.js';
+import { KEY_ESCAPE, KEY_TAB } from './utils/keyboardKeys.js';
 
 export { CATEGORY_GROUPS, categoryOptions } from './categoryData.js';
 
@@ -79,8 +80,8 @@ export function createCategorySelector(): CategoryContainer {
         }
     });
     container.addEventListener('keydown', (e) => {
-        if ((e as KeyboardEvent).key === "Escape") showDropdown(false);
-        if ((e as KeyboardEvent).key === "Tab") showDropdown(false);
+        const key = (e as KeyboardEvent).key;
+        if (key === KEY_ESCAPE || key === KEY_TAB) showDropdown(false);
     });
     function renderChips() {
         display.innerHTML = '';
