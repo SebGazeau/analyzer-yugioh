@@ -2,8 +2,9 @@
  * Probabilités hypergéométriques et simulations de tirage (sans DOM).
  */
 
-import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT } from './yugiohDrawConstants.js';
+import { PERCENT_DISPLAY_SCALE } from '../utils/percentScale.js';
 import { TEXT_EM_DASH, TEXT_PERCENT_SIGN } from '../utils/textPlaceholders.js';
+import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT } from './yugiohDrawConstants.js';
 
 export interface ProbabilityCardEntry {
     name: string;
@@ -55,7 +56,9 @@ export function hypergeometricProbRowStrings(K: number, totalCards: number, numD
             continue;
         }
         const p = 1 - cumulativeHypergeometric(x - 1, numDraws, K, totalCards);
-        probs.push(Number.isFinite(p) ? (p * 100).toFixed(2) + TEXT_PERCENT_SIGN : TEXT_EM_DASH);
+        probs.push(
+            Number.isFinite(p) ? (p * PERCENT_DISPLAY_SCALE).toFixed(2) + TEXT_PERCENT_SIGN : TEXT_EM_DASH,
+        );
     }
     return probs;
 }

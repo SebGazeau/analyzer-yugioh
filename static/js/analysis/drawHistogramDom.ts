@@ -42,6 +42,7 @@ import {
     STYLE_DISPLAY_BLOCK,
     STYLE_DISPLAY_NONE,
 } from '../utils/cssInlineDisplay.js';
+import { PERCENT_DISPLAY_SCALE } from '../utils/percentScale.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 import type { YgoHandDrawCount } from './yugiohDrawConstants.js';
@@ -95,7 +96,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
 
     buckets.forEach((k) => {
         const n = histogram[k];
-        const pct = iterations > 0 ? (n / iterations) * 100 : 0;
+        const pct = iterations > 0 ? (n / iterations) * PERCENT_DISPLAY_SCALE : 0;
         const heightPx = maxCount > 0 ? (n / maxCount) * DRAW_HISTOGRAM_MAIN_BAR_MAX_HEIGHT_PX : 0;
 
         const barWrap = document.createElement('div');

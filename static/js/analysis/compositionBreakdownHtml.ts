@@ -23,6 +23,7 @@ import {
     BUILDER_COMPOSITION_DETAIL_ROW_CLASS,
 } from './compositionBreakdownDomSelectors.js';
 import { escapeHtml } from '../utils/html.js';
+import { PERCENT_DISPLAY_SCALE } from '../utils/percentScale.js';
 
 function renderBreakdownList(counts: Record<string, number>, total: number): string {
     const entries = Object.entries(counts)
@@ -31,7 +32,7 @@ function renderBreakdownList(counts: Record<string, number>, total: number): str
     if (entries.length === 0) {
         return `<p class="${BUILDER_COMPOSITION_DETAIL_EMPTY_CLASS}">${COMPOSITION_BREAKDOWN_DETAIL_EMPTY_LIST}</p>`;
     }
-    const pct = (n: number) => (total > 0 ? ((n / total) * 100).toFixed(0) : '0');
+    const pct = (n: number) => (total > 0 ? ((n / total) * PERCENT_DISPLAY_SCALE).toFixed(0) : '0');
     return entries
         .map(
             ([label, n]) =>

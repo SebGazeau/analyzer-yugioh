@@ -47,6 +47,7 @@ import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../categoryData.js';
 import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
+import { PERCENT_DISPLAY_SCALE } from '../utils/percentScale.js';
 import { TEXT_EM_DASH, TEXT_PERCENT_SIGN } from '../utils/textPlaceholders.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { escapeHtml } from '../utils/html.js';
@@ -98,7 +99,9 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     }
 
     const pctDeck = (K: number) =>
-        totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + TEXT_PERCENT_SIGN : TEXT_EM_DASH;
+        totalCards > 0
+            ? ((K / totalCards) * PERCENT_DISPLAY_SCALE).toFixed(1) + TEXT_PERCENT_SIGN
+            : TEXT_EM_DASH;
     let dataRowIndex = 0;
 
     addSectionHeader(tbody, ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES, ANALYSIS_TABLE_SECTION_ENGINES);
@@ -217,7 +220,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         stripEl.innerHTML = '';
         if (sumAll > 0) {
             entries.forEach(({ name, K }) => {
-                const pct = (K / sumAll) * 100;
+                const pct = (K / sumAll) * PERCENT_DISPLAY_SCALE;
                 const seg = document.createElement('div');
                 seg.className = DECK_COMPOSITION_SEGMENT_CLASS;
                 seg.style.flexBasis = cssLengthPercent(pct);
@@ -233,7 +236,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         sidebarBarEl.innerHTML = '';
         if (sumAll > 0) {
             entries.forEach(({ name, K }) => {
-                const pct = (K / sumAll) * 100;
+                const pct = (K / sumAll) * PERCENT_DISPLAY_SCALE;
                 const seg = document.createElement('div');
                 seg.className = DECK_STATS_CATEGORY_SEGMENT_CLASS;
                 seg.style.flexBasis = cssLengthPercent(pct);
@@ -249,7 +252,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         categoryListEl.innerHTML = '';
         if (sumAll > 0) {
             entries.forEach(({ name, K }) => {
-                const pct = (K / sumAll) * 100;
+                const pct = (K / sumAll) * PERCENT_DISPLAY_SCALE;
                 const row = document.createElement('div');
                 row.className = BUILDER_CATEGORY_LIST_ROW_CLASS;
                 row.setAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR, name);
