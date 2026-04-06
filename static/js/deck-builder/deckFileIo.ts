@@ -8,6 +8,7 @@ import {
     msgImportCardsNotFound,
     msgImportParseError,
 } from '../utils/userDialogMessages.js';
+import { DECK_IMPORT_JSON_WARN_FAILED_CARDS_PREFIX } from './deckFileIoCopy.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
 export interface DeckFileExportRow {
@@ -163,7 +164,7 @@ export function runDeckImportFromFileInput(event: Event, deps: DeckJsonImportDep
             const data = JSON.parse(raw || '{}');
             const failedCards = await applyParsedDeckJson(data, deps);
             if (failedCards.length > 0) {
-                console.warn('Import: cartes non trouvées:', failedCards);
+                console.warn(DECK_IMPORT_JSON_WARN_FAILED_CARDS_PREFIX, failedCards);
                 alert(msgImportCardsNotFound(failedCards));
             }
         } catch (err: unknown) {
