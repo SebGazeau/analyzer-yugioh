@@ -24,10 +24,12 @@ import {
 import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
     ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
+    associationMarkdownCardBulletLine,
     associationMarkdownDiagnosticLine,
     associationMarkdownGeneratedLine,
     associationMarkdownGroupAngleLinkLine,
     associationMarkdownGroupCardCountLine,
+    associationMarkdownGroupHeading,
     associationMarkdownMoreCardsLine,
     associationMarkdownTitleLine,
 } from './associationsReportMarkdownCopy.js';
@@ -410,13 +412,13 @@ export function associationReportToMarkdown(report: AssociationReport, nameById?
         lines.push(ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE);
     } else {
         for (const g of report.groups) {
-            lines.push(`## ${g.displayLabel}`);
+            lines.push(associationMarkdownGroupHeading(g.displayLabel));
             lines.push(associationMarkdownGroupAngleLinkLine(g.angleId, g.linkStrength));
             lines.push(associationMarkdownGroupCardCountLine(g.cardIds.length));
             const sample = g.cardIds.slice(0, 15);
             for (const id of sample) {
                 const label = nameById?.get(id) ?? String(id);
-                lines.push(`  - ${label} (\`${id}\`)`);
+                lines.push(associationMarkdownCardBulletLine(label, id));
             }
             if (g.cardIds.length > sample.length)
                 lines.push(associationMarkdownMoreCardsLine(g.cardIds.length - sample.length));

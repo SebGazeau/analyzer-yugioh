@@ -30,6 +30,7 @@ import { refreshDrawSimulationPanel } from './analysis/drawSimulationDom.js';
 import { buildRemainingDrawPool, pickRandomFromPool } from './analysis/drawSimulationPile.js';
 import { computeMainDeckTypeCounts } from './analysis/mainDeckTypeCounts.js';
 import { mapDeckSections, type DeckSectionCounts } from './deckSection.js';
+import { STATS_CONSOLE_CATEGORY_SUMMARY_RENDER_ERROR_PREFIX } from './statsConsoleCopy.js';
 
 export type { CompositionBreakdown } from './analysis/compositionBreakdown.js';
 export type { ProbabilityCardEntry } from './analysis/probabilityMath.js';
@@ -130,7 +131,7 @@ export function updateCategorySummary(): void {
         );
         renderAnalysisCategorySummaryDom(input);
     } catch (error) {
-        console.error(error);
+        console.error(STATS_CONSOLE_CATEGORY_SUMMARY_RENDER_ERROR_PREFIX, error);
     }
 }
 

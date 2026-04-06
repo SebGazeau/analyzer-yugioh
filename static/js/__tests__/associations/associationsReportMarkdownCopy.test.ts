@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
     ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
+    associationMarkdownCardBulletLine,
     associationMarkdownDiagnosticLine,
     associationMarkdownGeneratedLine,
     associationMarkdownGroupAngleLinkLine,
     associationMarkdownGroupCardCountLine,
+    associationMarkdownGroupHeading,
     associationMarkdownMoreCardsLine,
     associationMarkdownTitleLine,
 } from '../../associations/associationsReportMarkdownCopy.js';
@@ -22,6 +24,8 @@ describe('associationsReportMarkdownCopy', () => {
         expect(associationMarkdownGroupAngleLinkLine('x', 'member')).toContain('Angle');
         expect(associationMarkdownGroupAngleLinkLine('x', 'member')).toContain('Lien');
         expect(associationMarkdownGroupCardCountLine(3)).toContain('3');
+        expect(associationMarkdownGroupHeading('Mon groupe')).toBe('## Mon groupe');
+        expect(associationMarkdownCardBulletLine('Dark Magician', 123)).toBe('  - Dark Magician (`123`)');
         expect(associationMarkdownMoreCardsLine(5)).toContain(TEXT_ELLIPSIS);
         expect(associationMarkdownMoreCardsLine(5)).toContain('+5 autres');
         expect(associationMarkdownDiagnosticLine('info', 'CODE', 'msg')).toContain('[info]');

@@ -24,6 +24,16 @@ export function associationMarkdownGroupCardCountLine(cardCount: number): string
     return `- **Cartes** : ${cardCount}`;
 }
 
+/** Titre de section Markdown pour un groupe (angle) du rapport. */
+export function associationMarkdownGroupHeading(displayLabel: string): string {
+    return `## ${displayLabel}`;
+}
+
+/** Puce liste : nom affiché + id carte en code inline. */
+export function associationMarkdownCardBulletLine(cardLabel: string, cardId: number): string {
+    return `  - ${cardLabel} (\`${cardId}\`)`;
+}
+
 export function associationMarkdownMoreCardsLine(extraCount: number): string {
     return `  - ${TEXT_ELLIPSIS} +${extraCount} autres`;
 }
