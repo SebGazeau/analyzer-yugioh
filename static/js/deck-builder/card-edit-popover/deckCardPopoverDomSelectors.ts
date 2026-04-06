@@ -2,8 +2,6 @@
  * Classes internes du popover « Modifier la carte ».
  */
 
-import { DECK_CARD_EDIT_DIALOG_TITLE } from '../../utils/deckCardEditLabels.js';
-
 export const DECK_CARD_POPOVER_QTY_CLASS = 'deck-card-popover-qty';
 export const DECK_CARD_POPOVER_QTY_SELECTOR = `.${DECK_CARD_POPOVER_QTY_CLASS}`;
 
@@ -58,18 +56,6 @@ export const DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_
 export const DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_DELETE_CLASS} btn btn-deck btn-deck-danger`;
 export const DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS = `${DECK_CARD_POPOVER_ICON_BTN_CLASS} ${DECK_CARD_POPOVER_COVER_CLASS} btn btn-deck btn-deck-outline`;
 
-/** Libellés `title` / `aria-label` des boutons d’action du popover. */
-export const DECK_CARD_POPOVER_CLOSE_BTN_TITLE = 'Enregistrer les modifications et fermer';
-export const DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL = 'Enregistrer et fermer';
-export const DECK_CARD_POPOVER_DELETE_BTN_TITLE = 'Supprimer cette ligne du deck';
-export const DECK_CARD_POPOVER_DELETE_BTN_ARIA_LABEL = 'Supprimer la carte du deck';
-export const DECK_CARD_POPOVER_COVER_BTN_TITLE =
-    'Définir cette carte comme couverture du deck (liste Mes decks)';
-export const DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL = 'Définir comme couverture du deck';
-
-/** Titre visible (`<h4>`) et `aria-label` du dialogue. */
-export const DECK_CARD_POPOVER_HEADING_TEXT = DECK_CARD_EDIT_DIALOG_TITLE;
-
 export const DECK_CARD_POPOVER_BACKDROP_CLASS = 'deck-card-popover-backdrop';
 export const DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS = 'deck-card-popover-backdrop--open';
 
@@ -86,3 +72,13 @@ export const DECK_CARD_POPOVER_QTY_LIMIT_CLASSES = [
 ] as const;
 
 export const DATA_DECK_POPOVER_BACKDROP_ATTR = 'data-deck-popover-backdrop';
+
+export {
+    DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_CLOSE_BTN_TITLE,
+    DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_COVER_BTN_TITLE,
+    DECK_CARD_POPOVER_DELETE_BTN_ARIA_LABEL,
+    DECK_CARD_POPOVER_DELETE_BTN_TITLE,
+    DECK_CARD_POPOVER_HEADING_TEXT,
+} from './deckCardPopoverActionTitlesCopy.js';
