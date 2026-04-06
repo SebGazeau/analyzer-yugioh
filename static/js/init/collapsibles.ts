@@ -2,6 +2,7 @@
  * Zones repliables : deck (Main/Extra/Side), table Analysis (Engines/Catégories/Groupes).
  */
 import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
+import { DOM_EVENT_CLICK } from '../utils/domEventNames.js';
 import {
     analysisTableSectionCollapsedClass,
     ANALYSIS_SECTION_HEADER_ROW_SELECTOR,
@@ -18,7 +19,7 @@ import {
 
 export function bindCollapsibles(): void {
     document.querySelectorAll(DECK_ACTION_TOGGLE_ZONE_SELECTOR).forEach((el) => {
-        el.addEventListener('click', () => {
+        el.addEventListener(DOM_EVENT_CLICK, () => {
             const section = el.closest(DECK_SECTION_SELECTOR);
             if (!section) return;
             const expanded = section.classList.toggle(DECK_SECTION_COLLAPSED_CLASS);
@@ -27,7 +28,7 @@ export function bindCollapsibles(): void {
     });
 
     const analysisTable = document.querySelector(ANALYSIS_TABLE_SELECTOR);
-    analysisTable?.addEventListener('click', (e: Event) => {
+    analysisTable?.addEventListener(DOM_EVENT_CLICK, (e: Event) => {
         const target = (e.target as HTMLElement).closest(ANALYSIS_SECTION_HEADER_ROW_SELECTOR);
         if (!target) return;
         const id = target.getAttribute(DATA_SECTION_HEADER_ATTR);

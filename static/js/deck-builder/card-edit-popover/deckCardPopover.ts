@@ -6,6 +6,13 @@ import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
+import {
+    DOM_EVENT_CHANGE,
+    DOM_EVENT_CLICK,
+    DOM_EVENT_KEYDOWN,
+    DOM_EVENT_RESIZE,
+    DOM_EVENT_SCROLL,
+} from '../../utils/domEventNames.js';
 import { KEY_ESCAPE } from '../../utils/keyboardKeys.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
@@ -166,7 +173,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         popoverBackdropEl.setAttribute(DATA_DECK_POPOVER_BACKDROP_ATTR, '1');
         popoverBackdropEl.setAttribute(ARIA_HIDDEN_ATTR, 'true');
         document.body.appendChild(popoverBackdropEl);
-        popoverBackdropEl.addEventListener('click', () => dismissSaving());
+        popoverBackdropEl.addEventListener(DOM_EVENT_CLICK, () => dismissSaving());
 
         popoverEl = document.createElement('div');
         popoverEl.className = DECK_CARD_POPOVER_ROOT_CLASS;
@@ -183,11 +190,11 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const closeBtn = popoverEl.querySelector(DECK_CARD_POPOVER_CLOSE_SELECTOR);
         const coverBtn = popoverEl.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR);
 
-        qtySelect?.addEventListener('change', () => persistEdits());
-        engineSelect?.addEventListener('change', () => persistEdits());
-        catContainer?.addEventListener('change', () => persistEdits());
+        qtySelect?.addEventListener(DOM_EVENT_CHANGE, () => persistEdits());
+        engineSelect?.addEventListener(DOM_EVENT_CHANGE, () => persistEdits());
+        catContainer?.addEventListener(DOM_EVENT_CHANGE, () => persistEdits());
 
-        deleteBtn?.addEventListener('click', () => {
+        deleteBtn?.addEventListener(DOM_EVENT_CLICK, () => {
             if (popoverSection == null || popoverIndex < 0) return;
             persistEdits();
             const sec = popoverSection;
@@ -199,8 +206,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             hide();
         });
 
-        closeBtn?.addEventListener('click', () => dismissSaving());
-        coverBtn?.addEventListener('click', async () => {
+        closeBtn?.addEventListener(DOM_EVENT_CLICK, () => dismissSaving());
+        coverBtn?.addEventListener(DOM_EVENT_CLICK, async () => {
             const deck = getCurrentLoadedDeck();
             if (popoverSection == null || popoverIndex < 0 || !deck) return;
             const arr = getState(popoverSection);
@@ -212,12 +219,12 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             await updateDeckOnServer();
         });
 
-        document.addEventListener('scroll', repositionPopover, true);
-        window.addEventListener('resize', repositionPopover);
+        document.addEventListener(DOM_EVENT_SCROLL, repositionPopover, true);
+        window.addEventListener(DOM_EVENT_RESIZE, repositionPopover);
 
         if (document.documentElement.dataset.deckPopoverEscapeBound !== '1') {
             document.documentElement.dataset.deckPopoverEscapeBound = '1';
-            document.addEventListener('keydown', (e: KeyboardEvent) => {
+            document.addEventListener(DOM_EVENT_KEYDOWN, (e: KeyboardEvent) => {
                 if (e.key !== KEY_ESCAPE) return;
                 if (!isOpen()) return;
                 dismissSaving();

@@ -11,6 +11,7 @@ import {
     DECK_CARD_REMOVE_ONE_BTN_SELECTOR,
 } from './deckGridDomSelectors.js';
 import type { CardTypeKind } from '../../utils/cardTypeKindConstants.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_DRAGSTART } from '../../utils/domEventNames.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
 export interface DeckGridRowForRender extends DeckCardCellShellRow {
@@ -38,8 +39,8 @@ export function renderDeckGridSection(
         cell.setAttribute(TITLE_ATTR, row.name);
         cell.setAttribute(DRAGGABLE_ATTR, DRAGGABLE_TRUE);
         cell.innerHTML = buildDeckCardCellInnerHtml(row);
-        cell.querySelector(DECK_CARD_REMOVE_ONE_BTN_SELECTOR)?.addEventListener('dragstart', (e) => e.preventDefault());
-        cell.addEventListener('click', (e) => {
+        cell.querySelector(DECK_CARD_REMOVE_ONE_BTN_SELECTOR)?.addEventListener(DOM_EVENT_DRAGSTART, (e) => e.preventDefault());
+        cell.addEventListener(DOM_EVENT_CLICK, (e) => {
             const t = e.target as HTMLElement;
             if (t.closest(DECK_ACTION_REMOVE_ONE_SELECTOR)) {
                 e.preventDefault();

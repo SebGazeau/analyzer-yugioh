@@ -1,6 +1,7 @@
 /** Navigation par onglets (header) — extrait pour éviter les cycles avec insights/panel. */
 
 import { ARIA_SELECTED_ATTR } from './utils/ariaAttrs.js';
+import { DOM_EVENT_CLICK } from './utils/domEventNames.js';
 
 export const TAB_ID_BUILDER = 'builder' as const;
 export const TAB_ID_DECKS = 'decks' as const;
@@ -47,7 +48,7 @@ export function setActiveTab(tabId: string): void {
 export function bindAppTabs(): void {
     setActiveTab(TAB_ID_BUILDER);
     document.querySelectorAll<HTMLAnchorElement>(APP_TAB_SELECTOR).forEach((a) => {
-        a.addEventListener('click', (e) => {
+        a.addEventListener(DOM_EVENT_CLICK, (e) => {
             e.preventDefault();
             if (a.hidden) return;
             const tabId = a.getAttribute(TAB_DATA_ATTR) || '';

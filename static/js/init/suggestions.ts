@@ -16,11 +16,12 @@ import {
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { NATIVE_BUTTON_SELECTOR } from '../utils/dom.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
 import { KEY_ENTER, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT } from '../utils/userDialogMessages.js';
 
 export function bindSuggestionsFindCard(): void {
-    document.addEventListener('click', (e: Event) => {
+    document.addEventListener(DOM_EVENT_CLICK, (e: Event) => {
         const el = (e.target as HTMLElement).closest(INSIGHTS_FIND_CARD_SELECTOR);
         if (!el || !(el instanceof HTMLButtonElement)) return;
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
@@ -47,7 +48,7 @@ async function addSuggestedCardToDeck(name: string, section?: DeckSection): Prom
 
 /** Clic sur une proposition Number Xyz (ligne) ou sur une vignette Main/Side. */
 export function bindSuggestionsAddToDeck(): void {
-    document.addEventListener('click', (e: Event) => {
+    document.addEventListener(DOM_EVENT_CLICK, (e: Event) => {
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;
@@ -72,7 +73,7 @@ export function bindSuggestionsAddToDeck(): void {
         }
     });
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
+    document.addEventListener(DOM_EVENT_KEYDOWN, (e: KeyboardEvent) => {
         if (e.key !== KEY_ENTER && e.key !== KEY_SPACE) return;
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;

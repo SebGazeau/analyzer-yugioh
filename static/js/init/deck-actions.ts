@@ -28,6 +28,7 @@ import {
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
     deckSavedListItemLoadTitle,
 } from '../deck-builder/deckSavedListDomSelectors.js';
+import { DOM_EVENT_CHANGE, DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
 import { KEY_ENTER, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { deckSavedListItemBodyInnerHtml } from '../deck-builder/deckSavedListItemBodyHtml.js';
 import {
@@ -100,7 +101,7 @@ export async function refreshMyDecksList(): Promise<void> {
         });
         li.appendChild(bodyEl);
         const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DUPLICATE_SELECTOR);
-        duplicateBtn?.addEventListener('click', async (e) => {
+        duplicateBtn?.addEventListener(DOM_EVENT_CLICK, async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const r = await duplicateDeckOnServer(d.id);
@@ -111,7 +112,7 @@ export async function refreshMyDecksList(): Promise<void> {
             }
         });
         const deleteBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DELETE_SELECTOR);
-        deleteBtn?.addEventListener('click', async (e) => {
+        deleteBtn?.addEventListener(DOM_EVENT_CLICK, async (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!confirm(msgConfirmDeleteDeck(d.name))) return;
@@ -126,8 +127,8 @@ export async function refreshMyDecksList(): Promise<void> {
                 setActiveTab(TAB_ID_BUILDER);
             }
         };
-        li.addEventListener('click', loadDeck);
-        li.addEventListener('keydown', (e) => {
+        li.addEventListener(DOM_EVENT_CLICK, loadDeck);
+        li.addEventListener(DOM_EVENT_KEYDOWN, (e) => {
             if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
                 e.preventDefault();
                 loadDeck();
@@ -141,18 +142,18 @@ export async function refreshMyDecksList(): Promise<void> {
 export function bindDeckList(): void {
     const pageDecks = document.querySelector(PAGE_DECKS_SELECTOR);
     if (!pageDecks) return;
-    document.getElementById(DECK_BTN_REFRESH_DECKS_ID)?.addEventListener('click', refreshMyDecksList);
+    document.getElementById(DECK_BTN_REFRESH_DECKS_ID)?.addEventListener(DOM_EVENT_CLICK, refreshMyDecksList);
     window.addEventListener(DECK_COVER_CHANGED_EVENT, () => refreshMyDecksList());
     refreshMyDecksList();
 
     const newDeckCard = pageDecks.querySelector<HTMLElement>(DECK_ACTION_NEW_DECK_SELECTOR);
-    newDeckCard?.addEventListener('click', () => {
+    newDeckCard?.addEventListener(DOM_EVENT_CLICK, () => {
         cleanCardTable();
         setActiveTab(TAB_ID_BUILDER);
         const nameInput = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
         nameInput?.focus();
     });
-    newDeckCard?.addEventListener('keydown', (e) => {
+    newDeckCard?.addEventListener(DOM_EVENT_KEYDOWN, (e) => {
         if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
             e.preventDefault();
             newDeckCard.click();
@@ -164,12 +165,12 @@ export function bindDeckList(): void {
 export function bindDeckToolbar(): void {
     const importInput = document.getElementById(DECK_IMPORT_JSON_INPUT_ID) as HTMLInputElement | null;
 
-    document.getElementById(DECK_BTN_CLEAR_DECK_ID)?.addEventListener('click', cleanCardTable);
-    document.getElementById(DECK_BTN_EXPORT_JSON_ID)?.addEventListener('click', exportDeckToFile);
-    document.getElementById(DECK_BTN_IMPORT_JSON_TRIGGER_ID)?.addEventListener('click', () => importInput?.click());
-    if (importInput) importInput.addEventListener('change', importDeckFromFile);
+    document.getElementById(DECK_BTN_CLEAR_DECK_ID)?.addEventListener(DOM_EVENT_CLICK, cleanCardTable);
+    document.getElementById(DECK_BTN_EXPORT_JSON_ID)?.addEventListener(DOM_EVENT_CLICK, exportDeckToFile);
+    document.getElementById(DECK_BTN_IMPORT_JSON_TRIGGER_ID)?.addEventListener(DOM_EVENT_CLICK, () => importInput?.click());
+    if (importInput) importInput.addEventListener(DOM_EVENT_CHANGE, importDeckFromFile);
 
-    document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.addEventListener('click', async () => {
+    document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await saveDeckToServer();
         if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.id) {
@@ -177,7 +178,7 @@ export function bindDeckToolbar(): void {
             await refreshMyDecksList();
         }
     });
-    document.getElementById(DECK_BTN_UPDATE_SERVER_ID)?.addEventListener('click', async () => {
+    document.getElementById(DECK_BTN_UPDATE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await updateDeckOnServer();
         if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.ok) {

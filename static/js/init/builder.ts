@@ -4,6 +4,7 @@
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
 import { ARIA_CONTROLS_ATTR, ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
+import { DOM_EVENT_CHANGE, DOM_EVENT_CLICK } from '../utils/domEventNames.js';
 import { HIDDEN_ATTR } from '../utils/htmlAttrs.js';
 import {
     BUILDER_COMPOSITION_ACCORDION_ITEM_SELECTOR,
@@ -58,7 +59,7 @@ export function initBuilder(): void {
     }
     prefetchAssociationCatalogWhenIdle();
 
-    document.addEventListener('change', (e: Event) => {
+    document.addEventListener(DOM_EVENT_CHANGE, (e: Event) => {
         const target = e.target as HTMLElement | null;
         if (
             target?.classList.contains(BUILDER_QTY_SELECT_CLASS) ||
@@ -77,7 +78,7 @@ export function initBuilder(): void {
 
     const liveStats = document.getElementById(LIVE_STATS_CONTAINER_ID);
     if (liveStats) {
-        liveStats.addEventListener('click', (e: Event) => {
+        liveStats.addEventListener(DOM_EVENT_CLICK, (e: Event) => {
             const toggle = (e.target as HTMLElement).closest?.(COMPOSITION_TOGGLE_SELECTOR) as HTMLElement | null;
             if (toggle) {
                 e.preventDefault();
@@ -108,7 +109,7 @@ export function initBuilder(): void {
     }
     updateBuilderSortIndicators();
 
-    document.getElementById(BTN_ANALYZE_LINK_ID)?.addEventListener('click', (e) => {
+    document.getElementById(BTN_ANALYZE_LINK_ID)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.preventDefault();
         import('../tabs.js').then((t) => t.setActiveTab(t.TAB_ID_ANALYSIS));
     });

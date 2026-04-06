@@ -5,6 +5,7 @@ import {
     ARIA_LABELLEDBY_ATTR,
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
 import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../utils/htmlAttrs.js';
@@ -177,7 +178,7 @@ function ensureModalElements(): {
             anchorArtId: ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
         });
         document.body.appendChild(overlay);
-        overlay.addEventListener('click', (e) => {
+        overlay.addEventListener(DOM_EVENT_CLICK, (e) => {
             const el = e.target as HTMLElement;
             const addTile = el.closest(ASSOCIATIONS_ADD_DECK_SELECTOR);
             if (addTile) {
@@ -199,7 +200,7 @@ function ensureModalElements(): {
                 handleExpandAssociationTiles(expandBtn);
             }
         });
-        document.addEventListener('keydown', (e: KeyboardEvent) => {
+        document.addEventListener(DOM_EVENT_KEYDOWN, (e: KeyboardEvent) => {
             const mod = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID);
             if (!mod || mod.hidden) return;
             if (e.key === KEY_ESCAPE) {

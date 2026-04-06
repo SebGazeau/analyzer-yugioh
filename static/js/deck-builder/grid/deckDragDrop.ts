@@ -21,6 +21,13 @@ import {
     DATA_DECK_CELL_INDEX_ATTR,
     DATA_DECK_CELL_SECTION_ATTR,
 } from './deckGridDomSelectors.js';
+import {
+    DOM_EVENT_CLICK,
+    DOM_EVENT_DRAGEND,
+    DOM_EVENT_DRAGOVER,
+    DOM_EVENT_DRAGSTART,
+    DOM_EVENT_DROP,
+} from '../../utils/domEventNames.js';
 import { MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN, msgDeckZoneFull } from '../../utils/userDialogMessages.js';
 
 export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
@@ -130,7 +137,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
 
     let suppressClickUntil = 0;
 
-    root.addEventListener('dragstart', (e: DragEvent) => {
+    root.addEventListener(DOM_EVENT_DRAGSTART, (e: DragEvent) => {
         const cell = (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR);
         if (!cell || !e.dataTransfer) return;
         const section = cell.getAttribute(DATA_DECK_CELL_SECTION_ATTR) as DeckSection;
@@ -142,14 +149,14 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         hidePopover();
     });
 
-    root.addEventListener('dragend', (e: DragEvent) => {
+    root.addEventListener(DOM_EVENT_DRAGEND, (e: DragEvent) => {
         (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR)?.classList.remove(DECK_CARD_CELL_DRAGGING_CLASS);
         document.querySelectorAll(DECK_CARDS_GRID_DND_OVER_SELECTOR).forEach((n) => n.classList.remove(DECK_CARDS_GRID_DND_OVER_CLASS));
         suppressClickUntil = Date.now() + 200;
     });
 
     root.addEventListener(
-        'click',
+        DOM_EVENT_CLICK,
         (e: MouseEvent) => {
             if (Date.now() < suppressClickUntil && (e.target as HTMLElement).closest(DECK_SECTIONS_ROOT_SELECTOR)) {
                 e.preventDefault();
@@ -159,7 +166,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         true,
     );
 
-    root.addEventListener('dragover', (e: DragEvent) => {
+    root.addEventListener(DOM_EVENT_DRAGOVER, (e: DragEvent) => {
         const grid = (e.target as HTMLElement).closest(DECK_CARDS_GRID_SELECTOR);
         if (!grid || !e.dataTransfer?.types.includes(dndPayloadType)) return;
         e.preventDefault();
@@ -168,7 +175,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         grid.classList.add(DECK_CARDS_GRID_DND_OVER_CLASS);
     });
 
-    root.addEventListener('drop', (e: DragEvent) => {
+    root.addEventListener(DOM_EVENT_DROP, (e: DragEvent) => {
         const grid = (e.target as HTMLElement).closest(DECK_CARDS_GRID_SELECTOR);
         if (!grid || !e.dataTransfer) return;
         e.preventDefault();
