@@ -1,3 +1,5 @@
+import { DECK_SECTION_MAIN_SIDE_SHORT_LABEL } from './deckSectionMainSideShortCopy.js';
+
 /** Zones deck officielles : Main, Extra, Side (ordre d’itération = affichage builder). */
 
 export const DECK_SECTIONS = ['main', 'extra', 'side'] as const;
@@ -37,14 +39,9 @@ export function isDeckSectionMainSide(value: string): value is DeckSectionMainSi
     return value === 'main' || value === 'side';
 }
 
-const MAIN_SIDE_SHORT_LABEL: Record<DeckSectionMainSide, string> = {
-    main: 'Main',
-    side: 'Side',
-};
-
 /** Libellé court UI pour puce / tooltip (Suggestions, etc.). */
 export function deckSectionMainSideShortLabel(section: DeckSectionMainSide): string {
-    return MAIN_SIDE_SHORT_LABEL[section];
+    return DECK_SECTION_MAIN_SIDE_SHORT_LABEL[section];
 }
 
 const MAIN_SIDE_SORT_KEY: Record<DeckSectionMainSide, number> = {
