@@ -1,6 +1,11 @@
 import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import {
+    ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY,
+    ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_HAS_GROUPS,
+    ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_INCONCLUSIVE,
+} from './associationsReportConclusivenessCopy.js';
+import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
     ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
     associationMarkdownDiagnosticLine,
@@ -357,7 +362,7 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
     const reasons: string[] = [];
     const nonEmpty = report.groups.some((g) => g.cardIds.length > 0);
     if (nonEmpty) {
-        reasons.push('Au moins un groupe non vide.');
+        reasons.push(ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_HAS_GROUPS);
         return { ok: true, reasons };
     }
     const hasExplain = report.diagnostics.some(
@@ -369,10 +374,10 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
             d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
     );
     if (hasExplain) {
-        reasons.push('Aucun lien trouvé mais des diagnostics expliquent pourquoi.');
+        reasons.push(ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY);
         return { ok: true, reasons };
     }
-    reasons.push('Aucun groupe et pas de diagnostic explicatif (résultat peu concluant).');
+    reasons.push(ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_INCONCLUSIVE);
     return { ok: false, reasons };
 }
 
