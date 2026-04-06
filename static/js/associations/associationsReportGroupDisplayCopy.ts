@@ -16,3 +16,13 @@ export const ASSOCIATION_GROUP_DISPLAY_YGORG_QA = 'Même réponse Q&A (base YGRe
 export function associationGroupDisplayLabelTextCiting(primary: string): string {
     return `Texte citant ${TEXT_GUILLEMET_OPEN} ${primary} ${TEXT_GUILLEMET_CLOSE}`;
 }
+
+/** Règle dynamique `text_arch:*` (citation depuis libellé d’archétype). */
+export function associationGroupDisplayLabelCitationText(label: string): string {
+    return `Citation texte : ${label}`;
+}
+
+/** Règle dynamique `text_name:*` (mot extrait du nom). */
+export function associationGroupDisplayLabelCitationNameWord(w: string): string {
+    return `Citation texte (mot du nom) : ${TEXT_GUILLEMET_OPEN} ${w} ${TEXT_GUILLEMET_CLOSE}`;
+}

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
     ASSOCIATION_GROUP_DISPLAY_YGORG_QA,
+    associationGroupDisplayLabelCitationNameWord,
+    associationGroupDisplayLabelCitationText,
     associationGroupDisplayLabelSameArchetype,
     associationGroupDisplayLabelTextCiting,
     EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
@@ -14,5 +16,7 @@ describe('associationsReportGroupDisplayCopy', () => {
         expect(ASSOCIATION_GROUP_DISPLAY_YGORG_QA).toContain('Q&A');
         expect(associationGroupDisplayLabelTextCiting('Dark Magician')).toContain('Dark Magician');
         expect(associationGroupDisplayLabelTextCiting('X')).toContain(TEXT_GUILLEMET_OPEN);
+        expect(associationGroupDisplayLabelCitationText('Foo')).toBe('Citation texte : Foo');
+        expect(associationGroupDisplayLabelCitationNameWord('x')).toBe('Citation texte (mot du nom) : « x »');
     });
 });

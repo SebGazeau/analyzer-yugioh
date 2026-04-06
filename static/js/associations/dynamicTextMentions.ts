@@ -2,13 +2,12 @@
  * Règles « citation texte » dérivées de l’ancre (archétypes + mots du nom),
  * pour balayer le catalogue de façon pertinente sans liste fixe type Blue-Eyes uniquement.
  */
-import {
-    TEXT_EM_DASH,
-    TEXT_EN_DASH,
-    TEXT_GUILLEMET_CLOSE,
-    TEXT_GUILLEMET_OPEN,
-} from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_EN_DASH } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
+import {
+    associationGroupDisplayLabelCitationNameWord,
+    associationGroupDisplayLabelCitationText,
+} from './associationsReportGroupDisplayCopy.js';
 import type { AssociationCatalogCard, TextMentionRule } from './types.js';
 
 export type DynamicTextMentionOptions = {
@@ -253,7 +252,7 @@ export function buildDynamicTextMentionRulesFromAnchor(
         usedKeys.add(key);
         rules.push({
             groupKey: key,
-            displayLabel: `Citation texte : ${label}`,
+            displayLabel: associationGroupDisplayLabelCitationText(label),
             patterns,
         });
     }
@@ -270,7 +269,7 @@ export function buildDynamicTextMentionRulesFromAnchor(
             usedKeys.add(key);
             rules.push({
                 groupKey: key,
-                displayLabel: `Citation texte (mot du nom) : ${TEXT_GUILLEMET_OPEN} ${w} ${TEXT_GUILLEMET_CLOSE}`,
+                displayLabel: associationGroupDisplayLabelCitationNameWord(w),
                 patterns: [w],
             });
         }
