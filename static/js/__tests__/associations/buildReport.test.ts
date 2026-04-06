@@ -12,6 +12,11 @@ import {
 import { TEXT_ELLIPSIS, TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
+import {
+    ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
+    ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
+    ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
+} from '../../associations/associationsDiagnosticCodes.js';
 import type { AssociationCatalogCard } from '../../associations/types.js';
 
 function card(p: Partial<AssociationCatalogCard> & Pick<AssociationCatalogCard, 'id' | 'name'>): AssociationCatalogCard {
@@ -37,7 +42,7 @@ describe('buildAssociationReport', () => {
         const anchor = card({ id: 1, name: 'A', archetype: 'X' });
         const r = buildAssociationReport(anchor, [], {});
         expect(r.groups).toHaveLength(0);
-        expect(r.diagnostics.some((d) => d.code === 'EMPTY_CATALOG')).toBe(true);
+        expect(r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG)).toBe(true);
         expect(evaluateReportConclusiveness(r).ok).toBe(true);
     });
 
@@ -110,7 +115,9 @@ describe('buildAssociationReport', () => {
         ];
         expect(associationCitableText(catalog[0])).toContain('Stardust');
         const r = buildAssociationReport(anchor, catalog, { includeNameWordPatterns: false });
-        expect(r.diagnostics.some((d) => d.code === 'YGORG_EFFECT_EN_AVAILABLE')).toBe(true);
+        expect(r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE)).toBe(
+            true,
+        );
         const tm = r.groups.filter((g) => g.angleId === 'text_mention');
         expect(tm.some((g) => g.cardIds.includes(2))).toBe(true);
     });
@@ -269,7 +276,9 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             ],
         });
         expect(r.groups.filter((g) => g.angleId === 'text_mention')).toHaveLength(0);
-        expect(r.diagnostics.some((d) => d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD')).toBe(true);
+        expect(
+            r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD),
+        ).toBe(true);
     });
 
     it('n’applique pas le plafond text_name aux règles text_arch', () => {
@@ -293,7 +302,9 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         });
         const g = r.groups.find((x) => x.groupKey === 'text_arch:stardust');
         expect(g?.cardIds.length).toBe(10);
-        expect(r.diagnostics.some((d) => d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD')).toBe(false);
+        expect(
+            r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD),
+        ).toBe(false);
     });
 });
 

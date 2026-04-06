@@ -1,5 +1,13 @@
 import { parseArchetypesFromField } from './archetype.js';
 import {
+    ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
+    ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
+    ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
+    ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR,
+    ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG,
+    ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
+} from './associationsDiagnosticCodes.js';
+import {
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY,
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_HAS_GROUPS,
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_INCONCLUSIVE,
@@ -189,7 +197,7 @@ export function buildAssociationReport(
 
     if (catalog.length === 0) {
         pushDiagnostic(diagnostics, {
-            code: 'EMPTY_CATALOG',
+            code: ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
             message: ASSOCIATION_DIAGNOSTIC_EMPTY_CATALOG_MESSAGE,
             severity: 'warn',
         });
@@ -212,7 +220,7 @@ export function buildAssociationReport(
     ).length;
     if (nYgorgFx > 0) {
         pushDiagnostic(diagnostics, {
-            code: 'YGORG_EFFECT_EN_AVAILABLE',
+            code: ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
             message: associationDiagnosticYgorgEffectEnCountMessage(nYgorgFx),
             severity: 'info',
         });
@@ -221,7 +229,7 @@ export function buildAssociationReport(
     const anchorArchetypes = parseArchetypesFromField(anchor.archetype ?? undefined);
     if (anchorArchetypes.length === 0) {
         pushDiagnostic(diagnostics, {
-            code: 'NO_ARCHETYPE_ON_ANCHOR',
+            code: ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR,
             message: associationDiagnosticNoArchetypeOnAnchorMessage(),
             severity: 'info',
         });
@@ -238,7 +246,7 @@ export function buildAssociationReport(
             if (unique.length > maxGroupSize) {
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
-                    code: 'LARGE_GROUP_TRUNCATED',
+                    code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                     message: associationDiagnosticArchetypeGroupTruncatedMessage(arch, unique.length, maxGroupSize),
                     severity: 'info',
                 });
@@ -263,7 +271,7 @@ export function buildAssociationReport(
         if (qaCardIds.length > maxGroupSize) {
             cardIds = qaCardIds.slice(0, maxGroupSize);
             pushDiagnostic(diagnostics, {
-                code: 'LARGE_GROUP_TRUNCATED',
+                code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                 message: associationDiagnosticQaGroupTruncatedMessage(qaCardIds.length, maxGroupSize),
                 severity: 'info',
             });
@@ -287,7 +295,7 @@ export function buildAssociationReport(
     }
     if (!anyDesc) {
         pushDiagnostic(diagnostics, {
-            code: 'NO_DESC_IN_CATALOG',
+            code: ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG,
             message: associationDiagnosticNoDescInCatalogMessage(),
             severity: 'info',
         });
@@ -306,7 +314,7 @@ export function buildAssociationReport(
             const unique = [...new Set(matching)];
             if (rule.groupKey.startsWith('text_name:') && unique.length > maxNameWordCitationMatches) {
                 pushDiagnostic(diagnostics, {
-                    code: 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
+                    code: ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
                     message: associationDiagnosticNameWordCitationSkippedMessage(
                         rule.displayLabel,
                         unique.length,
@@ -320,7 +328,7 @@ export function buildAssociationReport(
             if (unique.length > maxGroupSize) {
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
-                    code: 'LARGE_GROUP_TRUNCATED',
+                    code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                     message: associationDiagnosticMentionGroupTruncatedMessage(rule.displayLabel, unique.length),
                     severity: 'info',
                 });
@@ -353,7 +361,7 @@ export function buildAssociationReport(
                 if (unique.length > maxGroupSize) {
                     cardIds = unique.slice(0, maxGroupSize);
                     pushDiagnostic(diagnostics, {
-                        code: 'LARGE_GROUP_TRUNCATED',
+                        code: ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED,
                         message: associationDiagnosticAnchorNameInDescTruncatedMessage(unique.length),
                         severity: 'info',
                     });
@@ -389,11 +397,11 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
     }
     const hasExplain = report.diagnostics.some(
         (d) =>
-            d.code === 'NO_ARCHETYPE_ON_ANCHOR' ||
-            d.code === 'EMPTY_CATALOG' ||
-            d.code === 'NO_DESC_IN_CATALOG' ||
-            d.code === 'YGORG_EFFECT_EN_AVAILABLE' ||
-            d.code === 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
+            d.code === ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR ||
+            d.code === ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG ||
+            d.code === ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG ||
+            d.code === ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE ||
+            d.code === ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
     );
     if (hasExplain) {
         reasons.push(ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY);
