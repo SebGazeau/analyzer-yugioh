@@ -61,9 +61,9 @@ export function sameZoneInsertIndex(fromIdx: number, dropOnIdx: number, length: 
 }
 
 const MAX_CARDS_BY_ZONE: Record<DeckSection, number> = {
-    main: MAX_MAIN_CARDS,
-    extra: MAX_EXTRA_CARDS,
-    side: MAX_SIDE_CARDS,
+    [DECK_SECTIONS[0]]: MAX_MAIN_CARDS,
+    [DECK_SECTIONS[1]]: MAX_EXTRA_CARDS,
+    [DECK_SECTIONS[2]]: MAX_SIDE_CARDS,
 };
 
 export function maxCardsForZone(zone: DeckSection): number {

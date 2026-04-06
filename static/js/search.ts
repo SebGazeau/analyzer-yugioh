@@ -1,4 +1,5 @@
 import { addToDeck } from './deck.js';
+import { DECK_SECTIONS } from './deckSection.js';
 import {
     SEARCH_BOX_ELEMENT_ID,
     SEARCH_RESULTS_CONTAINER_ID,
@@ -94,7 +95,7 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     });
     row.querySelector(SEARCH_RESULT_ADD_SIDE_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
-        addToDeck(card, 'side');
+        addToDeck(card, DECK_SECTIONS[2]);
     });
     row.querySelector(SEARCH_ACTION_ASSOCIATED_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();

@@ -36,7 +36,7 @@ export function isDeckSection(value: string): value is DeckSection {
 }
 
 export function isDeckSectionMainSide(value: string): value is DeckSectionMainSide {
-    return value === 'main' || value === 'side';
+    return value === DECK_SECTIONS[0] || value === DECK_SECTIONS[2];
 }
 
 /** Libellé court UI pour puce / tooltip (Suggestions, etc.). */
@@ -45,8 +45,8 @@ export function deckSectionMainSideShortLabel(section: DeckSectionMainSide): str
 }
 
 const MAIN_SIDE_SORT_KEY: Record<DeckSectionMainSide, number> = {
-    main: 0,
-    side: 1,
+    [DECK_SECTIONS[0]]: 0,
+    [DECK_SECTIONS[2]]: 1,
 };
 
 /** Clé de tri : Main avant Side (tie-break après le nom). */
