@@ -2,13 +2,14 @@
  * Chaînes et gabarits pour alert / confirm / prompt (copy centralisé).
  */
 
+import { SEARCH_MIN_QUERY_LENGTH } from '../searchConstants.js';
 import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from './textPlaceholders.js';
 
 export const MSG_ADD_CARD_BLOCKED =
     "Impossible d'ajouter (limite d'exemplaires, zone pleine ou type incompatible).";
 
 export const MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT =
-    'Carte introuvable ou nom trop court pour la recherche (minimum 4 caractères).';
+    `Carte introuvable ou nom trop court pour la recherche (minimum ${SEARCH_MIN_QUERY_LENGTH} caractères).`;
 
 export const DECK_DUPLICATE_NAME_SUFFIX = ' (copie)';
 

@@ -1,6 +1,10 @@
 /**
- * MIME et en-têtes HTTP récurrents pour `fetch` / `Blob`.
+ * MIME, méthodes et en-têtes HTTP récurrents pour `fetch` / `Blob`.
  */
+
+export const HTTP_METHOD_POST = 'POST';
+export const HTTP_METHOD_PUT = 'PUT';
+export const HTTP_METHOD_DELETE = 'DELETE';
 
 export const MIME_TYPE_APPLICATION_JSON = 'application/json';
 

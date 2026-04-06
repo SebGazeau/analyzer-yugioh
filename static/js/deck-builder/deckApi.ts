@@ -2,7 +2,12 @@
  * Appels HTTP et sérialisation JSON pour les decks (`DECK_API_COLLECTION_URL`).
  * L’état du builder et le DOM restent dans deck.ts.
  */
-import { FETCH_HEADERS_JSON } from '../utils/httpMime.js';
+import {
+    FETCH_HEADERS_JSON,
+    HTTP_METHOD_DELETE,
+    HTTP_METHOD_POST,
+    HTTP_METHOD_PUT,
+} from '../utils/httpMime.js';
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import {
     DECK_DUPLICATE_NAME_SUFFIX,
@@ -93,7 +98,7 @@ export async function apiCreateDeck(name: string, sections: DeckSectionsPayload)
     const body = { name: name.trim(), ...sections };
     const res = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
-        method: 'POST',
+        method: HTTP_METHOD_POST,
         headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
@@ -118,7 +123,7 @@ export async function apiUpdateDeck(
     }
     const res = await fetch(deckApiDeckByIdUrl(deckId), {
         ...DECK_FETCH_INIT,
-        method: 'PUT',
+        method: HTTP_METHOD_PUT,
         headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
@@ -143,7 +148,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     const body = { name: newName, ...sections };
     const postRes = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
-        method: 'POST',
+        method: HTTP_METHOD_POST,
         headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
@@ -164,6 +169,6 @@ export async function apiFetchDeckById(id: number): Promise<Record<string, unkno
 }
 
 export async function apiDeleteDeck(id: number): Promise<boolean> {
-    const res = await fetch(deckApiDeckByIdUrl(id), { ...DECK_FETCH_INIT, method: 'DELETE' });
+    const res = await fetch(deckApiDeckByIdUrl(id), { ...DECK_FETCH_INIT, method: HTTP_METHOD_DELETE });
     return res.ok;
 }

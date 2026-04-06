@@ -1,3 +1,7 @@
+import {
+    ASSOCIATION_CATALOG_PREFETCH_IDLE_TIMEOUT_MS,
+    ASSOCIATION_CATALOG_PREFETCH_SET_TIMEOUT_MS,
+} from './associationCatalogPrefetchTiming.js';
 import { ASSOCIATIONS_API_CATALOG_URL, associationsApiQaRelatedUrl } from './associationsApiRoutes.js';
 import { toAssociationCatalog } from './buildReport.js';
 import type { AssociationCatalogCard } from './types.js';
@@ -13,9 +17,9 @@ export function prefetchAssociationCatalogWhenIdle(): void {
         });
     };
     if (typeof requestIdleCallback === 'function') {
-        requestIdleCallback(run, { timeout: 8000 });
+        requestIdleCallback(run, { timeout: ASSOCIATION_CATALOG_PREFETCH_IDLE_TIMEOUT_MS });
     } else {
-        window.setTimeout(run, 2500);
+        window.setTimeout(run, ASSOCIATION_CATALOG_PREFETCH_SET_TIMEOUT_MS);
     }
 }
 

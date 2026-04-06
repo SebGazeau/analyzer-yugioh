@@ -13,9 +13,11 @@ import {
     MSG_DECK_API_DECK_NOT_FOUND,
     MSG_IMPORT_JSON_INVALID_FORMAT,
     MSG_PROMPT_DECK_NAME,
+    MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
     USER_DIALOG_ERROR_PREFIX,
 } from '../utils/userDialogCopy.js';
+import { SEARCH_MIN_QUERY_LENGTH } from '../searchConstants.js';
 import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
 describe('userDialogCopy', () => {
@@ -44,6 +46,11 @@ describe('userDialogCopy', () => {
 
     it('copyDeckZoneFullMessage', () => {
         expect(copyDeckZoneFullMessage(15)).toContain('15');
+    });
+
+    it('MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT aligné sur SEARCH_MIN_QUERY_LENGTH', () => {
+        expect(MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT).toContain(String(SEARCH_MIN_QUERY_LENGTH));
+        expect(MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT).toContain('caractères');
     });
 
     it('constantes deck / import', () => {
