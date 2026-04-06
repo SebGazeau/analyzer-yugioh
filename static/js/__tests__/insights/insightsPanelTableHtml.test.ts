@@ -8,6 +8,7 @@ import {
     INSIGHTS_DETAIL_ROW_DATA_ATTR,
     INSIGHTS_KIND_DATA_ATTR,
     INSIGHTS_MATCHES_MAIN_DATA_ATTR,
+    INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR,
     INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUGGEST_ROW_DATA_ATTR,
 } from '../../insights/insightsDomSelectors.js';
@@ -51,8 +52,7 @@ describe('insightsNumberSuggestionRowsHtml', () => {
         expect(html).toContain(INSIGHTS_SUGGEST_ROW_DATA_ATTR);
         expect(html).toContain(`${INSIGHTS_MATCHES_MAIN_DATA_ATTR}="true"`);
         expect(html).toContain('Number 39');
-        expect(html).toContain('LIGHT');
-        expect(html).toContain('Warrior');
+        expect(html).toContain(`LIGHT${INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR}Warrior`);
     });
 });
 

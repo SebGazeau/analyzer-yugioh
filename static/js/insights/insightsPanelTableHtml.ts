@@ -18,6 +18,7 @@ import {
     SUGGESTIONS_TARGET_LIST_CLASS,
     INSIGHTS_FIND_CARD_BUTTON_LABEL,
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
+    INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR,
     INSIGHTS_SUGGEST_ROW_TITLE,
 } from './insightsDomSelectors.js';
 import { insightsMainMatchChipsHtml } from './insightsMainMatchChipsHtml.js';
@@ -48,7 +49,7 @@ export function insightsNumberSuggestionRowsHtml(suggested: NumberXyzSuggestion[
         .map((s) => {
             const nameEsc = escapeHtml(s.name);
             const nameAttr = escapeAttr(s.name);
-            const attrRace = `${escapeHtml(s.attribute)} / ${escapeHtml(s.race)}`;
+            const attrRace = `${escapeHtml(s.attribute)}${INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR}${escapeHtml(s.race)}`;
             const matchCell = insightsMainMatchChipsHtml(s.matchingCards);
             return `
     <tr ${INSIGHTS_SUGGEST_ROW_DATA_ATTR} ${INSIGHTS_MATCHES_MAIN_DATA_ATTR}="${s.matchesDeck ? 'true' : 'false'}" ${INSIGHTS_SUGGEST_NAME_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_SUGGEST_ROW_TITLE}">

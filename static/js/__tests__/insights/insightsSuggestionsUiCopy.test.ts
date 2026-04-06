@@ -3,6 +3,7 @@ import {
     INSIGHTS_FIND_CARD_BUTTON_LABEL,
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
     INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT,
+    INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR,
     INSIGHTS_SUGGEST_ROW_TITLE,
     insightsMainMatchChipTitle,
     insightsMainMatchQtyAriaLabel,
@@ -16,5 +17,6 @@ describe('insightsSuggestionsUiCopy', () => {
         expect(INSIGHTS_FIND_CARD_BUTTON_LABEL).toBe('Chercher');
         expect(insightsMainMatchQtyAriaLabel(3)).toBe('3 exemplaires');
         expect(INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT).toBe('?');
+        expect(INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR).toBe(' / ');
     });
 });

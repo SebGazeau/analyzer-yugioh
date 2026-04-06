@@ -23,3 +23,6 @@ export const INSIGHTS_SUGGEST_ROW_TITLE = 'Cliquer pour ajouter cette carte au d
 
 /** `title` du bouton « Chercher » (ouvre Builder + recherche). */
 export const INSIGHTS_FIND_CARD_BUTTON_TITLE = 'Ouvrir le Builder et rechercher cette carte';
+
+/** Séparateur entre attribut et race (colonne du tableau Number Xyz). */
+export const INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR = ' / ';
