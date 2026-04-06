@@ -12,7 +12,13 @@ import {
 import { CARD_API_PATH } from '../cardSearchApiRoutes.js';
 import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
 import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
-import { HTTP_METHOD_POST, HTTP_METHOD_PUT, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
+import {
+  HTTP_METHOD_POST,
+  HTTP_METHOD_PUT,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_OK,
+  HTTP_STATUS_UNAUTHORIZED,
+} from '../utils/httpMime.js';
 import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 
@@ -33,9 +39,9 @@ describe('Save/Load deck — fetch mocké', () => {
       const u = typeof url === 'string' ? url : url.toString();
       if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: HTTP_STATUS_OK }));
       }
-      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     const r = await saveDeckToServer();
     expect(r.id).toBe(1);
@@ -58,7 +64,7 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
@@ -66,11 +72,11 @@ describe('Save/Load deck — fetch mocké', () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Card A', type: 'Effect Monster' }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);
@@ -88,11 +94,11 @@ describe('Save/Load deck — fetch mocké', () => {
               { id: 1, name: 'Deck A', is_public: false, created_at: '2024-01-01' },
               { id: 2, name: 'Deck B', is_public: true, created_at: '2024-01-02' },
             ]),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const decks = await listMyDecks();
     expect(decks).toHaveLength(2);
@@ -126,22 +132,22 @@ describe('Save/Load deck — fetch mocké', () => {
       if (u.startsWith(`${DECK_API_COLLECTION_URL}/`) && init?.method === HTTP_METHOD_PUT) {
         putUrl = u;
         putBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: HTTP_STATUS_OK }));
       }
       if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Deck', main: [{ name: 'C', quantity: 1 }], extra: [], side: [] }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
       if (u.startsWith(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
-          new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: 200 }),
+          new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: HTTP_STATUS_OK }),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);
@@ -166,15 +172,15 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
       if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: HTTP_STATUS_OK }));
       }
-      return Promise.resolve(new Response('', { status: 404 }));
+      return Promise.resolve(new Response('', { status: HTTP_STATUS_NOT_FOUND }));
     }));
     const r = await duplicateDeckOnServer(7);
     expect(r.id).toBe(99);
@@ -198,7 +204,7 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
@@ -207,11 +213,11 @@ describe('Save/Load deck — fetch mocké', () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 14558127, name: 'Ash Blossom & Joyous Spring', type: 'Tuner Monster' }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);

@@ -25,7 +25,7 @@ import {
 import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
 import { TAB_ID_DECKS } from '../tabs.js';
 import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
-import { HTTP_METHOD_POST, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
+import { HTTP_METHOD_POST, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -56,9 +56,9 @@ function mockFetchDefault(): ReturnType<typeof vi.fn> {
   return vi.fn((url: string | URL, init?: RequestInit) => {
     const u = typeof url === 'string' ? url : url.toString();
     if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
-      return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: HTTP_STATUS_OK }));
     }
-    return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
   }) as unknown as ReturnType<typeof vi.fn>;
 }
 
@@ -83,9 +83,9 @@ describe('main.ts — intégration DOM', () => {
       const u = typeof url === 'string' ? url : url.toString();
       if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
         postCalls.push(init);
-        return Promise.resolve(new Response(JSON.stringify({ id: 42 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 42 }), { status: HTTP_STATUS_OK }));
       }
-      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
     document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -111,7 +111,7 @@ describe('main.ts — intégration DOM', () => {
           new Response(JSON.stringify({ error: 'Unauthorized' }), { status: HTTP_STATUS_UNAUTHORIZED }),
         );
       }
-      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
     document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -130,11 +130,11 @@ describe('main.ts — intégration DOM', () => {
         return Promise.resolve(
           new Response(
             JSON.stringify([{ id: 10, name: 'Mon deck', is_public: false, created_at: '2024-01-01' }]),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
     document.dispatchEvent(new Event('DOMContentLoaded'));

@@ -5,8 +5,14 @@
 /** `RequestInit.credentials` pour cookies de session (API même origine). */
 export const FETCH_CREDENTIALS_SAME_ORIGIN: RequestCredentials = 'same-origin';
 
+/** HTTP 200 OK */
+export const HTTP_STATUS_OK = 200;
+
 /** HTTP 401 Unauthorized — session absente ou expirée. */
 export const HTTP_STATUS_UNAUTHORIZED = 401;
+
+/** HTTP 404 Not Found */
+export const HTTP_STATUS_NOT_FOUND = 404;
 
 export const HTTP_METHOD_POST = 'POST';
 export const HTTP_METHOD_PUT = 'PUT';

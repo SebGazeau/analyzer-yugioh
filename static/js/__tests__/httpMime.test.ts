@@ -6,14 +6,18 @@ import {
     HTTP_METHOD_DELETE,
     HTTP_METHOD_POST,
     HTTP_METHOD_PUT,
+    HTTP_STATUS_NOT_FOUND,
+    HTTP_STATUS_OK,
     HTTP_STATUS_UNAUTHORIZED,
     MIME_TYPE_APPLICATION_JSON,
 } from '../utils/httpMime.js';
 
 describe('httpMime', () => {
-    it('credentials same-origin et statut 401', () => {
+    it('credentials same-origin et statuts HTTP usuels', () => {
         expect(FETCH_CREDENTIALS_SAME_ORIGIN).toBe('same-origin');
+        expect(HTTP_STATUS_OK).toBe(200);
         expect(HTTP_STATUS_UNAUTHORIZED).toBe(401);
+        expect(HTTP_STATUS_NOT_FOUND).toBe(404);
     });
 
     it('MIME JSON et en-tête fetch', () => {
