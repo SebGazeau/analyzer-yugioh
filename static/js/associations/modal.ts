@@ -30,12 +30,20 @@ import {
     ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR,
     ASSOCIATIONS_ADD_DECK_SELECTOR,
     ASSOCIATIONS_CLOSE_SELECTOR,
+    ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
     ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS,
+    ASSOCIATIONS_MODAL_BODY_ID,
     ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR,
     ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT,
     associationsModalSubtitle,
+    ASSOCIATIONS_MODAL_LIVE_ID,
+    ASSOCIATIONS_MODAL_LOADING_ID,
     ASSOCIATIONS_MODAL_OPEN_CLASS,
+    ASSOCIATIONS_MODAL_PANEL_ID,
     ASSOCIATIONS_MODAL_ROOT_CLASS,
+    ASSOCIATIONS_MODAL_ROOT_ID,
+    ASSOCIATIONS_MODAL_SUBTITLE_ID,
+    ASSOCIATIONS_MODAL_TITLE_ID,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
     ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR,
@@ -43,15 +51,6 @@ import {
     DATA_CARD_ID_ATTR,
 } from './associationsDomSelectors.js';
 import type { AssociationCatalogCard } from './types.js';
-
-const MODAL_ID = 'associations-modal';
-const MODAL_TITLE_ID = 'associations-modal-title';
-const MODAL_SUBTITLE_ID = 'associations-modal-subtitle';
-const MODAL_BODY_ID = 'associations-modal-body';
-const MODAL_LOADING_ID = 'associations-modal-loading';
-const MODAL_PANEL_ID = 'associations-modal-panel';
-const MODAL_LIVE_ID = 'associations-modal-live';
-const MODAL_ANCHOR_ART_ID = 'associations-modal-anchor-art';
 
 /** Markdown du dernier rapport affiché (copie presse-papiers). */
 let latestAssociationMarkdown = '';
@@ -82,7 +81,7 @@ function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
 }
 
 function setAnchorArt(card: AssociationCatalogCard): void {
-    const el = document.getElementById(MODAL_ANCHOR_ART_ID);
+    const el = document.getElementById(ASSOCIATIONS_MODAL_ANCHOR_ART_ID);
     if (!el) return;
     const name = card.name_en?.trim() || card.name;
     el.innerHTML = associationsModalThumbInnerHtml(card.image_url, name, ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS, 'eager');
@@ -103,7 +102,7 @@ function mergeAnchorWithCatalog(
 }
 
 function announceAssociationsModal(message: string): void {
-    const live = document.getElementById(MODAL_LIVE_ID);
+    const live = document.getElementById(ASSOCIATIONS_MODAL_LIVE_ID);
     if (!live) return;
     live.textContent = '';
     void live.offsetWidth;
@@ -158,23 +157,23 @@ function ensureModalElements(): {
     body: HTMLElement;
     loading: HTMLElement;
 } | null {
-    let overlay = document.getElementById(MODAL_ID) as HTMLElement | null;
+    let overlay = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID) as HTMLElement | null;
     if (!overlay) {
         const created = document.createElement('div');
         overlay = created;
-        overlay.id = MODAL_ID;
+        overlay.id = ASSOCIATIONS_MODAL_ROOT_ID;
         overlay.className = ASSOCIATIONS_MODAL_ROOT_CLASS;
         overlay.setAttribute(ROLE_ATTR, ROLE_DIALOG);
         overlay.setAttribute(ARIA_MODAL_ATTR, 'true');
-        overlay.setAttribute(ARIA_LABELLEDBY_ATTR, MODAL_TITLE_ID);
+        overlay.setAttribute(ARIA_LABELLEDBY_ATTR, ASSOCIATIONS_MODAL_TITLE_ID);
         overlay.innerHTML = associationsModalShellInnerHtml({
-            panelId: MODAL_PANEL_ID,
-            liveId: MODAL_LIVE_ID,
-            loadingId: MODAL_LOADING_ID,
-            bodyId: MODAL_BODY_ID,
-            titleId: MODAL_TITLE_ID,
-            subtitleId: MODAL_SUBTITLE_ID,
-            anchorArtId: MODAL_ANCHOR_ART_ID,
+            panelId: ASSOCIATIONS_MODAL_PANEL_ID,
+            liveId: ASSOCIATIONS_MODAL_LIVE_ID,
+            loadingId: ASSOCIATIONS_MODAL_LOADING_ID,
+            bodyId: ASSOCIATIONS_MODAL_BODY_ID,
+            titleId: ASSOCIATIONS_MODAL_TITLE_ID,
+            subtitleId: ASSOCIATIONS_MODAL_SUBTITLE_ID,
+            anchorArtId: ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
         });
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => {
@@ -200,7 +199,7 @@ function ensureModalElements(): {
             }
         });
         document.addEventListener('keydown', (e: KeyboardEvent) => {
-            const mod = document.getElementById(MODAL_ID);
+            const mod = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID);
             if (!mod || mod.hidden) return;
             if (e.key === 'Escape') {
                 closeAssociationsModal();
@@ -214,20 +213,20 @@ function ensureModalElements(): {
             void addAssociationTileToDeck(tile);
         });
     }
-    const body = document.getElementById(MODAL_BODY_ID) as HTMLElement | null;
-    const loading = document.getElementById(MODAL_LOADING_ID) as HTMLElement | null;
+    const body = document.getElementById(ASSOCIATIONS_MODAL_BODY_ID) as HTMLElement | null;
+    const loading = document.getElementById(ASSOCIATIONS_MODAL_LOADING_ID) as HTMLElement | null;
     if (!body || !loading) return null;
     return { overlay, body, loading };
 }
 
 export function closeAssociationsModal(): void {
     lastModalCatalogForTiles = null;
-    const el = document.getElementById(MODAL_ID);
+    const el = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID);
     if (el) {
         el.hidden = true;
         el.classList.remove(ASSOCIATIONS_MODAL_OPEN_CLASS);
     }
-    document.getElementById(MODAL_PANEL_ID)?.removeAttribute(ARIA_BUSY_ATTR);
+    document.getElementById(ASSOCIATIONS_MODAL_PANEL_ID)?.removeAttribute(ARIA_BUSY_ATTR);
     if (associationsReturnFocus && typeof associationsReturnFocus.focus === 'function') {
         try {
             associationsReturnFocus.focus();
@@ -254,16 +253,16 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     els.overlay.classList.add(ASSOCIATIONS_MODAL_OPEN_CLASS);
     els.loading.hidden = false;
     els.body.innerHTML = '';
-    const title = document.getElementById(MODAL_TITLE_ID);
+    const title = document.getElementById(ASSOCIATIONS_MODAL_TITLE_ID);
     if (title) title.textContent = ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT;
-    const subtitle = document.getElementById(MODAL_SUBTITLE_ID);
+    const subtitle = document.getElementById(ASSOCIATIONS_MODAL_SUBTITLE_ID);
     if (subtitle) {
         const displayName = anchor.name_en?.trim() || anchor.name;
         subtitle.textContent = associationsModalSubtitle(displayName, anchor.id);
     }
     setAnchorArt(anchor);
 
-    const panel = document.getElementById(MODAL_PANEL_ID);
+    const panel = document.getElementById(ASSOCIATIONS_MODAL_PANEL_ID);
     panel?.setAttribute(ARIA_BUSY_ATTR, 'true');
 
     try {

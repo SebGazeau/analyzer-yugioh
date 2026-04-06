@@ -1,9 +1,19 @@
 /**
- * Attributs `data-*` et classes pour le modal « cartes associées ».
+ * Attributs `data-*`, classes et `id` du modal « cartes associées ».
  */
 
 export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
 export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
+
+/** IDs du shell (création dynamique dans `modal.ts`, alignés sur le markup injecté). */
+export const ASSOCIATIONS_MODAL_ROOT_ID = 'associations-modal';
+export const ASSOCIATIONS_MODAL_TITLE_ID = 'associations-modal-title';
+export const ASSOCIATIONS_MODAL_SUBTITLE_ID = 'associations-modal-subtitle';
+export const ASSOCIATIONS_MODAL_BODY_ID = 'associations-modal-body';
+export const ASSOCIATIONS_MODAL_LOADING_ID = 'associations-modal-loading';
+export const ASSOCIATIONS_MODAL_PANEL_ID = 'associations-modal-panel';
+export const ASSOCIATIONS_MODAL_LIVE_ID = 'associations-modal-live';
+export const ASSOCIATIONS_MODAL_ANCHOR_ART_ID = 'associations-modal-anchor-art';
 
 export const DATA_ASSOCIATIONS_ADD_DECK_ATTR = 'data-associations-add-deck';
 export const DATA_ASSOCIATIONS_CLOSE_ATTR = 'data-associations-close';
