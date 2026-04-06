@@ -2,8 +2,6 @@
  * Classes DOM du résumé catégories / composition (page Analysis + miroir builder).
  */
 
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
-
 export const ANALYSIS_CATEGORY_DOT_CLASS = 'analysis-category-dot';
 export const ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX = `${ANALYSIS_CATEGORY_DOT_CLASS}--`;
 
@@ -21,16 +19,4 @@ export const BUILDER_CATEGORY_LIST_COUNT_CLASS = 'builder-category-list-count';
 export const BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS = 'builder-category-list-bar-wrap';
 export const BUILDER_CATEGORY_LIST_BAR_CLASS = 'builder-category-list-bar';
 
-/** Tooltip ligne de tri par catégorie (liste builder / analysis). */
-export function builderCategorySortRowTitle(categoryName: string): string {
-    return `Trier le Main Deck : ${categoryName} en premier`;
-}
-
-/** Légende sous le hero probas (référence groupe + effectif deck). */
-export function analysisHeroGroupReferenceLabel(
-    groupName: string,
-    firstK: number,
-    totalCards: number,
-): string {
-    return `Réf. : ${groupName} (${firstK} / ${totalCards} cartes) ${TEXT_EM_DASH} P(≥1) en 5 ou 6 tirages.`;
-}
+export { analysisHeroGroupReferenceLabel, builderCategorySortRowTitle } from './analysisCategorySummaryTooltipsCopy.js';
