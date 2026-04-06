@@ -13,8 +13,8 @@ export const ANALYSIS_SECTION_HEADER_ROW_SELECTOR = `tr.${ANALYSIS_SECTION_HEADE
 
 export const ANALYSIS_SECTION_HEADER_TOGGLE_CLASS = 'analysis-section-header-toggle';
 export const ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR = `.${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}`;
-/** Caractère visible du repliable (▼, U+25BC). */
-export const ANALYSIS_SECTION_HEADER_TOGGLE_TEXT = '\u25BC';
+
+export { ANALYSIS_SECTION_HEADER_TOGGLE_TEXT } from './analysisSectionHeaderToggleCopy.js';
 
 /** Lignes de données rattachées à une section (`engines`, `categories`, `groupes`). */
 export const DATA_ANALYSIS_TABLE_SECTION_ATTR = 'data-section';
