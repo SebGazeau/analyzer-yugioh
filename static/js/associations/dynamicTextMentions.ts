@@ -9,6 +9,7 @@ import {
     ASSOCIATION_SLUG_PREFIX_TEXT_ARCH,
     ASSOCIATION_SLUG_PREFIX_TEXT_NAME,
 } from './associationsReportKeys.js';
+import { ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH } from './associationsReportLimits.js';
 import {
     associationGroupDisplayLabelCitationNameWord,
     associationGroupDisplayLabelCitationText,
@@ -99,7 +100,7 @@ const STOP_WORDS = new Set([
  * Ne s’applique pas aux archétypes structurés (`archetype` API), seulement aux règles `text_name:*`.
  */
 const NAME_WORD_YGO_GENERIC_BLOCKLIST = new Set([
-    // Types / races (EN) — longueur ≥ minNameWordLength (5) sauf exceptions
+    // Types / races (EN) — longueur ≥ minNameWordLength (défaut rapport) sauf exceptions
     'dragon',
     'warrior',
     'spellcaster',
@@ -243,7 +244,7 @@ export function buildDynamicTextMentionRulesFromAnchor(
     options: DynamicTextMentionOptions = {},
 ): TextMentionRule[] {
     const includeName = options.includeNameWordPatterns ?? true;
-    const minLen = options.minNameWordLength ?? 5;
+    const minLen = options.minNameWordLength ?? ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH;
     const rules: TextMentionRule[] = [];
     const usedKeys = new Set<string>();
 

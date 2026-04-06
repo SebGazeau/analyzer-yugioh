@@ -9,3 +9,6 @@ export const ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_GROUP_SIZE = 200;
  * Au-delà, les angles `text_name:*` issus des mots du nom sont ignorés (trop de cartes).
  */
 export const ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES = 48;
+
+/** Longueur minimale d’un mot du nom pour générer un angle `text_name:*`. */
+export const ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH = 5;

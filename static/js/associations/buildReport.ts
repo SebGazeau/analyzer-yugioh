@@ -61,6 +61,7 @@ import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js
 import {
     ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_GROUP_SIZE,
     ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES,
+    ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
 } from './associationsReportLimits.js';
 import type {
     AssociationCatalogCard,
@@ -201,7 +202,8 @@ export function buildAssociationReport(
         ? [
               ...buildDynamicTextMentionRulesFromAnchor(anchor, {
                   includeNameWordPatterns: options.includeNameWordPatterns ?? true,
-                  minNameWordLength: options.minNameWordLength ?? 5,
+                  minNameWordLength:
+                      options.minNameWordLength ?? ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
               }),
               ...(options.textMentionRules ?? []),
           ]

@@ -13,6 +13,7 @@ import { TEXT_ELLIPSIS, TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
 import { EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY } from '../../associations/associationsReportGroupDisplayCopy.js';
+import { ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH } from '../../associations/associationsReportLimits.js';
 import {
     ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
@@ -236,7 +237,7 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         });
         const rules = buildDynamicTextMentionRulesFromAnchor(anchor, {
             includeNameWordPatterns: true,
-            minNameWordLength: 5,
+            minNameWordLength: ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
         });
         const nameRules = rules.filter((r) => r.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME));
         expect(nameRules.some((r) => r.patterns.includes('dragon'))).toBe(false);
@@ -254,7 +255,7 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
         });
         const rules = buildDynamicTextMentionRulesFromAnchor(anchor, {
             includeNameWordPatterns: true,
-            minNameWordLength: 5,
+            minNameWordLength: ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
         });
         const nameRules = rules.filter((r) => r.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME));
         expect(nameRules.some((r) => r.patterns.includes('break'))).toBe(false);
