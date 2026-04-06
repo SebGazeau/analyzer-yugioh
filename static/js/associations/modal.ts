@@ -5,6 +5,7 @@ import {
     ARIA_LABELLEDBY_ATTR,
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
+import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../utils/htmlAttrs.js';
 import {
@@ -201,11 +202,11 @@ function ensureModalElements(): {
         document.addEventListener('keydown', (e: KeyboardEvent) => {
             const mod = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID);
             if (!mod || mod.hidden) return;
-            if (e.key === 'Escape') {
+            if (e.key === KEY_ESCAPE) {
                 closeAssociationsModal();
                 return;
             }
-            if (e.key !== 'Enter' && e.key !== ' ') return;
+            if (e.key !== KEY_ENTER && e.key !== KEY_SPACE) return;
             const t = e.target as HTMLElement;
             const tile = t.closest(ASSOCIATIONS_ADD_DECK_SELECTOR);
             if (!tile || !mod.contains(tile)) return;

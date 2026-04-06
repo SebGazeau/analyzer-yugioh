@@ -6,6 +6,7 @@ import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
+import { KEY_ESCAPE } from '../../utils/keyboardKeys.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
     DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
@@ -217,7 +218,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         if (document.documentElement.dataset.deckPopoverEscapeBound !== '1') {
             document.documentElement.dataset.deckPopoverEscapeBound = '1';
             document.addEventListener('keydown', (e: KeyboardEvent) => {
-                if (e.key !== 'Escape') return;
+                if (e.key !== KEY_ESCAPE) return;
                 if (!isOpen()) return;
                 dismissSaving();
             });

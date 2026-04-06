@@ -16,6 +16,7 @@ import {
 import { SUGGESTIONS_PANEL_ELEMENT_ID } from '../suggestionsDomIds.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
 import { NATIVE_BUTTON_SELECTOR } from '../utils/dom.js';
+import { KEY_ENTER, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT } from '../utils/userDialogMessages.js';
 
 export function bindSuggestionsFindCard(): void {
@@ -72,7 +73,7 @@ export function bindSuggestionsAddToDeck(): void {
     });
 
     document.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.key !== KEY_ENTER && e.key !== KEY_SPACE) return;
         const panel = document.getElementById(SUGGESTIONS_PANEL_ELEMENT_ID);
         const t = e.target as HTMLElement;
         if (!panel?.contains(t)) return;

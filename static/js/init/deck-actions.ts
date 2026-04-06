@@ -28,6 +28,7 @@ import {
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
     deckSavedListItemLoadTitle,
 } from '../deck-builder/deckSavedListDomSelectors.js';
+import { KEY_ENTER, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { deckSavedListItemBodyInnerHtml } from '../deck-builder/deckSavedListItemBodyHtml.js';
 import {
     listMyDecks,
@@ -127,7 +128,7 @@ export async function refreshMyDecksList(): Promise<void> {
         };
         li.addEventListener('click', loadDeck);
         li.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
                 e.preventDefault();
                 loadDeck();
             }
@@ -152,7 +153,7 @@ export function bindDeckList(): void {
         nameInput?.focus();
     });
     newDeckCard?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
             e.preventDefault();
             newDeckCard.click();
         }
