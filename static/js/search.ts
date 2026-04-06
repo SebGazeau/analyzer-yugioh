@@ -33,11 +33,9 @@ import {
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { searchApiUrl } from './cardSearchApiRoutes.js';
+import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 import { TEXT_BLACK_STAR, TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
-
-const SEARCH_DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 4;
 
 /** Query `locale` pour `SEARCH_API_PATH` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
 function searchLocaleQuery(): string {
@@ -115,7 +113,7 @@ function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement):
 /** Requête brute recherche (même locale que le builder). */
 export async function fetchSearchResultsForQuery(q: string): Promise<any[]> {
     const t = q.trim();
-    if (t.length < MIN_QUERY_LENGTH) return [];
+    if (t.length < SEARCH_MIN_QUERY_LENGTH) return [];
     const res = await fetch(searchApiUrl(t, searchLocaleQuery()));
     if (!res.ok) return [];
     const data = await res.json();
@@ -148,7 +146,7 @@ export function runSearchWithQuery(q: string): void {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     if (!input) return;
     const trimmed = q.trim();
-    if (trimmed.length < MIN_QUERY_LENGTH) return;
+    if (trimmed.length < SEARCH_MIN_QUERY_LENGTH) return;
     input.value = trimmed;
     input.dispatchEvent(new Event('input', { bubbles: true }));
 }
@@ -162,7 +160,7 @@ export function setupSearch(): void {
     const runSearch = () => {
         const query = input.value.trim();
         resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
-        if (query.length < MIN_QUERY_LENGTH) {
+        if (query.length < SEARCH_MIN_QUERY_LENGTH) {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
@@ -206,7 +204,7 @@ export function setupSearch(): void {
 
     input.addEventListener('input', () => {
         const query = input.value.trim();
-        if (query.length < MIN_QUERY_LENGTH) {
+        if (query.length < SEARCH_MIN_QUERY_LENGTH) {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';

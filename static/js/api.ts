@@ -1,5 +1,6 @@
 // Fonctions d'accès à l'API
 import { cardApiByNameUrl, searchApiUrl } from './cardSearchApiRoutes.js';
+import { SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
 
 export interface Card {
     name: string;
@@ -34,7 +35,7 @@ export async function fetchCardByName(name: string): Promise<Card | null> {
         if (card) return card;
     }
 
-    if (trimmed.length >= 4) {
+    if (trimmed.length >= SEARCH_MIN_QUERY_LENGTH) {
         const r = await fetch(searchApiUrl(trimmed));
         if (!r.ok) return null;
         const cards: Card[] = await r.json();

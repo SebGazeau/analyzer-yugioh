@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { searchApiUrl } from '../cardSearchApiRoutes.js';
+import {
+  SEARCH_DEBOUNCE_MS,
+  SEARCH_DEBOUNCE_TEST_OVERRUN_MS,
+  SEARCH_MIN_QUERY_LENGTH,
+} from '../searchConstants.js';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
@@ -67,6 +72,8 @@ describe('search.ts — helpers purs', () => {
   });
 });
 
+const SEARCH_TEST_SETTLE_MS = SEARCH_DEBOUNCE_MS + SEARCH_DEBOUNCE_TEST_OVERRUN_MS;
+
 describe('search.ts — DOM', () => {
   beforeEach(() => {
     document.body.innerHTML =
@@ -80,18 +87,18 @@ describe('search.ts — DOM', () => {
     vi.restoreAllMocks();
   });
 
-  it('input avec moins de 4 caractères ne déclenche pas de fetch', async () => {
+  it('input avec moins de SEARCH_MIN_QUERY_LENGTH ne déclenche pas de fetch', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('[]'));
     setupSearch();
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
-    input.value = 'ab';
+    input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await Promise.resolve();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 
-  it('input avec 4+ caractères déclenche un fetch après le debounce', async () => {
+  it('input avec SEARCH_MIN_QUERY_LENGTH+ caractères déclenche un fetch après le debounce', async () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
@@ -101,7 +108,7 @@ describe('search.ts — DOM', () => {
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(fetchSpy).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -118,7 +125,7 @@ describe('search.ts — DOM', () => {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'abcd';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('abcd', '&locale=fr')));
     document.documentElement.lang = prevLang;
     vi.useRealTimers();
@@ -140,7 +147,7 @@ describe('search.ts — DOM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
@@ -157,7 +164,7 @@ describe('search.ts — DOM', () => {
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     await Promise.resolve();
     const items = list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`);
@@ -186,7 +193,7 @@ describe('search.ts — DOM', () => {
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'XyZz';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(0);
     expect(list.innerHTML).toBe('');
@@ -204,10 +211,10 @@ describe('search.ts — DOM', () => {
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Card';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(1);
-    input.value = 'ab';
+    input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(list.innerHTML).toBe('');
     vi.useRealTimers();
@@ -222,7 +229,7 @@ describe('search.ts — DOM', () => {
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(container.getAttribute(DATA_SEARCH_ERROR_ATTR)).toBe('true');
     expect(list.querySelector(`.${SEARCH_ERROR_STATE_CLASS}`)).not.toBeNull();
