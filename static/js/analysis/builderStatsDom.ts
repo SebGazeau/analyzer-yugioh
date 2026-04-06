@@ -3,7 +3,10 @@
  */
 
 import { DECK_SECTIONS, mapDeckSections, type DeckSection, type DeckSectionCounts } from '../deckSection.js';
-import { BUILDER_DECK_SECTION_COUNT_LABEL } from './builderDeckSectionCountLabelsCopy.js';
+import {
+    BUILDER_DECK_SECTION_COUNT_LABEL,
+    BUILDER_DECK_SECTION_SUMMARY_SEPARATOR,
+} from './builderDeckSectionCountLabelsCopy.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { DECK_COUNT_SUMMARY_ELEMENT_ID } from './builderShellDomIds.js';
 import {
@@ -46,7 +49,9 @@ export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): v
 export function applyDeckSectionCountLabels(counts: DeckSectionCounts): void {
     const summaryEl = document.getElementById(DECK_COUNT_SUMMARY_ELEMENT_ID);
     if (summaryEl) {
-        summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${BUILDER_DECK_SECTION_COUNT_LABEL[s]}`).join(' / ');
+        summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${BUILDER_DECK_SECTION_COUNT_LABEL[s]}`).join(
+            BUILDER_DECK_SECTION_SUMMARY_SEPARATOR,
+        );
     }
     for (const s of DECK_SECTIONS) {
         const el = document.getElementById(DECK_COUNT_ELEMENT_ID[s]);

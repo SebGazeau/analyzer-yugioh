@@ -15,3 +15,6 @@ export const BUILDER_DECK_SECTION_COUNT_LABEL: Record<DeckSection, string> = {
     extra: BUILDER_DECK_COUNT_LABEL_EXTRA,
     side: BUILDER_DECK_COUNT_LABEL_SIDE,
 };
+
+/** Séparateur entre les segments « {n} MAIN », « {n} EXTRA », « {n} SIDE » (ligne résumé builder). */
+export const BUILDER_DECK_SECTION_SUMMARY_SEPARATOR = ' / ';
