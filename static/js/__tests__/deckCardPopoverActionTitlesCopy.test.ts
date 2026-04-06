@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DECK_CARD_EDIT_DIALOG_TITLE } from '../utils/deckCardEditLabels.js';
+import { DECK_CARD_EDIT_DIALOG_TITLE } from '../deck-builder/card-edit-popover/deckCardEditDialogCopy.js';
 import {
     DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL,
     DECK_CARD_POPOVER_CLOSE_BTN_TITLE,

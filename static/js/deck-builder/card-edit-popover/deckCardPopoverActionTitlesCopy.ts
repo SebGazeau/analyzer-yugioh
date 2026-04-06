@@ -2,7 +2,7 @@
  * Titres / `aria-label` du popover « Modifier la carte » (actions fermer, supprimer, couverture).
  */
 
-import { DECK_CARD_EDIT_DIALOG_TITLE } from '../../utils/deckCardEditLabels.js';
+import { DECK_CARD_EDIT_DIALOG_TITLE } from './deckCardEditDialogCopy.js';
 
 /** Titre visible (`<h4>`) et `aria-label` du dialogue. */
 export const DECK_CARD_POPOVER_HEADING_TEXT = DECK_CARD_EDIT_DIALOG_TITLE;
