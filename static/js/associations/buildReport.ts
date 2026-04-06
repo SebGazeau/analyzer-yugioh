@@ -1,4 +1,3 @@
-import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import {
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY,
@@ -16,6 +15,12 @@ import {
     associationDiagnosticQaGroupTruncatedMessage,
     associationDiagnosticYgorgEffectEnCountMessage,
 } from './associationsReportDiagnosticsCopy.js';
+import {
+    ASSOCIATION_GROUP_DISPLAY_YGORG_QA,
+    associationGroupDisplayLabelSameArchetype,
+    associationGroupDisplayLabelTextCiting,
+    EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
+} from './associationsReportGroupDisplayCopy.js';
 import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
     ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
@@ -96,7 +101,7 @@ export function associationCitableTextForAnchorNameMatch(c: AssociationCatalogCa
 export const EXAMPLE_BLUE_EYES_TEXT_RULES: TextMentionRule[] = [
     {
         groupKey: 'blue_eyes',
-        displayLabel: 'Citation texte : Yeux Bleus / Blue-Eyes',
+        displayLabel: EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
         patterns: ['blue-eyes', 'blue eyes', 'yeux bleus', '青眼'],
     },
 ];
@@ -240,7 +245,7 @@ export function buildAssociationReport(
                 groups.push({
                     angleId: 'structured_archetype',
                     groupKey: `archetype:${arch}`,
-                    displayLabel: `Même archétype : ${arch}`,
+                    displayLabel: associationGroupDisplayLabelSameArchetype(arch),
                     linkStrength: 'member',
                     cardIds,
                     meta: { archetype: arch },
@@ -264,7 +269,7 @@ export function buildAssociationReport(
         groups.push({
             angleId: 'ygorg_official_qa',
             groupKey: 'ygorg_shared_qa',
-            displayLabel: 'Même réponse Q&A (base YGResources)',
+            displayLabel: ASSOCIATION_GROUP_DISPLAY_YGORG_QA,
             linkStrength: 'reference',
             cardIds,
             meta: { source: 'ygorg_qa_entries' },
@@ -355,7 +360,7 @@ export function buildAssociationReport(
                     groups.push({
                         angleId: 'text_mentions_anchor_name',
                         groupKey: 'anchor_name_in_desc',
-                        displayLabel: `Texte citant ${TEXT_GUILLEMET_OPEN} ${primary} ${TEXT_GUILLEMET_CLOSE}`,
+                        displayLabel: associationGroupDisplayLabelTextCiting(primary),
                         linkStrength: 'reference',
                         cardIds,
                     });
