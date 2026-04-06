@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { DECK_DND_SUPPRESS_CLICK_MS } from '../deck-builder/deckConstants.js';
 import { parseDeckCellDragPayload } from '../deck-builder/grid/deckDragDrop.js';
+
+describe('deck DnD constantes', () => {
+  it('fenêtre anti-clic fantôme après drag', () => {
+    expect(DECK_DND_SUPPRESS_CLICK_MS).toBe(200);
+  });
+});
 
 describe('parseDeckCellDragPayload', () => {
   it('accepte un JSON valide', () => {

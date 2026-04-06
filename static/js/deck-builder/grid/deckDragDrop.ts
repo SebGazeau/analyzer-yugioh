@@ -8,7 +8,7 @@ import {
     sumQuantities,
     type DeckRowLike,
 } from '../../deck-move.js';
-import { deckSectionForGridElementId } from '../deckConstants.js';
+import { deckSectionForGridElementId, DECK_DND_SUPPRESS_CLICK_MS } from '../deckConstants.js';
 import { isDeckSection, type DeckSection } from '../../deckSection.js';
 import {
     DECK_CARD_CELL_DRAGGING_CLASS,
@@ -153,7 +153,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
     root.addEventListener(DOM_EVENT_DRAGEND, (e: DragEvent) => {
         (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR)?.classList.remove(DECK_CARD_CELL_DRAGGING_CLASS);
         document.querySelectorAll(DECK_CARDS_GRID_DND_OVER_SELECTOR).forEach((n) => n.classList.remove(DECK_CARDS_GRID_DND_OVER_CLASS));
-        suppressClickUntil = Date.now() + 200;
+        suppressClickUntil = Date.now() + DECK_DND_SUPPRESS_CLICK_MS;
     });
 
     root.addEventListener(

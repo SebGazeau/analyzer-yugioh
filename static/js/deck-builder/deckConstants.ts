@@ -48,6 +48,9 @@ export const DECK_FETCH_INIT: RequestInit = { credentials: FETCH_CREDENTIALS_SAM
 /** Type MIME du payload drag-and-drop entre cellules du deck. */
 export const DECK_DND_PAYLOAD_TYPE = 'application/x-yugioh-deck-cell';
 
+/** Après `dragend`, durée pendant laquelle les clics délégués sur le builder sont ignorés (clic fantôme) (ms). */
+export const DECK_DND_SUPPRESS_CLICK_MS = 200;
+
 /** Actions déléguées sur le deck (boutons / zones cliquables). */
 export const DATA_DECK_ACTION_ATTR = 'data-deck-action';
 export const DECK_ACTION_NEW_DECK = 'new-deck';
