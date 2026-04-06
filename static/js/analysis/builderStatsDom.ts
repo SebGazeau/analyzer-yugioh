@@ -2,12 +2,8 @@
  * DOM : compteurs Main (types), barres builder, résumé MAIN/EXTRA/SIDE, panneaux composition.
  */
 
-import {
-    DECK_SECTIONS,
-    mapDeckSections,
-    type DeckSection,
-    type DeckSectionCounts,
-} from '../deckSection.js';
+import { DECK_SECTIONS, mapDeckSections, type DeckSection, type DeckSectionCounts } from '../deckSection.js';
+import { BUILDER_DECK_SECTION_COUNT_LABEL } from './builderDeckSectionCountLabelsCopy.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
 import { DECK_COUNT_SUMMARY_ELEMENT_ID } from './builderShellDomIds.js';
 import {
@@ -22,8 +18,6 @@ import {
     BUILDER_COUNT_TRAP_ID,
 } from './builderStatsDomIds.js';
 import type { MainDeckTypeCounts } from './mainDeckTypeCounts.js';
-
-const DECK_COUNT_LABEL: Record<DeckSection, string> = mapDeckSections((s) => s.toUpperCase());
 
 /** IDs `#deck-main-count`, etc. — réutilisable par les tests (jsdom). */
 export const DECK_COUNT_ELEMENT_ID: Record<DeckSection, string> = mapDeckSections(
@@ -52,7 +46,7 @@ export function applyBuilderMainTypeCountsAndBars(counts: MainDeckTypeCounts): v
 export function applyDeckSectionCountLabels(counts: DeckSectionCounts): void {
     const summaryEl = document.getElementById(DECK_COUNT_SUMMARY_ELEMENT_ID);
     if (summaryEl) {
-        summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${DECK_COUNT_LABEL[s]}`).join(' / ');
+        summaryEl.textContent = DECK_SECTIONS.map((s) => `${counts[s]} ${BUILDER_DECK_SECTION_COUNT_LABEL[s]}`).join(' / ');
     }
     for (const s of DECK_SECTIONS) {
         const el = document.getElementById(DECK_COUNT_ELEMENT_ID[s]);

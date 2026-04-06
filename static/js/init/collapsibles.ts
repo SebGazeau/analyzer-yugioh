@@ -11,6 +11,10 @@ import {
 } from '../analysis/analysisTableDomSelectors.js';
 import { DECK_ACTION_TOGGLE_ZONE_SELECTOR } from '../deck-builder/deckConstants.js';
 import { DECK_SECTION_COLLAPSED_CLASS, DECK_SECTION_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
+import {
+    COLLAPSIBLE_ANALYSIS_TOGGLE_COLLAPSED,
+    COLLAPSIBLE_ANALYSIS_TOGGLE_EXPANDED,
+} from './collapsibleToggleCopy.js';
 
 export function bindCollapsibles(): void {
     document.querySelectorAll(DECK_ACTION_TOGGLE_ZONE_SELECTOR).forEach((el) => {
@@ -33,6 +37,8 @@ export function bindCollapsibles(): void {
         const collapsed = table.classList.toggle(analysisTableSectionCollapsedClass(id));
         target.setAttribute(ARIA_EXPANDED_ATTR, String(!collapsed));
         const toggle = target.querySelector(ANALYSIS_SECTION_HEADER_TOGGLE_SELECTOR);
-        if (toggle) toggle.textContent = collapsed ? '▶' : '▼';
+        if (toggle) {
+            toggle.textContent = collapsed ? COLLAPSIBLE_ANALYSIS_TOGGLE_COLLAPSED : COLLAPSIBLE_ANALYSIS_TOGGLE_EXPANDED;
+        }
     });
 }
