@@ -26,7 +26,7 @@ import {
     maxAllowedForDeckLimitGroup,
     totalQtyDeckLimitGroup,
 } from '../deckLimitGroups.js';
-import type { DeckSection } from '../../deckSection.js';
+import type { DeckSection } from '../../deckSectionOrder.js';
 import {
     deckCellSelector,
     DECK_CARD_QTY_DISPLAY_PREFIX,

@@ -1,7 +1,7 @@
 /**
  * Rendu des grilles de cartes du deck builder (DOM + événements par cellule).
  */
-import type { DeckSection } from '../../deckSection.js';
+import type { DeckSection } from '../../deckSectionOrder.js';
 import { DRAGGABLE_ATTR, DRAGGABLE_TRUE, TITLE_ATTR } from '../../utils/htmlAttrs.js';
 import { DECK_ACTION_REMOVE_ONE_SELECTOR } from '../deckConstants.js';
 import {

@@ -2,7 +2,7 @@
  * Logique pure déplacement / réorganisation des cartes (drag-and-drop builder).
  */
 
-import { DECK_SECTIONS, type DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 
 export type { DeckSection };
 

@@ -1,5 +1,5 @@
 import { addToDeck } from './deck.js';
-import { DECK_SECTIONS } from './deckSection.js';
+import { DECK_SECTIONS } from './deckSectionOrder.js';
 import {
     SEARCH_BOX_ELEMENT_ID,
     SEARCH_RESULTS_CONTAINER_ID,

@@ -7,7 +7,7 @@ import {
 } from '../../analysis/builderShellDomIds.js';
 import { DECK_COUNT_ELEMENT_ID } from '../../analysis/builderStatsDom.js';
 import { DECK_GRID_IDS } from '../../deck-builder/deckConstants.js';
-import { DECK_SECTIONS } from '../../deckSection.js';
+import { DECK_SECTIONS } from '../../deckSectionOrder.js';
 
 /** Grille Main uniquement (stats / scénarios partiels). */
 export function htmlDeckMainGrid(className?: string): string {

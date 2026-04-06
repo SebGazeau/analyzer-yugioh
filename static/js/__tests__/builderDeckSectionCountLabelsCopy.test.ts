@@ -6,7 +6,7 @@ import {
     BUILDER_DECK_SECTION_COUNT_LABEL,
     BUILDER_DECK_SECTION_SUMMARY_SEPARATOR,
 } from '../analysis/builderDeckSectionCountLabelsCopy.js';
-import { DECK_SECTIONS } from '../deckSection.js';
+import { DECK_SECTIONS } from '../deckSectionOrder.js';
 
 describe('builderDeckSectionCountLabelsCopy', () => {
     it('libellés MAIN / EXTRA / SIDE', () => {
