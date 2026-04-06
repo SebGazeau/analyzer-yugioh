@@ -1,7 +1,6 @@
+import { ASSOCIATIONS_API_CATALOG_URL, associationsApiQaRelatedUrl } from './associationsApiRoutes.js';
 import { toAssociationCatalog } from './buildReport.js';
 import type { AssociationCatalogCard } from './types.js';
-
-const CATALOG_URL = '/associations/catalog';
 
 /**
  * Précharge le catalogue en idle (builder) pour que la première ouverture
@@ -43,7 +42,7 @@ export function getAssociationCatalog(): Promise<AssociationCatalogCard[]> {
     if (catalogInflight) return catalogInflight;
 
     catalogInflight = (async () => {
-        const catRes = await fetch(CATALOG_URL);
+        const catRes = await fetch(ASSOCIATIONS_API_CATALOG_URL);
         if (!catRes.ok) throw new Error(String(catRes.status));
         const data: unknown[] = await catRes.json();
         return toAssociationCatalog(data as Record<string, unknown>[]);
@@ -61,10 +60,6 @@ export function getAssociationCatalog(): Promise<AssociationCatalogCard[]> {
     return catalogInflight;
 }
 
-function qaRelatedUrl(anchorId: number): string {
-    return `/associations/qa_related?card_id=${encodeURIComponent(String(anchorId))}`;
-}
-
 /**
  * IDs catalogue partageant une Q&A avec l’ancre : cache par `card_id` (même onglet).
  */
@@ -75,7 +70,7 @@ export function getQaRelatedCardIds(anchorId: number): Promise<number[]> {
     const existing = qaRelatedInflight.get(anchorId);
     if (existing) return existing;
 
-    const p = fetch(qaRelatedUrl(anchorId))
+    const p = fetch(associationsApiQaRelatedUrl(anchorId))
         .then(async (qaRes) => {
             let ygorgQaRelatedCardIds: number[] = [];
             if (qaRes.ok) {

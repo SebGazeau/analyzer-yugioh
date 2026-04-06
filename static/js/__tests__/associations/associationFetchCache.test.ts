@@ -4,6 +4,10 @@ import {
     getQaRelatedCardIds,
     resetAssociationFetchCache,
 } from '../../associations/associationFetchCache.js';
+import {
+    ASSOCIATIONS_API_CATALOG_URL,
+    associationsApiQaRelatedUrl,
+} from '../../associations/associationsApiRoutes.js';
 
 afterEach(() => {
     resetAssociationFetchCache();
@@ -31,7 +35,7 @@ describe('associationFetchCache', () => {
         const b = await getAssociationCatalog();
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock).toHaveBeenCalledWith('/associations/catalog');
+        expect(fetchMock).toHaveBeenCalledWith(ASSOCIATIONS_API_CATALOG_URL);
         expect(a.length).toBe(1);
         expect(b).toBe(a);
     });
@@ -61,13 +65,13 @@ describe('associationFetchCache', () => {
         const fetchMock = vi
             .fn()
             .mockImplementation((url: string) => {
-                if (url === '/associations/catalog') {
+                if (url === ASSOCIATIONS_API_CATALOG_URL) {
                     return Promise.resolve({
                         ok: true,
                         json: async () => [{ id: 1, name: 'A', name_en: null, archetype: null, desc: null }],
                     });
                 }
-                if (url.startsWith('/associations/qa_related?card_id=7')) {
+                if (url.startsWith(associationsApiQaRelatedUrl(7))) {
                     return Promise.resolve({ ok: true, json: async () => [10, 20] });
                 }
                 return Promise.resolve({ ok: false, json: async () => null });
