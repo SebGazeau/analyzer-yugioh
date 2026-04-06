@@ -2,6 +2,9 @@
  * Libellés / `title` de l’onglet Suggestions (insights, Number Xyz, puces Main/Side).
  */
 
+/** Caractère affiché dans la vignette vide d’une puce match (pas d’image). */
+export const INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT = '?';
+
 /** Libellé visible du bouton « Chercher » (ligne Number Xyz). */
 export const INSIGHTS_FIND_CARD_BUTTON_LABEL = 'Chercher';
 

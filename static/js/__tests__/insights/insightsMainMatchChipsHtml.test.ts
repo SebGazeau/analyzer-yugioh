@@ -6,6 +6,7 @@ import {
     INSIGHTS_EMPTY_CELL_DATA_ATTR,
     INSIGHTS_MAIN_MATCH_DATA_ATTR,
     INSIGHTS_MAIN_MATCHES_DATA_ATTR,
+    INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT,
     INSIGHTS_MATCH_THUMB_DATA_ATTR,
     INSIGHTS_SECTION_DATA_ATTR,
     SUGGESTIONS_MAIN_MATCH_THUMB_CLASS,
@@ -44,7 +45,7 @@ describe('insightsMainMatchChipsHtml', () => {
         const cards: MatchingCardPreview[] = [{ name: 'X', quantity: 3, section: 'side', imageUrl: '' }];
         const html = insightsMainMatchChipsHtml(cards);
         expect(html).toContain(`${INSIGHTS_SECTION_DATA_ATTR}="side"`);
-        expect(html).toContain('>?<');
+        expect(html).toContain(`>${INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT}<`);
         expect(html).toContain(TEXT_MULTIPLICATION_SIGN);
         expect(html).toContain('3 exemplaires');
     });

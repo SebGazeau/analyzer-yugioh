@@ -69,6 +69,7 @@ export function suggestionsMainMatchThumbEmptyClassName(): string {
 export {
     INSIGHTS_FIND_CARD_BUTTON_LABEL,
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
+    INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT,
     INSIGHTS_SUGGEST_ROW_TITLE,
     insightsMainMatchChipTitle,
     insightsMainMatchQtyAriaLabel,
