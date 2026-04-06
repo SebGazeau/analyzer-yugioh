@@ -37,6 +37,26 @@ export function msgDeckSavedWithId(id: number): string {
 
 export const MSG_DECK_UPDATED = 'Deck mis à jour.';
 
+/** `prompt()` lors d’une première sauvegarde sans nom dans le champ builder. */
+export const MSG_PROMPT_DECK_NAME = 'Nom du deck ?';
+
+/** Retour de `updateDeckOnServer` si aucun deck courant n’est chargé. */
+export const MSG_UPDATE_DECK_NOT_LOADED =
+    'Aucun deck chargé. Chargez un deck ou sauvegardez-en un nouveau.';
+
+/** Nom affiché / utilisé quand le serveur ne fournit pas de nom. */
+export const DECK_NAME_FALLBACK_DISPLAY = 'Sans nom';
+
+/** Fichier téléchargé par « Exporter JSON ». */
+export const DECK_EXPORT_JSON_FILE_NAME = 'deck.json';
+
+/** Réponse 401 par défaut sur les routes decks (corps JSON sans `error`). */
+export const MSG_DECK_API_AUTH_REQUIRED =
+    'Connexion requise. Connectez-vous pour enregistrer ou gérer vos decks.';
+
+/** Erreur quand le deck source (ex. duplication) n’existe pas. */
+export const MSG_DECK_API_DECK_NOT_FOUND = 'Deck introuvable';
+
 export const MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN =
     "Cette carte ne peut pas être placée dans l'Extra Deck.";
 

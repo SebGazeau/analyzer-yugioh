@@ -37,6 +37,12 @@ import { readDeckNameFromBuilderInput, writeDeckNameToBuilderInput } from './dec
 import { dispatchDeckSortChanged } from './deck-builder/deckSortEvents.js';
 import { tryAddCardToDeckSection } from './deck-builder/tryAddCardToDeckSection.js';
 import {
+    DECK_EXPORT_JSON_FILE_NAME,
+    DECK_NAME_FALLBACK_DISPLAY,
+    MSG_PROMPT_DECK_NAME,
+    MSG_UPDATE_DECK_NOT_LOADED,
+} from './utils/userDialogMessages.js';
+import {
     clearLoadedDeckRecord,
     getCurrentLoadedDeck,
     setLoadedDeckRecord,
@@ -253,7 +259,7 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
 }
 
 export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
-    const name = getDeckName() || prompt('Nom du deck ?') || '';
+    const name = getDeckName() || prompt(MSG_PROMPT_DECK_NAME) || '';
     if (!name.trim()) return {};
     const sections = buildDeckSectionsPayload(getDeckState());
     const result = await apiCreateDeck(name, sections);
@@ -266,7 +272,7 @@ export async function saveDeckToServer(): Promise<{ id?: number; error?: string 
 
 export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
     const deck = getCurrentLoadedDeck();
-    if (!deck) return { error: 'Aucun deck chargé. Chargez un deck ou sauvegardez-en un nouveau.' };
+    if (!deck) return { error: MSG_UPDATE_DECK_NOT_LOADED };
     const sections = buildDeckSectionsPayload(getDeckState());
     const name = getDeckName() || deck.name;
     const cover = getDeckCover(deck.id);
@@ -300,7 +306,7 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         await pushSection(data[section], section);
     }
     renderAllDeckGridSections();
-    const loadedName = String(data.name ?? 'Sans nom');
+    const loadedName = String(data.name ?? DECK_NAME_FALLBACK_DISPLAY);
     const deckId = typeof data.id === 'number' ? data.id : id;
     setCurrentLoadedDeck(deckId, loadedName);
     setDeckName(loadedName);
@@ -326,7 +332,7 @@ export async function deleteDeckFromServer(id: number): Promise<boolean> {
 }
 
 export function exportDeckToFile(): void {
-    downloadJsonFile('deck.json', buildDeckJsonExportPayload(getDeckState()));
+    downloadJsonFile(DECK_EXPORT_JSON_FILE_NAME, buildDeckJsonExportPayload(getDeckState()));
 }
 
 export function importDeckFromFile(event: Event): void {

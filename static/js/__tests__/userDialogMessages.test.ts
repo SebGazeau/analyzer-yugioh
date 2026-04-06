@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DECK_EXPORT_JSON_FILE_NAME,
+  DECK_NAME_FALLBACK_DISPLAY,
+  MSG_DECK_API_AUTH_REQUIRED,
+  MSG_DECK_API_DECK_NOT_FOUND,
   MSG_IMPORT_JSON_INVALID_FORMAT,
+  MSG_PROMPT_DECK_NAME,
+  MSG_UPDATE_DECK_NOT_LOADED,
   msgAssociationCardNotFound,
   msgConfirmDeleteDeck,
   msgDeckZoneFull,
@@ -32,6 +38,15 @@ describe('userDialogMessages', () => {
 
   it('MSG_IMPORT_JSON_INVALID_FORMAT mentionne main/extra/side', () => {
     expect(MSG_IMPORT_JSON_INVALID_FORMAT).toContain('main');
+  });
+
+  it('messages deck persist / API stables', () => {
+    expect(MSG_PROMPT_DECK_NAME).toContain('deck');
+    expect(MSG_UPDATE_DECK_NOT_LOADED.length).toBeGreaterThan(20);
+    expect(DECK_NAME_FALLBACK_DISPLAY).toBe('Sans nom');
+    expect(DECK_EXPORT_JSON_FILE_NAME).toBe('deck.json');
+    expect(MSG_DECK_API_AUTH_REQUIRED).toContain('Connexion');
+    expect(MSG_DECK_API_DECK_NOT_FOUND).toBe('Deck introuvable');
   });
 
   it('msgImportCardsNotFound résume la liste', () => {

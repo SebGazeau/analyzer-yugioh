@@ -3,6 +3,11 @@
  * L’état du builder et le DOM restent dans deck.ts.
  */
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
+import {
+    DECK_NAME_FALLBACK_DISPLAY,
+    MSG_DECK_API_AUTH_REQUIRED,
+    MSG_DECK_API_DECK_NOT_FOUND,
+} from '../utils/userDialogMessages.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
 
 export type DeckEntryPayload = {
@@ -54,9 +59,7 @@ export function buildDeckSectionsPayload(sections: Record<DeckSection, DeckRowPa
 
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
     if (res.status === 401) {
-        return typeof data.error === 'string'
-            ? data.error
-            : 'Connexion requise. Connectez-vous pour enregistrer ou gérer vos decks.';
+        return typeof data.error === 'string' ? data.error : MSG_DECK_API_AUTH_REQUIRED;
     }
     return (
         (typeof data.error === 'string' ? data.error : null) ||
@@ -125,10 +128,10 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
         if (res.status === 401) return { error: deckApiErrorMessage(res, data) };
-        return { error: typeof data.error === 'string' ? data.error : 'Deck introuvable' };
+        return { error: typeof data.error === 'string' ? data.error : MSG_DECK_API_DECK_NOT_FOUND };
     }
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    const baseName = String(data.name ?? 'Sans nom').trim() || 'Sans nom';
+    const baseName = String(data.name ?? DECK_NAME_FALLBACK_DISPLAY).trim() || DECK_NAME_FALLBACK_DISPLAY;
     const newName = `${baseName} (copie)`;
     const sections = mapDeckSections((s) => (Array.isArray(data[s]) ? data[s] : [])) as DeckSectionsPayload;
     const body = { name: newName, ...sections };
