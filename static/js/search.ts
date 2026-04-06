@@ -6,54 +6,32 @@ import {
 } from './searchDomIds.js';
 import {
     DATA_SEARCH_ACTION_ATTR,
-    DATA_SEARCH_ARCHETYPE_SOURCE_ATTR,
     DATA_SEARCH_ERROR_ATTR,
     DATA_SEARCH_FILTER_ATTR,
-    SEARCH_ACTION_ASSOCIATED,
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
     SEARCH_ERROR_STATE_CLASS,
     SEARCH_FETCH_ERROR_MESSAGE,
-    SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL,
-    SEARCH_RESULT_BTN_ADD_DECK_TITLE,
-    SEARCH_RESULT_BTN_ADD_SIDE_ARIA_LABEL,
-    SEARCH_RESULT_BTN_ADD_SIDE_TITLE,
-    SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL,
-    SEARCH_RESULT_BTN_ASSOCIATED_TITLE,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
     SEARCH_HIGHLIGHT_CLASS,
-    SEARCH_RESULT_ACTIONS_CLASS,
-    SEARCH_RESULT_ADD_DECK_CLASS,
     SEARCH_RESULT_ADD_DECK_SELECTOR,
-    SEARCH_RESULT_ADD_SIDE_CLASS,
     SEARCH_RESULT_ADD_SIDE_SELECTOR,
-    SEARCH_RESULT_ARCH_SOURCE_CLASS,
     SEARCH_RESULT_ASSOCIATED_CLASS,
-    SEARCH_RESULT_INFO_CLASS,
-    SEARCH_RESULT_META_CLASS,
-    SEARCH_RESULT_NAME_CLASS,
     SEARCH_RESULT_ROW_CLASS,
-    SEARCH_RESULT_SUBTYPE_CLASS,
-    SEARCH_RESULT_THUMB_CLASS,
-    SEARCH_RESULT_THUMB_IMG_CLASS,
-    searchResultInitialCellClass,
 } from './searchDomSelectors.js';
-import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
+import {
+    searchResultArchetypeSourceBadgeHtml,
+    searchResultRowFragmentHtml,
+    searchResultThumbInnerHtml,
+} from './searchResultRowHtml.js';
 import { debounce } from './utils/debounce.js';
-import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
+import { ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
 import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
 import {
     STYLE_DISPLAY_FLEX,
     STYLE_DISPLAY_NONE,
 } from './utils/cssInlineDisplay.js';
-import {
-    BTN_TYPE_ATTR,
-    BTN_TYPE_BUTTON,
-    IMG_LOADING_ATTR,
-    IMG_LOADING_LAZY,
-    TITLE_ATTR,
-} from './utils/htmlAttrs.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 import { TEXT_BLACK_STAR, TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
@@ -86,14 +64,6 @@ function getSubtypeLine(card: any): string {
     return card.type || '';
 }
 
-function archetypeSourceBadgeHtml(card: any): string {
-    const src = card.archetype_source;
-    if (typeof src !== 'string' || !src.trim()) return '';
-    const { short, title } = archetypeSourceUi(src.trim());
-    if (!short) return '';
-    return `<span class="${SEARCH_RESULT_ARCH_SOURCE_CLASS}" ${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
-}
-
 let lastResults: any[] = [];
 let lastQuery = '';
 let activeFilter: SearchFilter = 'all';
@@ -105,32 +75,18 @@ function filterCards(cards: any[], filter: SearchFilter): any[] {
 
 function renderResultRow(card: any, query: string, results: HTMLElement): void {
     const kind = cardTypeKindFromTypeString(card.type);
-    const letter = kind === 'monster' ? 'M' : kind === 'spell' ? 'S' : 'T';
     // `name` est la locale demandée quand le backend applique `card_locales` ; `name_en` reste l’anglais si présent.
     const mainName = card.name ?? card.name_en ?? '';
     const subtype = getSubtypeLine(card);
-    const imgUrl = card.image_url;
-    const thumbContent = imgUrl
-        ? `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
-        : `<span class="${searchResultInitialCellClass(kind)}" ${ARIA_HIDDEN_ATTR}="true">${letter}</span>`;
-
+    const thumbInner = searchResultThumbInnerHtml(card.image_url, kind);
     const row = document.createElement('div');
     row.className = SEARCH_RESULT_ROW_CLASS;
-    row.innerHTML = `
-        <div class="${SEARCH_RESULT_THUMB_CLASS}">${thumbContent}</div>
-        <div class="${SEARCH_RESULT_INFO_CLASS}">
-            <span class="${SEARCH_RESULT_NAME_CLASS}">${highlightMatch(mainName, query)}</span>
-            <div class="${SEARCH_RESULT_META_CLASS}">
-                <span class="${SEARCH_RESULT_SUBTYPE_CLASS}">${escapeHtml(subtype)}</span>
-                ${archetypeSourceBadgeHtml(card)}
-            </div>
-        </div>
-        <div class="${SEARCH_RESULT_ACTIONS_CLASS}">
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_DECK_CLASS}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ADD_DECK_TITLE}" ${ARIA_LABEL_ATTR}="${SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL}">+</button>
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ADD_SIDE_CLASS}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ADD_SIDE_TITLE}" ${ARIA_LABEL_ATTR}="${SEARCH_RESULT_BTN_ADD_SIDE_ARIA_LABEL}">Side</button>
-            <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${SEARCH_RESULT_ASSOCIATED_CLASS}" ${DATA_SEARCH_ACTION_ATTR}="${SEARCH_ACTION_ASSOCIATED}" ${TITLE_ATTR}="${SEARCH_RESULT_BTN_ASSOCIATED_TITLE}" ${ARIA_LABEL_ATTR}="${SEARCH_RESULT_BTN_ASSOCIATED_ARIA_LABEL}">c. associés</button>
-        </div>
-    `;
+    row.innerHTML = searchResultRowFragmentHtml({
+        nameHighlightedHtml: highlightMatch(mainName, query),
+        subtypeEscapedHtml: escapeHtml(subtype),
+        archetypeBadgeHtml: searchResultArchetypeSourceBadgeHtml(card.archetype_source),
+        thumbInnerHtml: thumbInner,
+    });
     row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener('click', (e) => {
         e.stopPropagation();
         addToDeck(card);
