@@ -27,24 +27,26 @@ import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMain
 import { bindDeckToolbar } from './deck-actions.js';
 import { bindKeyboard } from './keyboard.js';
 import { bindCollapsibles } from './collapsibles.js';
-
-const SORT_ARROW_ASC = ' ↑';
-const SORT_ARROW_DESC = ' ↓';
-const TITLE_COMPOSITION = 'Composition';
-const TITLE_CATEGORIES = 'Catégories (Main)';
+import {
+    BUILDER_SORT_INDICATOR_ASC,
+    BUILDER_SORT_INDICATOR_DESC,
+    BUILDER_SORT_TITLE_CATEGORIES_MAIN,
+    BUILDER_SORT_TITLE_COMPOSITION,
+} from './builderSortTitlesCopy.js';
 
 function updateBuilderSortIndicators(): void {
     const { by, category, dir } = getMainDeckSortState();
     const compBlock = document.querySelector(BUILDER_STATS_COMPOSITION_TITLE_SELECTOR);
     const catBlock = document.querySelector(BUILDER_STATS_CATEGORIES_TITLE_SELECTOR);
     if (compBlock) {
-        const arrow = by === 'type' ? (dir === 'asc' ? SORT_ARROW_ASC : SORT_ARROW_DESC) : '';
-        compBlock.textContent = TITLE_COMPOSITION + arrow;
+        const arrow = by === 'type' ? (dir === 'asc' ? BUILDER_SORT_INDICATOR_ASC : BUILDER_SORT_INDICATOR_DESC) : '';
+        compBlock.textContent = BUILDER_SORT_TITLE_COMPOSITION + arrow;
     }
     if (catBlock) {
-        const arrow = by === 'category' ? (dir === 'asc' ? SORT_ARROW_ASC : SORT_ARROW_DESC) : '';
+        const arrow =
+            by === 'category' ? (dir === 'asc' ? BUILDER_SORT_INDICATOR_ASC : BUILDER_SORT_INDICATOR_DESC) : '';
         const suffix = category ? ` : ${category}` : '';
-        catBlock.textContent = TITLE_CATEGORIES + suffix + arrow;
+        catBlock.textContent = BUILDER_SORT_TITLE_CATEGORIES_MAIN + suffix + arrow;
     }
 }
 

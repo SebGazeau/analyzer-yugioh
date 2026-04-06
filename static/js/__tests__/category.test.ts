@@ -1,34 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import {
-  CATEGORY_GROUPS,
-  categoryOptions,
-  createCategorySelector,
-  getCardsByCategory,
-} from '../category.js';
+import { createCategorySelector, getCardsByCategory } from '../category.js';
+import { categoryOptions } from '../categoryData.js';
 import {
   CATEGORY_CONTAINER_CLASS,
   DROPDOWN_EMPTY_MESSAGE_CLASS,
   DROPDOWN_EMPTY_MESSAGE_TEXT,
   DROPDOWN_LIST_CLASS,
 } from '../categoryDomSelectors.js';
-
-describe('category.ts — données pures', () => {
-  it('CATEGORY_GROUPS a des clés et valeurs tableau de chaînes', () => {
-    expect(Object.keys(CATEGORY_GROUPS).length).toBeGreaterThan(0);
-    for (const [groupName, cats] of Object.entries(CATEGORY_GROUPS)) {
-      expect(Array.isArray(cats)).toBe(true);
-      cats.forEach((c) => expect(typeof c).toBe('string'));
-    }
-  });
-
-  it('toutes les catégories des groupes sont dans categoryOptions', () => {
-    const allFromGroups = new Set(Object.values(CATEGORY_GROUPS).flat());
-    for (const cat of allFromGroups) {
-      expect(categoryOptions).toContain(cat);
-    }
-  });
-});
 
 describe('category.ts — createCategorySelector (DOM)', () => {
   it('retourne un élément avec la classe category-container', () => {

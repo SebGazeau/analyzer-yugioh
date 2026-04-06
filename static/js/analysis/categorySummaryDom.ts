@@ -43,7 +43,7 @@ import {
     DECK_STATS_CATEGORY_BAR_ID,
 } from './analysisDomIds.js';
 import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
-import { CATEGORY_GROUPS } from '../category.js';
+import { CATEGORY_GROUPS } from '../categoryData.js';
 import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';

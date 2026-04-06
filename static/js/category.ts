@@ -10,6 +10,9 @@ import {
     DROPDOWN_LIST_CLASS,
     DROPDOWN_LIST_VISIBLE_CLASS,
 } from './categoryDomSelectors.js';
+import { categoryOptions } from './categoryData.js';
+
+export { CATEGORY_GROUPS, categoryOptions } from './categoryData.js';
 
 // Gestion des catégories de cartes
 
@@ -29,18 +32,6 @@ export function getCardsByCategory(
         (entry) => entry.categories && entry.categories.includes(categoryName),
     );
 }
-
-export const CATEGORY_GROUPS: Record<string, string[]> = {
-    "Core Access": ["Starter", "Extender", "Consistency"],
-    "Disruption": ["Interruption", "Hand Trap"],
-    "Board Reset": ["Board Breaker", "Floodgate"],
-    "Win Setup": ["Wincon", "Time", "Brick"]
-};
-export const categoryOptions: string[]  = [
-    'Starter', 'Extender', 'Board Breaker', 'Floodgate',
-    'Hand Trap', 'Wincon', 'Time', 'Brick', 'Consistency', 'Interruption',
-    'Going First', 'Going Second'
-];
 
 interface CategoryContainer extends HTMLElement {
     addCategory?: (cat: string) => void;
