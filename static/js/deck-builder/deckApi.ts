@@ -9,6 +9,7 @@ import {
     MSG_DECK_API_AUTH_REQUIRED,
     MSG_DECK_API_DECK_NOT_FOUND,
 } from '../utils/userDialogMessages.js';
+import { DECK_API_VALIDATION_ERRORS_JOIN } from './deckApiCopy.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
 
 export type DeckEntryPayload = {
@@ -64,7 +65,9 @@ function deckApiErrorMessage(res: Response, data: Record<string, unknown>): stri
     }
     return (
         (typeof data.error === 'string' ? data.error : null) ||
-        (Array.isArray(data.errors) && data.errors.length ? (data.errors as string[]).join(' ; ') : null) ||
+        (Array.isArray(data.errors) && data.errors.length
+            ? (data.errors as string[]).join(DECK_API_VALIDATION_ERRORS_JOIN)
+            : null) ||
         res.statusText
     );
 }
