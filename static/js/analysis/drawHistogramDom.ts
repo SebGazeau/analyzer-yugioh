@@ -29,6 +29,7 @@ import {
     DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
     DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY,
     DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK,
+    DRAW_HISTOGRAM_BAR_SCALE_FLOOR,
     DRAW_HISTOGRAM_SIM_ITERATIONS,
     drawHistogramAllCategoriesTitle,
     drawHistogramContainerAriaLabel,
@@ -90,7 +91,7 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
         return;
     }
 
-    const maxCount = Math.max(1, ...Object.values(histogram));
+    const maxCount = Math.max(DRAW_HISTOGRAM_BAR_SCALE_FLOOR, ...Object.values(histogram));
     const wrap = document.createElement('div');
     wrap.className = DRAW_HISTOGRAM_CHART_CLASS;
 
@@ -125,7 +126,7 @@ export function appendCategoryMiniHistogram(
         .map(Number)
         .sort((a, b) => a - b);
     if (buckets.length === 0) return;
-    const maxCount = Math.max(1, ...Object.values(histogram));
+    const maxCount = Math.max(DRAW_HISTOGRAM_BAR_SCALE_FLOOR, ...Object.values(histogram));
     const color = DRAW_HISTOGRAM_CATEGORY_FILL_VARS[colorIndex % DRAW_HISTOGRAM_CATEGORY_FILL_VARS.length];
     const wrap = document.createElement('div');
     wrap.className = DRAW_HISTOGRAM_MINI_CLASS;

@@ -13,6 +13,9 @@ import {
 /** Nombre de simulations pour un run histogramme (UI + logique). */
 export const DRAW_HISTOGRAM_SIM_ITERATIONS = 1000;
 
+/** Plancher du max compté pour l’échelle des hauteurs de barres (évite division par zéro). */
+export const DRAW_HISTOGRAM_BAR_SCALE_FLOOR = 1;
+
 export function drawHistogramHeadingIdle(iterations: number): string {
     return `Distribution (${iterations} tirages)`;
 }

@@ -122,10 +122,10 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
         const maxForThisRow = Math.min(
             row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD,
-            Math.max(1, maxA - totalOthers),
+            Math.max(DECK_DEFAULT_ROW_QUANTITY, maxA - totalOthers),
         );
         if (newQty > maxForThisRow) newQty = maxForThisRow;
-        if (newQty < 1) newQty = 1;
+        if (newQty < DECK_DEFAULT_ROW_QUANTITY) newQty = DECK_DEFAULT_ROW_QUANTITY;
         row.quantity = newQty;
         if (qtySelect) qtySelect.value = String(newQty);
         row.engine = engineSelect?.value || '';
@@ -262,9 +262,12 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             const flat = allDeckRowsFlat();
             const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
             const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
-            const cap = Math.min(row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD, Math.max(1, maxA - totalOthers));
+            const cap = Math.min(
+                row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD,
+                Math.max(DECK_DEFAULT_ROW_QUANTITY, maxA - totalOthers),
+            );
             qtySelect.innerHTML = '';
-            for (let q = 1; q <= cap; q++) {
+            for (let q = DECK_DEFAULT_ROW_QUANTITY; q <= cap; q++) {
                 const opt = document.createElement('option');
                 opt.value = String(q);
                 opt.textContent = String(q);
