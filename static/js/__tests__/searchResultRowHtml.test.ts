@@ -7,6 +7,7 @@ import {
 import {
     DATA_SEARCH_ARCHETYPE_SOURCE_ATTR,
     SEARCH_RESULT_ADD_DECK_CLASS,
+    SEARCH_RESULT_BTN_ASSOCIATED_CAPTION,
     SEARCH_RESULT_NAME_CLASS,
     SEARCH_RESULT_SUBTYPE_CLASS,
     SEARCH_RESULT_THUMB_IMG_CLASS,
@@ -51,6 +52,6 @@ describe('searchResultRowFragmentHtml', () => {
         expect(html).toContain(`class="${SEARCH_RESULT_SUBTYPE_CLASS}">Y</span>`);
         expect(html).toContain(SEARCH_RESULT_ADD_DECK_CLASS);
         expect(html).toContain('>Side<');
-        expect(html).toContain('c. associés');
+        expect(html).toContain(SEARCH_RESULT_BTN_ASSOCIATED_CAPTION);
     });
 });
