@@ -25,6 +25,7 @@ import {
 import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
 import { TAB_ID_DECKS } from '../tabs.js';
 import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
+import { HTTP_METHOD_POST } from '../utils/httpMime.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -54,7 +55,7 @@ function minimalDeckDOM() {
 function mockFetchDefault(): ReturnType<typeof vi.fn> {
   return vi.fn((url: string | URL, init?: RequestInit) => {
     const u = typeof url === 'string' ? url : url.toString();
-    if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
+    if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
       return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
@@ -80,7 +81,7 @@ describe('main.ts — intégration DOM', () => {
     const postCalls: RequestInit[] = [];
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
+      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
         postCalls.push(init);
         return Promise.resolve(new Response(JSON.stringify({ id: 42 }), { status: 200 }));
       }
@@ -105,7 +106,7 @@ describe('main.ts — intégration DOM', () => {
     const alertSpy = vi.mocked(alert);
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === 'POST') {
+      if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
         return Promise.resolve(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }));
       }
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));

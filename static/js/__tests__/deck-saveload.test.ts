@@ -12,6 +12,7 @@ import {
 import { CARD_API_PATH } from '../cardSearchApiRoutes.js';
 import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
 import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
+import { HTTP_METHOD_POST, HTTP_METHOD_PUT } from '../utils/httpMime.js';
 import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
 import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 
@@ -30,7 +31,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let postBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === DECK_API_COLLECTION_URL && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
       }
@@ -122,7 +123,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let putBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`) && init?.method === 'PUT') {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`) && init?.method === HTTP_METHOD_PUT) {
         putUrl = u;
         putBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
@@ -169,7 +170,7 @@ describe('Save/Load deck — fetch mocké', () => {
           ),
         );
       }
-      if (u === DECK_API_COLLECTION_URL && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
         return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
       }
