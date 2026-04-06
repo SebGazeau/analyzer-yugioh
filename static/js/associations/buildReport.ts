@@ -1,11 +1,15 @@
-import {
-    TEXT_ELLIPSIS,
-    TEXT_EM_DASH,
-    TEXT_GUILLEMET_CLOSE,
-    TEXT_GUILLEMET_OPEN,
-    TEXT_MIDDLE_DOT,
-} from '../utils/textPlaceholders.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
+import {
+    ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
+    ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
+    associationMarkdownDiagnosticLine,
+    associationMarkdownGeneratedLine,
+    associationMarkdownGroupAngleLinkLine,
+    associationMarkdownGroupCardCountLine,
+    associationMarkdownMoreCardsLine,
+    associationMarkdownTitleLine,
+} from './associationsReportMarkdownCopy.js';
 import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js';
 import type {
     AssociationCatalogCard,
@@ -374,30 +378,30 @@ export function evaluateReportConclusiveness(report: AssociationReport): { ok: b
 
 export function associationReportToMarkdown(report: AssociationReport, nameById?: Map<number, string>): string {
     const lines: string[] = [];
-    lines.push(`# Cartes associées ${TEXT_EM_DASH} ${report.anchorName} (id ${report.anchorId})`);
-    lines.push(`_Généré : ${report.generatedAt}_`);
+    lines.push(associationMarkdownTitleLine(report.anchorName, report.anchorId));
+    lines.push(associationMarkdownGeneratedLine(report.generatedAt));
     lines.push('');
     if (report.groups.length === 0) {
-        lines.push('_Aucun groupe._');
+        lines.push(ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE);
     } else {
         for (const g of report.groups) {
             lines.push(`## ${g.displayLabel}`);
-            lines.push(`- **Angle** : \`${g.angleId}\` ${TEXT_MIDDLE_DOT} **Lien** : ${g.linkStrength}`);
-            lines.push(`- **Cartes** : ${g.cardIds.length}`);
+            lines.push(associationMarkdownGroupAngleLinkLine(g.angleId, g.linkStrength));
+            lines.push(associationMarkdownGroupCardCountLine(g.cardIds.length));
             const sample = g.cardIds.slice(0, 15);
             for (const id of sample) {
                 const label = nameById?.get(id) ?? String(id);
                 lines.push(`  - ${label} (\`${id}\`)`);
             }
             if (g.cardIds.length > sample.length)
-                lines.push(`  - ${TEXT_ELLIPSIS} +${g.cardIds.length - sample.length} autres`);
+                lines.push(associationMarkdownMoreCardsLine(g.cardIds.length - sample.length));
             lines.push('');
         }
     }
     if (report.diagnostics.length > 0) {
-        lines.push('## Diagnostics');
+        lines.push(ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING);
         for (const d of report.diagnostics) {
-            lines.push(`- **[${d.severity}]** \`${d.code}\` ${TEXT_EM_DASH} ${d.message}`);
+            lines.push(associationMarkdownDiagnosticLine(d.severity, d.code, d.message));
         }
     }
     return lines.join('\n');
