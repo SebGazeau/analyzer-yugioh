@@ -1,8 +1,6 @@
 import { getDeckState } from '../deck.js';
-import { deckSectionMainSideShortLabel } from '../deckSection.js';
 import { collectDeckInsights } from './collect.js';
 import {
-    INSIGHTS_ADD_DECK_CARD_DATA_ATTR,
     INSIGHTS_CARD_LINE_DATA_ATTR,
     INSIGHTS_CARD_NAME_DATA_ATTR,
     INSIGHTS_CELL_DATA_ATTR,
@@ -12,35 +10,24 @@ import {
     INSIGHTS_FIND_CARD_BUTTON_CLASS,
     INSIGHTS_FIND_CARD_DATA_ATTR,
     INSIGHTS_KIND_DATA_ATTR,
-    INSIGHTS_MAIN_MATCH_DATA_ATTR,
-    INSIGHTS_MAIN_MATCHES_DATA_ATTR,
-    INSIGHTS_MATCH_THUMB_DATA_ATTR,
     INSIGHTS_MATCHES_MAIN_DATA_ATTR,
     INSIGHTS_NAV_TAB_SELECTOR,
     INSIGHTS_NUMBER_TBODY_SELECTOR,
     INSIGHTS_PAGE_HELP_SELECTOR,
-    INSIGHTS_SECTION_DATA_ATTR,
     INSIGHTS_SEVERITY_DATA_ATTR,
     INSIGHTS_SUGGEST_NAME_DATA_ATTR,
     INSIGHTS_SUGGEST_ROW_DATA_ATTR,
     INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUMMARY_TBODY_SELECTOR,
     SUGGESTIONS_DETAIL_WRAP_SELECTOR,
-    SUGGESTIONS_MAIN_MATCH_CHIP_CLASS,
-    SUGGESTIONS_MAIN_MATCH_NAME_CLASS,
-    SUGGESTIONS_MAIN_MATCH_QTY_CLASS,
-    SUGGESTIONS_MAIN_MATCH_SECTION_CLASS,
-    SUGGESTIONS_MAIN_MATCH_THUMB_CLASS,
-    SUGGESTIONS_MAIN_MATCHES_CLASS,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
     SUGGESTIONS_TARGET_LIST_CLASS,
     INSIGHTS_FIND_CARD_BUTTON_LABEL,
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
     INSIGHTS_SUGGEST_ROW_TITLE,
-    insightsMainMatchChipTitle,
-    suggestionsMainMatchThumbEmptyClassName,
 } from './insightsDomSelectors.js';
-import type { DeckInsight, MatchingCardPreview, NumberXyzSuggestion } from './types.js';
+import { insightsMainMatchChipsHtml } from './insightsMainMatchChipsHtml.js';
+import type { DeckInsight, NumberXyzSuggestion } from './types.js';
 import {
     APP_TAB_ACTIVE_SELECTOR,
     setActiveTab,
@@ -48,18 +35,8 @@ import {
     TAB_ID_BUILDER,
     TAB_ID_SUGGESTIONS,
 } from '../tabs.js';
-import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
-import {
-    BTN_TYPE_ATTR,
-    BTN_TYPE_BUTTON,
-    IMG_LOADING_ATTR,
-    IMG_LOADING_LAZY,
-    ROLE_ATTR,
-    ROLE_BUTTON,
-    TABINDEX_ATTR,
-    TABINDEX_ZERO,
-    TITLE_ATTR,
-} from '../utils/htmlAttrs.js';
+import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import { TEXT_EM_DASH, TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
 
@@ -86,38 +63,13 @@ function renderSummaryRows(insights: DeckInsight[]): string {
         .join('');
 }
 
-function renderMatchChips(cards: MatchingCardPreview[]): string {
-    if (cards.length === 0) return `<span ${INSIGHTS_EMPTY_CELL_DATA_ATTR}>${TEXT_EM_DASH}</span>`;
-    return `<div class="${SUGGESTIONS_MAIN_MATCHES_CLASS}" ${INSIGHTS_MAIN_MATCHES_DATA_ATTR}>${cards
-        .map((c) => {
-            const nameEsc = escapeHtml(c.name);
-            const nameAttr = escapeAttr(c.name);
-            const qty =
-                c.quantity > 1
-                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${c.quantity} exemplaires">${TEXT_MULTIPLICATION_SIGN}${c.quantity}</span>`
-                    : '';
-            const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
-            const thumb =
-                c.imageUrl && c.imageUrl.trim() !== ''
-                    ? `<img class="${SUGGESTIONS_MAIN_MATCH_THUMB_CLASS}" src="${escapeAttr(c.imageUrl)}" alt="" width="44" height="64" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} />`
-                    : `<span class="${suggestionsMainMatchThumbEmptyClassName()}" ${INSIGHTS_MATCH_THUMB_DATA_ATTR} ${ARIA_HIDDEN_ATTR}="true">?</span>`;
-            return `<div class="${SUGGESTIONS_MAIN_MATCH_CHIP_CLASS}" ${INSIGHTS_MAIN_MATCH_DATA_ATTR} ${INSIGHTS_ADD_DECK_CARD_DATA_ATTR}="1" ${INSIGHTS_CARD_NAME_DATA_ATTR}="${nameAttr}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}" ${TITLE_ATTR}="${insightsMainMatchChipTitle(deckSectionMainSideShortLabel(c.section))}" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}">
-        ${thumb}
-        <span class="${SUGGESTIONS_MAIN_MATCH_NAME_CLASS}">${nameEsc}</span>
-        ${sectionBadge}
-        ${qty}
-      </div>`;
-        })
-        .join('')}</div>`;
-}
-
 function renderNumberSuggestionRows(suggested: NumberXyzSuggestion[]): string {
     return suggested
         .map((s) => {
             const nameEsc = escapeHtml(s.name);
             const nameAttr = escapeAttr(s.name);
             const attrRace = `${escapeHtml(s.attribute)} / ${escapeHtml(s.race)}`;
-            const matchCell = renderMatchChips(s.matchingCards);
+            const matchCell = insightsMainMatchChipsHtml(s.matchingCards);
             return `
     <tr ${INSIGHTS_SUGGEST_ROW_DATA_ATTR} ${INSIGHTS_MATCHES_MAIN_DATA_ATTR}="${s.matchesDeck ? 'true' : 'false'}" ${INSIGHTS_SUGGEST_NAME_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_SUGGEST_ROW_TITLE}">
       <td ${INSIGHTS_CELL_DATA_ATTR}="name">${nameEsc}</td>
