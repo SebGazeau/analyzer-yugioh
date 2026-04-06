@@ -19,27 +19,16 @@ import {
     DECK_SAVED_ITEM_CLASS,
 } from '../deck-builder/deckConstants.js';
 import {
-    DATA_DECK_DELETE_ATTR,
-    DATA_DECK_DUPLICATE_ATTR,
     DATA_DECK_ID_ATTR,
-    DECK_SAVED_ITEM_ACTIONS_CLASS,
     DECK_SAVED_ITEM_BODY_CLASS,
     DECK_SAVED_ITEM_COVER_CLASS,
     DECK_SAVED_ITEM_COVER_IMG_CLASS,
     DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS,
-    DECK_SAVED_ITEM_DELETE_BTN_TITLE,
-    DECK_SAVED_ITEM_DELETE_CLASS,
     DECK_SAVED_ITEM_DELETE_SELECTOR,
-    DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
-    DECK_SAVED_ITEM_DUPLICATE_CLASS,
     DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
     deckSavedListItemLoadTitle,
-    htmlDeckSavedItemDeleteActionSvg,
-    htmlDeckSavedItemDuplicateActionSvg,
-    DECK_SAVED_ITEM_FOOTER_CLASS,
-    DECK_SAVED_ITEM_META_CLASS,
-    DECK_SAVED_ITEM_NAME_CLASS,
 } from '../deck-builder/deckSavedListDomSelectors.js';
+import { deckSavedListItemBodyInnerHtml } from '../deck-builder/deckSavedListItemBodyHtml.js';
 import {
     listMyDecks,
     loadDeckFromServer,
@@ -54,18 +43,8 @@ import {
 } from '../deck.js';
 import { PAGE_DECKS_SELECTOR } from '../appPageDomSelectors.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
-import {
-    BTN_TYPE_ATTR,
-    BTN_TYPE_BUTTON,
-    IMG_LOADING_LAZY,
-    ROLE_ATTR,
-    ROLE_BUTTON,
-    TABINDEX_ATTR,
-    TABINDEX_ZERO,
-    TITLE_ATTR,
-} from '../utils/htmlAttrs.js';
+import { IMG_LOADING_LAZY, ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO } from '../utils/htmlAttrs.js';
 import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
-import { escapeHtml, formatDeckDate } from '../utils/html.js';
 import {
     MSG_DECK_DELETE_FAILED,
     MSG_DECK_LOAD_FAILED,
@@ -111,14 +90,13 @@ export async function refreshMyDecksList(): Promise<void> {
             coverEl.appendChild(placeholder);
         }
         li.appendChild(coverEl);
-        const meta = d.created_at
-            ? `<span class="${DECK_SAVED_ITEM_META_CLASS}">${formatDeckDate(d.created_at)}</span>`
-            : '';
-        const trashSvg = htmlDeckSavedItemDeleteActionSvg();
-        const copySvg = htmlDeckSavedItemDuplicateActionSvg();
         const bodyEl = document.createElement('div');
         bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
-        bodyEl.innerHTML = `<span class="${DECK_SAVED_ITEM_NAME_CLASS}">${escapeHtml(d.name)}</span><div class="${DECK_SAVED_ITEM_FOOTER_CLASS}">${meta}<div class="${DECK_SAVED_ITEM_ACTIONS_CLASS}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DUPLICATE_CLASS}" ${DATA_DECK_DUPLICATE_ATTR}="${d.id}" ${TITLE_ATTR}="${DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE}">${copySvg}</button><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${DECK_SAVED_ITEM_DELETE_CLASS}" ${DATA_DECK_DELETE_ATTR}="${d.id}" ${TITLE_ATTR}="${DECK_SAVED_ITEM_DELETE_BTN_TITLE}">${trashSvg}</button></div></div>`;
+        bodyEl.innerHTML = deckSavedListItemBodyInnerHtml({
+            deckName: d.name,
+            deckId: d.id,
+            createdAtIso: d.created_at ?? null,
+        });
         li.appendChild(bodyEl);
         const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DUPLICATE_SELECTOR);
         duplicateBtn?.addEventListener('click', async (e) => {
