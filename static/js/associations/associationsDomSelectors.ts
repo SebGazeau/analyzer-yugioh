@@ -98,4 +98,7 @@ export {
     ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
 } from './associationsModalChromeCopy.js';
 
-export { associationsModalSubtitle } from './associationsModalSubtitleCopy.js';
+export {
+    ASSOCIATIONS_MODAL_SUBTITLE_PASSCODE_LABEL,
+    associationsModalSubtitle,
+} from './associationsModalSubtitleCopy.js';
