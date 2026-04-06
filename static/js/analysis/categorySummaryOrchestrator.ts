@@ -9,6 +9,7 @@ import {
     countNameOccurrences,
     remainingDrawCountForProbTable,
 } from './categorySummaryData.js';
+import { categorySummarySimulationBannerText } from './categorySummarySimulationCopy.js';
 import type { AnalysisCategorySummaryDomInput } from './categorySummaryDom.js';
 
 export type MainRowLikeForCategorySummary = {
@@ -33,7 +34,11 @@ export function buildAnalysisCategorySummaryDomInput(
         );
         const numDraws = remainingDrawCountForProbTable(handSize, drawnCardNames.length);
         return {
-            simulationBanner: `Simulation : ${drawnCardNames.length} carte(s) tirée(s), ${totalCards} restantes (probas pour ${numDraws} tirage(s) restant(s))`,
+            simulationBanner: categorySummarySimulationBannerText({
+                drawnCount: drawnCardNames.length,
+                totalCards,
+                numDraws,
+            }),
             summary,
             engineSummary,
             totalCards,
