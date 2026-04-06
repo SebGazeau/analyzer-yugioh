@@ -3,8 +3,6 @@
  */
 
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
-import { escapeHtml } from '../utils/html.js';
-import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
 export const DECK_SAVED_ITEM_COVER_CLASS = 'deck-saved-item-cover';
 export const DECK_SAVED_ITEM_COVER_IMG_CLASS = 'deck-saved-item-cover-img';
@@ -38,15 +36,6 @@ export const DATA_DECK_ID_ATTR = 'data-deck-id';
 export const DATA_DECK_DUPLICATE_ATTR = 'data-deck-duplicate';
 export const DATA_DECK_DELETE_ATTR = 'data-deck-delete';
 
-/** Attribut `title` des boutons d’action sur une ligne « Mes decks ». */
-export const DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE = 'Dupliquer le deck';
-export const DECK_SAVED_ITEM_DELETE_BTN_TITLE = 'Supprimer le deck';
-
-/** `title` de la ligne cliquable pour charger un deck (nom échappé). */
-export function deckSavedListItemLoadTitle(deckName: string): string {
-    return `Charger le deck ${TEXT_GUILLEMET_OPEN} ${escapeHtml(deckName)} ${TEXT_GUILLEMET_CLOSE}`;
-}
-
 /** SVG complet du bouton supprimer (liste Mes decks). */
 export function htmlDeckSavedItemDeleteActionSvg(): string {
     return `<svg class="${DECK_SAVED_ITEM_DELETE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DELETE_SVG_INNER_HTML}</svg>`;
@@ -56,3 +45,9 @@ export function htmlDeckSavedItemDeleteActionSvg(): string {
 export function htmlDeckSavedItemDuplicateActionSvg(): string {
     return `<svg class="${DECK_SAVED_ITEM_DUPLICATE_ICON_CLASS}" ${DECK_SAVED_ITEM_ACTION_SVG_ROOT_ATTRS} ${ARIA_HIDDEN_ATTR}="true">${DECK_SAVED_ITEM_DUPLICATE_SVG_INNER_HTML}</svg>`;
 }
+
+export {
+    DECK_SAVED_ITEM_DELETE_BTN_TITLE,
+    DECK_SAVED_ITEM_DUPLICATE_BTN_TITLE,
+    deckSavedListItemLoadTitle,
+} from './deckSavedListTitlesCopy.js';
