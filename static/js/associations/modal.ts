@@ -13,9 +13,6 @@ import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userD
 import {
     BTN_TYPE_ATTR,
     BTN_TYPE_BUTTON,
-    IMG_DECODING_ASYNC,
-    IMG_DECODING_ATTR,
-    IMG_LOADING_ATTR,
     ROLE_ATTR,
     ROLE_BUTTON,
     ROLE_DIALOG,
@@ -56,6 +53,10 @@ import {
 } from './associationsModalReportCopy.js';
 import { associationsModalShellInnerHtml } from './associationsModalShellHtml.js';
 import {
+    associationsModalThumbInnerHtml,
+    associationsModalTileListItemHtml,
+} from './associationsModalTileHtml.js';
+import {
     ASSOCIATIONS_ACTION_COPY_MARKDOWN,
     ASSOCIATIONS_ACTION_COPY_MARKDOWN_SELECTOR,
     ASSOCIATIONS_ACTION_EXPAND_TILES,
@@ -86,7 +87,6 @@ import {
     ASSOCIATIONS_MODAL_CATALOG_LOAD_ERROR_TEXT,
     ASSOCIATIONS_MODAL_ERROR_CLASS,
     ASSOCIATIONS_MODAL_HEADER_TITLE_TEXT,
-    ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE,
     associationsModalSubtitle,
     ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS,
     ASSOCIATIONS_MODAL_FOOTER_CLASS,
@@ -97,13 +97,11 @@ import {
     ASSOCIATIONS_MODAL_STAT_CLASS,
     ASSOCIATIONS_MODAL_STAT_VALUE_CLASS,
     ASSOCIATIONS_MODAL_SUMMARY_CLASS,
-    ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS,
     ASSOCIATIONS_MODAL_TILE_ART_CLASS,
     ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS,
     ASSOCIATIONS_MODAL_TILE_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
-    ASSOCIATIONS_MODAL_TILE_IMG_CLASS,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_NAME_CLASS,
@@ -149,36 +147,6 @@ function countAssociationStats(groups: AssociationGroup[]): {
     return { groupsWithCards, uniqueCardCount: ids.size };
 }
 
-function isAllowedImageSrc(url: string): boolean {
-    const t = url.trim();
-    return t.startsWith('/') || t.startsWith('https://') || t.startsWith('http://');
-}
-
-function renderThumbInner(
-    imageUrl: string | null | undefined,
-    name: string,
-    imgClass: string,
-    loading: 'eager' | 'lazy',
-): string {
-    const safeName = escapeHtml(name);
-    if (imageUrl && isAllowedImageSrc(imageUrl)) {
-        return `<img class="${imgClass}" src="${escapeAttr(imageUrl)}" alt="${safeName}" width="59" height="86" ${IMG_LOADING_ATTR}="${loading}" ${IMG_DECODING_ATTR}="${IMG_DECODING_ASYNC}" />`;
-    }
-    const initials =
-        name
-            .replace(/[^a-zA-ZÀ-ÿ0-9]/g, '')
-            .slice(0, 2)
-            .toUpperCase() || '?';
-    return `<div class="${ASSOCIATIONS_MODAL_THUMB_PLACEHOLDER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"><span>${escapeHtml(initials)}</span></div>`;
-}
-
-function renderTileListItemHtml(id: number, idToCard: Map<number, AssociationCatalogCard>): string {
-    const row = idToCard.get(id);
-    const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
-    const art = renderThumbInner(row?.image_url, nm, ASSOCIATIONS_MODAL_TILE_IMG_CLASS, 'lazy');
-    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="${ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE}"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
-}
-
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
     const cat = lastModalCatalogForTiles;
     if (!cat) return;
@@ -193,7 +161,7 @@ function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
     if (!ul) return;
     const idToCard = new Map<number, AssociationCatalogCard>();
     for (const c of cat) idToCard.set(c.id, c);
-    const html = rest.map((id) => renderTileListItemHtml(id, idToCard)).join('');
+    const html = rest.map((id) => associationsModalTileListItemHtml(id, idToCard)).join('');
     const liWrap = btn.closest(ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR);
     if (liWrap) {
         liWrap.insertAdjacentHTML('beforebegin', html);
@@ -205,7 +173,7 @@ function setAnchorArt(card: AssociationCatalogCard): void {
     const el = document.getElementById(MODAL_ANCHOR_ART_ID);
     if (!el) return;
     const name = card.name_en?.trim() || card.name;
-    el.innerHTML = renderThumbInner(card.image_url, name, ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS, 'eager');
+    el.innerHTML = associationsModalThumbInnerHtml(card.image_url, name, ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS, 'eager');
 }
 
 function mergeAnchorWithCatalog(
@@ -436,7 +404,7 @@ function renderReportHtml(
         parts.push(`<ul class="${ASSOCIATIONS_MODAL_TILE_GRID_CLASS}">`);
         const { visible, rest } = splitAssociationTileIdsForDisplay(g.cardIds, ASSOCIATIONS_MODAL_TILES_INITIAL);
         for (const id of visible) {
-            parts.push(renderTileListItemHtml(id, idToCard));
+            parts.push(associationsModalTileListItemHtml(id, idToCard));
         }
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
