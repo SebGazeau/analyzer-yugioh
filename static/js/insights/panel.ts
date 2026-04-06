@@ -61,7 +61,7 @@ import {
     TITLE_ATTR,
 } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { TEXT_EM_DASH, TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
 
 function severityLabel(sev: string): string {
     return sev === 'active' ? 'Actif' : 'Info';
@@ -94,7 +94,7 @@ function renderMatchChips(cards: MatchingCardPreview[]): string {
             const nameAttr = escapeAttr(c.name);
             const qty =
                 c.quantity > 1
-                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${c.quantity} exemplaires">×${c.quantity}</span>`
+                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${c.quantity} exemplaires">${TEXT_MULTIPLICATION_SIGN}${c.quantity}</span>`
                     : '';
             const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =
@@ -143,7 +143,7 @@ function renderDetailRows(insight: DeckInsight | undefined): string {
                     : `<ul class="${SUGGESTIONS_TARGET_LIST_CLASS}">${g.targets
                           .map(
                               (t) =>
-                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > 1 ? ` ×${t.quantity}` : ''}</li>`,
+                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > 1 ? ` ${TEXT_MULTIPLICATION_SIGN}${t.quantity}` : ''}</li>`,
                           )
                           .join('')}</ul>`;
             return `

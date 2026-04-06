@@ -4,6 +4,7 @@ import {
   DROPDOWN_ARROW_TEXT,
   DROPDOWN_EMPTY_MESSAGE_TEXT,
 } from '../categoryDomSelectors.js';
+import { TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
 
 describe('categoryDomSelectors', () => {
   it('flèche dropdown = entité HTML &#9662; (U+25BE)', () => {
@@ -12,7 +13,7 @@ describe('categoryDomSelectors', () => {
   });
 
   it('puce retirer = × (U+00D7) ; message liste vide stable', () => {
-    expect(CATEGORY_CHIP_REMOVE_BUTTON_TEXT).toBe('\u00D7');
+    expect(CATEGORY_CHIP_REMOVE_BUTTON_TEXT).toBe(TEXT_MULTIPLICATION_SIGN);
     expect(DROPDOWN_EMPTY_MESSAGE_TEXT).toBe('Aucune option');
   });
 });

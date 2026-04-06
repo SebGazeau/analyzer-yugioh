@@ -1,4 +1,10 @@
-import { TEXT_EM_DASH, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
+import {
+    TEXT_ELLIPSIS,
+    TEXT_EM_DASH,
+    TEXT_GUILLEMET_CLOSE,
+    TEXT_GUILLEMET_OPEN,
+    TEXT_MIDDLE_DOT,
+} from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js';
 import type {
@@ -189,7 +195,7 @@ export function buildAssociationReport(
     if (anchorArchetypes.length === 0) {
         pushDiagnostic(diagnostics, {
             code: 'NO_ARCHETYPE_ON_ANCHOR',
-            message: "L'ancre n'a pas d'archétype structuré : l'angle « même archétype » est ignoré.",
+            message: `L'ancre n'a pas d'archétype structuré : l'angle ${TEXT_GUILLEMET_OPEN} même archétype ${TEXT_GUILLEMET_CLOSE} est ignoré.`,
             severity: 'info',
         });
     } else {
@@ -206,7 +212,7 @@ export function buildAssociationReport(
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
                     code: 'LARGE_GROUP_TRUNCATED',
-                    message: `Groupe archétype « ${arch} » tronqué : ${unique.length} cartes (affichage max ${maxGroupSize}).`,
+                    message: `Groupe archétype ${TEXT_GUILLEMET_OPEN} ${arch} ${TEXT_GUILLEMET_CLOSE} tronqué : ${unique.length} cartes (affichage max ${maxGroupSize}).`,
                     severity: 'info',
                 });
             }
@@ -255,8 +261,7 @@ export function buildAssociationReport(
     if (!anyDesc) {
         pushDiagnostic(diagnostics, {
             code: 'NO_DESC_IN_CATALOG',
-            message:
-                'Aucune description utilisable (`desc` ou textes EN YGOrg) : angles « citation texte » ignorés.',
+            message: `Aucune description utilisable (\`desc\` ou textes EN YGOrg) : angles ${TEXT_GUILLEMET_OPEN} citation texte ${TEXT_GUILLEMET_CLOSE} ignorés.`,
             severity: 'info',
         });
     } else {
@@ -275,7 +280,7 @@ export function buildAssociationReport(
             if (rule.groupKey.startsWith('text_name:') && unique.length > maxNameWordCitationMatches) {
                 pushDiagnostic(diagnostics, {
                     code: 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
-                    message: `« ${rule.displayLabel} » ignoré : ${unique.length} cartes (plafond ${maxNameWordCitationMatches} pour un mot extrait du nom).`,
+                    message: `${TEXT_GUILLEMET_OPEN} ${rule.displayLabel} ${TEXT_GUILLEMET_CLOSE} ignoré : ${unique.length} cartes (plafond ${maxNameWordCitationMatches} pour un mot extrait du nom).`,
                     severity: 'info',
                 });
                 continue;
@@ -285,7 +290,7 @@ export function buildAssociationReport(
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
                     code: 'LARGE_GROUP_TRUNCATED',
-                    message: `Groupe « ${rule.displayLabel} » tronqué (${unique.length} cartes).`,
+                    message: `Groupe ${TEXT_GUILLEMET_OPEN} ${rule.displayLabel} ${TEXT_GUILLEMET_CLOSE} tronqué (${unique.length} cartes).`,
                     severity: 'info',
                 });
             }
@@ -318,7 +323,7 @@ export function buildAssociationReport(
                     cardIds = unique.slice(0, maxGroupSize);
                     pushDiagnostic(diagnostics, {
                         code: 'LARGE_GROUP_TRUNCATED',
-                        message: `Groupe « nom de l’ancre dans le texte » tronqué (${unique.length} cartes).`,
+                        message: `Groupe ${TEXT_GUILLEMET_OPEN} nom de l’ancre dans le texte ${TEXT_GUILLEMET_CLOSE} tronqué (${unique.length} cartes).`,
                         severity: 'info',
                     });
                 }
@@ -326,7 +331,7 @@ export function buildAssociationReport(
                     groups.push({
                         angleId: 'text_mentions_anchor_name',
                         groupKey: 'anchor_name_in_desc',
-                        displayLabel: `Texte citant « ${primary} »`,
+                        displayLabel: `Texte citant ${TEXT_GUILLEMET_OPEN} ${primary} ${TEXT_GUILLEMET_CLOSE}`,
                         linkStrength: 'reference',
                         cardIds,
                     });
@@ -384,7 +389,8 @@ export function associationReportToMarkdown(report: AssociationReport, nameById?
                 const label = nameById?.get(id) ?? String(id);
                 lines.push(`  - ${label} (\`${id}\`)`);
             }
-            if (g.cardIds.length > sample.length) lines.push(`  - … +${g.cardIds.length - sample.length} autres`);
+            if (g.cardIds.length > sample.length)
+                lines.push(`  - ${TEXT_ELLIPSIS} +${g.cardIds.length - sample.length} autres`);
             lines.push('');
         }
     }

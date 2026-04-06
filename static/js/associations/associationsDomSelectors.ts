@@ -2,7 +2,7 @@
  * Attributs `data-*` et classes pour le modal « cartes associées ».
  */
 
-import { TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
+import { TEXT_ELLIPSIS, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
 
 export const ASSOCIATIONS_MODAL_ROOT_CLASS = 'associations-modal';
 export const ASSOCIATIONS_MODAL_OPEN_CLASS = 'associations-modal--open';
@@ -46,7 +46,7 @@ export const ASSOCIATIONS_MODAL_TITLE_CLASS = 'associations-modal__title';
 export const ASSOCIATIONS_MODAL_SUBTITLE_CLASS = 'associations-modal__subtitle';
 export const ASSOCIATIONS_MODAL_LOADING_CLASS = 'associations-modal__loading';
 /** Texte affiché pendant le chargement catalogue + visuels. */
-export const ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT = 'Chargement des visuels et du catalogue…';
+export const ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT = `Chargement des visuels et du catalogue${TEXT_ELLIPSIS}`;
 export const ASSOCIATIONS_MODAL_SPINNER_CLASS = 'associations-modal__spinner';
 export const ASSOCIATIONS_MODAL_BODY_CLASS = 'associations-modal__body';
 

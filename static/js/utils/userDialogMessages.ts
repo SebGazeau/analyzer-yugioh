@@ -3,12 +3,13 @@
  */
 
 import { escapeHtml } from './html.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from './textPlaceholders.js';
 
 export const MSG_ADD_CARD_BLOCKED =
     "Impossible d'ajouter (limite d'exemplaires, zone pleine ou type incompatible).";
 
 export function msgAssociationCardNotFound(searchName: string): string {
-    return `Carte introuvable pour « ${searchName} » (API /carte ou recherche).`;
+    return `Carte introuvable pour ${TEXT_GUILLEMET_OPEN} ${searchName} ${TEXT_GUILLEMET_CLOSE} (API /carte ou recherche).`;
 }
 
 export const MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT =
@@ -19,12 +20,12 @@ export function msgErrorPrefixed(detail: string): string {
 }
 
 export function msgDeckDuplicated(deckName: string): string {
-    return `Deck dupliqué : « ${deckName} (copie) »`;
+    return `Deck dupliqué : ${TEXT_GUILLEMET_OPEN} ${deckName} (copie) ${TEXT_GUILLEMET_CLOSE}`;
 }
 
 /** `deckName` brut : échappé pour affichage HTML dans la boîte de dialogue. */
 export function msgConfirmDeleteDeck(deckName: string): string {
-    return `Supprimer le deck « ${escapeHtml(deckName)} » ?`;
+    return `Supprimer le deck ${TEXT_GUILLEMET_OPEN} ${escapeHtml(deckName)} ${TEXT_GUILLEMET_CLOSE} ?`;
 }
 
 export const MSG_DECK_DELETE_FAILED = 'Impossible de supprimer le deck.';

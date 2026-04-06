@@ -10,7 +10,14 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
-import { TEXT_EM_DASH, TEXT_MIDDLE_DOT } from '../utils/textPlaceholders.js';
+import {
+    TEXT_ELLIPSIS,
+    TEXT_EM_DASH,
+    TEXT_GUILLEMET_CLOSE,
+    TEXT_GUILLEMET_OPEN,
+    TEXT_MIDDLE_DOT,
+    TEXT_MULTIPLICATION_SIGN,
+} from '../utils/textPlaceholders.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import {
     BTN_TYPE_ATTR,
@@ -298,7 +305,7 @@ function ensureModalElements(): {
                             <p id="${MODAL_SUBTITLE_ID}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="${ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL}">×</button>
+                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="${ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL}">${TEXT_MULTIPLICATION_SIGN}</button>
                 </header>
                 <div id="${MODAL_LOADING_ID}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
                     <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>
@@ -414,7 +421,7 @@ function renderReportHtml(
         );
     }
     parts.push(
-        `<p class="${ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS}">Le groupe « même archétype » repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause ${TEXT_EM_DASH} pas la logique de regroupement.</p>`,
+        `<p class="${ASSOCIATIONS_MODAL_ANCHOR_NOTE_CLASS}">Le groupe ${TEXT_GUILLEMET_OPEN} même archétype ${TEXT_GUILLEMET_CLOSE} repose sur ce champ (souvent YGOProDeck). S’il ne correspond pas au jeu papier, la base importée est en cause ${TEXT_EM_DASH} pas la logique de regroupement.</p>`,
     );
     parts.push(`</div>`);
 
@@ -454,7 +461,7 @@ function renderReportHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(',');
             parts.push(
-                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(`Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe`)}">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}…</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(`Afficher ${rest.length} carte${rest.length > 1 ? 's' : ''} supplémentaires dans ce groupe`)}">+ ${rest.length} carte${rest.length > 1 ? 's' : ''}${TEXT_ELLIPSIS}</button></li>`,
             );
         }
         parts.push('</ul></div></details>');

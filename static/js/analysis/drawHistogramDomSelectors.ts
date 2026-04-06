@@ -3,7 +3,12 @@
  */
 
 import { DECK_CARD_EDIT_DIALOG_TITLE } from '../utils/deckCardEditLabels.js';
-import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import {
+    TEXT_ELLIPSIS,
+    TEXT_EM_DASH,
+    TEXT_GUILLEMET_CLOSE,
+    TEXT_GUILLEMET_OPEN,
+} from '../utils/textPlaceholders.js';
 
 export const DRAW_HISTOGRAM_EMPTY_CLASS = 'draw-histogram-empty';
 export const DRAW_HISTOGRAM_CHART_CLASS = 'draw-histogram-chart';
@@ -47,7 +52,7 @@ export function drawHistogramHeadingActive(iterations: number, category: string)
 }
 
 export function drawHistogramExplanationText(iterations: number, category: string): string {
-    return `En abscisse : nombre de cartes « ${category} » en main (0, 1, 2, …). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
+    return `En abscisse : nombre de cartes ${TEXT_GUILLEMET_OPEN} ${category} ${TEXT_GUILLEMET_CLOSE} en main (0, 1, 2, ${TEXT_ELLIPSIS}). Hauteur des barres : nombre de simulations sur ${iterations} ayant ce résultat.`;
 }
 
 export function drawHistogramAllCategoriesTitle(iterations: number): string {
@@ -60,7 +65,7 @@ export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY = `${TEXT_EM_DASH} Aucune c
 export const DRAW_HISTOGRAM_SELECT_PLACEHOLDER_PICK = `${TEXT_EM_DASH} Choisir une catégorie ${TEXT_EM_DASH}`;
 
 /** Message histogramme vide : deck sans catégories assignées. */
-export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG = `Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via « ${DECK_CARD_EDIT_DIALOG_TITLE} ») pour afficher la distribution.`;
+export const DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG = `Deck vide ou aucune catégorie. Assignez des catégories aux cartes (via ${TEXT_GUILLEMET_OPEN} ${DECK_CARD_EDIT_DIALOG_TITLE} ${TEXT_GUILLEMET_CLOSE}) pour afficher la distribution.`;
 
 export function drawHistogramEmptyCategoryMsg(categoryLabel: string): string {
     return `Aucune donnée pour "${categoryLabel}".`;

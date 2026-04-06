@@ -9,6 +9,7 @@ import {
   htmlDeckSavedItemDeleteActionSvg,
   htmlDeckSavedItemDuplicateActionSvg,
 } from '../deck-builder/deckSavedListDomSelectors.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
 describe('deckSavedListDomSelectors', () => {
   it('SVG actions liste : racine 18×24 viewBox', () => {
@@ -35,6 +36,8 @@ describe('deckSavedListDomSelectors', () => {
 
   it('title ligne charger deck échappe le nom', () => {
     expect(deckSavedListItemLoadTitle('Test')).toContain('Test');
+    expect(deckSavedListItemLoadTitle('Test')).toContain(TEXT_GUILLEMET_OPEN);
+    expect(deckSavedListItemLoadTitle('Test')).toContain(TEXT_GUILLEMET_CLOSE);
     expect(deckSavedListItemLoadTitle('<')).not.toContain('<');
   });
 });

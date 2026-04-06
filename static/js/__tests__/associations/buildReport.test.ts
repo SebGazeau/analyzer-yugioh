@@ -9,7 +9,7 @@ import {
     patternMatchesInCitableText,
     toAssociationCatalog,
 } from '../../associations/buildReport.js';
-import { TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
+import { TEXT_ELLIPSIS, TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
 import type { AssociationCatalogCard } from '../../associations/types.js';
@@ -327,5 +327,28 @@ describe('associationReportToMarkdown', () => {
         expect(md).toContain('Diagnostics');
         expect(md).toContain('Two');
         expect(md.split(TEXT_EM_DASH).length - 1).toBeGreaterThanOrEqual(2);
+    });
+
+    it('liste Markdown tronquée : ligne avec ellipsis si >15 cartes', () => {
+        const cardIds = Array.from({ length: 20 }, (_, i) => i + 1);
+        const report = {
+            anchorId: 1,
+            anchorName: 'A',
+            generatedAt: '2020-01-01T00:00:00.000Z',
+            groups: [
+                {
+                    angleId: 'x',
+                    groupKey: 'k',
+                    displayLabel: 'G',
+                    linkStrength: 'member' as const,
+                    cardIds,
+                },
+            ],
+            diagnostics: [],
+        };
+        const nameById = new Map(cardIds.map((id) => [id, `C${id}`]));
+        const md = associationReportToMarkdown(report, nameById);
+        expect(md).toContain(TEXT_ELLIPSIS);
+        expect(md).toContain('+5 autres');
     });
 });

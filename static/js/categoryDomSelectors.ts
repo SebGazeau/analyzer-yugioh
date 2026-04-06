@@ -2,6 +2,8 @@
  * Widget sélecteur de catégories (popover deck / chips).
  */
 
+import { TEXT_MULTIPLICATION_SIGN } from './utils/textPlaceholders.js';
+
 export const CATEGORY_CONTAINER_CLASS = 'category-container';
 export const CHIPS_CATEGORIES_CLASS = 'chips-categories';
 export const DROPDOWN_ARROW_CLASS = 'dropdown-arrow';
@@ -12,7 +14,7 @@ export const DROPDOWN_LIST_CLASS = 'dropdown-list';
 export const DROPDOWN_EMPTY_MESSAGE_CLASS = 'dropdown-list__empty';
 export const DROPDOWN_EMPTY_MESSAGE_TEXT = 'Aucune option';
 /** Libellé bouton retirer une puce (×, U+00D7). */
-export const CATEGORY_CHIP_REMOVE_BUTTON_TEXT = '\u00D7';
+export const CATEGORY_CHIP_REMOVE_BUTTON_TEXT = TEXT_MULTIPLICATION_SIGN;
 /** État ouvert de la liste déroulante. */
 export const DROPDOWN_LIST_VISIBLE_CLASS = 'show';
 

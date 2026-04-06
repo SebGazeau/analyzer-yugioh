@@ -7,6 +7,7 @@
  */
 import { deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 import type {
     DeckInsight,
     InsightCardRef,
@@ -213,7 +214,7 @@ export function computeSeventhTachyonInsight(deck: InsightDeckSnapshot): DeckIns
         const summary =
             prio > 0
                 ? `Extra Deck sans Number 101–107 ni C101–C107. ${prio} proposition(s) ci-dessous correspondent à des monstres dans ton Main ou ton Side (niveau = rang, type ou attribut). Les autres complètent la liste.`
-                : 'Extra Deck sans monstre Xyz « Number » 101–107 ou C101–C107. Voici les 14 cartes de la série : privilégie celles dont le rang égale un niveau de monstre dans ton Main/Side et qui partagent type ou attribut.';
+                : `Extra Deck sans monstre Xyz ${TEXT_GUILLEMET_OPEN} Number ${TEXT_GUILLEMET_CLOSE} 101–107 ou C101–C107. Voici les 14 cartes de la série : privilégie celles dont le rang égale un niveau de monstre dans ton Main/Side et qui partagent type ou attribut.`;
         return {
             id: 'insight-seventh-tachyon',
             kind: 'seventh_tachyon',

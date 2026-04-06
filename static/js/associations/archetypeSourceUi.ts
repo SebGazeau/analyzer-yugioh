@@ -2,6 +2,8 @@
  * Libellés UI pour `archetype_source` (réponses `/search`, `/associations/catalog`).
  */
 
+import { TEXT_ELLIPSIS } from '../utils/textPlaceholders.js';
+
 export function archetypeSourceUi(code: string): { short: string; title: string } {
     const c = code.trim();
     if (!c) return { short: '', title: '' };
@@ -13,7 +15,7 @@ export function archetypeSourceUi(code: string): { short: string; title: string 
         };
     }
     return {
-        short: c.length > 14 ? `${c.slice(0, 12)}…` : c,
+        short: c.length > 14 ? `${c.slice(0, 12)}${TEXT_ELLIPSIS}` : c,
         title: `Provenance métadonnées archétype : ${c}`,
     };
 }

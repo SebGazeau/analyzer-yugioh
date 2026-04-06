@@ -10,7 +10,7 @@ import {
   DATA_ASSOCIATION_ANGLE_ATTR,
   DATA_ASSOCIATIONS_DIAGNOSTIC_SEVERITY_ATTR,
 } from '../../associations/associationsDomSelectors.js';
-import { TEXT_MIDDLE_DOT } from '../../utils/textPlaceholders.js';
+import { TEXT_ELLIPSIS, TEXT_MIDDLE_DOT } from '../../utils/textPlaceholders.js';
 
 describe('associationsDomSelectors', () => {
   it('contrats modal + grille tuiles', () => {
@@ -24,5 +24,6 @@ describe('associationsDomSelectors', () => {
     expect(associationsModalSubtitle('Dark Magician', 123)).toContain('123');
     expect(associationsModalSubtitle('X', 1)).toContain(TEXT_MIDDLE_DOT);
     expect(ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT).toContain('catalogue');
+    expect(ASSOCIATIONS_MODAL_LOADING_STATUS_TEXT).toContain(TEXT_ELLIPSIS);
   });
 });

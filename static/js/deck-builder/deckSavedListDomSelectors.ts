@@ -4,6 +4,7 @@
 
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
 import { escapeHtml } from '../utils/html.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
 export const DECK_SAVED_ITEM_COVER_CLASS = 'deck-saved-item-cover';
 export const DECK_SAVED_ITEM_COVER_IMG_CLASS = 'deck-saved-item-cover-img';
@@ -43,7 +44,7 @@ export const DECK_SAVED_ITEM_DELETE_BTN_TITLE = 'Supprimer le deck';
 
 /** `title` de la ligne cliquable pour charger un deck (nom échappé). */
 export function deckSavedListItemLoadTitle(deckName: string): string {
-    return `Charger le deck « ${escapeHtml(deckName)} »`;
+    return `Charger le deck ${TEXT_GUILLEMET_OPEN} ${escapeHtml(deckName)} ${TEXT_GUILLEMET_CLOSE}`;
 }
 
 /** SVG complet du bouton supprimer (liste Mes decks). */

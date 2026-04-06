@@ -7,11 +7,15 @@ import {
   msgErrorPrefixed,
   msgImportCardsNotFound,
 } from '../utils/userDialogMessages.js';
+import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
 describe('userDialogMessages', () => {
   it('msgAssociationCardNotFound inclut le nom cherché', () => {
-    expect(msgAssociationCardNotFound('Dark Magician')).toContain('Dark Magician');
-    expect(msgAssociationCardNotFound('Dark Magician')).toContain('/carte');
+    const m = msgAssociationCardNotFound('Dark Magician');
+    expect(m).toContain('Dark Magician');
+    expect(m).toContain('/carte');
+    expect(m).toContain(TEXT_GUILLEMET_OPEN);
+    expect(m).toContain(TEXT_GUILLEMET_CLOSE);
   });
 
   it('msgErrorPrefixed préfixe Erreur', () => {
