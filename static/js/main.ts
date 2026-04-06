@@ -2,7 +2,10 @@
 // Interfaces : Decks | Builder | Analysis | Suggestions (onglet Suggestions dynamique).
 import { addToDeck, cleanCardTable, exportDeckToFile, importDeckFromFile } from './deck.js';
 import { updateDeckCount, computeGlobalStats } from './stats.js';
-import { HEADER_AVATAR_INITIALS_PLACEHOLDER } from './appHeaderAvatarCopy.js';
+import {
+    HEADER_AVATAR_INITIALS_PLACEHOLDER,
+    HEADER_AVATAR_SINGLE_WORD_CHAR_COUNT,
+} from './appHeaderAvatarCopy.js';
 import { DATA_PSEUDO_ATTR, HEADER_AVATAR_SELECTOR } from './appPageDomSelectors.js';
 import { bindAppTabs } from './tabs.js';
 import { initDecks } from './init/decks.js';
@@ -15,7 +18,10 @@ function getInitials(pseudo: string | null): string {
     if (!pseudo || !pseudo.trim()) return HEADER_AVATAR_INITIALS_PLACEHOLDER;
     const parts = pseudo.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return pseudo.slice(0, 2).toUpperCase().padEnd(2, pseudo[0]);
+    return pseudo
+        .slice(0, HEADER_AVATAR_SINGLE_WORD_CHAR_COUNT)
+        .toUpperCase()
+        .padEnd(HEADER_AVATAR_SINGLE_WORD_CHAR_COUNT, pseudo[0]);
 }
 
 function bindAvatarInitials(): void {

@@ -66,10 +66,14 @@ export function copyDeckZoneFullMessage(maxT: number): string {
     return `Zone pleine (max ${maxT} cartes).`;
 }
 
+/** Noms listés dans `copyImportCardsNotFoundMessage` avant la ligne « … et N autre(s) ». */
+export const USER_DIALOG_IMPORT_FAILED_NAMES_PREVIEW_MAX = 10;
+
 export function copyImportCardsNotFoundMessage(failedCards: string[]): string {
     const n = failedCards.length;
-    const head = failedCards.slice(0, 10).join('\n');
-    const tail = n > 10 ? `\n... et ${n - 10} autre(s)` : '';
+    const max = USER_DIALOG_IMPORT_FAILED_NAMES_PREVIEW_MAX;
+    const head = failedCards.slice(0, max).join('\n');
+    const tail = n > max ? `\n... et ${n - max} autre(s)` : '';
     return `${n} carte(s) non trouvée(s):\n${head}${tail}`;
 }
 

@@ -13,7 +13,10 @@ import { TEXT_ELLIPSIS, TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
 import { EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY } from '../../associations/associationsReportGroupDisplayCopy.js';
-import { ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH } from '../../associations/associationsReportLimits.js';
+import {
+    ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
+    ASSOCIATION_REPORT_MARKDOWN_CARD_ID_SAMPLE_MAX,
+} from '../../associations/associationsReportLimits.js';
 import {
     ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
@@ -362,8 +365,9 @@ describe('associationReportToMarkdown', () => {
         expect(md.split(TEXT_EM_DASH).length - 1).toBeGreaterThanOrEqual(2);
     });
 
-    it('liste Markdown tronquée : ligne avec ellipsis si >15 cartes', () => {
-        const cardIds = Array.from({ length: 20 }, (_, i) => i + 1);
+    it('liste Markdown tronquée : ligne « +N autres » au-delà de l’échantillon', () => {
+        const extra = 5;
+        const cardIds = Array.from({ length: ASSOCIATION_REPORT_MARKDOWN_CARD_ID_SAMPLE_MAX + extra }, (_, i) => i + 1);
         const report = {
             anchorId: 1,
             anchorName: 'A',
@@ -382,6 +386,6 @@ describe('associationReportToMarkdown', () => {
         const nameById = new Map(cardIds.map((id) => [id, `C${id}`]));
         const md = associationReportToMarkdown(report, nameById);
         expect(md).toContain(TEXT_ELLIPSIS);
-        expect(md).toContain('+5 autres');
+        expect(md).toContain(`+${extra} autres`);
     });
 });

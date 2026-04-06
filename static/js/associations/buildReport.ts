@@ -62,6 +62,7 @@ import {
     ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_GROUP_SIZE,
     ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES,
     ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH,
+    ASSOCIATION_REPORT_MARKDOWN_CARD_ID_SAMPLE_MAX,
 } from './associationsReportLimits.js';
 import type {
     AssociationCatalogCard,
@@ -445,7 +446,7 @@ export function associationReportToMarkdown(report: AssociationReport, nameById?
             lines.push(associationMarkdownGroupHeading(g.displayLabel));
             lines.push(associationMarkdownGroupAngleLinkLine(g.angleId, g.linkStrength));
             lines.push(associationMarkdownGroupCardCountLine(g.cardIds.length));
-            const sample = g.cardIds.slice(0, 15);
+            const sample = g.cardIds.slice(0, ASSOCIATION_REPORT_MARKDOWN_CARD_ID_SAMPLE_MAX);
             for (const id of sample) {
                 const label = nameById?.get(id) ?? String(id);
                 lines.push(associationMarkdownCardBulletLine(label, id));

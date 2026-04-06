@@ -16,6 +16,7 @@ import {
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
     USER_DIALOG_ERROR_PREFIX,
+    USER_DIALOG_IMPORT_FAILED_NAMES_PREVIEW_MAX,
 } from '../utils/userDialogCopy.js';
 import { SEARCH_MIN_QUERY_LENGTH } from '../searchConstants.js';
 import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
@@ -64,11 +65,13 @@ describe('userDialogCopy', () => {
     });
 
     it('copyImportCardsNotFoundMessage', () => {
+        expect(USER_DIALOG_IMPORT_FAILED_NAMES_PREVIEW_MAX).toBe(10);
         const a = copyImportCardsNotFoundMessage(['A', 'B']);
         expect(a).toContain('2 carte');
         expect(a).toContain('A');
         expect(a).toContain('B');
-        const many = copyImportCardsNotFoundMessage(Array.from({ length: 12 }, (_, i) => `c${i}`));
-        expect(many).toContain('... et 2 autre');
+        const over = USER_DIALOG_IMPORT_FAILED_NAMES_PREVIEW_MAX + 2;
+        const many = copyImportCardsNotFoundMessage(Array.from({ length: over }, (_, i) => `c${i}`));
+        expect(many).toContain(`... et 2 autre`);
     });
 });

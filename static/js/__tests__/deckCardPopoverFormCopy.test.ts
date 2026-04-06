@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from '../deck-builder/deckConstants.js';
 import {
     DECK_CARD_POPOVER_ENGINE_CHOICES,
     DECK_CARD_POPOVER_LABEL_CATEGORIES,
@@ -16,6 +17,6 @@ describe('deckCardPopoverFormCopy', () => {
 
     it('engines et plage qty cohérents avec le shell', () => {
         expect(DECK_CARD_POPOVER_ENGINE_CHOICES).toContain('Staple');
-        expect(DECK_CARD_POPOVER_SHELL_QTY_OPTION_COUNT).toBe(3);
+        expect(DECK_CARD_POPOVER_SHELL_QTY_OPTION_COUNT).toBe(DECK_DEFAULT_MAX_COPIES_PER_CARD);
     });
 });

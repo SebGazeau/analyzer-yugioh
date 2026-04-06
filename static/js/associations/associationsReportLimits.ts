@@ -12,3 +12,6 @@ export const ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES = 4
 
 /** Longueur minimale d’un mot du nom pour générer un angle `text_name:*`. */
 export const ASSOCIATION_BUILD_REPORT_DEFAULT_MIN_NAME_WORD_LENGTH = 5;
+
+/** IDs cartes listés par groupe dans l’export Markdown (puis ligne « … de plus »). */
+export const ASSOCIATION_REPORT_MARKDOWN_CARD_ID_SAMPLE_MAX = 15;
