@@ -3,10 +3,18 @@
  */
 
 import {
+    ANALYSIS_CATEGORY_SUMMARY_SECTION_CATEGORIES,
+    ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES,
+    ANALYSIS_CATEGORY_SUMMARY_SECTION_GROUPS,
+} from './analysisCategorySummaryCopy.js';
+import {
+    analysisCategorySummaryDotClass,
+    analysisCategorySummaryTableDataRowInnerHtml,
+    analysisSectionHeaderRowInnerHtml,
+    builderCategoryListRowInnerHtml,
+} from './analysisCategorySummaryTableHtml.js';
+import {
     ANALYSIS_SECTION_HEADER_ROW_CLASS,
-    ANALYSIS_SECTION_HEADER_TOGGLE_CLASS,
-    ANALYSIS_SECTION_HEADER_TOGGLE_TEXT,
-    ANALYSIS_TABLE_BODY_COLSPAN,
     ANALYSIS_TABLE_SECTION_CATEGORIES,
     ANALYSIS_TABLE_SECTION_ENGINES,
     ANALYSIS_TABLE_SECTION_GROUPES,
@@ -14,15 +22,6 @@ import {
     DATA_SECTION_HEADER_ATTR,
 } from './analysisTableDomSelectors.js';
 import {
-    ANALYSIS_CATEGORY_DOT_CLASS,
-    ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX,
-    ANALYSIS_TD_COUNT_CLASS,
-    ANALYSIS_TD_PCT_CLASS,
-    ANALYSIS_TD_PROB5_CLASS,
-    BUILDER_CATEGORY_LIST_BAR_CLASS,
-    BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS,
-    BUILDER_CATEGORY_LIST_COUNT_CLASS,
-    BUILDER_CATEGORY_LIST_LABEL_CLASS,
     BUILDER_CATEGORY_LIST_ROW_CLASS,
     analysisHeroGroupReferenceLabel,
     builderCategorySortRowTitle,
@@ -45,7 +44,7 @@ import {
 } from './analysisDomIds.js';
 import { CATEGORY_SUMMARY_BODY_ELEMENT_ID } from './builderShellDomIds.js';
 import { CATEGORY_GROUPS } from '../category.js';
-import { ARIA_EXPANDED_ATTR, ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { ARIA_EXPANDED_ATTR } from '../utils/ariaAttrs.js';
 import { STYLE_CURSOR_POINTER } from '../utils/cssInlineCursor.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { cssLengthPercent } from '../utils/cssInlineLength.js';
@@ -59,17 +58,6 @@ import {
 import { updateHistogramCategorySelect } from './drawHistogramDom.js';
 import { hypergeometricProbRowStrings } from './probabilityMath.js';
 
-const ANALYSIS_DOT_COLORS = [
-    'zone-main',
-    'zone-extra',
-    'zone-side',
-    'gold',
-    'info',
-    'success',
-    'amber',
-    'danger',
-];
-
 function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string): void {
     const tr = document.createElement('tr');
     tr.className = ANALYSIS_SECTION_HEADER_ROW_CLASS;
@@ -78,15 +66,11 @@ function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string)
         tr.setAttribute(ROLE_ATTR, ROLE_BUTTON);
         tr.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
         tr.setAttribute(ARIA_EXPANDED_ATTR, 'true');
-        tr.innerHTML = `<td colspan="${ANALYSIS_TABLE_BODY_COLSPAN}"><span class="${ANALYSIS_SECTION_HEADER_TOGGLE_CLASS}" ${ARIA_HIDDEN_ATTR}="true">${ANALYSIS_SECTION_HEADER_TOGGLE_TEXT}</span> <strong>${escapeHtml(title)}</strong></td>`;
+        tr.innerHTML = analysisSectionHeaderRowInnerHtml(title, true);
     } else {
-        tr.innerHTML = `<td colspan="${ANALYSIS_TABLE_BODY_COLSPAN}"><strong>${escapeHtml(title)}</strong></td>`;
+        tr.innerHTML = analysisSectionHeaderRowInnerHtml(title, false);
     }
     tbody.appendChild(tr);
-}
-
-function analysisCategoryDotClass(index: number): string {
-    return `${ANALYSIS_CATEGORY_DOT_CLASS} ${ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX}${ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length]}`;
 }
 
 export interface AnalysisCategorySummaryDomInput {
@@ -114,7 +98,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const pctDeck = (K: number) => (totalCards > 0 ? ((K / totalCards) * 100).toFixed(1) + '%' : TEXT_EM_DASH);
     let dataRowIndex = 0;
 
-    addSectionHeader(tbody, 'Engines', ANALYSIS_TABLE_SECTION_ENGINES);
+    addSectionHeader(tbody, ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES, ANALYSIS_TABLE_SECTION_ENGINES);
     Object.entries(engineSummary)
         .sort(([a], [b]) => a.localeCompare(b))
         .forEach(([engineName, cardMap]) => {
@@ -122,38 +106,38 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_ENGINES);
             const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-            const dotClass = analysisCategoryDotClass(dataRowIndex++);
-            tr.innerHTML = `
-                    <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span><strong>${escapeHtml(engineName)}</strong></td>
-                    <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
-                    <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
-                    <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
-                    ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
-                `;
+            const dotClass = analysisCategorySummaryDotClass(dataRowIndex++);
+            tr.innerHTML = analysisCategorySummaryTableDataRowInnerHtml({
+                dotClass,
+                firstCellContentHtml: `<strong>${escapeHtml(engineName)}</strong>`,
+                K,
+                pctDeck: pctDeck(K),
+                probs,
+            });
             tbody.appendChild(tr);
         });
 
-    addSectionHeader(tbody, 'Catégories', ANALYSIS_TABLE_SECTION_CATEGORIES);
+    addSectionHeader(tbody, ANALYSIS_CATEGORY_SUMMARY_SECTION_CATEGORIES, ANALYSIS_TABLE_SECTION_CATEGORIES);
     Object.keys(summary)
         .sort()
         .forEach((cat) => {
             const cardMap = summary[cat];
             const K = Array.from(cardMap.values()).reduce((s, v) => s + v, 0);
             const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-            const dotClass = analysisCategoryDotClass(dataRowIndex++);
+            const dotClass = analysisCategorySummaryDotClass(dataRowIndex++);
             const tr = document.createElement('tr');
             tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_CATEGORIES);
-            tr.innerHTML = `
-                    <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span>${escapeHtml(cat)}</td>
-                    <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
-                    <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
-                    <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
-                    ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
-                `;
+            tr.innerHTML = analysisCategorySummaryTableDataRowInnerHtml({
+                dotClass,
+                firstCellContentHtml: escapeHtml(cat),
+                K,
+                pctDeck: pctDeck(K),
+                probs,
+            });
             tbody.appendChild(tr);
         });
 
-    addSectionHeader(tbody, 'Groupes de catégories', ANALYSIS_TABLE_SECTION_GROUPES);
+    addSectionHeader(tbody, ANALYSIS_CATEGORY_SUMMARY_SECTION_GROUPS, ANALYSIS_TABLE_SECTION_GROUPES);
     Object.entries(CATEGORY_GROUPS).forEach(([groupName, includedCats]) => {
         const cardSet = new Map<string, number>();
         includedCats.forEach((cat) => {
@@ -165,16 +149,16 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         });
         const K = Array.from(cardSet.values()).reduce((s, v) => s + v, 0);
         const probs = hypergeometricProbRowStrings(K, totalCards, numDraws);
-        const dotClass = analysisCategoryDotClass(dataRowIndex++);
+        const dotClass = analysisCategorySummaryDotClass(dataRowIndex++);
         const tr = document.createElement('tr');
         tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_GROUPES);
-        tr.innerHTML = `
-                <td><span class="${dotClass}" ${ARIA_HIDDEN_ATTR}="true"></span><strong>${escapeHtml(groupName)}</strong></td>
-                <td class="${ANALYSIS_TD_COUNT_CLASS}">${K}</td>
-                <td class="${ANALYSIS_TD_PCT_CLASS}">${pctDeck(K)}</td>
-                <td class="${ANALYSIS_TD_PROB5_CLASS}">${probs[0]}</td>
-                ${probs.slice(1).map((p) => `<td>${p}</td>`).join('')}
-            `;
+        tr.innerHTML = analysisCategorySummaryTableDataRowInnerHtml({
+            dotClass,
+            firstCellContentHtml: `<strong>${escapeHtml(groupName)}</strong>`,
+            K,
+            pctDeck: pctDeck(K),
+            probs,
+        });
         tbody.appendChild(tr);
     });
 
@@ -260,7 +244,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 row.setAttribute(DATA_BUILDER_SORT_CATEGORY_ATTR, name);
                 row.style.cursor = STYLE_CURSOR_POINTER;
                 row.title = builderCategorySortRowTitle(name);
-                row.innerHTML = `<span class="${BUILDER_CATEGORY_LIST_LABEL_CLASS}">${escapeHtml(name)}</span><span class="${BUILDER_CATEGORY_LIST_COUNT_CLASS}">${K}</span><div class="${BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS}"><div class="${BUILDER_CATEGORY_LIST_BAR_CLASS}" style="width:${cssLengthPercent(pct)}"></div></div>`;
+                row.innerHTML = builderCategoryListRowInnerHtml(name, K, pct);
                 categoryListEl.appendChild(row);
             });
         }
