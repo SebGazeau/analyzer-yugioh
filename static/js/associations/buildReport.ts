@@ -58,6 +58,10 @@ import {
     associationMarkdownTitleLine,
 } from './associationsReportMarkdownCopy.js';
 import { buildDynamicTextMentionRulesFromAnchor } from './dynamicTextMentions.js';
+import {
+    ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_GROUP_SIZE,
+    ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES,
+} from './associationsReportLimits.js';
 import type {
     AssociationCatalogCard,
     AssociationGroup,
@@ -66,10 +70,6 @@ import type {
     Diagnostic,
     TextMentionRule,
 } from './types.js';
-
-const DEFAULT_MAX_GROUP = 200;
-/** Au-delà, les angles `text_name:*` sont ignorés (anti-bruit dynamique). */
-const DEFAULT_MAX_NAME_WORD_CITATION_MATCHES = 48;
 
 function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -192,8 +192,9 @@ export function buildAssociationReport(
     catalog: AssociationCatalogCard[],
     options: BuildAssociationReportOptions = {},
 ): AssociationReport {
-    const maxGroupSize = options.maxGroupSize ?? DEFAULT_MAX_GROUP;
-    const maxNameWordCitationMatches = options.maxNameWordCitationMatches ?? DEFAULT_MAX_NAME_WORD_CITATION_MATCHES;
+    const maxGroupSize = options.maxGroupSize ?? ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_GROUP_SIZE;
+    const maxNameWordCitationMatches =
+        options.maxNameWordCitationMatches ?? ASSOCIATION_BUILD_REPORT_DEFAULT_MAX_NAME_WORD_CITATION_MATCHES;
     const useWordBoundaryForNameWords = options.useWordBoundaryForNameWordPatterns !== false;
     const dynamicOn = options.dynamicTextMentions !== false;
     const textMentionRules: TextMentionRule[] = dynamicOn

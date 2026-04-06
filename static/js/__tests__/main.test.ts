@@ -34,6 +34,9 @@ import {
 } from '../searchDomIds.js';
 import { htmlCategorySummaryBody, htmlDeckCountCells, htmlDeckCountSummary, htmlDeckGrids } from './helpers/deckTestDom.js';
 
+/** Laisser résoudre fetch / microtâches après un clic (assertions async). */
+const MAIN_TEST_POST_CLICK_YIELD_MS = 50;
+
 /** DOM minimal pour que main.ts et ses listeners ne plantent pas. */
 function minimalDeckDOM() {
   document.body.innerHTML =
@@ -119,7 +122,7 @@ describe('main.ts — intégration DOM', () => {
     await Promise.resolve();
     await Promise.resolve();
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, MAIN_TEST_POST_CLICK_YIELD_MS));
     expect(alertSpy).toHaveBeenCalled();
     expect(alertSpy.mock.calls.some((c) => String(c[0]).includes('Erreur'))).toBe(true);
   });
@@ -144,7 +147,7 @@ describe('main.ts — intégration DOM', () => {
     const list = document.getElementById(DECK_MY_DECKS_LIST_ID);
     const refreshBtn = document.getElementById(DECK_BTN_REFRESH_DECKS_ID);
     refreshBtn?.click();
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, MAIN_TEST_POST_CLICK_YIELD_MS));
     expect(list?.querySelectorAll(`li.${DECK_SAVED_ITEM_CLASS}`).length).toBe(1);
     expect(list?.textContent).toContain('Mon deck');
   });
