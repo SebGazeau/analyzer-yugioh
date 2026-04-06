@@ -4,6 +4,12 @@
 
 import { DATA_CATEGORY_ATTR } from './analysisCategorySummaryDomSelectors.js';
 import {
+    DRAW_HISTOGRAM_MAIN_BAR_MAX_HEIGHT_PX,
+    DRAW_HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX,
+    drawHistogramMainBarWrapInnerHtml,
+    drawHistogramMiniBarWrapInnerHtml,
+} from './drawHistogramBarHtml.js';
+import {
     DRAW_HISTOGRAM_ALL_CATEGORIES_ID,
     DRAW_HISTOGRAM_ALL_TITLE_ID,
     DRAW_HISTOGRAM_CATEGORY_SELECT_ID,
@@ -12,19 +18,13 @@ import {
     DRAW_SIMULATION_HISTOGRAM_CONTAINER_ID,
 } from './drawHistogramDomIds.js';
 import {
-    DRAW_HISTOGRAM_BAR_CLASS,
     DRAW_HISTOGRAM_BAR_WRAP_CLASS,
     DRAW_HISTOGRAM_CHART_CLASS,
-    DRAW_HISTOGRAM_COUNT_CLASS,
     DRAW_HISTOGRAM_EMPTY_CLASS,
     DRAW_HISTOGRAM_EMPTY_DECK_CATEGORIES_MSG,
-    DRAW_HISTOGRAM_LABEL_CLASS,
-    DRAW_HISTOGRAM_MINI_BAR_CLASS,
     DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS,
     DRAW_HISTOGRAM_MINI_CHART_CLASS,
     DRAW_HISTOGRAM_MINI_CLASS,
-    DRAW_HISTOGRAM_MINI_COUNT_CLASS,
-    DRAW_HISTOGRAM_MINI_LABEL_CLASS,
     DRAW_HISTOGRAM_MINI_TITLE_CLASS,
     DRAW_HISTOGRAM_CATEGORY_FILL_VARS,
     DRAW_HISTOGRAM_SELECT_PLACEHOLDER_EMPTY,
@@ -42,12 +42,9 @@ import {
     STYLE_DISPLAY_BLOCK,
     STYLE_DISPLAY_NONE,
 } from '../utils/cssInlineDisplay.js';
-import { cssLengthPx } from '../utils/cssInlineLength.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
 
-const HISTOGRAM_BAR_MAX_HEIGHT_PX = 120;
-const HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX = 56;
 /** Met à jour le &lt;select&gt; des catégories pour l’histogramme (rempli selon le deck). */
 export function updateHistogramCategorySelect(categoryNames: string[]): void {
     const select = document.getElementById(DRAW_HISTOGRAM_CATEGORY_SELECT_ID) as HTMLSelectElement | null;
@@ -98,16 +95,16 @@ export function updateHistogramDOM(histogram: Record<number, number>, iterations
     buckets.forEach((k) => {
         const n = histogram[k];
         const pct = iterations > 0 ? (n / iterations) * 100 : 0;
-        const heightPx = maxCount > 0 ? (n / maxCount) * HISTOGRAM_BAR_MAX_HEIGHT_PX : 0;
+        const heightPx = maxCount > 0 ? (n / maxCount) * DRAW_HISTOGRAM_MAIN_BAR_MAX_HEIGHT_PX : 0;
 
         const barWrap = document.createElement('div');
         barWrap.className = DRAW_HISTOGRAM_BAR_WRAP_CLASS;
-        const barTitle = `${k} carte(s) de la catégorie en main : ${n} simulations (${pct.toFixed(1)} %)`;
-        barWrap.innerHTML = `
-            <div class="${DRAW_HISTOGRAM_BAR_CLASS}" style="height: ${cssLengthPx(heightPx)}" title="${barTitle}"></div>
-            <span class="${DRAW_HISTOGRAM_LABEL_CLASS}">${k}</span>
-            <span class="${DRAW_HISTOGRAM_COUNT_CLASS}">${n}</span>
-        `;
+        barWrap.innerHTML = drawHistogramMainBarWrapInnerHtml({
+            k,
+            n,
+            pctOfIterations: pct,
+            heightPx,
+        });
         wrap.appendChild(barWrap);
     });
 
@@ -140,14 +137,16 @@ export function appendCategoryMiniHistogram(
     chart.className = DRAW_HISTOGRAM_MINI_CHART_CLASS;
     buckets.forEach((k) => {
         const n = histogram[k];
-        const heightPx = maxCount > 0 ? (n / maxCount) * HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX : 0;
+        const heightPx = maxCount > 0 ? (n / maxCount) * DRAW_HISTOGRAM_MINI_BAR_MAX_HEIGHT_PX : 0;
         const barWrap = document.createElement('div');
         barWrap.className = DRAW_HISTOGRAM_MINI_BAR_WRAP_CLASS;
-        barWrap.innerHTML = `
-            <div class="${DRAW_HISTOGRAM_MINI_BAR_CLASS}" style="height:${cssLengthPx(heightPx)};background:${color}" title="${k} en main : ${n} / ${iterations}"></div>
-            <span class="${DRAW_HISTOGRAM_MINI_LABEL_CLASS}">${k}</span>
-            <span class="${DRAW_HISTOGRAM_MINI_COUNT_CLASS}">${n}</span>
-        `;
+        barWrap.innerHTML = drawHistogramMiniBarWrapInnerHtml({
+            k,
+            n,
+            iterations,
+            heightPx,
+            color,
+        });
         chart.appendChild(barWrap);
     });
     wrap.appendChild(chart);
