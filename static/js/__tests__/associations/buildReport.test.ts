@@ -12,6 +12,7 @@ import {
 import { TEXT_ELLIPSIS, TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from '../../associations/archetype.js';
 import { buildDynamicTextMentionRulesFromAnchor, expandPhrasePatterns } from '../../associations/dynamicTextMentions.js';
+import { EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY } from '../../associations/associationsReportGroupDisplayCopy.js';
 import {
     ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG,
     ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
@@ -25,6 +26,8 @@ import {
     ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
     ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH,
     ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME,
+    ASSOCIATION_LINK_STRENGTH_MEMBER,
+    ASSOCIATION_LINK_STRENGTH_REFERENCE,
 } from '../../associations/associationsReportKeys.js';
 import type { AssociationCatalogCard } from '../../associations/types.js';
 
@@ -91,11 +94,11 @@ describe('buildAssociationReport', () => {
             textMentionRules: EXAMPLE_BLUE_EYES_TEXT_RULES,
         });
         const tm = r.groups.filter(
-            (g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION && g.groupKey === 'blue_eyes',
+            (g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION && g.groupKey === EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY,
         );
         expect(tm.length).toBeGreaterThanOrEqual(1);
         expect(tm[0].cardIds).toContain(2);
-        expect(tm[0].linkStrength).toBe('reference');
+        expect(tm[0].linkStrength).toBe(ASSOCIATION_LINK_STRENGTH_REFERENCE);
     });
 
     it('aucun groupe archetype si catalogue sans partage (diagnostic ou groupe vide)', () => {
@@ -193,7 +196,7 @@ describe('buildAssociationReport', () => {
         });
         const q = r.groups.find((g) => g.angleId === ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA);
         expect(q?.cardIds.sort((a, b) => a - b)).toEqual([2, 3]);
-        expect(q?.linkStrength).toBe('reference');
+        expect(q?.linkStrength).toBe(ASSOCIATION_LINK_STRENGTH_REFERENCE);
     });
 });
 
@@ -344,7 +347,7 @@ describe('associationReportToMarkdown', () => {
                     angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
                     groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Z`,
                     displayLabel: 'Même archétype : Z',
-                    linkStrength: 'member' as const,
+                    linkStrength: ASSOCIATION_LINK_STRENGTH_MEMBER,
                     cardIds: [2, 3],
                 },
             ],
@@ -368,7 +371,7 @@ describe('associationReportToMarkdown', () => {
                     angleId: 'x',
                     groupKey: 'k',
                     displayLabel: 'G',
-                    linkStrength: 'member' as const,
+                    linkStrength: ASSOCIATION_LINK_STRENGTH_MEMBER,
                     cardIds,
                 },
             ],

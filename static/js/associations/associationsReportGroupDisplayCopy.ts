@@ -7,6 +7,9 @@ import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlacehol
 /** `displayLabel` de l’exemple `EXAMPLE_BLUE_EYES_TEXT_RULES` (buildReport). */
 export const EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL = 'Citation texte : Yeux Bleus / Blue-Eyes';
 
+/** `groupKey` de l’exemple `EXAMPLE_BLUE_EYES_TEXT_RULES` (règle manuelle, pas `text_arch:`). */
+export const EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY = 'blue_eyes';
+
 export function associationGroupDisplayLabelSameArchetype(arch: string): string {
     return `Même archétype : ${arch}`;
 }

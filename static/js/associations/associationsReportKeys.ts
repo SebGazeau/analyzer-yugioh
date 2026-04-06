@@ -29,3 +29,9 @@ export const ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME = `${ASSOCIATION_SLUG_PREFIX
 
 /** `meta.source` du groupe Q&A YGOrg officiel. */
 export const ASSOCIATION_REPORT_META_SOURCE_YGORG_QA_ENTRIES = 'ygorg_qa_entries';
+
+/** Même archétype structuré (API) : lien « membre ». */
+export const ASSOCIATION_LINK_STRENGTH_MEMBER = 'member' as const;
+
+/** Citation texte, nom dans desc, Q&A : lien « référence ». */
+export const ASSOCIATION_LINK_STRENGTH_REFERENCE = 'reference' as const;

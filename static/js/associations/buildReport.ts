@@ -16,6 +16,8 @@ import {
     ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
     ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME,
     ASSOCIATION_GROUP_KEY_YGORG_SHARED_QA,
+    ASSOCIATION_LINK_STRENGTH_MEMBER,
+    ASSOCIATION_LINK_STRENGTH_REFERENCE,
     ASSOCIATION_REPORT_META_SOURCE_YGORG_QA_ENTRIES,
 } from './associationsReportKeys.js';
 import {
@@ -39,6 +41,7 @@ import {
     associationGroupDisplayLabelSameArchetype,
     associationGroupDisplayLabelTextCiting,
     EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
+    EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY,
 } from './associationsReportGroupDisplayCopy.js';
 import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
@@ -121,7 +124,7 @@ export function associationCitableTextForAnchorNameMatch(c: AssociationCatalogCa
  */
 export const EXAMPLE_BLUE_EYES_TEXT_RULES: TextMentionRule[] = [
     {
-        groupKey: 'blue_eyes',
+        groupKey: EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY,
         displayLabel: EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
         patterns: ['blue-eyes', 'blue eyes', 'yeux bleus', '青眼'],
     },
@@ -267,7 +270,7 @@ export function buildAssociationReport(
                     angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
                     groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}${arch}`,
                     displayLabel: associationGroupDisplayLabelSameArchetype(arch),
-                    linkStrength: 'member',
+                    linkStrength: ASSOCIATION_LINK_STRENGTH_MEMBER,
                     cardIds,
                     meta: { archetype: arch },
                 });
@@ -291,7 +294,7 @@ export function buildAssociationReport(
             angleId: ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA,
             groupKey: ASSOCIATION_GROUP_KEY_YGORG_SHARED_QA,
             displayLabel: ASSOCIATION_GROUP_DISPLAY_YGORG_QA,
-            linkStrength: 'reference',
+            linkStrength: ASSOCIATION_LINK_STRENGTH_REFERENCE,
             cardIds,
             meta: { source: ASSOCIATION_REPORT_META_SOURCE_YGORG_QA_ENTRIES },
         });
@@ -352,7 +355,7 @@ export function buildAssociationReport(
                     angleId: ASSOCIATION_ANGLE_TEXT_MENTION,
                     groupKey: rule.groupKey,
                     displayLabel: rule.displayLabel,
-                    linkStrength: 'reference',
+                    linkStrength: ASSOCIATION_LINK_STRENGTH_REFERENCE,
                     cardIds,
                     meta: { mentionKey: rule.groupKey },
                 });
@@ -385,7 +388,7 @@ export function buildAssociationReport(
                         angleId: ASSOCIATION_ANGLE_TEXT_MENTIONS_ANCHOR_NAME,
                         groupKey: ASSOCIATION_GROUP_KEY_ANCHOR_NAME_IN_DESC,
                         displayLabel: associationGroupDisplayLabelTextCiting(primary),
-                        linkStrength: 'reference',
+                        linkStrength: ASSOCIATION_LINK_STRENGTH_REFERENCE,
                         cardIds,
                     });
                 }

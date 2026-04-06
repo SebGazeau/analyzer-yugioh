@@ -6,12 +6,14 @@ import {
     associationGroupDisplayLabelSameArchetype,
     associationGroupDisplayLabelTextCiting,
     EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL,
+    EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY,
 } from '../../associations/associationsReportGroupDisplayCopy.js';
 import { TEXT_GUILLEMET_OPEN } from '../../utils/textPlaceholders.js';
 
 describe('associationsReportGroupDisplayCopy', () => {
     it('libellés groupe / exemple', () => {
         expect(EXAMPLE_BLUE_EYES_TEXT_RULE_DISPLAY_LABEL).toContain('Yeux Bleus');
+        expect(EXAMPLE_BLUE_EYES_TEXT_RULE_GROUP_KEY).toBe('blue_eyes');
         expect(associationGroupDisplayLabelSameArchetype('Z')).toBe('Même archétype : Z');
         expect(ASSOCIATION_GROUP_DISPLAY_YGORG_QA).toContain('Q&A');
         expect(associationGroupDisplayLabelTextCiting('Dark Magician')).toContain('Dark Magician');

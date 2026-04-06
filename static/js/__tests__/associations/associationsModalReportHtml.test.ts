@@ -15,6 +15,7 @@ import {
 import {
     ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
     ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
+    ASSOCIATION_LINK_STRENGTH_MEMBER,
 } from '../../associations/associationsReportKeys.js';
 import type { AssociationCatalogCard, AssociationReport } from '../../associations/types.js';
 
@@ -51,7 +52,7 @@ describe('associationsModalReportBodyHtml', () => {
                     angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
                     groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}TestArch`,
                     displayLabel: 'Même archétype',
-                    linkStrength: 'member',
+                    linkStrength: ASSOCIATION_LINK_STRENGTH_MEMBER,
                     cardIds: [2],
                 },
             ],
