@@ -5,6 +5,15 @@
 
 import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deckConstants.js';
 
+/** Exemplaires max lorsque la carte est Forbidden (ou équivalent) sur la banlist TCG. */
+export const DECK_BAN_TCG_MAX_FORBIDDEN = 0;
+
+/** Exemplaires max lorsque la carte est Limited (hors Semi-Limited). */
+export const DECK_BAN_TCG_MAX_LIMITED = 1;
+
+/** Exemplaires max lorsque la carte est Semi-Limited. */
+export const DECK_BAN_TCG_MAX_SEMI_LIMITED = 2;
+
 /** Clé : plusieurs lignes partagent la même limite si même deckCopyId / id / nom. */
 export type DeckLimitGroupKey = number | string;
 
@@ -34,12 +43,16 @@ export function deckLimitGroupKeyFromCard(
     return `n:${displayName}`;
 }
 
-/** Forbidden=0, Limited=1, Semi-Limited=2, sinon {@link DECK_DEFAULT_MAX_COPIES_PER_CARD}. */
+/**
+ * Traduit un statut banlist texte en nombre d’exemplaires max autorisés :
+ * {@link DECK_BAN_TCG_MAX_FORBIDDEN} / {@link DECK_BAN_TCG_MAX_LIMITED} /
+ * {@link DECK_BAN_TCG_MAX_SEMI_LIMITED}, sinon {@link DECK_DEFAULT_MAX_COPIES_PER_CARD}.
+ */
 export function banTcgToMaxCopies(ban: string | undefined): number {
     const s = (ban ?? '').toLowerCase();
-    if (s.includes('forbidden') || s === 'banned') return 0;
-    if (s.includes('limited') && !s.includes('semi')) return 1;
-    if (s.includes('semi')) return 2;
+    if (s.includes('forbidden') || s === 'banned') return DECK_BAN_TCG_MAX_FORBIDDEN;
+    if (s.includes('limited') && !s.includes('semi')) return DECK_BAN_TCG_MAX_LIMITED;
+    if (s.includes('semi')) return DECK_BAN_TCG_MAX_SEMI_LIMITED;
     return DECK_DEFAULT_MAX_COPIES_PER_CARD;
 }
 
