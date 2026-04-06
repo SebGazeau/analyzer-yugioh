@@ -31,8 +31,14 @@ import { buildRemainingDrawPool, pickRandomFromPool } from './analysis/drawSimul
 import { computeMainDeckTypeCounts } from './analysis/mainDeckTypeCounts.js';
 import { mapDeckSections, type DeckSectionCounts } from './deckSection.js';
 import { STATS_CONSOLE_CATEGORY_SUMMARY_RENDER_ERROR_PREFIX } from './statsConsoleCopy.js';
+import type { YgoHandDrawCount } from './analysis/yugiohDrawConstants.js';
 
 export type { CompositionBreakdown } from './analysis/compositionBreakdown.js';
+export type { YgoHandDrawCount };
+export {
+    YGO_FIRST_HAND_DRAW_COUNT,
+    YGO_SECOND_HAND_DRAW_COUNT,
+} from './analysis/yugiohDrawConstants.js';
 export type { ProbabilityCardEntry } from './analysis/probabilityMath.js';
 export { setAnalysisDeckName } from './analysis/analysisPageDom.js';
 export { getHandSize };
@@ -59,7 +65,7 @@ function getDeckMainSnapshot() {
     return buildMainDeckProbabilitySnapshot(getDeckState().main);
 }
 
-export function setHandSize(size: 5 | 6): void {
+export function setHandSize(size: YgoHandDrawCount): void {
     if (!applyHandSize(size)) return;
     updateProbabilities();
     updateCategorySummary();

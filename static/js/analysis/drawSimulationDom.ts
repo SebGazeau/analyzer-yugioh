@@ -16,10 +16,11 @@ import {
     DRAW_SIMULATION_THUMB_REVEAL_CLASS,
 } from './drawSimulationDomSelectors.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import type { YgoHandDrawCount } from './yugiohDrawConstants.js';
 
 export interface DrawSimulationDomInput {
     drawnCardNames: readonly string[];
-    handSize: 5 | 6;
+    handSize: YgoHandDrawCount;
     resolveImageUrl: (cardName: string) => string | null;
     /** Somme des qty du Main (cartes physiques dans le deck). */
     totalMainDeckCards: number;

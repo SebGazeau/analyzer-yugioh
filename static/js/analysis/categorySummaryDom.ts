@@ -57,6 +57,7 @@ import {
     type CategoryEngineSummaryMap,
 } from './categorySummaryData.js';
 import { updateHistogramCategorySelect } from './drawHistogramDom.js';
+import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT, type YgoHandDrawCount } from './yugiohDrawConstants.js';
 import { hypergeometricProbRowStrings } from './probabilityMath.js';
 
 function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string): void {
@@ -82,7 +83,7 @@ export interface AnalysisCategorySummaryDomInput {
     totalCards: number;
     /** Tirages utilisés pour les colonnes du tableau (full deck ou restant). */
     numDraws: number;
-    handSize: 5 | 6;
+    handSize: YgoHandDrawCount;
 }
 
 export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryDomInput): void {
@@ -174,10 +175,14 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : TEXT_EM_DASH;
     if (firstEl)
         firstEl.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : TEXT_EM_DASH;
+            totalCards > 0 && firstK > 0
+                ? hypergeometricProbRowStrings(firstK, totalCards, YGO_FIRST_HAND_DRAW_COUNT)[0]
+                : TEXT_EM_DASH;
     if (secondEl)
         secondEl.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : TEXT_EM_DASH;
+            totalCards > 0 && firstK > 0
+                ? hypergeometricProbRowStrings(firstK, totalCards, YGO_SECOND_HAND_DRAW_COUNT)[0]
+                : TEXT_EM_DASH;
     if (engineEl) engineEl.textContent = enginePct;
     const heroGroupEl = document.getElementById(ANALYSIS_HERO_GROUP_ID);
     if (heroGroupEl) {
@@ -192,10 +197,14 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     const builderEngine = document.getElementById(BUILDER_STATS_ENGINE_ID);
     if (builderFirst)
         builderFirst.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 5)[0] : TEXT_EM_DASH;
+            totalCards > 0 && firstK > 0
+                ? hypergeometricProbRowStrings(firstK, totalCards, YGO_FIRST_HAND_DRAW_COUNT)[0]
+                : TEXT_EM_DASH;
     if (builderSecond)
         builderSecond.textContent =
-            totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, 6)[0] : TEXT_EM_DASH;
+            totalCards > 0 && firstK > 0
+                ? hypergeometricProbRowStrings(firstK, totalCards, YGO_SECOND_HAND_DRAW_COUNT)[0]
+                : TEXT_EM_DASH;
     if (builderEngine) builderEngine.textContent = enginePct;
 
     updateHistogramCategorySelect(Object.keys(summary).sort());

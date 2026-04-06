@@ -10,6 +10,7 @@ import {
     remainingDrawCountForProbTable,
 } from './categorySummaryData.js';
 import { categorySummarySimulationBannerText } from './categorySummarySimulationCopy.js';
+import type { YgoHandDrawCount } from './yugiohDrawConstants.js';
 import type { AnalysisCategorySummaryDomInput } from './categorySummaryDom.js';
 
 export type MainRowLikeForCategorySummary = {
@@ -22,7 +23,7 @@ export type MainRowLikeForCategorySummary = {
 export function buildAnalysisCategorySummaryDomInput(
     main: ReadonlyArray<MainRowLikeForCategorySummary>,
     drawnCardNames: readonly string[],
-    handSize: 5 | 6,
+    handSize: YgoHandDrawCount,
 ): AnalysisCategorySummaryDomInput {
     const snapshot = buildMainDeckProbabilitySnapshot(main);
 

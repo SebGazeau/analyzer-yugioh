@@ -2,6 +2,7 @@
  * Probabilités hypergéométriques et simulations de tirage (sans DOM).
  */
 
+import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT } from './yugiohDrawConstants.js';
 import { TEXT_EM_DASH, TEXT_PERCENT_SIGN } from '../utils/textPlaceholders.js';
 
 export interface ProbabilityCardEntry {
@@ -44,11 +45,11 @@ export function cumulativeHypergeometric(maxSuccesses: number, draws: number, K:
 }
 
 /**
- * Probas P(≥1) … P(≥6) formatées pour le tableau Analysis (6 colonnes ; « — » si tirage impossible).
+ * Probas P(≥1) … P(≥N) formatées pour le tableau Analysis (N = max main supportée ; « — » si tirage impossible).
  */
 export function hypergeometricProbRowStrings(K: number, totalCards: number, numDraws: number): string[] {
     const probs: string[] = [];
-    for (let x = 1; x <= 6; x++) {
+    for (let x = 1; x <= YGO_SECOND_HAND_DRAW_COUNT; x++) {
         if (x > numDraws || totalCards === 0) {
             probs.push(TEXT_EM_DASH);
             continue;
@@ -101,14 +102,14 @@ export function firstHandProbability(
     cards: ProbabilityCardEntry[],
     categoryNames: string[],
 ): Record<string, number> {
-    return computeHandProbability(cards, categoryNames, 5);
+    return computeHandProbability(cards, categoryNames, YGO_FIRST_HAND_DRAW_COUNT);
 }
 
 export function secondHandProbability(
     cards: ProbabilityCardEntry[],
     categoryNames: string[],
 ): Record<string, number> {
-    return computeHandProbability(cards, categoryNames, 6);
+    return computeHandProbability(cards, categoryNames, YGO_SECOND_HAND_DRAW_COUNT);
 }
 
 function buildSimulationDeck(cards: ProbabilityCardEntry[]): ProbabilityCardEntry[] {

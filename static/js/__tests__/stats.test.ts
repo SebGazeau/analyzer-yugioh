@@ -11,6 +11,8 @@ import {
   probabilityAtLeast,
   simulateDraw,
   simulateDrawCounts,
+  YGO_FIRST_HAND_DRAW_COUNT,
+  YGO_SECOND_HAND_DRAW_COUNT,
 } from '../stats.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import {
@@ -125,22 +127,27 @@ describe('stats.ts - cumulativeHypergeometric adaptee', () => {
 });
 
 describe('stats.ts - hypergeometricProbRowStrings (tableau Analysis)', () => {
-  it('6 colonnes P(≥1)…P(≥6) pour 5 tirages', () => {
-    const row = hypergeometricProbRowStrings(3, 40, 5);
-    expect(row).toHaveLength(6);
+  it('colonnes P(≥1)…P(≥N) pour 5 tirages (N = max main)', () => {
+    const row = hypergeometricProbRowStrings(3, 40, YGO_FIRST_HAND_DRAW_COUNT);
+    expect(row).toHaveLength(YGO_SECOND_HAND_DRAW_COUNT);
     expect(row[0]).toMatch(/%$/);
-    expect(row[5]).toBe(TEXT_EM_DASH);
+    expect(row[YGO_SECOND_HAND_DRAW_COUNT - 1]).toBe(TEXT_EM_DASH);
   });
 
   it('totalCards = 0 → tout « — »', () => {
-    expect(hypergeometricProbRowStrings(1, 0, 5).every((c) => c === TEXT_EM_DASH)).toBe(true);
+    expect(
+      hypergeometricProbRowStrings(1, 0, YGO_FIRST_HAND_DRAW_COUNT).every((c) => c === TEXT_EM_DASH),
+    ).toBe(true);
   });
 });
 
 describe('stats.ts - probabilites de main', () => {
-  it('firstHandProbability utilise 5 cartes', () => {
+  it('firstHandProbability utilise YGO_FIRST_HAND_DRAW_COUNT cartes', () => {
     const result = firstHandProbability(DECK_40_THREE_COPIES, ['engine']);
-    expect(result.engine).toBeCloseTo(probabilityAtLeast(40, 3, 5, 1), 6);
+    expect(result.engine).toBeCloseTo(
+      probabilityAtLeast(40, 3, YGO_FIRST_HAND_DRAW_COUNT, 1),
+      6,
+    );
   });
 
   it('second hand est superieure a first hand', async () => {
@@ -203,20 +210,20 @@ describe('stats.ts - simulateDrawCounts (histogramme)', () => {
   });
 
   it('retourne des clés 0 à drawCount', () => {
-    const hist = simulateDrawCounts(DECK_40_THREE_COPIES, 'engine', 5, 100);
+    const hist = simulateDrawCounts(DECK_40_THREE_COPIES, 'engine', YGO_FIRST_HAND_DRAW_COUNT, 100);
     const keys = Object.keys(hist).map(Number).sort((a, b) => a - b);
     expect(keys).toEqual([0, 1, 2, 3, 4, 5]);
   });
 
   it('retourne objet vide si iterations = 0', () => {
-    const hist = simulateDrawCounts(DECK_40_THREE_COPIES, 'engine', 5, 0);
+    const hist = simulateDrawCounts(DECK_40_THREE_COPIES, 'engine', YGO_FIRST_HAND_DRAW_COUNT, 0);
     expect(Object.keys(hist)).toHaveLength(0);
   });
 });
 
 describe('stats.ts - hand size', () => {
-  it('getHandSize retourne 5 par défaut', () => {
-    expect(getHandSize()).toBe(5);
+  it('getHandSize retourne YGO_FIRST_HAND_DRAW_COUNT par défaut', () => {
+    expect(getHandSize()).toBe(YGO_FIRST_HAND_DRAW_COUNT);
   });
 
   it('setHandSize puis getHandSize reflète la taille', () => {
@@ -226,9 +233,9 @@ describe('stats.ts - hand size', () => {
       `<div id="${DRAW_SIMULATION_LIST_ID}"></div>` +
       `<span id="${DRAW_SIMULATION_COUNT_ID}"></span><span id="${DRAW_SIMULATION_MAX_ID}"></span>` +
       `<button id="${DRAW_SIM_BTN_DRAW_ONE_ID}"></button>`;
-    setHandSize(6);
-    expect(getHandSize()).toBe(6);
-    setHandSize(5);
-    expect(getHandSize()).toBe(5);
+    setHandSize(YGO_SECOND_HAND_DRAW_COUNT);
+    expect(getHandSize()).toBe(YGO_SECOND_HAND_DRAW_COUNT);
+    setHandSize(YGO_FIRST_HAND_DRAW_COUNT);
+    expect(getHandSize()).toBe(YGO_FIRST_HAND_DRAW_COUNT);
   });
 });

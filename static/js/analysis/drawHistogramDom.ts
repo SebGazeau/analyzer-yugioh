@@ -44,6 +44,7 @@ import {
 } from '../utils/cssInlineDisplay.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
+import type { YgoHandDrawCount } from './yugiohDrawConstants.js';
 
 /** Met à jour le &lt;select&gt; des catégories pour l’histogramme (rempli selon le deck). */
 export function updateHistogramCategorySelect(categoryNames: string[]): void {
@@ -169,7 +170,7 @@ export function clearHistogramGraphs(): void {
 /** Lance `DRAW_HISTOGRAM_SIM_ITERATIONS` simulations et met à jour l’histogramme principal + mini-graphs. */
 export function runHistogramSimulation1000(input: {
     cards: ProbabilityCardEntry[];
-    handSize: 5 | 6;
+    handSize: YgoHandDrawCount;
 }): void {
     const { cards, handSize } = input;
     const categories = getAllCategories(cards).sort();
