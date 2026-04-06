@@ -14,6 +14,7 @@ import {
     MSG_IMPORT_JSON_INVALID_FORMAT,
     MSG_PROMPT_DECK_NAME,
     MSG_UPDATE_DECK_NOT_LOADED,
+    USER_DIALOG_ERROR_PREFIX,
 } from '../utils/userDialogCopy.js';
 import { TEXT_GUILLEMET_CLOSE, TEXT_GUILLEMET_OPEN } from '../utils/textPlaceholders.js';
 
@@ -27,6 +28,7 @@ describe('userDialogCopy', () => {
     });
 
     it('copyErrorPrefixedMessage', () => {
+        expect(USER_DIALOG_ERROR_PREFIX).toBe('Erreur:');
         expect(copyErrorPrefixedMessage('timeout')).toBe('Erreur: timeout');
     });
 

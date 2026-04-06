@@ -26,6 +26,7 @@ import {
     MSG_PROMPT_DECK_NAME,
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
+    USER_DIALOG_ERROR_PREFIX,
 } from './userDialogCopy.js';
 
 export {
@@ -43,6 +44,7 @@ export {
     MSG_PROMPT_DECK_NAME,
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
+    USER_DIALOG_ERROR_PREFIX,
 };
 
 export function msgAssociationCardNotFound(searchName: string): string {

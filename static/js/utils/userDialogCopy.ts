@@ -41,8 +41,11 @@ export function copyAssociationCardNotFoundMessage(searchName: string): string {
     return `Carte introuvable pour ${TEXT_GUILLEMET_OPEN} ${searchName} ${TEXT_GUILLEMET_CLOSE} (API /carte ou recherche).`;
 }
 
+/** Préfixe des alertes `msgErrorPrefixed` (suivi d’un espace puis le détail). */
+export const USER_DIALOG_ERROR_PREFIX = 'Erreur:';
+
 export function copyErrorPrefixedMessage(detail: string): string {
-    return `Erreur: ${detail}`;
+    return `${USER_DIALOG_ERROR_PREFIX} ${detail}`;
 }
 
 export function copyDeckDuplicatedMessage(sourceDeckName: string): string {
