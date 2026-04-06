@@ -4,6 +4,10 @@
 
 import { compositionBreakdownLevelBucketKey } from './compositionBreakdownCopy.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+} from '../utils/cardTypeKindConstants.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 export interface CompositionBreakdown {
@@ -39,14 +43,14 @@ export function computeCompositionBreakdown(main: CompositionBreakdownRow[]): Co
         if (kind === null) return;
         const qty = row.quantity;
         const key = (v: string) => v || TEXT_EM_DASH;
-        if (kind === 'monster') {
+        if (kind === CARD_TYPE_KIND_MONSTER) {
             const attr = key(row.attribute ?? '');
             monsters.byAttribute[attr] = (monsters.byAttribute[attr] || 0) + qty;
             const lvl = row.level != null ? compositionBreakdownLevelBucketKey(row.level) : TEXT_EM_DASH;
             monsters.byLevel[lvl] = (monsters.byLevel[lvl] || 0) + qty;
             const race = key(row.race ?? '');
             monsters.byRace[race] = (monsters.byRace[race] || 0) + qty;
-        } else if (kind === 'spell') {
+        } else if (kind === CARD_TYPE_KIND_SPELL) {
             const race = key(row.race ?? '');
             spells.byRace[race] = (spells.byRace[race] || 0) + qty;
         } else {

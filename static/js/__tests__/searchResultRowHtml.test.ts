@@ -14,6 +14,7 @@ import {
     SEARCH_RESULT_SUBTYPE_CLASS,
     SEARCH_RESULT_THUMB_IMG_CLASS,
 } from '../searchDomSelectors.js';
+import { CARD_TYPE_KIND_MONSTER, CARD_TYPE_KIND_SPELL } from '../utils/cardTypeKindConstants.js';
 
 describe('searchResultArchetypeSourceBadgeHtml', () => {
     it('vide si pas de source', () => {
@@ -31,13 +32,13 @@ describe('searchResultArchetypeSourceBadgeHtml', () => {
 
 describe('searchResultThumbInnerHtml', () => {
     it('image si URL non vide', () => {
-        const html = searchResultThumbInnerHtml('https://x/c.jpg', 'monster');
+        const html = searchResultThumbInnerHtml('https://x/c.jpg', CARD_TYPE_KIND_MONSTER);
         expect(html).toContain(`class="${SEARCH_RESULT_THUMB_IMG_CLASS}"`);
         expect(html).toContain('loading="lazy"');
     });
 
     it('initiale S si pas d’image et sort', () => {
-        const html = searchResultThumbInnerHtml(null, 'spell');
+        const html = searchResultThumbInnerHtml(null, CARD_TYPE_KIND_SPELL);
         expect(html).toContain('>S<');
     });
 });

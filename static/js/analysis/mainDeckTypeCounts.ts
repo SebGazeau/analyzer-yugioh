@@ -3,6 +3,10 @@
  */
 
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+} from '../utils/cardTypeKindConstants.js';
 
 export interface MainDeckTypeCounts {
     monsters: number;
@@ -20,8 +24,8 @@ export function computeMainDeckTypeCounts(
         const kind = cardTypeKindFromTypeStringOrNull(row.type);
         if (kind === null) continue;
         const qty = row.quantity;
-        if (kind === 'monster') monsters += qty;
-        else if (kind === 'spell') spells += qty;
+        if (kind === CARD_TYPE_KIND_MONSTER) monsters += qty;
+        else if (kind === CARD_TYPE_KIND_SPELL) spells += qty;
         else traps += qty;
     }
     return { monsters, spells, traps };

@@ -2,6 +2,13 @@
  * Grilles deck : classes DnD et attributs `data-deck-cell-*` (cellules / grilles).
  */
 
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+    CARD_TYPE_KIND_TRAP,
+    type CardTypeKind,
+} from '../../utils/cardTypeKindConstants.js';
+
 export const DECK_SECTIONS_ROOT_CLASS = 'deck-sections';
 export const DECK_CARDS_GRID_CLASS = 'deck-cards-grid';
 export const DECK_CARDS_GRID_DND_OVER_CLASS = 'deck-cards-grid--dnd-over';
@@ -31,12 +38,12 @@ export const DECK_CARD_CELL_SELECTOR = `.${DECK_CARD_CELL_CLASS}`;
 
 /** Modificateur BEM `--monster` | `--spell` | `--trap` sur la cellule grille. */
 export const DECK_CARD_CELL_TYPE_KIND_CLASS = {
-    monster: `${DECK_CARD_CELL_CLASS}--monster`,
-    spell: `${DECK_CARD_CELL_CLASS}--spell`,
-    trap: `${DECK_CARD_CELL_CLASS}--trap`,
-} as const;
+    [CARD_TYPE_KIND_MONSTER]: `${DECK_CARD_CELL_CLASS}--monster`,
+    [CARD_TYPE_KIND_SPELL]: `${DECK_CARD_CELL_CLASS}--spell`,
+    [CARD_TYPE_KIND_TRAP]: `${DECK_CARD_CELL_CLASS}--trap`,
+} as const satisfies Record<CardTypeKind, string>;
 
-export type DeckCardCellTypeKind = keyof typeof DECK_CARD_CELL_TYPE_KIND_CLASS;
+export type DeckCardCellTypeKind = CardTypeKind;
 
 /** Classes complètes du wrapper cellule (base + modificateur type). */
 export function deckCardCellWrapperClassName(kind: DeckCardCellTypeKind): string {

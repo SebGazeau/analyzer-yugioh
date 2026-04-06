@@ -7,6 +7,7 @@
  */
 import { deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import { CARD_TYPE_KIND_MONSTER, CARD_TYPE_KIND_SPELL } from '../utils/cardTypeKindConstants.js';
 import {
     INSIGHT_SEVENTH_TACHYON_HELP_LINE,
     INSIGHT_SEVENTH_TACHYON_SUMMARY_MAIN_NO_TARGETS,
@@ -41,7 +42,7 @@ export function extractNumberIndexFromName(name: string): number | null {
 }
 
 function isSpell(row: InsightDeckRow): boolean {
-    return cardTypeKindFromTypeStringOrNull(row.type) === 'spell';
+    return cardTypeKindFromTypeStringOrNull(row.type) === CARD_TYPE_KIND_SPELL;
 }
 
 function isXyzMonster(row: InsightDeckRow): boolean {
@@ -52,7 +53,7 @@ function isXyzMonster(row: InsightDeckRow): boolean {
 }
 
 function isMainDeckMonster(row: InsightDeckRow): boolean {
-    if (cardTypeKindFromTypeStringOrNull(row.type) !== 'monster') return false;
+    if (cardTypeKindFromTypeStringOrNull(row.type) !== CARD_TYPE_KIND_MONSTER) return false;
     const t = (row.type || '').toLowerCase();
     if (t.includes('fusion') || t.includes('synchro') || t.includes('xyz') || t.includes('link')) return false;
     const f = (row as { frame_type?: string }).frame_type?.toLowerCase() ?? '';

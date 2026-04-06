@@ -10,6 +10,7 @@ import {
     deckCardCellWrapperClassName,
     DECK_CARD_REMOVE_ONE_BTN_SELECTOR,
 } from './deckGridDomSelectors.js';
+import type { CardTypeKind } from '../../utils/cardTypeKindConstants.js';
 import { buildDeckCardCellInnerHtml, type DeckCardCellShellRow } from './deckCardCellShell.js';
 
 export interface DeckGridRowForRender extends DeckCardCellShellRow {
@@ -21,7 +22,7 @@ export function renderDeckGridSection(
     section: DeckSection,
     gridId: string,
     rows: DeckGridRowForRender[],
-    typeKind: (type: string) => 'monster' | 'spell' | 'trap',
+    typeKind: (type: string) => CardTypeKind,
     onRemoveOne: (section: DeckSection, index: number) => void,
     onOpenCell: (section: DeckSection, index: number, cell: HTMLElement) => void,
 ): void {

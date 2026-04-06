@@ -37,8 +37,14 @@ import {
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from './utils/ariaAttrs.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, IMG_LOADING_ATTR, IMG_LOADING_LAZY, TITLE_ATTR } from './utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from './utils/html.js';
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+    type CardTypeKind,
+} from './utils/cardTypeKindConstants.js';
 
-export type SearchResultRowKind = 'monster' | 'spell' | 'trap';
+/** Alias sémantique : vignette M/S/T (pas de filtre « tous »). */
+export type SearchResultRowKind = CardTypeKind;
 
 /** Badge provenance archétype (vide si pas de source affichable). */
 export function searchResultArchetypeSourceBadgeHtml(archetypeSource: unknown): string {
@@ -56,9 +62,9 @@ export function searchResultThumbInnerHtml(imageUrl: unknown, kind: SearchResult
         return `<img class="${SEARCH_RESULT_THUMB_IMG_CLASS}" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`;
     }
     const letter =
-        kind === 'monster'
+        kind === CARD_TYPE_KIND_MONSTER
             ? SEARCH_RESULT_THUMB_LETTER_MONSTER
-            : kind === 'spell'
+            : kind === CARD_TYPE_KIND_SPELL
               ? SEARCH_RESULT_THUMB_LETTER_SPELL
               : SEARCH_RESULT_THUMB_LETTER_TRAP;
     return `<span class="${searchResultInitialCellClass(kind)}" ${ARIA_HIDDEN_ATTR}="true">${letter}</span>`;
