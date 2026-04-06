@@ -11,6 +11,12 @@ import {
     type DeckSection,
     type DeckSectionCounts,
 } from './deckSection.js';
+import {
+    YDK_EXPORT_HEADER_LINE,
+    YDK_SECTION_MARKER_EXTRA,
+    YDK_SECTION_MARKER_MAIN,
+    YDK_SECTION_MARKER_SIDE_OPEN,
+} from './deckYdkCopy.js';
 
 export type { DeckSection };
 
@@ -119,14 +125,14 @@ export function removeCard(
 }
 
 const YDK_SECTION_OPEN: Record<DeckSection, string> = {
-    main: '#main',
-    extra: '#extra',
-    side: '!side',
+    main: YDK_SECTION_MARKER_MAIN,
+    extra: YDK_SECTION_MARKER_EXTRA,
+    side: YDK_SECTION_MARKER_SIDE_OPEN,
 };
 
 /** Export YDK : #main, #extra, !side, une ligne par id de carte (répété quantity fois). */
 export function exportDeckToYDK(state: DeckState): string {
-    const lines: string[] = ['#created by ...'];
+    const lines: string[] = [YDK_EXPORT_HEADER_LINE];
     for (const s of DECK_SECTIONS) {
         lines.push(YDK_SECTION_OPEN[s]);
         for (const e of state[s]) {
@@ -145,11 +151,12 @@ export function importDeckFromYDK(ydk: string): { state: DeckState; error?: stri
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.startsWith('#')) {
-            if (trimmed.toLowerCase() === '#extra') section = 'extra';
-            else if (trimmed.toLowerCase() === '#main') section = 'main';
+            const low = trimmed.toLowerCase();
+            if (low === YDK_SECTION_MARKER_EXTRA.toLowerCase()) section = 'extra';
+            else if (low === YDK_SECTION_MARKER_MAIN.toLowerCase()) section = 'main';
             continue;
         }
-        if (trimmed.toLowerCase() === '!side') {
+        if (trimmed.toLowerCase() === YDK_SECTION_MARKER_SIDE_OPEN.toLowerCase()) {
             section = 'side';
             continue;
         }
