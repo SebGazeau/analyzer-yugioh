@@ -7,6 +7,7 @@ import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 import {
     CARD_TYPE_KIND_MONSTER,
     CARD_TYPE_KIND_SPELL,
+    CARD_TYPE_KIND_TRAP,
 } from '../utils/cardTypeKindConstants.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
@@ -53,7 +54,7 @@ export function computeCompositionBreakdown(main: CompositionBreakdownRow[]): Co
         } else if (kind === CARD_TYPE_KIND_SPELL) {
             const race = key(row.race ?? '');
             spells.byRace[race] = (spells.byRace[race] || 0) + qty;
-        } else {
+        } else if (kind === CARD_TYPE_KIND_TRAP) {
             const race = key(row.race ?? '');
             traps.byRace[race] = (traps.byRace[race] || 0) + qty;
         }

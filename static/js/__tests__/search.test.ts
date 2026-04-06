@@ -6,6 +6,7 @@ import {
   SEARCH_DEBOUNCE_TEST_OVERRUN_MS,
   SEARCH_MIN_QUERY_LENGTH,
 } from '../searchConstants.js';
+import { DOM_EVENT_INPUT } from '../utils/domEventNames.js';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
@@ -92,7 +93,7 @@ describe('search.ts — DOM', () => {
     setupSearch();
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await Promise.resolve();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -106,7 +107,7 @@ describe('search.ts — DOM', () => {
     setupSearch();
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     expect(fetchSpy).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
@@ -124,7 +125,7 @@ describe('search.ts — DOM', () => {
     setupSearch();
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'abcd';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('abcd', '&locale=fr')));
     document.documentElement.lang = prevLang;
@@ -140,13 +141,13 @@ describe('search.ts — DOM', () => {
     setupSearch();
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'D';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Da';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Dar';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
@@ -163,7 +164,7 @@ describe('search.ts — DOM', () => {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     await Promise.resolve();
@@ -192,7 +193,7 @@ describe('search.ts — DOM', () => {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'XyZz';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(0);
@@ -210,12 +211,12 @@ describe('search.ts — DOM', () => {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Card';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(1);
     input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     expect(list.innerHTML).toBe('');
     vi.useRealTimers();
   });
@@ -228,7 +229,7 @@ describe('search.ts — DOM', () => {
     const container = document.getElementById(SEARCH_RESULTS_CONTAINER_ID)!;
     const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     expect(container.getAttribute(DATA_SEARCH_ERROR_ATTR)).toBe('true');

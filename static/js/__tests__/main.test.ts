@@ -26,6 +26,7 @@ import { DATA_PAGE_ATTR } from '../appPageDomSelectors.js';
 import { TAB_ID_DECKS } from '../tabs.js';
 import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
 import { HTTP_METHOD_POST, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
+import { DOM_EVENT_DOM_CONTENT_LOADED } from '../utils/domEventNames.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -72,7 +73,7 @@ describe('main.ts — intégration DOM', () => {
 
   it('DOMContentLoaded initialise sans exception (deck et stats)', async () => {
     await import('../main.js');
-    expect(() => document.dispatchEvent(new Event('DOMContentLoaded'))).not.toThrow();
+    expect(() => document.dispatchEvent(new Event(DOM_EVENT_DOM_CONTENT_LOADED))).not.toThrow();
     await Promise.resolve();
     await Promise.resolve();
   });
@@ -88,7 +89,7 @@ describe('main.ts — intégration DOM', () => {
       return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event(DOM_EVENT_DOM_CONTENT_LOADED));
     await Promise.resolve();
     await Promise.resolve();
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
@@ -114,7 +115,7 @@ describe('main.ts — intégration DOM', () => {
       return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event(DOM_EVENT_DOM_CONTENT_LOADED));
     await Promise.resolve();
     await Promise.resolve();
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
@@ -137,7 +138,7 @@ describe('main.ts — intégration DOM', () => {
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     await import('../main.js');
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    document.dispatchEvent(new Event(DOM_EVENT_DOM_CONTENT_LOADED));
     await Promise.resolve();
     await Promise.resolve();
     const list = document.getElementById(DECK_MY_DECKS_LIST_ID);

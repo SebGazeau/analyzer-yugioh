@@ -9,6 +9,7 @@ import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
 import { initAnalysis } from './init/analysis.js';
 import { bindSuggestionsAddToDeck, bindSuggestionsFindCard } from './init/suggestions.js';
+import { DOM_EVENT_DOM_CONTENT_LOADED } from './utils/domEventNames.js';
 
 function getInitials(pseudo: string | null): string {
     if (!pseudo || !pseudo.trim()) return HEADER_AVATAR_INITIALS_PLACEHOLDER;
@@ -23,7 +24,7 @@ function bindAvatarInitials(): void {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     bindAvatarInitials();
     bindAppTabs();
     initDecks();

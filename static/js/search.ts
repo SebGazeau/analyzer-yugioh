@@ -34,6 +34,7 @@ import {
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { searchApiUrl } from './cardSearchApiRoutes.js';
 import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
+import { DOM_EVENT_INPUT } from './utils/domEventNames.js';
 import {
     SEARCH_FILTER_ALL,
     type SearchFilter,
@@ -150,7 +151,7 @@ export function runSearchWithQuery(q: string): void {
     const trimmed = q.trim();
     if (trimmed.length < SEARCH_MIN_QUERY_LENGTH) return;
     input.value = trimmed;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
 }
 
 export function setupSearch(): void {
