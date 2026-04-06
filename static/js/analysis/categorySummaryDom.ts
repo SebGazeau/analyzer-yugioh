@@ -25,6 +25,7 @@ import {
     BUILDER_CATEGORY_LIST_ROW_CLASS,
     analysisHeroGroupReferenceLabel,
     builderCategorySortRowTitle,
+    categoryCompositionSegmentTooltip,
     DATA_CATEGORY_ATTR,
     DECK_COMPOSITION_SEGMENT_CLASS,
     DECK_STATS_CATEGORY_SEGMENT_CLASS,
@@ -210,7 +211,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const seg = document.createElement('div');
                 seg.className = DECK_COMPOSITION_SEGMENT_CLASS;
                 seg.style.flexBasis = cssLengthPercent(pct);
-                seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
+                seg.setAttribute(TITLE_ATTR, categoryCompositionSegmentTooltip(name, K, pct));
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 stripEl.appendChild(seg);
             });
@@ -226,7 +227,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 const seg = document.createElement('div');
                 seg.className = DECK_STATS_CATEGORY_SEGMENT_CLASS;
                 seg.style.flexBasis = cssLengthPercent(pct);
-                seg.setAttribute(TITLE_ATTR, `${name}: ${K} (${pct.toFixed(1)}%)`);
+                seg.setAttribute(TITLE_ATTR, categoryCompositionSegmentTooltip(name, K, pct));
                 seg.setAttribute(DATA_CATEGORY_ATTR, name);
                 sidebarBarEl.appendChild(seg);
             });

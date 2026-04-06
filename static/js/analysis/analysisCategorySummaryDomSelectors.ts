@@ -19,4 +19,8 @@ export const BUILDER_CATEGORY_LIST_COUNT_CLASS = 'builder-category-list-count';
 export const BUILDER_CATEGORY_LIST_BAR_WRAP_CLASS = 'builder-category-list-bar-wrap';
 export const BUILDER_CATEGORY_LIST_BAR_CLASS = 'builder-category-list-bar';
 
-export { analysisHeroGroupReferenceLabel, builderCategorySortRowTitle } from './analysisCategorySummaryTooltipsCopy.js';
+export {
+    analysisHeroGroupReferenceLabel,
+    builderCategorySortRowTitle,
+    categoryCompositionSegmentTooltip,
+} from './analysisCategorySummaryTooltipsCopy.js';

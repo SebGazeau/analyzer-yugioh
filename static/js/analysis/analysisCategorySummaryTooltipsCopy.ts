@@ -17,3 +17,8 @@ export function analysisHeroGroupReferenceLabel(
 ): string {
     return `Réf. : ${groupName} (${firstK} / ${totalCards} cartes) ${TEXT_EM_DASH} P(≥1) en 5 ou 6 tirages.`;
 }
+
+/** `title` d’un segment de la bande composition / barre catégories (pourcentage arrondi 1 décimale). */
+export function categoryCompositionSegmentTooltip(name: string, K: number, pct: number): string {
+    return `${name}: ${K} (${pct.toFixed(1)}%)`;
+}

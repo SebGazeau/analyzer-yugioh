@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     analysisHeroGroupReferenceLabel,
     builderCategorySortRowTitle,
+    categoryCompositionSegmentTooltip,
 } from '../analysis/analysisCategorySummaryTooltipsCopy.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
@@ -18,5 +19,9 @@ describe('analysisCategorySummaryTooltipsCopy', () => {
     it('builderCategorySortRowTitle inclut le nom de catégorie', () => {
         expect(builderCategorySortRowTitle('Hand Trap')).toContain('Hand Trap');
         expect(builderCategorySortRowTitle('X')).toContain('Main Deck');
+    });
+
+    it('categoryCompositionSegmentTooltip forme le title des segments', () => {
+        expect(categoryCompositionSegmentTooltip('Rocher', 4, 33.333)).toBe('Rocher: 4 (33.3%)');
     });
 });
