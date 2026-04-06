@@ -13,6 +13,12 @@ export const SEARCH_RESULT_BTN_ASSOCIATED_TITLE = 'Cartes associées (catalogue 
 /** Texte visible du bouton cartes associées (corps du `<button>`). */
 export const SEARCH_RESULT_BTN_ASSOCIATED_CAPTION = 'c. associés';
 
+/** Texte visible du bouton ajout deck (corps du `<button>`). */
+export const SEARCH_RESULT_BTN_ADD_DECK_CAPTION = '+';
+
+/** Texte visible du bouton ajout Side (corps du `<button>`). */
+export const SEARCH_RESULT_BTN_ADD_SIDE_CAPTION = 'Side';
+
 /** Attribut `aria-label` (cohérent avec les `title` quand pertinent). */
 export const SEARCH_RESULT_BTN_ADD_DECK_ARIA_LABEL = 'Ajouter au deck';
 export const SEARCH_RESULT_BTN_ADD_SIDE_ARIA_LABEL = 'Ajouter au Side';
