@@ -8,10 +8,13 @@
 import { deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 import {
-    TEXT_EN_DASH,
-    TEXT_GUILLEMET_CLOSE,
-    TEXT_GUILLEMET_OPEN,
-} from '../utils/textPlaceholders.js';
+    INSIGHT_SEVENTH_TACHYON_HELP_LINE,
+    INSIGHT_SEVENTH_TACHYON_SUMMARY_MAIN_NO_TARGETS,
+    INSIGHT_SEVENTH_TACHYON_TITLE,
+    insightSeventhTachyonSummaryExtraNoQualifyingNoPrio,
+    insightSeventhTachyonSummaryExtraNoQualifyingWithPrio,
+    insightSeventhTachyonSummaryMainWithTargets,
+} from './seventhTachyonCopy.js';
 import type {
     DeckInsight,
     InsightCardRef,
@@ -20,9 +23,6 @@ import type {
     MatchingCardPreview,
     NumberXyzSuggestion,
 } from './types.js';
-
-const HELP_LINE =
-    'Une activation par tour. Le reste de l’effet (bannissement, dégâts, etc.) n’est pas simulé ici.';
 
 const ST_NAME_NORM = 'seventh tachyon';
 
@@ -217,16 +217,16 @@ export function computeSeventhTachyonInsight(deck: InsightDeckSnapshot): DeckIns
         const prio = suggestedNumberXyz.filter((s) => s.matchesDeck).length;
         const summary =
             prio > 0
-                ? `Extra Deck sans Number 101${TEXT_EN_DASH}107 ni C101${TEXT_EN_DASH}C107. ${prio} proposition(s) ci-dessous correspondent à des monstres dans ton Main ou ton Side (niveau = rang, type ou attribut). Les autres complètent la liste.`
-                : `Extra Deck sans monstre Xyz ${TEXT_GUILLEMET_OPEN} Number ${TEXT_GUILLEMET_CLOSE} 101${TEXT_EN_DASH}107 ou C101${TEXT_EN_DASH}C107. Voici les 14 cartes de la série : privilégie celles dont le rang égale un niveau de monstre dans ton Main/Side et qui partagent type ou attribut.`;
+                ? insightSeventhTachyonSummaryExtraNoQualifyingWithPrio(prio)
+                : insightSeventhTachyonSummaryExtraNoQualifyingNoPrio();
         return {
             id: 'insight-seventh-tachyon',
             kind: 'seventh_tachyon',
             severity: 'info',
-            title: 'Seventh Tachyon',
+            title: INSIGHT_SEVENTH_TACHYON_TITLE,
             summary,
             details: {
-                helpLine: HELP_LINE,
+                helpLine: INSIGHT_SEVENTH_TACHYON_HELP_LINE,
                 seventhTachyon: { suggestedNumberXyz },
             },
         };
@@ -260,20 +260,19 @@ export function computeSeventhTachyonInsight(deck: InsightDeckSnapshot): DeckIns
 
     let summary: string;
     if (uniqueTargetCount === 0) {
-        summary =
-            'Aucun monstre du Main ne correspond (Type ou Attribut identique au Number révélé, Niveau = Rang).';
+        summary = INSIGHT_SEVENTH_TACHYON_SUMMARY_MAIN_NO_TARGETS;
     } else {
-        summary = `${uniqueTargetCount} carte(s) distincte(s) dans le Main peuvent être ajoutées à la main (Type ou Attribut identique, Niveau = Rang).`;
+        summary = insightSeventhTachyonSummaryMainWithTargets(uniqueTargetCount);
     }
 
     return {
         id: 'insight-seventh-tachyon',
         kind: 'seventh_tachyon',
         severity: 'active',
-        title: 'Seventh Tachyon',
+        title: INSIGHT_SEVENTH_TACHYON_TITLE,
         summary,
         details: {
-            helpLine: HELP_LINE,
+            helpLine: INSIGHT_SEVENTH_TACHYON_HELP_LINE,
             seventhTachyon: { xyzGroups, uniqueTargetCount },
         },
     };
