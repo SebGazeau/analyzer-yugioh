@@ -2,7 +2,7 @@
  * Onglet Suggestions : « Chercher » → Builder + recherche ; clic ligne / vignette → ajout deck.
  */
 import { addToDeck } from '../deck.js';
-import { isDeckSectionMainSide } from '../deckSectionMainSideShortCopy.js';
+import { isDeckSectionMainSide } from '../deckSectionMainSide.js';
 import type { DeckSection } from '../deckSectionOrder.js';
 import { fetchSearchResultsForQuery, pickBestCardFromSearchResults, runSearchWithQuery } from '../search.js';
 import {

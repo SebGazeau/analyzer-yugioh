@@ -74,14 +74,14 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
 export type { DeckSectionCounts } from './deckSection.js';
-export type { DeckSectionMainSide } from './deckSectionMainSideShortCopy.js';
+export type { DeckSectionMainSide } from './deckSectionMainSide.js';
 export type { DeckSection } from './deckSectionOrder.js';
 export { DECK_SECTIONS } from './deckSectionOrder.js';
 export {
     deckSectionMainSideShortLabel,
     deckSectionMainSideSortKey,
     isDeckSectionMainSide,
-} from './deckSectionMainSideShortCopy.js';
+} from './deckSectionMainSide.js';
 export {
     emptyArraysByDeckSection,
     hasTruthyDeckSectionData,

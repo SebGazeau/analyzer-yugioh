@@ -1,6 +1,6 @@
 /** Types partagés pour les suggestions / insights deck (extensible). */
 
-import type { DeckSectionMainSide } from '../deckSectionMainSideShortCopy.js';
+import type { DeckSectionMainSide } from '../deckSectionMainSide.js';
 
 /** Sous-ensemble des champs `DeckRow` nécessaires aux règles (sans dépendre de deck.ts). */
 export interface InsightDeckRow {

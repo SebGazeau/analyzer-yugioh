@@ -4,9 +4,9 @@ import {
     deckSectionMainSideShortLabel,
     deckSectionMainSideSortKey,
     isDeckSectionMainSide,
-} from '../deckSectionMainSideShortCopy.js';
+} from '../deckSectionMainSide.js';
 
-describe('deckSectionMainSideShortCopy', () => {
+describe('deckSectionMainSide', () => {
     it('libellés stables', () => {
         expect(DECK_SECTION_MAIN_SIDE_SHORT_LABEL.main).toBe('Main');
         expect(DECK_SECTION_MAIN_SIDE_SHORT_LABEL.side).toBe('Side');
