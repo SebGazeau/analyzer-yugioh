@@ -4,6 +4,7 @@
  */
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import {
+    DECK_DUPLICATE_NAME_SUFFIX,
     DECK_NAME_FALLBACK_DISPLAY,
     MSG_DECK_API_AUTH_REQUIRED,
     MSG_DECK_API_DECK_NOT_FOUND,
@@ -132,7 +133,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     }
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const baseName = String(data.name ?? DECK_NAME_FALLBACK_DISPLAY).trim() || DECK_NAME_FALLBACK_DISPLAY;
-    const newName = `${baseName} (copie)`;
+    const newName = `${baseName}${DECK_DUPLICATE_NAME_SUFFIX}`;
     const sections = mapDeckSections((s) => (Array.isArray(data[s]) ? data[s] : [])) as DeckSectionsPayload;
     const body = { name: newName, ...sections };
     const postRes = await fetch('/decks', {

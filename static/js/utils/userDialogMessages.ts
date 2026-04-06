@@ -19,8 +19,11 @@ export function msgErrorPrefixed(detail: string): string {
     return `Erreur: ${detail}`;
 }
 
-export function msgDeckDuplicated(deckName: string): string {
-    return `Deck dupliqué : ${TEXT_GUILLEMET_OPEN} ${deckName} (copie) ${TEXT_GUILLEMET_CLOSE}`;
+/** Suffixe du nom du deck créé par duplication (aligné sur `apiDuplicateDeck`). */
+export const DECK_DUPLICATE_NAME_SUFFIX = ' (copie)';
+
+export function msgDeckDuplicated(sourceDeckName: string): string {
+    return `Deck dupliqué : ${TEXT_GUILLEMET_OPEN} ${sourceDeckName}${DECK_DUPLICATE_NAME_SUFFIX} ${TEXT_GUILLEMET_CLOSE}`;
 }
 
 /** `deckName` brut : échappé pour affichage HTML dans la boîte de dialogue. */

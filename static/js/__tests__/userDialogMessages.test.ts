@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  DECK_DUPLICATE_NAME_SUFFIX,
   DECK_EXPORT_JSON_FILE_NAME,
   DECK_NAME_FALLBACK_DISPLAY,
   MSG_DECK_API_AUTH_REQUIRED,
@@ -9,6 +10,7 @@ import {
   MSG_UPDATE_DECK_NOT_LOADED,
   msgAssociationCardNotFound,
   msgConfirmDeleteDeck,
+  msgDeckDuplicated,
   msgDeckZoneFull,
   msgErrorPrefixed,
   msgImportCardsNotFound,
@@ -26,6 +28,12 @@ describe('userDialogMessages', () => {
 
   it('msgErrorPrefixed préfixe Erreur', () => {
     expect(msgErrorPrefixed('timeout')).toBe('Erreur: timeout');
+  });
+
+  it('DECK_DUPLICATE_NAME_SUFFIX aligné msgDeckDuplicated / apiDuplicateDeck', () => {
+    expect(DECK_DUPLICATE_NAME_SUFFIX).toBe(' (copie)');
+    expect(msgDeckDuplicated('X')).toContain(DECK_DUPLICATE_NAME_SUFFIX);
+    expect(msgDeckDuplicated('X')).toContain('X');
   });
 
   it('msgConfirmDeleteDeck échappe le nom', () => {
