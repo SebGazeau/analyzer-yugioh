@@ -4,6 +4,7 @@ import {
     builderCategorySortRowTitle,
     categoryCompositionSegmentTooltip,
 } from '../analysis/analysisCategorySummaryTooltipsCopy.js';
+import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT } from '../analysis/yugiohDrawConstants.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 describe('analysisCategorySummaryTooltipsCopy', () => {
@@ -13,6 +14,8 @@ describe('analysisCategorySummaryTooltipsCopy', () => {
         expect(s).toContain('3');
         expect(s).toContain('40');
         expect(s).toContain('P(≥1)');
+        expect(s).toContain(String(YGO_FIRST_HAND_DRAW_COUNT));
+        expect(s).toContain(String(YGO_SECOND_HAND_DRAW_COUNT));
         expect(s).toContain(TEXT_EM_DASH);
     });
 

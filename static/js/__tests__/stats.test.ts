@@ -15,6 +15,7 @@ import {
   YGO_SECOND_HAND_DRAW_COUNT,
 } from '../stats.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
+import { DRAW_HISTOGRAM_SIM_ITERATIONS } from '../analysis/drawHistogramDomCopy.js';
 import {
   DRAW_SIMULATION_COUNT_ID,
   DRAW_SIMULATION_LIST_ID,
@@ -204,9 +205,14 @@ describe('stats.ts - simulation Monte Carlo', () => {
 
 describe('stats.ts - simulateDrawCounts (histogramme)', () => {
   it('retourne un histogramme dont la somme vaut iterations', () => {
-    const hist = simulateDrawCounts(DECK_40_THREE_COPIES, 'engine', 5, 1000);
+    const hist = simulateDrawCounts(
+      DECK_40_THREE_COPIES,
+      'engine',
+      YGO_FIRST_HAND_DRAW_COUNT,
+      DRAW_HISTOGRAM_SIM_ITERATIONS,
+    );
     const sum = Object.values(hist).reduce((a, b) => a + b, 0);
-    expect(sum).toBe(1000);
+    expect(sum).toBe(DRAW_HISTOGRAM_SIM_ITERATIONS);
   });
 
   it('retourne des clés 0 à drawCount', () => {
