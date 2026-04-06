@@ -2,6 +2,13 @@
  * Classes et attributs `data-*` du widget recherche (alignés sur templates + CSS).
  */
 
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+    CARD_TYPE_KIND_TRAP,
+    type CardTypeKind,
+} from './utils/cardTypeKindConstants.js';
+
 export const SEARCH_RESULT_ROW_CLASS = 'search-result-row';
 export const SEARCH_RESULT_META_CLASS = 'search-result-meta';
 export const SEARCH_FILTER_BTN_CLASS = 'search-filter-btn';
@@ -34,12 +41,13 @@ export const SEARCH_RESULT_THUMB_IMG_CLASS = 'search-result-thumb-img';
 
 export const SEARCH_RESULT_INITIAL_CLASS = 'search-result-initial';
 export const SEARCH_RESULT_INITIAL_KIND_CLASS = {
-    monster: `${SEARCH_RESULT_INITIAL_CLASS}--monster`,
-    spell: `${SEARCH_RESULT_INITIAL_CLASS}--spell`,
-    trap: `${SEARCH_RESULT_INITIAL_CLASS}--trap`,
-} as const;
+    [CARD_TYPE_KIND_MONSTER]: `${SEARCH_RESULT_INITIAL_CLASS}--monster`,
+    [CARD_TYPE_KIND_SPELL]: `${SEARCH_RESULT_INITIAL_CLASS}--spell`,
+    [CARD_TYPE_KIND_TRAP]: `${SEARCH_RESULT_INITIAL_CLASS}--trap`,
+} as const satisfies Record<CardTypeKind, string>;
 
-export type SearchResultInitialKind = keyof typeof SEARCH_RESULT_INITIAL_KIND_CLASS;
+/** Alias sémantique : initiale M/S/T dans la vignette recherche. */
+export type SearchResultInitialKind = CardTypeKind;
 
 export function searchResultInitialCellClass(kind: SearchResultInitialKind): string {
     return `${SEARCH_RESULT_INITIAL_CLASS} ${SEARCH_RESULT_INITIAL_KIND_CLASS[kind]}`;

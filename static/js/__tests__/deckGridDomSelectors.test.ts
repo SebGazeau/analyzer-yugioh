@@ -8,24 +8,29 @@ import {
     DECK_CARD_THUMB_WRAPPER_CLASS,
     deckCardCellWrapperClassName,
 } from '../deck-builder/grid/deckGridDomSelectors.js';
+import {
+    CARD_TYPE_KIND_MONSTER,
+    CARD_TYPE_KIND_SPELL,
+    CARD_TYPE_KIND_TRAP,
+} from '../utils/cardTypeKindConstants.js';
 
 describe('deckGridDomSelectors', () => {
   it('deckCardCellWrapperClassName combine base + modificateur type', () => {
-    expect(deckCardCellWrapperClassName('monster')).toBe(
-      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS.monster}`,
+    expect(deckCardCellWrapperClassName(CARD_TYPE_KIND_MONSTER)).toBe(
+      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_MONSTER]}`,
     );
-    expect(deckCardCellWrapperClassName('spell')).toBe(
-      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS.spell}`,
+    expect(deckCardCellWrapperClassName(CARD_TYPE_KIND_SPELL)).toBe(
+      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_SPELL]}`,
     );
-    expect(deckCardCellWrapperClassName('trap')).toBe(
-      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS.trap}`,
+    expect(deckCardCellWrapperClassName(CARD_TYPE_KIND_TRAP)).toBe(
+      `${DECK_CARD_CELL_CLASS} ${DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_TRAP]}`,
     );
   });
 
   it('modificateurs correspondent aux classes BEM attendues', () => {
-    expect(DECK_CARD_CELL_TYPE_KIND_CLASS.monster).toBe('deck-card-cell--monster');
-    expect(DECK_CARD_CELL_TYPE_KIND_CLASS.spell).toBe('deck-card-cell--spell');
-    expect(DECK_CARD_CELL_TYPE_KIND_CLASS.trap).toBe('deck-card-cell--trap');
+    expect(DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_MONSTER]).toBe('deck-card-cell--monster');
+    expect(DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_SPELL]).toBe('deck-card-cell--spell');
+    expect(DECK_CARD_CELL_TYPE_KIND_CLASS[CARD_TYPE_KIND_TRAP]).toBe('deck-card-cell--trap');
   });
 
   it('shell cellule : classes thumb / remove-one alignées CSS builder', () => {
