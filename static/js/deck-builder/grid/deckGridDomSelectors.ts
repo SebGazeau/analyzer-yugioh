@@ -60,14 +60,9 @@ export const DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS = 'viewBox="0 0 24 24" fill="no
 export const DECK_CARD_REMOVE_ONE_PATH_HTML =
     '<path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>';
 
-/** Libellé `title` / `aria-label` du bouton « retirer 1 exemplaire ». */
-export const DECK_CARD_REMOVE_ONE_BTN_LABEL = 'Retirer 1 exemplaire';
-
-export function deckCardBanBadgeTitle(maxCopies: number): string {
-    return `Banlist TCG : max ${maxCopies} exemplaire(s)`;
-}
-
 export const DECK_CARD_QTY_CLASS = 'deck-card-qty';
 export const DECK_CARD_QTY_SELECTOR = `.${DECK_CARD_QTY_CLASS}`;
 /** Préfixe affiché devant la quantité (grille + popover, ex. « x3 »). */
 export const DECK_CARD_QTY_DISPLAY_PREFIX = 'x';
+
+export { DECK_CARD_REMOVE_ONE_BTN_LABEL, deckCardBanBadgeTitle } from './deckCardGridCellCopy.js';
