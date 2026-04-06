@@ -65,7 +65,7 @@ function addOrIncrement(
     const currentQty = existing ? existing.quantity : 0;
     if (currentQty >= DECK_DEFAULT_MAX_COPIES_PER_CARD) return { entries: [...entries], ok: false };
 
-    const newQty = currentQty + 1;
+    const newQty = currentQty + DECK_DEFAULT_ROW_QUANTITY;
     const newEntries = existing
         ? entries.map((e) => (e.id === card.id ? { ...e, quantity: newQty } : e))
         : [
@@ -130,7 +130,7 @@ export function removeCard(
     const entries = state[section].map((e) => {
         if (e.id !== cardId) return e;
         if (e.quantity <= DECK_DEFAULT_ROW_QUANTITY) return null;
-        return { ...e, quantity: e.quantity - 1 };
+        return { ...e, quantity: e.quantity - DECK_DEFAULT_ROW_QUANTITY };
     }).filter((e): e is DeckEntry => e !== null);
     return { ...state, [section]: entries };
 }
@@ -176,7 +176,7 @@ export function importDeckFromYDK(ydk: string): { state: DeckState; error?: stri
 
         const arr = sections[section];
         const existing = arr.find((e) => e.id === id);
-        if (existing) existing.quantity += 1;
+        if (existing) existing.quantity += DECK_DEFAULT_ROW_QUANTITY;
         else arr.push({ id, name: '', quantity: DECK_DEFAULT_ROW_QUANTITY });
     }
 

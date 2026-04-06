@@ -9,7 +9,7 @@ import {
     canAddToDeckLimitGroup,
     deckLimitGroupKeyFromCard,
 } from './deckLimitGroups.js';
-import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deckConstants.js';
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD, DECK_DEFAULT_ROW_QUANTITY } from './deckConstants.js';
 import { createDeckRowFromApiCard } from './deckRowFactory.js';
 
 export type TryAddCardResult = { ok: true; mode: 'increment' | 'newRow' } | { ok: false };
@@ -40,14 +40,16 @@ export function tryAddCardToDeckSection(
 
     const existingIdx = findExistingRowIndex(arr, card, displayName);
     if (existingIdx >= 0) {
-        if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, 1, incomingMax)) return { ok: false };
+        if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, DECK_DEFAULT_ROW_QUANTITY, incomingMax))
+            return { ok: false };
         const row = arr[existingIdx];
         const max = row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD;
         if (row.quantity >= max) return { ok: false };
-        row.quantity += 1;
+        row.quantity += DECK_DEFAULT_ROW_QUANTITY;
         return { ok: true, mode: 'increment' };
     }
-    if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, 1, incomingMax)) return { ok: false };
+    if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, DECK_DEFAULT_ROW_QUANTITY, incomingMax))
+        return { ok: false };
 
     arr.push(createDeckRowFromApiCard(card));
     return { ok: true, mode: 'newRow' };
