@@ -91,9 +91,9 @@ export function isLegal(state: DeckState): boolean {
     const c: DeckSectionCounts = mapDeckSections((s) => sectionCount(state[s]));
     return (
         c.main >= MIN_MAIN_CARDS &&
-        c.main <= maxCardsForZone('main') &&
-        c.extra <= maxCardsForZone('extra') &&
-        c.side <= maxCardsForZone('side')
+        c.main <= maxCardsForZone(DECK_SECTIONS[0]) &&
+        c.extra <= maxCardsForZone(DECK_SECTIONS[1]) &&
+        c.side <= maxCardsForZone(DECK_SECTIONS[2])
     );
 }
 
@@ -105,7 +105,8 @@ export function addCard(
 ): { state: DeckState; ok: boolean } {
     const isExtra = (t: string) =>
         /fusion|synchro|xyz|link/i.test(t || '');
-    const targetSection: DeckSection = section ?? (isExtra(card.type || '') ? 'extra' : 'main');
+    const targetSection: DeckSection =
+        section ?? (isExtra(card.type || '') ? DECK_SECTIONS[1] : DECK_SECTIONS[0]);
 
     const max = maxCardsForZone(targetSection);
     const current = state[targetSection];

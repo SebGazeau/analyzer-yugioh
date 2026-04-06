@@ -5,7 +5,7 @@
  * - Le numéro « Number 101 » … « Number 107 » est extrait du nom anglais via regex (supporte « Number C101 », etc.).
  * - Le rang des Xyz est lu depuis `level` (champ YGOPro / API : rang stocké comme level pour les Xyz).
  */
-import { deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
+import { DECK_SECTIONS, deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
 import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { CARD_TYPE_KIND_MONSTER, CARD_TYPE_KIND_SPELL } from '../utils/cardTypeKindConstants.js';
@@ -175,8 +175,8 @@ function matchingCardsForCatalogEntry(
         }
     };
 
-    collect(main, 'main');
-    collect(side, 'side');
+    collect(main, DECK_SECTIONS[0]);
+    collect(side, DECK_SECTIONS[2]);
     out.sort(
         (a, b) =>
             a.name.localeCompare(b.name) ||

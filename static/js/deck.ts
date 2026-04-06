@@ -221,8 +221,8 @@ deckCardPopoverApi = createDeckCardPopover({
 });
 
 mainDeckSortStore = createMainDeckSortStore({
-    getMainDeck: () => getState('main'),
-    renderMain: () => renderDeckSection('main'),
+    getMainDeck: () => getState(DECK_SECTIONS[0]),
+    renderMain: () => renderDeckSection(DECK_SECTIONS[0]),
     afterVisualUpdate: () => syncBuilderStatsFromDeck(),
 });
 
@@ -253,7 +253,7 @@ export function cleanCardTable(): void {
 
 export async function addToDeck(card: Card, sectionOverride?: DeckSection): Promise<boolean> {
     const section: DeckSection =
-        sectionOverride ?? (isExtraDeckCard(card) ? 'extra' : 'main');
+        sectionOverride ?? (isExtraDeckCard(card) ? DECK_SECTIONS[1] : DECK_SECTIONS[0]);
     const arr = getState(section);
     const result = tryAddCardToDeckSection(card, arr, allDeckRowsFlat());
     if (!result.ok) return false;

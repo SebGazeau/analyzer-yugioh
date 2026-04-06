@@ -2,7 +2,7 @@
  * Logique pure déplacement / réorganisation des cartes (drag-and-drop builder).
  */
 
-import type { DeckSection } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSection.js';
 
 export type { DeckSection };
 
@@ -44,8 +44,8 @@ export function isExtraDeckRowLike(row: DeckRowLike): boolean {
  * Une carte non-Extra ne peut pas aller en Extra (→ null).
  */
 export function resolveTargetZone(row: DeckRowLike, requested: DeckSection): DeckSection | null {
-    if (requested === 'extra' && !isExtraDeckRowLike(row)) return null;
-    if (requested === 'main' && isExtraDeckRowLike(row)) return 'extra';
+    if (requested === DECK_SECTIONS[1] && !isExtraDeckRowLike(row)) return null;
+    if (requested === DECK_SECTIONS[0] && isExtraDeckRowLike(row)) return DECK_SECTIONS[1];
     return requested;
 }
 
