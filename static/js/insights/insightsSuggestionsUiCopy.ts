@@ -2,6 +2,8 @@
  * Libellés / `title` de l’onglet Suggestions (insights, Number Xyz, puces Main/Side).
  */
 
+import { DECK_DEFAULT_ROW_QUANTITY } from '../deck-builder/deckConstants.js';
+
 /** Caractère affiché dans la vignette vide d’une puce match (pas d’image). */
 export const INSIGHTS_MAIN_MATCH_THUMB_PLACEHOLDER_TEXT = '?';
 
@@ -10,7 +12,7 @@ export const INSIGHTS_FIND_CARD_BUTTON_LABEL = 'Chercher';
 
 /** `title` des puces « match » (section affichée entre parenthèses). */
 export function insightsMainMatchChipTitle(sectionShortLabel: string): string {
-    return `Cliquer pour ajouter 1 exemplaire (${sectionShortLabel})`;
+    return `Cliquer pour ajouter ${DECK_DEFAULT_ROW_QUANTITY} exemplaire (${sectionShortLabel})`;
 }
 
 /** `aria-label` de la quantité sur une puce match (qty &gt; 1). */

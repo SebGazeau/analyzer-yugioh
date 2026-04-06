@@ -63,7 +63,7 @@ export const DECK_CARD_REMOVE_ONE_ICON_CLASS = 'deck-card-remove-one-icon';
 /** Racine SVG « moins » sur la cellule grille. */
 export const DECK_CARD_REMOVE_ONE_ICON_SVG_ATTRS = 'viewBox="0 0 24 24" fill="none"';
 
-/** Élément `<path>` de l’icône « retirer 1 » (trait horizontal épais). */
+/** Élément `<path>` de l’icône « retirer une unité » (trait horizontal épais). */
 export const DECK_CARD_REMOVE_ONE_PATH_HTML =
     '<path d="M4 12h16" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>';
 
