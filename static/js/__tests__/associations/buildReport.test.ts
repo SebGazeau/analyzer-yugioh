@@ -17,6 +17,15 @@ import {
     ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
     ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
 } from '../../associations/associationsDiagnosticCodes.js';
+import {
+    ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+    ASSOCIATION_ANGLE_TEXT_MENTION,
+    ASSOCIATION_ANGLE_TEXT_MENTIONS_ANCHOR_NAME,
+    ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA,
+    ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
+    ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH,
+    ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME,
+} from '../../associations/associationsReportKeys.js';
 import type { AssociationCatalogCard } from '../../associations/types.js';
 
 function card(p: Partial<AssociationCatalogCard> & Pick<AssociationCatalogCard, 'id' | 'name'>): AssociationCatalogCard {
@@ -54,11 +63,17 @@ describe('buildAssociationReport', () => {
             card({ id: 4, name: 'Other', archetype: 'Lightsworn' }),
         ];
         const r = buildAssociationReport(anchor, catalog, {});
-        const archGroups = r.groups.filter((g) => g.angleId === 'structured_archetype');
+        const archGroups = r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE);
         expect(archGroups).toHaveLength(2);
-        expect(archGroups.map((g) => g.groupKey).sort()).toEqual(['archetype:Archfiend', 'archetype:Regenesis'].sort());
-        expect(archGroups.find((g) => g.groupKey === 'archetype:Regenesis')?.cardIds).toEqual([2]);
-        expect(archGroups.find((g) => g.groupKey === 'archetype:Archfiend')?.cardIds).toEqual([3]);
+        expect(archGroups.map((g) => g.groupKey).sort()).toEqual(
+            [`${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Archfiend`, `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Regenesis`].sort(),
+        );
+        expect(
+            archGroups.find((g) => g.groupKey === `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Regenesis`)?.cardIds,
+        ).toEqual([2]);
+        expect(
+            archGroups.find((g) => g.groupKey === `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Archfiend`)?.cardIds,
+        ).toEqual([3]);
     });
 
     it('text_mention : desc contenant synonyme Yeux Bleus', () => {
@@ -75,7 +90,9 @@ describe('buildAssociationReport', () => {
             dynamicTextMentions: false,
             textMentionRules: EXAMPLE_BLUE_EYES_TEXT_RULES,
         });
-        const tm = r.groups.filter((g) => g.angleId === 'text_mention' && g.groupKey === 'blue_eyes');
+        const tm = r.groups.filter(
+            (g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION && g.groupKey === 'blue_eyes',
+        );
         expect(tm.length).toBeGreaterThanOrEqual(1);
         expect(tm[0].cardIds).toContain(2);
         expect(tm[0].linkStrength).toBe('reference');
@@ -85,7 +102,7 @@ describe('buildAssociationReport', () => {
         const anchor = card({ id: 1, name: 'A', archetype: 'UniqueArch' });
         const catalog: AssociationCatalogCard[] = [card({ id: 2, name: 'B', archetype: 'Other' })];
         const r = buildAssociationReport(anchor, catalog, {});
-        expect(r.groups.filter((g) => g.angleId === 'structured_archetype')).toHaveLength(0);
+        expect(r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE)).toHaveLength(0);
     });
 
     it('toAssociationCatalog parse JSON API', () => {
@@ -118,7 +135,7 @@ describe('buildAssociationReport', () => {
         expect(r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE)).toBe(
             true,
         );
-        const tm = r.groups.filter((g) => g.angleId === 'text_mention');
+        const tm = r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION);
         expect(tm.some((g) => g.cardIds.includes(2))).toBe(true);
     });
 
@@ -160,7 +177,7 @@ describe('buildAssociationReport', () => {
             dynamicTextMentions: false,
             includeAnchorNameInDesc: true,
         });
-        expect(r.groups.filter((g) => g.angleId === 'text_mentions_anchor_name')).toHaveLength(0);
+        expect(r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTIONS_ANCHOR_NAME)).toHaveLength(0);
     });
 
     it('groupe ygorg_official_qa depuis ygorgQaRelatedCardIds', () => {
@@ -174,7 +191,7 @@ describe('buildAssociationReport', () => {
             dynamicTextMentions: false,
             ygorgQaRelatedCardIds: [2, 3],
         });
-        const q = r.groups.find((g) => g.angleId === 'ygorg_official_qa');
+        const q = r.groups.find((g) => g.angleId === ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA);
         expect(q?.cardIds.sort((a, b) => a - b)).toEqual([2, 3]);
         expect(q?.linkStrength).toBe('reference');
     });
@@ -217,7 +234,7 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             includeNameWordPatterns: true,
             minNameWordLength: 5,
         });
-        const nameRules = rules.filter((r) => r.groupKey.startsWith('text_name:'));
+        const nameRules = rules.filter((r) => r.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME));
         expect(nameRules.some((r) => r.patterns.includes('dragon'))).toBe(false);
         expect(nameRules.some((r) => r.patterns.includes('white'))).toBe(false);
         expect(nameRules.length).toBeGreaterThanOrEqual(1);
@@ -235,7 +252,7 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             includeNameWordPatterns: true,
             minNameWordLength: 5,
         });
-        const nameRules = rules.filter((r) => r.groupKey.startsWith('text_name:'));
+        const nameRules = rules.filter((r) => r.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME));
         expect(nameRules.some((r) => r.patterns.includes('break'))).toBe(false);
         expect(nameRules.some((r) => r.patterns.includes('diactorus'))).toBe(true);
     });
@@ -251,7 +268,7 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             }),
         ];
         const r = buildAssociationReport(anchor, catalog, { includeNameWordPatterns: false });
-        const tm = r.groups.filter((g) => g.angleId === 'text_mention');
+        const tm = r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION);
         expect(tm.some((g) => g.displayLabel.includes('Stardust'))).toBe(true);
         expect(tm.some((g) => g.cardIds.includes(2))).toBe(true);
     });
@@ -269,13 +286,13 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             maxNameWordCitationMatches: 5,
             textMentionRules: [
                 {
-                    groupKey: 'text_name:broad',
+                    groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME}broad`,
                     displayLabel: 'Citation texte (mot du nom) : « x »',
                     patterns: ['broadmatchtoken'],
                 },
             ],
         });
-        expect(r.groups.filter((g) => g.angleId === 'text_mention')).toHaveLength(0);
+        expect(r.groups.filter((g) => g.angleId === ASSOCIATION_ANGLE_TEXT_MENTION)).toHaveLength(0);
         expect(
             r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD),
         ).toBe(true);
@@ -294,13 +311,13 @@ describe('buildDynamicTextMentionRulesFromAnchor', () => {
             maxNameWordCitationMatches: 3,
             textMentionRules: [
                 {
-                    groupKey: 'text_arch:stardust',
+                    groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH}stardust`,
                     displayLabel: 'Citation texte : Stardust',
                     patterns: ['stardust'],
                 },
             ],
         });
-        const g = r.groups.find((x) => x.groupKey === 'text_arch:stardust');
+        const g = r.groups.find((x) => x.groupKey === `${ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH}stardust`);
         expect(g?.cardIds.length).toBe(10);
         expect(
             r.diagnostics.some((d) => d.code === ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD),
@@ -324,8 +341,8 @@ describe('associationReportToMarkdown', () => {
             generatedAt: '2020-01-01T00:00:00.000Z',
             groups: [
                 {
-                    angleId: 'structured_archetype',
-                    groupKey: 'archetype:Z',
+                    angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+                    groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}Z`,
                     displayLabel: 'Même archétype : Z',
                     linkStrength: 'member' as const,
                     cardIds: [2, 3],

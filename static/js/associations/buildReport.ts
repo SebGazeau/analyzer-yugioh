@@ -8,6 +8,17 @@ import {
     ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE,
 } from './associationsDiagnosticCodes.js';
 import {
+    ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+    ASSOCIATION_ANGLE_TEXT_MENTION,
+    ASSOCIATION_ANGLE_TEXT_MENTIONS_ANCHOR_NAME,
+    ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA,
+    ASSOCIATION_GROUP_KEY_ANCHOR_NAME_IN_DESC,
+    ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
+    ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME,
+    ASSOCIATION_GROUP_KEY_YGORG_SHARED_QA,
+    ASSOCIATION_REPORT_META_SOURCE_YGORG_QA_ENTRIES,
+} from './associationsReportKeys.js';
+import {
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_EXPLAINED_EMPTY,
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_HAS_GROUPS,
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_INCONCLUSIVE,
@@ -253,8 +264,8 @@ export function buildAssociationReport(
             }
             if (cardIds.length > 0) {
                 groups.push({
-                    angleId: 'structured_archetype',
-                    groupKey: `archetype:${arch}`,
+                    angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+                    groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}${arch}`,
                     displayLabel: associationGroupDisplayLabelSameArchetype(arch),
                     linkStrength: 'member',
                     cardIds,
@@ -277,12 +288,12 @@ export function buildAssociationReport(
             });
         }
         groups.push({
-            angleId: 'ygorg_official_qa',
-            groupKey: 'ygorg_shared_qa',
+            angleId: ASSOCIATION_ANGLE_YGORG_OFFICIAL_QA,
+            groupKey: ASSOCIATION_GROUP_KEY_YGORG_SHARED_QA,
             displayLabel: ASSOCIATION_GROUP_DISPLAY_YGORG_QA,
             linkStrength: 'reference',
             cardIds,
-            meta: { source: 'ygorg_qa_entries' },
+            meta: { source: ASSOCIATION_REPORT_META_SOURCE_YGORG_QA_ENTRIES },
         });
     }
 
@@ -303,7 +314,7 @@ export function buildAssociationReport(
         for (const rule of textMentionRules) {
             const matching: number[] = [];
             const useWordBoundary =
-                useWordBoundaryForNameWords && rule.groupKey.startsWith('text_name:');
+                useWordBoundaryForNameWords && rule.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME);
             for (const c of catalog) {
                 if (c.id === anchor.id) continue;
                 const d = associationCitableText(c).toLowerCase();
@@ -312,7 +323,10 @@ export function buildAssociationReport(
                 if (hit) matching.push(c.id);
             }
             const unique = [...new Set(matching)];
-            if (rule.groupKey.startsWith('text_name:') && unique.length > maxNameWordCitationMatches) {
+            if (
+                rule.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_NAME) &&
+                unique.length > maxNameWordCitationMatches
+            ) {
                 pushDiagnostic(diagnostics, {
                     code: ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD,
                     message: associationDiagnosticNameWordCitationSkippedMessage(
@@ -335,7 +349,7 @@ export function buildAssociationReport(
             }
             if (cardIds.length > 0) {
                 groups.push({
-                    angleId: 'text_mention',
+                    angleId: ASSOCIATION_ANGLE_TEXT_MENTION,
                     groupKey: rule.groupKey,
                     displayLabel: rule.displayLabel,
                     linkStrength: 'reference',
@@ -368,8 +382,8 @@ export function buildAssociationReport(
                 }
                 if (cardIds.length > 0) {
                     groups.push({
-                        angleId: 'text_mentions_anchor_name',
-                        groupKey: 'anchor_name_in_desc',
+                        angleId: ASSOCIATION_ANGLE_TEXT_MENTIONS_ANCHOR_NAME,
+                        groupKey: ASSOCIATION_GROUP_KEY_ANCHOR_NAME_IN_DESC,
                         displayLabel: associationGroupDisplayLabelTextCiting(primary),
                         linkStrength: 'reference',
                         cardIds,

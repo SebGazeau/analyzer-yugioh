@@ -5,6 +5,11 @@
 import { TEXT_EM_DASH, TEXT_EN_DASH } from '../utils/textPlaceholders.js';
 import { parseArchetypesFromField } from './archetype.js';
 import {
+    ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH,
+    ASSOCIATION_SLUG_PREFIX_TEXT_ARCH,
+    ASSOCIATION_SLUG_PREFIX_TEXT_NAME,
+} from './associationsReportKeys.js';
+import {
     associationGroupDisplayLabelCitationNameWord,
     associationGroupDisplayLabelCitationText,
 } from './associationsReportGroupDisplayCopy.js';
@@ -247,7 +252,7 @@ export function buildDynamicTextMentionRulesFromAnchor(
         if (label.length < 2) continue;
         const patterns = expandPhrasePatterns(label);
         if (patterns.length === 0) continue;
-        const key = slugKey('text_arch', label);
+        const key = slugKey(ASSOCIATION_SLUG_PREFIX_TEXT_ARCH, label);
         if (usedKeys.has(key)) continue;
         usedKeys.add(key);
         rules.push({
@@ -259,11 +264,13 @@ export function buildDynamicTextMentionRulesFromAnchor(
 
     if (includeName) {
         for (const w of extractNameWords(anchor, minLen)) {
-            const key = slugKey('text_name', w);
+            const key = slugKey(ASSOCIATION_SLUG_PREFIX_TEXT_NAME, w);
             if (usedKeys.has(key)) continue;
             // Éviter de dupliquer une règle déjà couverte par un archétype identique
             const dupArch = rules.some(
-                (r) => r.groupKey.startsWith('text_arch:') && r.patterns.some((p) => p === w || p.replace(/\s/g, '-') === w),
+                (r) =>
+                    r.groupKey.startsWith(ASSOCIATION_GROUP_KEY_PREFIX_TEXT_ARCH) &&
+                    r.patterns.some((p) => p === w || p.replace(/\s/g, '-') === w),
             );
             if (dupArch) continue;
             usedKeys.add(key);

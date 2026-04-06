@@ -12,6 +12,10 @@ import {
     DATA_ASSOCIATIONS_ACTION_ATTR,
     DATA_CARD_ID_ATTR,
 } from '../../associations/associationsDomSelectors.js';
+import {
+    ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+    ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE,
+} from '../../associations/associationsReportKeys.js';
 import type { AssociationCatalogCard, AssociationReport } from '../../associations/types.js';
 
 function catalogCard(p: Partial<AssociationCatalogCard> & Pick<AssociationCatalogCard, 'id' | 'name'>): AssociationCatalogCard {
@@ -44,8 +48,8 @@ describe('associationsModalReportBodyHtml', () => {
             generatedAt: 't0',
             groups: [
                 {
-                    angleId: 'structured_archetype',
-                    groupKey: 'archetype:TestArch',
+                    angleId: ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE,
+                    groupKey: `${ASSOCIATION_GROUP_KEY_PREFIX_ARCHETYPE}TestArch`,
                     displayLabel: 'Même archétype',
                     linkStrength: 'member',
                     cardIds: [2],
@@ -55,7 +59,7 @@ describe('associationsModalReportBodyHtml', () => {
         };
         const html = associationsModalReportBodyHtml(report, catalog, anchor, '# md');
         expect(html).toContain(`${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_COPY_MARKDOWN}"`);
-        expect(html).toContain(`${DATA_ASSOCIATION_ANGLE_ATTR}="structured_archetype"`);
+        expect(html).toContain(`${DATA_ASSOCIATION_ANGLE_ATTR}="${ASSOCIATION_ANGLE_STRUCTURED_ARCHETYPE}"`);
         expect(html).toContain(`${DATA_CARD_ID_ATTR}="2"`);
         expect(html).toContain('# md');
     });
