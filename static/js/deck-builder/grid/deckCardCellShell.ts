@@ -4,6 +4,7 @@
  */
 
 import { DATA_DECK_ACTION_ATTR, DECK_ACTION_REMOVE_ONE } from '../deckConstants.js';
+import { DECK_CARD_THUMB_PLACEHOLDER_TEXT, deckCardBanBadgeVisibleLabel } from './deckCardGridCellCopy.js';
 import {
     DECK_CARD_BAN_BADGE_CLASS,
     DECK_CARD_QTY_CLASS,
@@ -40,10 +41,10 @@ export interface DeckCardCellShellRow {
 export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
     const thumbHtml = row.imageUrl
         ? `<img class="${DECK_CARD_THUMB_IMG_CLASS}" src="${escapeAttr(row.imageUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
-        : `<span class="${DECK_CARD_THUMB_PLACEHOLDER_CLASS}">?</span>`;
+        : `<span class="${DECK_CARD_THUMB_PLACEHOLDER_CLASS}">${DECK_CARD_THUMB_PLACEHOLDER_TEXT}</span>`;
     const banBadge =
         row.maxCopies != null && row.maxCopies < 3
-            ? `<span class="${DECK_CARD_BAN_BADGE_CLASS}" title="${escapeAttr(deckCardBanBadgeTitle(row.maxCopies!))}">lt. ${row.maxCopies}</span>`
+            ? `<span class="${DECK_CARD_BAN_BADGE_CLASS}" title="${escapeAttr(deckCardBanBadgeTitle(row.maxCopies!))}">${deckCardBanBadgeVisibleLabel(row.maxCopies)}</span>`
             : '';
     return `
             <div class="${DECK_CARD_THUMB_WRAPPER_CLASS}">${thumbHtml}</div>
