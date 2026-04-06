@@ -3,7 +3,8 @@ import { setAnalysisDeckName, syncBuilderStatsFromDeck } from './stats.js';
 import { fetchCardByName, Card } from './api.js';
 import { cleanDeckCardDisplayName } from './analysis/categorySummaryData.js';
 import { clearCategorySummaryTableBody } from './analysis/categorySummaryDom.js';
-import { DECK_SECTIONS, emptyArraysByDeckSection, mapDeckSections, type DeckSection } from './deckSection.js';
+import { emptyArraysByDeckSection, mapDeckSections } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 import { isExtraDeckRowLike } from './deck-move.js';
 import {
     createDeckCardPopover,
@@ -72,9 +73,10 @@ export { getCurrentLoadedDeck } from './deck-builder/loadedDeckSession.js';
 
 export const cleanCardNameFromCell = cleanDeckCardDisplayName;
 
-export type { DeckSection, DeckSectionCounts, DeckSectionMainSide } from './deckSection.js';
+export type { DeckSectionCounts, DeckSectionMainSide } from './deckSection.js';
+export type { DeckSection } from './deckSectionOrder.js';
+export { DECK_SECTIONS } from './deckSectionOrder.js';
 export {
-    DECK_SECTIONS,
     deckSectionMainSideShortLabel,
     deckSectionMainSideSortKey,
     emptyArraysByDeckSection,

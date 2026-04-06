@@ -9,7 +9,8 @@ import {
     HTTP_METHOD_PUT,
     HTTP_STATUS_UNAUTHORIZED,
 } from '../utils/httpMime.js';
-import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { mapDeckSections } from '../deckSection.js';
+import type { DeckSection } from '../deckSectionOrder.js';
 import {
     DECK_DUPLICATE_NAME_SUFFIX,
     DECK_NAME_FALLBACK_DISPLAY,

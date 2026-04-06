@@ -2,7 +2,8 @@
  * Constantes du deck builder : IDs DOM, clés stockage, fetch, DnD, layout popover.
  */
 
-import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { mapDeckSections } from '../deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from '../deckSectionOrder.js';
 import { FETCH_CREDENTIALS_SAME_ORIGIN } from '../utils/httpMime.js';
 
 /** Limite Yu-Gi-Oh classique par nom de carte dans une zone (hors règles spéciales du row). */

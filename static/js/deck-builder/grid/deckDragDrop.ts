@@ -9,7 +9,8 @@ import {
     type DeckRowLike,
 } from '../../deck-move.js';
 import { deckSectionForGridElementId, DECK_DND_SUPPRESS_CLICK_MS } from '../deckConstants.js';
-import { isDeckSection, type DeckSection } from '../../deckSection.js';
+import { isDeckSection } from '../../deckSection.js';
+import type { DeckSection } from '../../deckSectionOrder.js';
 import { INTEGER_STRING_DECIMAL_RADIX } from '../../utils/numberParse.js';
 import {
     DECK_CARD_CELL_DRAGGING_CLASS,

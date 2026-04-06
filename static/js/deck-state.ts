@@ -10,12 +10,11 @@ import {
 import { maxCardsForZone, MIN_MAIN_CARDS } from './deck-move.js';
 import { INTEGER_STRING_DECIMAL_RADIX } from './utils/numberParse.js';
 import {
-    DECK_SECTIONS,
     emptyArraysByDeckSection,
     mapDeckSections,
-    type DeckSection,
     type DeckSectionCounts,
 } from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 import {
     YDK_EXPORT_HEADER_LINE,
     YDK_SECTION_MARKER_EXTRA,

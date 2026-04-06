@@ -2,7 +2,8 @@
  * DOM : compteurs Main (types), barres builder, résumé MAIN/EXTRA/SIDE, panneaux composition.
  */
 
-import { DECK_SECTIONS, mapDeckSections, type DeckSection, type DeckSectionCounts } from '../deckSection.js';
+import { mapDeckSections, type DeckSectionCounts } from '../deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from '../deckSectionOrder.js';
 import {
     BUILDER_DECK_SECTION_COUNT_LABEL,
     BUILDER_DECK_SECTION_SUMMARY_SEPARATOR,

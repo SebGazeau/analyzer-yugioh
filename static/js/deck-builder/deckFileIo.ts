@@ -2,7 +2,8 @@
  * Export / import JSON du deck (fichier local, hors API serveur).
  */
 import type { Card } from '../api.js';
-import { DECK_SECTIONS, hasTruthyDeckSectionData, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { hasTruthyDeckSectionData, mapDeckSections } from '../deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from '../deckSectionOrder.js';
 import { DECK_DEFAULT_ROW_QUANTITY } from './deckConstants.js';
 import { JSON_STRINGIFY_PRETTY_INDENT_SPACES } from '../utils/jsonFormat.js';
 import { MIME_TYPE_APPLICATION_JSON } from '../utils/httpMime.js';
