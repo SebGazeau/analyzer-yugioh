@@ -10,6 +10,7 @@ import {
 } from '../../deck-move.js';
 import { deckSectionForGridElementId, DECK_DND_SUPPRESS_CLICK_MS } from '../deckConstants.js';
 import { isDeckSection, type DeckSection } from '../../deckSection.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from '../../utils/numberParse.js';
 import {
     DECK_CARD_CELL_DRAGGING_CLASS,
     DECK_CARDS_GRID_DND_OVER_CLASS,
@@ -142,7 +143,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         const cell = (e.target as HTMLElement).closest(DECK_CELL_HAS_SECTION_SELECTOR);
         if (!cell || !e.dataTransfer) return;
         const section = cell.getAttribute(DATA_DECK_CELL_SECTION_ATTR) as DeckSection;
-        const index = parseInt(cell.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '-1', 10);
+        const index = parseInt(cell.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '-1', INTEGER_STRING_DECIMAL_RADIX);
         if (index < 0 || !isDeckSection(section)) return;
         e.dataTransfer.setData(dndPayloadType, JSON.stringify({ section, index }));
         e.dataTransfer.effectAllowed = 'move';
@@ -193,7 +194,7 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
         const len = getSectionLength(dropSection);
         let dropOnIdx: number;
         if (hit && grid.contains(hit)) {
-            dropOnIdx = parseInt(hit.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '0', 10);
+            dropOnIdx = parseInt(hit.getAttribute(DATA_DECK_CELL_INDEX_ATTR) || '0', INTEGER_STRING_DECIMAL_RADIX);
         } else {
             dropOnIdx = len;
         }

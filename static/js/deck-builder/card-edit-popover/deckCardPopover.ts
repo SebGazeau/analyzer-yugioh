@@ -13,11 +13,13 @@ import {
     DOM_EVENT_RESIZE,
     DOM_EVENT_SCROLL,
 } from '../../utils/domEventNames.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from '../../utils/numberParse.js';
 import { KEY_ESCAPE } from '../../utils/keyboardKeys.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
     DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
     DECK_DEFAULT_MAX_COPIES_PER_CARD,
+    DECK_DEFAULT_ROW_QUANTITY,
 } from '../deckConstants.js';
 import {
     deckLimitGroupKeyRow,
@@ -110,7 +112,10 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const arr = getState(popoverSection);
         const row = arr[popoverIndex];
         if (!row) return;
-        let newQty = parseInt(qtySelect?.value || '1', 10);
+        let newQty = parseInt(
+            qtySelect?.value || String(DECK_DEFAULT_ROW_QUANTITY),
+            INTEGER_STRING_DECIMAL_RADIX,
+        );
         const key = deckLimitGroupKeyRow(row);
         const flat = allDeckRowsFlat();
         const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);

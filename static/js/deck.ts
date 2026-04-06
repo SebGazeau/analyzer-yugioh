@@ -14,7 +14,11 @@ import {
     removeDeckCoverFromStorage,
     setDeckCover,
 } from './deck-builder/deckCoverStorage.js';
-import { DECK_GRID_IDS, DECK_DND_PAYLOAD_TYPE } from './deck-builder/deckConstants.js';
+import {
+    DECK_DEFAULT_ROW_QUANTITY,
+    DECK_DND_PAYLOAD_TYPE,
+    DECK_GRID_IDS,
+} from './deck-builder/deckConstants.js';
 import { banTcgToMaxCopies } from './deck-builder/deckLimitGroups.js';
 import {
     apiCreateDeck,
@@ -153,7 +157,7 @@ export function isExtraDeckCard(card: Card): boolean {
     return isExtraDeckRowLike({
         type: card.type || '',
         frame_type: typeof card.frame_type === 'string' ? card.frame_type : undefined,
-        quantity: 1,
+        quantity: DECK_DEFAULT_ROW_QUANTITY,
     });
 }
 

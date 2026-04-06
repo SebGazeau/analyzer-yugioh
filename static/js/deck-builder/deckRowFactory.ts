@@ -4,6 +4,7 @@
 
 import type { Card } from '../api.js';
 import type { DeckRow } from '../deck.js';
+import { DECK_DEFAULT_ROW_QUANTITY } from './deckConstants.js';
 import { banTcgToMaxCopies } from './deckLimitGroups.js';
 
 export interface ServerDeckListEntry {
@@ -31,7 +32,7 @@ export function createDeckRowFromApiCard(card: Card): DeckRow {
     return {
         name: displayName,
         type: card.type ?? '',
-        quantity: 1,
+        quantity: DECK_DEFAULT_ROW_QUANTITY,
         engine: '',
         categories: [],
         imageUrl: card.image_url ?? undefined,
@@ -64,7 +65,7 @@ export function createDeckRowFromServerEntry(infoCard: Card, entry: ServerDeckLi
     return {
         name: infoCard.name_en ?? infoCard.name,
         type: infoCard.type ?? '',
-        quantity: entry.quantity ?? 1,
+        quantity: entry.quantity ?? DECK_DEFAULT_ROW_QUANTITY,
         engine: entry.engine ?? '',
         categories: entry.categories ?? [],
         imageUrl: infoCard.image_url ?? undefined,

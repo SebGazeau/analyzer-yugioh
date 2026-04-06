@@ -7,6 +7,7 @@
  */
 import { deckSectionMainSideSortKey, type DeckSectionMainSide } from '../deckSection.js';
 import { cardTypeKindFromTypeStringOrNull } from '../utils/cardTypeKind.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { CARD_TYPE_KIND_MONSTER, CARD_TYPE_KIND_SPELL } from '../utils/cardTypeKindConstants.js';
 import {
     INSIGHT_SEVENTH_TACHYON_HELP_LINE,
@@ -38,7 +39,7 @@ function normalizeName(name: string): string {
 export function extractNumberIndexFromName(name: string): number | null {
     const m = name.match(/number\s+(?:c)?(10[1-7])\b/i);
     if (!m) return null;
-    return parseInt(m[1], 10);
+    return parseInt(m[1], INTEGER_STRING_DECIMAL_RADIX);
 }
 
 function isSpell(row: InsightDeckRow): boolean {

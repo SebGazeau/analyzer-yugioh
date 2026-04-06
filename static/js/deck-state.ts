@@ -3,8 +3,12 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
-import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deck-builder/deckConstants.js';
+import {
+    DECK_DEFAULT_MAX_COPIES_PER_CARD,
+    DECK_DEFAULT_ROW_QUANTITY,
+} from './deck-builder/deckConstants.js';
 import { maxCardsForZone, MIN_MAIN_CARDS } from './deck-move.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from './utils/numberParse.js';
 import {
     DECK_SECTIONS,
     emptyArraysByDeckSection,
@@ -64,7 +68,16 @@ function addOrIncrement(
     const newQty = currentQty + 1;
     const newEntries = existing
         ? entries.map((e) => (e.id === card.id ? { ...e, quantity: newQty } : e))
-        : [...entries, { id: card.id, name: card.name, quantity: 1, engine: card.engine, categories: card.categories }];
+        : [
+              ...entries,
+              {
+                  id: card.id,
+                  name: card.name,
+                  quantity: DECK_DEFAULT_ROW_QUANTITY,
+                  engine: card.engine,
+                  categories: card.categories,
+              },
+          ];
     return { entries: newEntries, ok: true };
 }
 
@@ -158,13 +171,13 @@ export function importDeckFromYDK(ydk: string): { state: DeckState; error?: stri
             section = 'side';
             continue;
         }
-        const id = parseInt(trimmed, 10);
+        const id = parseInt(trimmed, INTEGER_STRING_DECIMAL_RADIX);
         if (Number.isNaN(id) || trimmed !== String(id)) continue; // comment or invalid
 
         const arr = sections[section];
         const existing = arr.find((e) => e.id === id);
         if (existing) existing.quantity += 1;
-        else arr.push({ id, name: '', quantity: 1 });
+        else arr.push({ id, name: '', quantity: DECK_DEFAULT_ROW_QUANTITY });
     }
 
     return { state: { ...sections } };

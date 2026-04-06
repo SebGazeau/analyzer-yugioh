@@ -14,6 +14,7 @@ import {
 } from '../analysis/drawSimulationDomIds.js';
 import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT } from '../analysis/yugiohDrawConstants.js';
 import { DOM_EVENT_CLICK } from '../utils/domEventNames.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { setHandSize, getHandSize, drawOneCard, resetDrawSimulation, runSimulation1000AndUpdateHistogram, clearHistogramGraphs } from '../stats.js';
 
 export function bindSimulation(): void {
@@ -23,7 +24,10 @@ export function bindSimulation(): void {
             const b = btn as HTMLButtonElement;
             b.classList.toggle(
                 DRAW_SIM_HAND_BTN_ACTIVE_CLASS,
-                parseInt(b.getAttribute(DRAW_SIM_HAND_DATA_ATTR) || String(YGO_FIRST_HAND_DRAW_COUNT), 10) === current,
+                parseInt(
+                    b.getAttribute(DRAW_SIM_HAND_DATA_ATTR) || String(YGO_FIRST_HAND_DRAW_COUNT),
+                    INTEGER_STRING_DECIMAL_RADIX,
+                ) === current,
             );
         });
     }

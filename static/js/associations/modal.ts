@@ -6,6 +6,7 @@ import {
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
 import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../utils/htmlAttrs.js';
@@ -113,7 +114,7 @@ function announceAssociationsModal(message: string): void {
 
 async function addAssociationTileToDeck(tile: Element): Promise<void> {
     const idStr = tile.getAttribute(DATA_CARD_ID_ATTR);
-    const id = idStr ? parseInt(idStr, 10) : NaN;
+    const id = idStr ? parseInt(idStr, INTEGER_STRING_DECIMAL_RADIX) : NaN;
     if (!Number.isFinite(id)) return;
     const cat = lastModalCatalogForTiles;
     const row = cat?.find((c) => c.id === id);
