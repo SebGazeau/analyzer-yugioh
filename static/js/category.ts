@@ -11,6 +11,7 @@ import {
     DROPDOWN_LIST_VISIBLE_CLASS,
 } from './categoryDomSelectors.js';
 import { categoryOptions } from './categoryData.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from './utils/domEventNames.js';
 import { KEY_ESCAPE, KEY_TAB } from './utils/keyboardKeys.js';
 
 export { CATEGORY_GROUPS, categoryOptions } from './categoryData.js';
@@ -67,19 +68,19 @@ export function createCategorySelector(): CategoryContainer {
         }
     });
     container.appendChild(select);
-    container.addEventListener('click', (e) => {
+    container.addEventListener(DOM_EVENT_CLICK, (e) => {
         if (select.classList.contains(DROPDOWN_LIST_VISIBLE_CLASS)) {
             showDropdown(false);
         } else {
             showDropdown(true);
         }
     });
-    document.addEventListener('click', (e) => {
+    document.addEventListener(DOM_EVENT_CLICK, (e) => {
         if (!container.contains(e.target as Node) && !select.contains(e.target as Node)) {
             showDropdown(false);
         }
     });
-    container.addEventListener('keydown', (e) => {
+    container.addEventListener(DOM_EVENT_KEYDOWN, (e) => {
         const key = (e as KeyboardEvent).key;
         if (key === KEY_ESCAPE || key === KEY_TAB) showDropdown(false);
     });

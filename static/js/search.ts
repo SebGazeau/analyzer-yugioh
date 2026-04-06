@@ -34,7 +34,7 @@ import {
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { searchApiUrl } from './cardSearchApiRoutes.js';
 import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
-import { DOM_EVENT_INPUT } from './utils/domEventNames.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_INPUT } from './utils/domEventNames.js';
 import {
     SEARCH_FILTER_ALL,
     type SearchFilter,
@@ -88,19 +88,19 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
         archetypeBadgeHtml: searchResultArchetypeSourceBadgeHtml(card.archetype_source),
         thumbInnerHtml: thumbInner,
     });
-    row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
         addToDeck(card);
     });
-    row.querySelector(SEARCH_RESULT_ADD_SIDE_SELECTOR)?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_RESULT_ADD_SIDE_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
         addToDeck(card, 'side');
     });
-    row.querySelector(SEARCH_ACTION_ASSOCIATED_SELECTOR)?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_ACTION_ASSOCIATED_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
         void openAssociatedCardsModal(card as Record<string, unknown>);
     });
-    row.addEventListener('click', (e) => {
+    row.addEventListener(DOM_EVENT_CLICK, (e) => {
         if ((e.target as HTMLElement).closest(NATIVE_BUTTON_SELECTOR)) return;
         addToDeck(card);
     });
@@ -190,7 +190,7 @@ export function setupSearch(): void {
     };
 
     document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener(DOM_EVENT_CLICK, () => {
             const filter = (btn.getAttribute(DATA_SEARCH_FILTER_ATTR) ?? SEARCH_FILTER_ALL) as SearchFilter;
             activeFilter = filter;
             document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((b) => {
@@ -205,7 +205,7 @@ export function setupSearch(): void {
 
     const debouncedSearch = debounce(runSearch, SEARCH_DEBOUNCE_MS);
 
-    input.addEventListener('input', () => {
+    input.addEventListener(DOM_EVENT_INPUT, () => {
         const query = input.value.trim();
         if (query.length < SEARCH_MIN_QUERY_LENGTH) {
             results.innerHTML = '';

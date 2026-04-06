@@ -8,6 +8,7 @@ import {
   DROPDOWN_EMPTY_MESSAGE_TEXT,
   DROPDOWN_LIST_CLASS,
 } from '../categoryDomSelectors.js';
+import { DOM_EVENT_CLICK } from '../utils/domEventNames.js';
 
 describe('category.ts — createCategorySelector (DOM)', () => {
   it('retourne un élément avec la classe category-container', () => {
@@ -55,7 +56,7 @@ describe('category.ts — createCategorySelector (DOM)', () => {
   it('dropdown sans options affiche le message avec classe (style via CSS)', () => {
     const el = createCategorySelector();
     el.setCategories?.([...categoryOptions]);
-    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    el.dispatchEvent(new MouseEvent(DOM_EVENT_CLICK, { bubbles: true }));
     const list = el.querySelector(`.${DROPDOWN_LIST_CLASS}`);
     const empty = list?.querySelector(`.${DROPDOWN_EMPTY_MESSAGE_CLASS}`);
     expect(empty?.textContent).toBe(DROPDOWN_EMPTY_MESSAGE_TEXT);
