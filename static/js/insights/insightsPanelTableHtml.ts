@@ -26,6 +26,7 @@ import { insightsTableKindLabel, insightsTableSeverityLabel } from './insightsPa
 import type { DeckInsight, NumberXyzSuggestion, SeventhTachyonXyzGroup } from './types.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
+import { DECK_DEFAULT_ROW_QUANTITY } from '../deck-builder/deckConstants.js';
 import { TEXT_EM_DASH, TEXT_MULTIPLICATION_SIGN } from '../utils/textPlaceholders.js';
 
 /** Lignes du tableau résumé (liste des insights). */
@@ -76,7 +77,7 @@ export function insightsSeventhTachyonDetailRowsHtml(groups: SeventhTachyonXyzGr
                     : `<ul class="${SUGGESTIONS_TARGET_LIST_CLASS}">${g.targets
                           .map(
                               (t) =>
-                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > 1 ? ` ${TEXT_MULTIPLICATION_SIGN}${t.quantity}` : ''}</li>`,
+                                  `<li ${INSIGHTS_CARD_LINE_DATA_ATTR}>${escapeHtml(t.name)}${t.quantity > DECK_DEFAULT_ROW_QUANTITY ? ` ${TEXT_MULTIPLICATION_SIGN}${t.quantity}` : ''}</li>`,
                           )
                           .join('')}</ul>`;
             return `

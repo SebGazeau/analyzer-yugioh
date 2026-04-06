@@ -194,8 +194,8 @@ function removeOneDeckCopy(section: DeckSection, index: number): void {
     const arr = getState(section);
     const row = arr[index];
     if (!row) return;
-    if (row.quantity > 1) {
-        row.quantity -= 1;
+    if (row.quantity > DECK_DEFAULT_ROW_QUANTITY) {
+        row.quantity -= DECK_DEFAULT_ROW_QUANTITY;
         renderDeckSection(section);
         syncBuilderStatsFromDeck();
         if (wasEditingHere) {

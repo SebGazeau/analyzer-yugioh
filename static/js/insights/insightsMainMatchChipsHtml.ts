@@ -2,6 +2,7 @@
  * HTML des chips « cartes du deck qui matchent » (tableau Number XYZ, onglet Suggestions).
  */
 
+import { DECK_DEFAULT_ROW_QUANTITY } from '../deck-builder/deckConstants.js';
 import { deckSectionMainSideShortLabel } from '../deckSection.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
@@ -47,7 +48,7 @@ export function insightsMainMatchChipsHtml(cards: MatchingCardPreview[]): string
             const nameEsc = escapeHtml(c.name);
             const nameAttr = escapeAttr(c.name);
             const qty =
-                c.quantity > 1
+                c.quantity > DECK_DEFAULT_ROW_QUANTITY
                     ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${escapeAttr(insightsMainMatchQtyAriaLabel(c.quantity))}">${TEXT_MULTIPLICATION_SIGN}${c.quantity}</span>`
                     : '';
             const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
