@@ -1,9 +1,7 @@
 import { DECK_SECTION_MAIN_SIDE_SHORT_LABEL } from './deckSectionMainSideShortCopy.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
 
-/** Zones deck officielles : Main, Extra, Side (ordre d’itération = affichage builder). */
-
-export const DECK_SECTIONS = ['main', 'extra', 'side'] as const;
-export type DeckSection = (typeof DECK_SECTIONS)[number];
+export { DECK_SECTIONS, type DeckSection };
 
 /** Construit un `Record<DeckSection, T>` dans l’ordre canonique (évite de dupliquer `Object.fromEntries` + `map`). */
 export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Record<DeckSection, T> {
