@@ -27,6 +27,7 @@ import {
     ASSOCIATIONS_MODAL_SPINNER_CLASS,
     ASSOCIATIONS_MODAL_SUBTITLE_CLASS,
     ASSOCIATIONS_MODAL_TITLE_CLASS,
+    ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE,
     DATA_ASSOCIATIONS_CLOSE_ATTR,
 } from './associationsDomSelectors.js';
 
@@ -51,7 +52,7 @@ export function associationsModalShellInnerHtml(ids: AssociationsModalShellIds):
         anchorArtId,
     } = ids;
     return `
-            <div class="${ASSOCIATIONS_MODAL_BACKDROP_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1"></div>
+            <div class="${ASSOCIATIONS_MODAL_BACKDROP_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="${ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE}"></div>
             <div class="${ASSOCIATIONS_MODAL_PANEL_CLASS}" id="${panelId}" ${ROLE_ATTR}="${ROLE_DOCUMENT}">
                 <div id="${liveId}" class="${ASSOCIATIONS_MODAL_LIVE_CLASS}" ${ARIA_LIVE_ATTR}="polite" ${ARIA_ATOMIC_ATTR}="true"></div>
                 <header class="${ASSOCIATIONS_MODAL_HEADER_CLASS}">
@@ -62,7 +63,7 @@ export function associationsModalShellInnerHtml(ids: AssociationsModalShellIds):
                             <p id="${subtitleId}" class="${ASSOCIATIONS_MODAL_SUBTITLE_CLASS}"></p>
                         </div>
                     </div>
-                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="1" ${ARIA_LABEL_ATTR}="${ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL}">${TEXT_MULTIPLICATION_SIGN}</button>
+                    <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_CLOSE_BTN_CLASS}" ${DATA_ASSOCIATIONS_CLOSE_ATTR}="${ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE}" ${ARIA_LABEL_ATTR}="${ASSOCIATIONS_MODAL_CLOSE_BTN_ARIA_LABEL}">${TEXT_MULTIPLICATION_SIGN}</button>
                 </header>
                 <div id="${loadingId}" class="${ASSOCIATIONS_MODAL_LOADING_CLASS}" hidden>
                     <span class="${ASSOCIATIONS_MODAL_SPINNER_CLASS}" ${ARIA_HIDDEN_ATTR}="true"></span>

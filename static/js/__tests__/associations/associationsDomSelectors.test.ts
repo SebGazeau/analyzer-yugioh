@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+    ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE,
     ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
     ASSOCIATIONS_MODAL_BODY_ID,
     ASSOCIATIONS_MODAL_LIVE_ID,
@@ -16,6 +17,10 @@ import {
 } from '../../associations/associationsDomSelectors.js';
 
 describe('associationsDomSelectors', () => {
+    it('valeur présence data-associations stable', () => {
+        expect(ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE).toBe('1');
+    });
+
     it('contrats modal + grille tuiles', () => {
         expect(ASSOCIATIONS_MODAL_ROOT_CLASS).toBe('associations-modal');
         expect(ASSOCIATIONS_MODAL_TILE_GRID_CLASS).toBe('associations-modal__tile-grid');

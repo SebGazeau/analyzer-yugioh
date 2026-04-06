@@ -64,6 +64,7 @@ import {
     ASSOCIATIONS_MODAL_STAT_CLASS,
     ASSOCIATIONS_MODAL_STAT_VALUE_CLASS,
     ASSOCIATIONS_MODAL_SUMMARY_CLASS,
+    ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE,
     ASSOCIATIONS_MODAL_TILE_GRID_CLASS,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS,
     DATA_ASSOCIATION_ANGLE_ATTR,
@@ -178,7 +179,7 @@ export function associationsModalReportBodyHtml(
         if (rest.length > 0) {
             const idsAttr = rest.join(ASSOCIATIONS_REST_IDS_VALUE_SEPARATOR);
             parts.push(
-                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="1"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(associationsModalReportExpandTilesAriaLabel(rest.length))}">${associationsModalReportExpandTilesButtonCaption(rest.length)}</button></li>`,
+                `<li class="${ASSOCIATIONS_MODAL_TILE_MORE_LI_CLASS}" ${DATA_ASSOCIATIONS_TILE_MORE_ATTR}="${ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE}"><button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${ASSOCIATIONS_MODAL_EXPAND_TILES_BTN_CLASS}" ${DATA_ASSOCIATIONS_ACTION_ATTR}="${ASSOCIATIONS_ACTION_EXPAND_TILES}" ${DATA_ASSOCIATIONS_REST_IDS_ATTR}="${escapeAttr(idsAttr)}" ${ARIA_LABEL_ATTR}="${escapeAttr(associationsModalReportExpandTilesAriaLabel(rest.length))}">${associationsModalReportExpandTilesButtonCaption(rest.length)}</button></li>`,
             );
         }
         parts.push('</ul></div></details>');

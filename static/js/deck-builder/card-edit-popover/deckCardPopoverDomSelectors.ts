@@ -72,6 +72,8 @@ export const DECK_CARD_POPOVER_QTY_LIMIT_CLASSES = [
 ] as const;
 
 export const DATA_DECK_POPOVER_BACKDROP_ATTR = 'data-deck-popover-backdrop';
+/** Valeur lorsque seule la présence compte pour `[data-deck-popover-backdrop]`. */
+export const DATA_DECK_POPOVER_BACKDROP_PRESENCE_VALUE = '1';
 
 export {
     DECK_CARD_POPOVER_CLOSE_BTN_ARIA_LABEL,

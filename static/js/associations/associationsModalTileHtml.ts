@@ -22,6 +22,7 @@ import {
     ASSOCIATIONS_MODAL_TILE_CLASS,
     ASSOCIATIONS_MODAL_TILE_IMG_CLASS,
     ASSOCIATIONS_MODAL_TILE_NAME_CLASS,
+    ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE,
     DATA_ASSOCIATIONS_ADD_DECK_ATTR,
     DATA_CARD_ID_ATTR,
 } from './associationsDomSelectors.js';
@@ -62,5 +63,5 @@ export function associationsModalTileListItemHtml(
     const row = idToCard.get(id);
     const nm = row ? row.name_en?.trim() || row.name : `#${id}`;
     const art = associationsModalThumbInnerHtml(row?.image_url, nm, ASSOCIATIONS_MODAL_TILE_IMG_CLASS, 'lazy');
-    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="1" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="${ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE}"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
+    return `<li class="${ASSOCIATIONS_MODAL_TILE_CLASS}" ${DATA_CARD_ID_ATTR}="${id}" ${DATA_ASSOCIATIONS_ADD_DECK_ATTR}="${ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE}" ${ROLE_ATTR}="${ROLE_BUTTON}" ${TABINDEX_ATTR}="${TABINDEX_ZERO}" ${TITLE_ATTR}="${ASSOCIATIONS_MODAL_TILE_ADD_DECK_TITLE}"><div class="${ASSOCIATIONS_MODAL_TILE_ART_CLASS}">${art}</div><div class="${ASSOCIATIONS_MODAL_TILE_CAPTION_CLASS}"><span class="${ASSOCIATIONS_MODAL_TILE_NAME_CLASS}">${escapeHtml(nm)}</span></div></li>`;
 }

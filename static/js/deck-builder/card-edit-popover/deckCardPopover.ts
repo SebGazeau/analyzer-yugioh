@@ -34,6 +34,7 @@ import {
 } from '../grid/deckGridDomSelectors.js';
 import {
     DATA_DECK_POPOVER_BACKDROP_ATTR,
+    DATA_DECK_POPOVER_BACKDROP_PRESENCE_VALUE,
     DECK_CARD_POPOVER_ABOVE_CLASS,
     DECK_CARD_POPOVER_BACKDROP_CLASS,
     DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS,
@@ -179,7 +180,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
 
         popoverBackdropEl = document.createElement('div');
         popoverBackdropEl.className = DECK_CARD_POPOVER_BACKDROP_CLASS;
-        popoverBackdropEl.setAttribute(DATA_DECK_POPOVER_BACKDROP_ATTR, '1');
+        popoverBackdropEl.setAttribute(DATA_DECK_POPOVER_BACKDROP_ATTR, DATA_DECK_POPOVER_BACKDROP_PRESENCE_VALUE);
         popoverBackdropEl.setAttribute(ARIA_HIDDEN_ATTR, 'true');
         document.body.appendChild(popoverBackdropEl);
         popoverBackdropEl.addEventListener(DOM_EVENT_CLICK, () => dismissSaving());

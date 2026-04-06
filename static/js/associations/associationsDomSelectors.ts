@@ -18,6 +18,11 @@ export const ASSOCIATIONS_MODAL_ANCHOR_ART_ID = 'associations-modal-anchor-art';
 export const DATA_ASSOCIATIONS_ADD_DECK_ATTR = 'data-associations-add-deck';
 export const DATA_ASSOCIATIONS_CLOSE_ATTR = 'data-associations-close';
 export const DATA_ASSOCIATIONS_ACTION_ATTR = 'data-associations-action';
+/**
+ * Valeur des `data-associations-*` lorsque seule la présence compte pour le sélecteur
+ * (ex. `[data-associations-close]`, `[data-associations-add-deck]`).
+ */
+export const ASSOCIATIONS_DATA_ATTR_PRESENCE_VALUE = '1';
 export const ASSOCIATIONS_ACTION_COPY_MARKDOWN = 'copy-markdown';
 export const ASSOCIATIONS_ACTION_EXPAND_TILES = 'expand-tiles';
 
