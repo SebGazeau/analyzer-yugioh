@@ -15,7 +15,7 @@ export function insightsMainMatchChipTitle(sectionShortLabel: string): string {
     return `Cliquer pour ajouter ${DECK_DEFAULT_ROW_QUANTITY} exemplaire (${sectionShortLabel})`;
 }
 
-/** `aria-label` de la quantité sur une puce match (qty &gt; 1). */
+/** `aria-label` de la quantité sur une puce match (qty &gt; {@link DECK_DEFAULT_ROW_QUANTITY}). */
 export function insightsMainMatchQtyAriaLabel(quantity: number): string {
     return `${quantity} exemplaires`;
 }

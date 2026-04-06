@@ -137,7 +137,7 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
     };
 
     if (Array.isArray(data)) {
-        await addEntries(data, 'main');
+        await addEntries(data, DECK_SECTIONS[0]);
     } else if (data && typeof data === 'object') {
         const o = data as Partial<Record<DeckSection, unknown>>;
         if (!hasTruthyDeckSectionData(o)) {
