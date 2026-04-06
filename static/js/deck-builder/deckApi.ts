@@ -2,6 +2,7 @@
  * Appels HTTP et sérialisation JSON pour les decks (`DECK_API_COLLECTION_URL`).
  * L’état du builder et le DOM restent dans deck.ts.
  */
+import { FETCH_HEADERS_JSON } from '../utils/httpMime.js';
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import {
     DECK_DUPLICATE_NAME_SUFFIX,
@@ -93,7 +94,7 @@ export async function apiCreateDeck(name: string, sections: DeckSectionsPayload)
     const res = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -118,7 +119,7 @@ export async function apiUpdateDeck(
     const res = await fetch(deckApiDeckByIdUrl(deckId), {
         ...DECK_FETCH_INIT,
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -143,7 +144,7 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     const postRes = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...FETCH_HEADERS_JSON },
         body: JSON.stringify(body),
     });
     const postData = (await postRes.json().catch(() => ({}))) as Record<string, unknown>;

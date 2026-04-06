@@ -3,6 +3,7 @@
  */
 import type { Card } from '../api.js';
 import { DECK_SECTIONS, hasTruthyDeckSectionData, mapDeckSections, type DeckSection } from '../deckSection.js';
+import { MIME_TYPE_APPLICATION_JSON } from '../utils/httpMime.js';
 import {
     MSG_IMPORT_JSON_INVALID_FORMAT,
     msgImportCardsNotFound,
@@ -42,7 +43,7 @@ export function buildDeckJsonExportPayload<T extends DeckFileExportRow>(
 
 export function downloadJsonFile(filename: string, payload: unknown): void {
     const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([json], { type: MIME_TYPE_APPLICATION_JSON });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
