@@ -6,6 +6,17 @@ import {
     ASSOCIATION_REPORT_CONCLUSIVENESS_REASON_INCONCLUSIVE,
 } from './associationsReportConclusivenessCopy.js';
 import {
+    ASSOCIATION_DIAGNOSTIC_EMPTY_CATALOG_MESSAGE,
+    associationDiagnosticAnchorNameInDescTruncatedMessage,
+    associationDiagnosticArchetypeGroupTruncatedMessage,
+    associationDiagnosticMentionGroupTruncatedMessage,
+    associationDiagnosticNameWordCitationSkippedMessage,
+    associationDiagnosticNoArchetypeOnAnchorMessage,
+    associationDiagnosticNoDescInCatalogMessage,
+    associationDiagnosticQaGroupTruncatedMessage,
+    associationDiagnosticYgorgEffectEnCountMessage,
+} from './associationsReportDiagnosticsCopy.js';
+import {
     ASSOCIATION_MARKDOWN_DIAGNOSTICS_HEADING,
     ASSOCIATION_MARKDOWN_EMPTY_GROUPS_LINE,
     associationMarkdownDiagnosticLine,
@@ -172,7 +183,7 @@ export function buildAssociationReport(
     if (catalog.length === 0) {
         pushDiagnostic(diagnostics, {
             code: 'EMPTY_CATALOG',
-            message: 'Catalogue vide : impossible de calculer des associations.',
+            message: ASSOCIATION_DIAGNOSTIC_EMPTY_CATALOG_MESSAGE,
             severity: 'warn',
         });
         return {
@@ -195,7 +206,7 @@ export function buildAssociationReport(
     if (nYgorgFx > 0) {
         pushDiagnostic(diagnostics, {
             code: 'YGORG_EFFECT_EN_AVAILABLE',
-            message: `${nYgorgFx} carte(s) ont du texte YGResources (effet / pendule / flavor / link / nom EN) en complément de desc pour les citations.`,
+            message: associationDiagnosticYgorgEffectEnCountMessage(nYgorgFx),
             severity: 'info',
         });
     }
@@ -204,7 +215,7 @@ export function buildAssociationReport(
     if (anchorArchetypes.length === 0) {
         pushDiagnostic(diagnostics, {
             code: 'NO_ARCHETYPE_ON_ANCHOR',
-            message: `L'ancre n'a pas d'archétype structuré : l'angle ${TEXT_GUILLEMET_OPEN} même archétype ${TEXT_GUILLEMET_CLOSE} est ignoré.`,
+            message: associationDiagnosticNoArchetypeOnAnchorMessage(),
             severity: 'info',
         });
     } else {
@@ -221,7 +232,7 @@ export function buildAssociationReport(
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
                     code: 'LARGE_GROUP_TRUNCATED',
-                    message: `Groupe archétype ${TEXT_GUILLEMET_OPEN} ${arch} ${TEXT_GUILLEMET_CLOSE} tronqué : ${unique.length} cartes (affichage max ${maxGroupSize}).`,
+                    message: associationDiagnosticArchetypeGroupTruncatedMessage(arch, unique.length, maxGroupSize),
                     severity: 'info',
                 });
             }
@@ -246,7 +257,7 @@ export function buildAssociationReport(
             cardIds = qaCardIds.slice(0, maxGroupSize);
             pushDiagnostic(diagnostics, {
                 code: 'LARGE_GROUP_TRUNCATED',
-                message: `Groupe Q&A YGOrg tronqué : ${qaCardIds.length} cartes (max ${maxGroupSize}).`,
+                message: associationDiagnosticQaGroupTruncatedMessage(qaCardIds.length, maxGroupSize),
                 severity: 'info',
             });
         }
@@ -270,7 +281,7 @@ export function buildAssociationReport(
     if (!anyDesc) {
         pushDiagnostic(diagnostics, {
             code: 'NO_DESC_IN_CATALOG',
-            message: `Aucune description utilisable (\`desc\` ou textes EN YGOrg) : angles ${TEXT_GUILLEMET_OPEN} citation texte ${TEXT_GUILLEMET_CLOSE} ignorés.`,
+            message: associationDiagnosticNoDescInCatalogMessage(),
             severity: 'info',
         });
     } else {
@@ -289,7 +300,11 @@ export function buildAssociationReport(
             if (rule.groupKey.startsWith('text_name:') && unique.length > maxNameWordCitationMatches) {
                 pushDiagnostic(diagnostics, {
                     code: 'NAME_WORD_CITATION_SKIPPED_TOO_BROAD',
-                    message: `${TEXT_GUILLEMET_OPEN} ${rule.displayLabel} ${TEXT_GUILLEMET_CLOSE} ignoré : ${unique.length} cartes (plafond ${maxNameWordCitationMatches} pour un mot extrait du nom).`,
+                    message: associationDiagnosticNameWordCitationSkippedMessage(
+                        rule.displayLabel,
+                        unique.length,
+                        maxNameWordCitationMatches,
+                    ),
                     severity: 'info',
                 });
                 continue;
@@ -299,7 +314,7 @@ export function buildAssociationReport(
                 cardIds = unique.slice(0, maxGroupSize);
                 pushDiagnostic(diagnostics, {
                     code: 'LARGE_GROUP_TRUNCATED',
-                    message: `Groupe ${TEXT_GUILLEMET_OPEN} ${rule.displayLabel} ${TEXT_GUILLEMET_CLOSE} tronqué (${unique.length} cartes).`,
+                    message: associationDiagnosticMentionGroupTruncatedMessage(rule.displayLabel, unique.length),
                     severity: 'info',
                 });
             }
@@ -332,7 +347,7 @@ export function buildAssociationReport(
                     cardIds = unique.slice(0, maxGroupSize);
                     pushDiagnostic(diagnostics, {
                         code: 'LARGE_GROUP_TRUNCATED',
-                        message: `Groupe ${TEXT_GUILLEMET_OPEN} nom de l’ancre dans le texte ${TEXT_GUILLEMET_CLOSE} tronqué (${unique.length} cartes).`,
+                        message: associationDiagnosticAnchorNameInDescTruncatedMessage(unique.length),
                         severity: 'info',
                     });
                 }
