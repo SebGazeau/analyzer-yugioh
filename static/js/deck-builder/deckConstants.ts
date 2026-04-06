@@ -5,6 +5,9 @@
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import { FETCH_CREDENTIALS_SAME_ORIGIN } from '../utils/httpMime.js';
 
+/** Nombre de colonnes (cellules) par ligne dans la grille deck du builder (ligne d’en-tête + rangées de cartes). */
+export const DECK_BUILDER_GRID_COLUMN_COUNT = 7;
+
 /** IDs des conteneurs grille (`deck-{section}-grid`, alignés sur le template builder). */
 export const DECK_GRID_IDS: Record<DeckSection, string> = mapDeckSections((s) => `deck-${s}-grid`);
 
