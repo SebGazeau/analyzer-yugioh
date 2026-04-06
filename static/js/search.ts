@@ -34,6 +34,10 @@ import {
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { searchApiUrl } from './cardSearchApiRoutes.js';
 import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
+import {
+    SEARCH_FILTER_ALL,
+    type SearchFilter,
+} from './searchFilterConstants.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
 import { TEXT_BLACK_STAR, TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
 
@@ -45,8 +49,6 @@ function searchLocaleQuery(): string {
     if (!base) return '';
     return `&locale=${encodeURIComponent(base)}`;
 }
-
-type SearchFilter = 'all' | 'monster' | 'spell' | 'trap';
 
 function getSubtypeLine(card: any): string {
     const t = (card.type ?? '').toLowerCase();
@@ -64,10 +66,10 @@ function getSubtypeLine(card: any): string {
 
 let lastResults: any[] = [];
 let lastQuery = '';
-let activeFilter: SearchFilter = 'all';
+let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
 
 function filterCards(cards: any[], filter: SearchFilter): any[] {
-    if (filter === 'all') return cards;
+    if (filter === SEARCH_FILTER_ALL) return cards;
     return cards.filter((c) => cardTypeKindFromTypeString(c.type) === filter);
 }
 
@@ -188,7 +190,7 @@ export function setupSearch(): void {
 
     document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((btn) => {
         btn.addEventListener('click', () => {
-            const filter = (btn.getAttribute(DATA_SEARCH_FILTER_ATTR) ?? 'all') as SearchFilter;
+            const filter = (btn.getAttribute(DATA_SEARCH_FILTER_ATTR) ?? SEARCH_FILTER_ALL) as SearchFilter;
             activeFilter = filter;
             document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((b) => {
                 const f = b.getAttribute(DATA_SEARCH_FILTER_ATTR);
