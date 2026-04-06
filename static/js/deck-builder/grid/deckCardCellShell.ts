@@ -3,7 +3,11 @@
  * Les attributs dynamiques (section, index, title) sont posés sur le nœud dans deckGridRender.
  */
 
-import { DATA_DECK_ACTION_ATTR, DECK_ACTION_REMOVE_ONE } from '../deckConstants.js';
+import {
+    DATA_DECK_ACTION_ATTR,
+    DECK_ACTION_REMOVE_ONE,
+    DECK_DEFAULT_MAX_COPIES_PER_CARD,
+} from '../deckConstants.js';
 import { DECK_CARD_THUMB_PLACEHOLDER_TEXT, deckCardBanBadgeVisibleLabel } from './deckCardGridCellCopy.js';
 import {
     DECK_CARD_BAN_BADGE_CLASS,
@@ -43,7 +47,7 @@ export function buildDeckCardCellInnerHtml(row: DeckCardCellShellRow): string {
         ? `<img class="${DECK_CARD_THUMB_IMG_CLASS}" src="${escapeAttr(row.imageUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
         : `<span class="${DECK_CARD_THUMB_PLACEHOLDER_CLASS}">${DECK_CARD_THUMB_PLACEHOLDER_TEXT}</span>`;
     const banBadge =
-        row.maxCopies != null && row.maxCopies < 3
+        row.maxCopies != null && row.maxCopies < DECK_DEFAULT_MAX_COPIES_PER_CARD
             ? `<span class="${DECK_CARD_BAN_BADGE_CLASS}" title="${escapeAttr(deckCardBanBadgeTitle(row.maxCopies!))}">${deckCardBanBadgeVisibleLabel(row.maxCopies)}</span>`
             : '';
     return `

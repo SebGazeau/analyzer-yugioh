@@ -3,6 +3,8 @@
  * L’état du deck (main/extra/side) est passé en argument pour rester sans effet de bord.
  */
 
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deckConstants.js';
+
 /** Clé : plusieurs lignes partagent la même limite si même deckCopyId / id / nom. */
 export type DeckLimitGroupKey = number | string;
 
@@ -32,13 +34,13 @@ export function deckLimitGroupKeyFromCard(
     return `n:${displayName}`;
 }
 
-/** Forbidden=0, Limited=1, Semi-Limited=2, sinon 3. */
+/** Forbidden=0, Limited=1, Semi-Limited=2, sinon {@link DECK_DEFAULT_MAX_COPIES_PER_CARD}. */
 export function banTcgToMaxCopies(ban: string | undefined): number {
     const s = (ban ?? '').toLowerCase();
     if (s.includes('forbidden') || s === 'banned') return 0;
     if (s.includes('limited') && !s.includes('semi')) return 1;
     if (s.includes('semi')) return 2;
-    return 3;
+    return DECK_DEFAULT_MAX_COPIES_PER_CARD;
 }
 
 export function rowsInDeckLimitGroup(
@@ -55,14 +57,14 @@ export function totalQtyDeckLimitGroup(
     return rowsInDeckLimitGroup(allRows, key).reduce((s, r) => s + r.quantity, 0);
 }
 
-/** Plafond du groupe : min(3, banlist de chaque ligne + carte ajoutée). */
+/** Plafond du groupe : min(max TCG normal, banlist de chaque ligne + carte ajoutée). */
 export function maxAllowedForDeckLimitGroup(
     allRows: readonly DeckRowLimitFields[],
     key: DeckLimitGroupKey,
     incomingMaxCopies: number,
 ): number {
-    const caps = rowsInDeckLimitGroup(allRows, key).map((r) => r.maxCopies ?? 3);
-    return Math.min(3, incomingMaxCopies, ...caps);
+    const caps = rowsInDeckLimitGroup(allRows, key).map((r) => r.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
+    return Math.min(DECK_DEFAULT_MAX_COPIES_PER_CARD, incomingMaxCopies, ...caps);
 }
 
 /** Peut-on ajouter `delta` exemplaires à ce groupe (toutes zones) ? */

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Card } from '../api.js';
 import type { DeckRow } from '../deck.js';
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from '../deck-builder/deckConstants.js';
 import { tryAddCardToDeckSection } from '../deck-builder/tryAddCardToDeckSection.js';
 
 const monster: Card = { id: 100, name: 'Test Monster', type: 'Effect Monster' };
@@ -32,20 +33,21 @@ describe('tryAddCardToDeckSection', () => {
   });
 
   it('refuse si quantity >= maxCopies', () => {
+    const cap = DECK_DEFAULT_MAX_COPIES_PER_CARD;
     const arr: DeckRow[] = [
       {
         name: 'Test Monster',
         type: 'Effect Monster',
-        quantity: 3,
+        quantity: cap,
         engine: '',
         categories: [],
         cardId: 100,
-        maxCopies: 3,
+        maxCopies: cap,
       },
     ];
     const r = tryAddCardToDeckSection(monster, arr, arr);
     expect(r).toEqual({ ok: false });
-    expect(arr[0].quantity).toBe(3);
+    expect(arr[0].quantity).toBe(cap);
   });
 
   it('refuse une carte Forbidden (banlist)', () => {

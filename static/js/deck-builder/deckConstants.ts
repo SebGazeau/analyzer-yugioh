@@ -5,6 +5,9 @@
 import { DECK_SECTIONS, mapDeckSections, type DeckSection } from '../deckSection.js';
 import { FETCH_CREDENTIALS_SAME_ORIGIN } from '../utils/httpMime.js';
 
+/** Limite Yu-Gi-Oh classique par nom de carte dans une zone (hors règles spéciales du row). */
+export const DECK_DEFAULT_MAX_COPIES_PER_CARD = 3;
+
 /** Nombre de colonnes (cellules) par ligne dans la grille deck du builder (ligne d’en-tête + rangées de cartes). */
 export const DECK_BUILDER_GRID_COLUMN_COUNT = 7;
 

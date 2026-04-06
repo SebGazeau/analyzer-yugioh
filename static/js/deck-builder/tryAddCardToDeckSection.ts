@@ -9,6 +9,7 @@ import {
     canAddToDeckLimitGroup,
     deckLimitGroupKeyFromCard,
 } from './deckLimitGroups.js';
+import { DECK_DEFAULT_MAX_COPIES_PER_CARD } from './deckConstants.js';
 import { createDeckRowFromApiCard } from './deckRowFactory.js';
 
 export type TryAddCardResult = { ok: true; mode: 'increment' | 'newRow' } | { ok: false };
@@ -41,7 +42,7 @@ export function tryAddCardToDeckSection(
     if (existingIdx >= 0) {
         if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, 1, incomingMax)) return { ok: false };
         const row = arr[existingIdx];
-        const max = row.maxCopies ?? 3;
+        const max = row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD;
         if (row.quantity >= max) return { ok: false };
         row.quantity += 1;
         return { ok: true, mode: 'increment' };

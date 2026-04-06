@@ -17,6 +17,7 @@ import { KEY_ESCAPE } from '../../utils/keyboardKeys.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
     DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX,
+    DECK_DEFAULT_MAX_COPIES_PER_CARD,
 } from '../deckConstants.js';
 import {
     deckLimitGroupKeyRow,
@@ -112,9 +113,12 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         let newQty = parseInt(qtySelect?.value || '1', 10);
         const key = deckLimitGroupKeyRow(row);
         const flat = allDeckRowsFlat();
-        const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? 3);
+        const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
         const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
-        const maxForThisRow = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
+        const maxForThisRow = Math.min(
+            row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD,
+            Math.max(1, maxA - totalOthers),
+        );
         if (newQty > maxForThisRow) newQty = maxForThisRow;
         if (newQty < 1) newQty = 1;
         row.quantity = newQty;
@@ -251,9 +255,9 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         if (qtySelect) {
             const key = deckLimitGroupKeyRow(row);
             const flat = allDeckRowsFlat();
-            const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? 3);
+            const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
             const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
-            const cap = Math.min(row.maxCopies ?? 3, Math.max(1, maxA - totalOthers));
+            const cap = Math.min(row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD, Math.max(1, maxA - totalOthers));
             qtySelect.innerHTML = '';
             for (let q = 1; q <= cap; q++) {
                 const opt = document.createElement('option');
@@ -263,8 +267,9 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             }
             qtySelect.value = String(Math.min(row.quantity, cap));
             qtySelect.classList.remove(...DECK_CARD_POPOVER_QTY_LIMIT_CLASSES);
-            const limit = row.maxCopies ?? 3;
-            if (limit < 3) qtySelect.classList.add(`${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}${limit}`);
+            const limit = row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD;
+            if (limit < DECK_DEFAULT_MAX_COPIES_PER_CARD)
+                qtySelect.classList.add(`${DECK_CARD_POPOVER_QTY_LIMIT_CLASS_PREFIX}${limit}`);
         }
         if (engineSelect) engineSelect.value = row.engine || '';
         if (catContainer) {
