@@ -3,6 +3,7 @@ import {
   TEXT_BLACK_STAR,
   TEXT_ELLIPSIS,
   TEXT_EM_DASH,
+  TEXT_EN_DASH,
   TEXT_GUILLEMET_CLOSE,
   TEXT_GUILLEMET_OPEN,
   TEXT_MIDDLE_DOT,
@@ -13,6 +14,11 @@ describe('textPlaceholders', () => {
   it('TEXT_EM_DASH = tiret cadratin', () => {
     expect(TEXT_EM_DASH).toBe('\u2014');
     expect(TEXT_EM_DASH.codePointAt(0)).toBe(0x2014);
+  });
+
+  it('TEXT_EN_DASH = tiret demi-cadratin', () => {
+    expect(TEXT_EN_DASH).toBe('\u2013');
+    expect(TEXT_EN_DASH.codePointAt(0)).toBe(0x2013);
   });
 
   it('TEXT_MIDDLE_DOT = point médian', () => {

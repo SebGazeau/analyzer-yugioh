@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { collectDeckInsights } from '../../insights/collect.js';
+import { TEXT_EN_DASH } from '../../utils/textPlaceholders.js';
 import {
     buildSuggestedNumberXyz,
     computeSeventhTachyonInsight,
@@ -44,6 +45,7 @@ describe('computeSeventhTachyonInsight', () => {
         expect(i).not.toBeNull();
         expect(i!.severity).toBe('info');
         expect(i!.summary).toMatch(/101|107|Number/i);
+        expect(i!.summary).toContain(TEXT_EN_DASH);
         const sug = i!.details?.seventhTachyon?.suggestedNumberXyz;
         expect(sug).toBeDefined();
         expect(sug!.length).toBe(NUMBER_10X_CATALOG.length);

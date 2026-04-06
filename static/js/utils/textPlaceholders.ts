@@ -5,6 +5,9 @@
 /** Valeur affichée pour « non applicable » / vide (tiret cadratin U+2014). */
 export const TEXT_EM_DASH = '\u2014';
 
+/** Tiret demi-cadratin / plage typographique (U+2013), ex. 101–107. */
+export const TEXT_EN_DASH = '\u2013';
+
 /** Séparateur typographique entre segments de méta (point médian U+00B7). */
 export const TEXT_MIDDLE_DOT = '\u00B7';
 
