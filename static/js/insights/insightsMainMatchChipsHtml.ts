@@ -30,6 +30,7 @@ import {
     SUGGESTIONS_MAIN_MATCH_THUMB_CLASS,
     SUGGESTIONS_MAIN_MATCHES_CLASS,
     insightsMainMatchChipTitle,
+    insightsMainMatchQtyAriaLabel,
     suggestionsMainMatchThumbEmptyClassName,
 } from './insightsDomSelectors.js';
 import type { MatchingCardPreview } from './types.js';
@@ -46,7 +47,7 @@ export function insightsMainMatchChipsHtml(cards: MatchingCardPreview[]): string
             const nameAttr = escapeAttr(c.name);
             const qty =
                 c.quantity > 1
-                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${c.quantity} exemplaires">${TEXT_MULTIPLICATION_SIGN}${c.quantity}</span>`
+                    ? `<span class="${SUGGESTIONS_MAIN_MATCH_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${escapeAttr(insightsMainMatchQtyAriaLabel(c.quantity))}">${TEXT_MULTIPLICATION_SIGN}${c.quantity}</span>`
                     : '';
             const sectionBadge = `<span class="${SUGGESTIONS_MAIN_MATCH_SECTION_CLASS}" ${INSIGHTS_SECTION_DATA_ATTR}="${c.section}">${escapeHtml(deckSectionMainSideShortLabel(c.section))}</span>`;
             const thumb =

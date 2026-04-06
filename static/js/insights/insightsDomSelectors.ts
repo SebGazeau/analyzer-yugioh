@@ -71,4 +71,5 @@ export {
     INSIGHTS_FIND_CARD_BUTTON_TITLE,
     INSIGHTS_SUGGEST_ROW_TITLE,
     insightsMainMatchChipTitle,
+    insightsMainMatchQtyAriaLabel,
 } from './insightsSuggestionsUiCopy.js';

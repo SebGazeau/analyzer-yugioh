@@ -10,6 +10,11 @@ export function insightsMainMatchChipTitle(sectionShortLabel: string): string {
     return `Cliquer pour ajouter 1 exemplaire (${sectionShortLabel})`;
 }
 
+/** `aria-label` de la quantité sur une puce match (qty &gt; 1). */
+export function insightsMainMatchQtyAriaLabel(quantity: number): string {
+    return `${quantity} exemplaires`;
+}
+
 /** `title` d’une ligne suggestion Number Xyz. */
 export const INSIGHTS_SUGGEST_ROW_TITLE = 'Cliquer pour ajouter cette carte au deck (Extra si Xyz)';
 
