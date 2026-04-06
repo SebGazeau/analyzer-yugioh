@@ -28,6 +28,7 @@ import {
     DOM_EVENT_DRAGSTART,
     DOM_EVENT_DROP,
 } from '../../utils/domEventNames.js';
+import { HTML_DATASET_VALUE_BOUND } from '../../utils/htmlAttrs.js';
 import { MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN, msgDeckZoneFull } from '../../utils/userDialogMessages.js';
 
 export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
@@ -132,8 +133,8 @@ export function bindDeckDragAndDropRoot(options: BindDeckDragAndDropOptions): vo
     const el = document.querySelector(DECK_SECTIONS_ROOT_SELECTOR);
     if (!el || !(el instanceof HTMLElement)) return;
     const root = el;
-    if (root.dataset.deckDndBound === '1') return;
-    root.dataset.deckDndBound = '1';
+    if (root.dataset.deckDndBound === HTML_DATASET_VALUE_BOUND) return;
+    root.dataset.deckDndBound = HTML_DATASET_VALUE_BOUND;
 
     let suppressClickUntil = 0;
 

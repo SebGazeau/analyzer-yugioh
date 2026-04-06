@@ -18,6 +18,11 @@ export const TABINDEX_ZERO = '0';
 export const DRAGGABLE_TRUE = 'true';
 export const DRAGGABLE_FALSE = 'false';
 
+/**
+ * Valeur de `element.dataset.*` pour marquer un branchement one-shot déjà posé (idempotence JS).
+ */
+export const HTML_DATASET_VALUE_BOUND = '1';
+
 /** `<button type="button">` (évite soumission implicite dans un formulaire). */
 export const BTN_TYPE_ATTR = 'type';
 export const BTN_TYPE_BUTTON = 'button';

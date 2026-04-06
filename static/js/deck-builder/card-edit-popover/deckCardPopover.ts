@@ -5,7 +5,7 @@ import { createCategorySelector } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
-import { ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
+import { HTML_DATASET_VALUE_BOUND, ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
 import {
     DOM_EVENT_CHANGE,
     DOM_EVENT_CLICK,
@@ -222,8 +222,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         document.addEventListener(DOM_EVENT_SCROLL, repositionPopover, true);
         window.addEventListener(DOM_EVENT_RESIZE, repositionPopover);
 
-        if (document.documentElement.dataset.deckPopoverEscapeBound !== '1') {
-            document.documentElement.dataset.deckPopoverEscapeBound = '1';
+        if (document.documentElement.dataset.deckPopoverEscapeBound !== HTML_DATASET_VALUE_BOUND) {
+            document.documentElement.dataset.deckPopoverEscapeBound = HTML_DATASET_VALUE_BOUND;
             document.addEventListener(DOM_EVENT_KEYDOWN, (e: KeyboardEvent) => {
                 if (e.key !== KEY_ESCAPE) return;
                 if (!isOpen()) return;

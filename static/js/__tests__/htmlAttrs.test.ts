@@ -4,6 +4,7 @@ import {
   BTN_TYPE_BUTTON,
   DRAGGABLE_ATTR,
   HIDDEN_ATTR,
+  HTML_DATASET_VALUE_BOUND,
   IMG_DECODING_ASYNC,
   IMG_LOADING_LAZY,
   ROLE_ATTR,
@@ -30,5 +31,9 @@ describe('htmlAttrs', () => {
     expect(BTN_TYPE_BUTTON).toBe('button');
     expect(IMG_LOADING_LAZY).toBe('lazy');
     expect(IMG_DECODING_ASYNC).toBe('async');
+  });
+
+  it('marqueur dataset idempotence', () => {
+    expect(HTML_DATASET_VALUE_BOUND).toBe('1');
   });
 });
