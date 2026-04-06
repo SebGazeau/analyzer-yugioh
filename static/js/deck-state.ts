@@ -137,9 +137,9 @@ export function removeCard(
 }
 
 const YDK_SECTION_OPEN: Record<DeckSection, string> = {
-    main: YDK_SECTION_MARKER_MAIN,
-    extra: YDK_SECTION_MARKER_EXTRA,
-    side: YDK_SECTION_MARKER_SIDE_OPEN,
+    [DECK_SECTIONS[0]]: YDK_SECTION_MARKER_MAIN,
+    [DECK_SECTIONS[1]]: YDK_SECTION_MARKER_EXTRA,
+    [DECK_SECTIONS[2]]: YDK_SECTION_MARKER_SIDE_OPEN,
 };
 
 /** Export YDK : #main, #extra, !side, une ligne par id de carte (répété quantity fois). */
