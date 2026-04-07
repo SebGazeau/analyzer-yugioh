@@ -26,6 +26,7 @@ describe('searchCardPreview', () => {
         const html = buildSearchCardPreviewInnerHtml(card);
         expect(html).toContain('&lt;script&gt;');
         expect(html).not.toContain('<script>');
+        expect(html).toContain('search-card-preview__hero-img');
         expect(html).toContain('https://example.com/a.jpg');
 
         const inner = document.createElement('div');
@@ -40,6 +41,21 @@ describe('searchCardPreview', () => {
         applySearchCardPreviewCard(inner, card);
         const desc = inner.querySelector('[data-search-preview-desc]');
         expect(desc?.textContent).toBe(SEARCH_CARD_PREVIEW_NO_DESC_TEXT);
+    });
+
+    it('monstre : ligne race secondaire et badge niveau', () => {
+        const card: SearchApiCard = {
+            name: 'Test',
+            type: 'Effect Monster',
+            race: 'Dragon',
+            level: 4,
+            atk: 1800,
+            def: 0,
+        };
+        const html = buildSearchCardPreviewInnerHtml(card);
+        expect(html).toContain('Dragon');
+        expect(html).toContain('Niveau 4');
+        expect(html).toContain('1800 / 0');
     });
 
     it('applySearchCardPreviewPlaceholder affiche le texte d’invite échappé', () => {

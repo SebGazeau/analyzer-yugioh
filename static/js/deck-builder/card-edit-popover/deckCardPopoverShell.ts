@@ -12,10 +12,18 @@ import {
     DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_ENGINE_CLASS,
     DECK_CARD_POPOVER_ICON_CLASS,
+    DATA_DECK_POPOVER_ART,
+    DATA_DECK_POPOVER_BADGES,
+    DATA_DECK_POPOVER_NAME,
+    DATA_DECK_POPOVER_TYPE_PRIMARY,
+    DATA_DECK_POPOVER_TYPE_SECONDARY,
+    DECK_CARD_POPOVER_HERO_CLASS,
     DECK_CARD_POPOVER_INNER_CLASS,
     DECK_CARD_POPOVER_QTY_CLASS,
     DECK_CARD_POPOVER_ROW_CLASS,
+    DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS,
     DECK_CARD_POPOVER_TITLE_CLASS,
+    DECK_CARD_POPOVER_TITLE_SR_ONLY_CLASS,
 } from './deckCardPopoverDomSelectors.js';
 import {
     DECK_CARD_POPOVER_ASSOCIATED_BTN_ARIA_LABEL,
@@ -41,6 +49,7 @@ import {
     DECK_CARD_POPOVER_LABEL_CATEGORIES,
     DECK_CARD_POPOVER_LABEL_ENGINE,
     DECK_CARD_POPOVER_LABEL_QTY,
+    DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL,
     DECK_CARD_POPOVER_SHELL_QTY_OPTION_COUNT,
 } from './deckCardPopoverFormCopy.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR } from '../../utils/ariaAttrs.js';
@@ -60,7 +69,19 @@ const deckCardPopoverEngineOptionsHtml =
 
 export const DECK_CARD_POPOVER_SHELL_HTML = `
         <div class="${DECK_CARD_POPOVER_INNER_CLASS}">
-            <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS}">${DECK_CARD_POPOVER_HEADING_TEXT}</h4>
+            <div class="${DECK_CARD_POPOVER_HERO_CLASS}">
+                <div class="deck-card-popover-hero-art">
+                    <div class="deck-card-popover-hero-art-fill" ${DATA_DECK_POPOVER_ART}=""></div>
+                </div>
+                <div class="deck-card-popover-hero-text">
+                    <p class="deck-card-popover-card-name" ${DATA_DECK_POPOVER_NAME}=""></p>
+                    <p class="deck-card-popover-type-primary" ${DATA_DECK_POPOVER_TYPE_PRIMARY}=""></p>
+                    <p class="deck-card-popover-type-secondary" ${DATA_DECK_POPOVER_TYPE_SECONDARY}=""></p>
+                    <div class="deck-card-popover-badge-row" ${DATA_DECK_POPOVER_BADGES}=""></div>
+                </div>
+            </div>
+            <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS} ${DECK_CARD_POPOVER_TITLE_SR_ONLY_CLASS}">${escapeHtml(DECK_CARD_POPOVER_HEADING_TEXT)}</h4>
+            <p class="${DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS}">${escapeHtml(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL)}</p>
             <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
                 <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_QTY)}</label>
                 <select class="${DECK_CARD_POPOVER_QTY_CLASS}">

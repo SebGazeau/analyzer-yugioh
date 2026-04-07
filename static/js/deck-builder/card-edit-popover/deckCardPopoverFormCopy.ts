@@ -10,6 +10,9 @@ export const DECK_CARD_POPOVER_LABEL_ENGINE = 'Engine';
 
 export const DECK_CARD_POPOVER_LABEL_CATEGORIES = 'Catégories';
 
+/** Au-dessus du formulaire (quantité, engine, catégories), sous le bandeau « fiche ». */
+export const DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL = 'Dans ton deck';
+
 /** Libellé de l’option `value=""` du select engine. */
 export const DECK_CARD_POPOVER_ENGINE_OPTION_EMPTY_LABEL = '-';
 

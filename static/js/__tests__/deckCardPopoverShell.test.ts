@@ -3,12 +3,14 @@ import {
   DECK_CARD_POPOVER_LABEL_CATEGORIES,
   DECK_CARD_POPOVER_LABEL_ENGINE,
   DECK_CARD_POPOVER_LABEL_QTY,
+  DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL,
 } from '../deck-builder/card-edit-popover/deckCardPopoverFormCopy.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
   DECK_CARD_POPOVER_ASSOCIATED_CLASS,
   DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
+  DECK_CARD_POPOVER_HERO_CLASS,
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
@@ -25,7 +27,9 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverIconsHtml.js';
 
 describe('deckCardPopoverShell', () => {
-  it('structure Quantité / Engine / Catégories inchangée', () => {
+  it('structure hero + Quantité / Engine / Catégories', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_HERO_CLASS);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_QTY);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_ENGINE);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_CATEGORIES);

@@ -1,7 +1,8 @@
 /**
  * Panneau d’aperçu carte sous la recherche du builder (survol des résultats).
+ * Présentation type « fiche » : informatif uniquement, sans actions.
  */
-import { getSubtypeLine } from './services/search/searchCardPresentation.js';
+import { buildCardFicheBadgesInnerHtml } from './cardFicheBadges.js';
 import type { SearchApiCard } from './services/search/searchApiTypes.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { CARD_TYPE_KIND_MONSTER } from './utils/cardTypeKindConstants.js';
@@ -15,29 +16,18 @@ export const SEARCH_CARD_PREVIEW_NO_DESC_TEXT = 'Texte non disponible';
 
 const DATA_SEARCH_PREVIEW_DESC = 'data-search-preview-desc';
 
-function formatAtkDefLine(card: SearchApiCard): string | null {
+function typePrimarySecondary(card: SearchApiCard): { primary: string; secondary: string } {
+    const primary = (card.type ?? '').trim();
     const kind = cardTypeKindFromTypeString(card.type);
-    if (kind !== CARD_TYPE_KIND_MONSTER) return null;
-    const atk = card.atk;
-    const def = card.def;
-    if (atk == null && def == null) return null;
-    const atkStr = atk != null ? String(atk) : '?';
-    const defStr = def != null ? String(def) : '?';
-    return `ATK/${atkStr} DEF/${defStr}`;
+    if (kind === CARD_TYPE_KIND_MONSTER) {
+        return { primary, secondary: (card.race ?? '').trim() };
+    }
+    return { primary, secondary: '' };
 }
 
-function buildMetaLine(card: SearchApiCard): string {
-    const parts: string[] = [];
-    const sub = getSubtypeLine(card);
-    if (sub) parts.push(sub);
-    const arch =
-        typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
-    if (arch) parts.push(arch);
-    const atkDef = formatAtkDefLine(card);
-    if (atkDef) parts.push(atkDef);
-    const ban = typeof card.ban_tcg === 'string' && card.ban_tcg.trim() ? card.ban_tcg.trim() : '';
-    if (ban) parts.push(ban);
-    return parts.join(' · ');
+function attributeString(card: SearchApiCard): string | undefined {
+    const a = card.attribute;
+    return typeof a === 'string' && a.trim() ? a.trim() : undefined;
 }
 
 /** Résumé court pour `aria-live` (évite de lire tout le descriptif). */
@@ -57,12 +47,37 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
     const imgUrl =
         typeof card.image_url === 'string' && card.image_url.trim() ? card.image_url.trim() : '';
     const art = imgUrl
-        ? `<img class="search-card-preview__img" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
-        : `<div class="search-card-preview__img-placeholder" aria-hidden="true"></div>`;
+        ? `<img class="search-card-preview__hero-img" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
+        : `<div class="search-card-preview__hero-placeholder" aria-hidden="true"></div>`;
 
-    const metaLine = buildMetaLine(card);
-    const metaBlock = metaLine
-        ? `<p class="search-card-preview__meta">${escapeHtml(metaLine)}</p>`
+    const { primary: typePri, secondary: typeSec } = typePrimarySecondary(card);
+    const typePriBlock = typePri
+        ? `<p class="search-card-preview__type-primary">${escapeHtml(typePri)}</p>`
+        : '';
+    const typeSecBlock = typeSec
+        ? `<p class="search-card-preview__type-secondary">${escapeHtml(typeSec)}</p>`
+        : '';
+
+    const arch =
+        typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
+    const ban = typeof card.ban_tcg === 'string' && card.ban_tcg.trim() ? card.ban_tcg.trim() : '';
+    const metaBits: string[] = [];
+    if (arch) metaBits.push(arch);
+    if (ban) metaBits.push(ban);
+    const metaExtra =
+        metaBits.length > 0
+            ? `<p class="search-card-preview__meta-extra">${escapeHtml(metaBits.join(' · '))}</p>`
+            : '';
+
+    const badgesInner = buildCardFicheBadgesInnerHtml({
+        type: card.type,
+        level: card.level ?? undefined,
+        attribute: attributeString(card),
+        atk: card.atk ?? null,
+        def: card.def ?? null,
+    });
+    const badgesRow = badgesInner
+        ? `<div class="search-card-preview__badge-row">${badgesInner}</div>`
         : '';
 
     const nameEnBlock = showEn
@@ -70,12 +85,15 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
         : '';
 
     return `
-        <div class="search-card-preview__layout">
-            <div class="search-card-preview__art">${art}</div>
-            <div class="search-card-preview__main">
+        <div class="search-card-preview__layout search-card-preview__layout--fiche">
+            <div class="search-card-preview__hero-art">${art}</div>
+            <div class="search-card-preview__fiche-body">
                 <h3 class="search-card-preview__name">${escapeHtml(mainName)}</h3>
                 ${nameEnBlock}
-                ${metaBlock}
+                ${typePriBlock}
+                ${typeSecBlock}
+                ${badgesRow}
+                ${metaExtra}
                 <p class="search-card-preview__desc" ${DATA_SEARCH_PREVIEW_DESC}=""></p>
             </div>
         </div>
