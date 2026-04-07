@@ -7,13 +7,13 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverFormCopy.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
+  DATA_DECK_POPOVER_ART_BANNER,
   DATA_DECK_POPOVER_DESC,
   DECK_CARD_POPOVER_ASSOCIATED_CLASS,
   DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_COL_DECK_CLASS,
-  DECK_CARD_POPOVER_COL_INFO_CLASS,
+  DECK_CARD_POPOVER_COL_TEXT_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
-  DECK_CARD_POPOVER_HERO_CLASS,
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_MAIN_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
@@ -31,16 +31,17 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverIconsHtml.js';
 
 describe('deckCardPopoverShell', () => {
-  it('grille principale : colonne deck (gauche) puis fiche (droite), actions en dessous', () => {
+  it('bannière art puis grille : texte (gauche), deck (droite), actions en dessous', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DATA_DECK_POPOVER_ART_BANNER);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain('deck-card-popover-banner-mount');
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_MAIN_CLASS);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_COL_TEXT_CLASS);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_COL_DECK_CLASS);
-    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_COL_INFO_CLASS);
-    const idxDeck = DECK_CARD_POPOVER_SHELL_HTML.indexOf(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
-    const idxHero = DECK_CARD_POPOVER_SHELL_HTML.indexOf(`class="${DECK_CARD_POPOVER_HERO_CLASS}"`);
-    expect(idxDeck).toBeGreaterThan(-1);
-    expect(idxHero).toBeGreaterThan(-1);
-    expect(idxDeck).toBeLessThan(idxHero);
-    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_HERO_CLASS);
+    const idxDesc = DECK_CARD_POPOVER_SHELL_HTML.indexOf(DATA_DECK_POPOVER_DESC);
+    const idxDeckHeading = DECK_CARD_POPOVER_SHELL_HTML.indexOf(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
+    expect(idxDesc).toBeGreaterThan(-1);
+    expect(idxDeckHeading).toBeGreaterThan(-1);
+    expect(idxDesc).toBeLessThan(idxDeckHeading);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_QTY);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_ENGINE);
@@ -52,7 +53,6 @@ describe('deckCardPopoverShell', () => {
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${catsRow}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_CATS_CLASS).length - 1).toBe(1);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DATA_DECK_POPOVER_DESC);
-    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain('card-art-crop');
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain('deck-card-popover-card-desc');
   });
 

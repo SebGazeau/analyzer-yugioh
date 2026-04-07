@@ -28,23 +28,21 @@ export const DECK_CARD_POPOVER_TITLE_CLASS = 'deck-card-popover-title';
 export const DECK_CARD_POPOVER_TITLE_SR_ONLY_CLASS = 'deck-card-popover-title--sr-only';
 export const DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS = 'deck-card-popover-settings-heading';
 
-export const DECK_CARD_POPOVER_HERO_CLASS = 'deck-card-popover-hero';
-
-/** Grille principale : colonne deck (gauche) + colonne fiche (droite). */
+/** Grille principale : colonne texte (gauche) + colonne deck (droite). */
 export const DECK_CARD_POPOVER_MAIN_CLASS = 'deck-card-popover-main';
 export const DECK_CARD_POPOVER_COL_CLASS = 'deck-card-popover-col';
+export const DECK_CARD_POPOVER_COL_TEXT_CLASS = `${DECK_CARD_POPOVER_COL_CLASS} deck-card-popover-col--text`;
 export const DECK_CARD_POPOVER_COL_DECK_CLASS = `${DECK_CARD_POPOVER_COL_CLASS} deck-card-popover-col--deck`;
-export const DECK_CARD_POPOVER_COL_INFO_CLASS = `${DECK_CARD_POPOVER_COL_CLASS} deck-card-popover-col--info`;
 
 /** Cibles remplies à l’ouverture du popover (`openPopover`). */
-export const DATA_DECK_POPOVER_ART = 'data-deck-popover-art';
+export const DATA_DECK_POPOVER_ART_BANNER = 'data-deck-popover-art-banner';
 export const DATA_DECK_POPOVER_NAME = 'data-deck-popover-name';
 export const DATA_DECK_POPOVER_TYPE_PRIMARY = 'data-deck-popover-type-primary';
 export const DATA_DECK_POPOVER_TYPE_SECONDARY = 'data-deck-popover-type-secondary';
 export const DATA_DECK_POPOVER_BADGES = 'data-deck-popover-badges';
 export const DATA_DECK_POPOVER_DESC = 'data-deck-popover-desc';
 
-export const DECK_CARD_POPOVER_ART_SELECTOR = `[${DATA_DECK_POPOVER_ART}]`;
+export const DECK_CARD_POPOVER_ART_BANNER_SELECTOR = `[${DATA_DECK_POPOVER_ART_BANNER}]`;
 export const DECK_CARD_POPOVER_CARD_NAME_SELECTOR = `[${DATA_DECK_POPOVER_NAME}]`;
 export const DECK_CARD_POPOVER_TYPE_PRIMARY_SELECTOR = `[${DATA_DECK_POPOVER_TYPE_PRIMARY}]`;
 export const DECK_CARD_POPOVER_TYPE_SECONDARY_SELECTOR = `[${DATA_DECK_POPOVER_TYPE_SECONDARY}]`;

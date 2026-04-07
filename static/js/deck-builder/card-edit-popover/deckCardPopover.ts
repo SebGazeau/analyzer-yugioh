@@ -4,13 +4,13 @@
 import { fetchCardByName } from '../../api.js';
 import { openAssociatedCardsModal } from '../../associations/modal.js';
 import { resolveDeckCardForAssociationName } from '../../associations/modalController.js';
+import { buildCardArtBannerHtml, cardArtBannerFrameHintFromType } from '../../components/cardArtBanner.js';
 import { buildCardFicheBadgesInnerHtml } from '../../cardFicheBadges.js';
 import { createCategorySelector, isCategorySelectorElement } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
-import { escapeAttr } from '../../utils/html.js';
-import { HTML_DATASET_VALUE_BOUND, IMG_LOADING_ATTR, IMG_LOADING_EAGER, ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
+import { HTML_DATASET_VALUE_BOUND, ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
 import {
     DOM_EVENT_CHANGE,
     DOM_EVENT_CLICK,
@@ -38,7 +38,7 @@ import {
     DECK_CARD_POPOVER_BACKDROP_CLASS,
     DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR,
-    DECK_CARD_POPOVER_ART_SELECTOR,
+    DECK_CARD_POPOVER_ART_BANNER_SELECTOR,
     DECK_CARD_POPOVER_ASSOCIATED_SELECTOR,
     DECK_CARD_POPOVER_BADGES_SELECTOR,
     DECK_CARD_POPOVER_CARD_NAME_SELECTOR,
@@ -64,19 +64,23 @@ import {
 import { DECK_CARD_POPOVER_DESC_EMPTY_LABEL } from './deckCardPopoverFormCopy.js';
 
 function fillDeckCardPopoverHero(popover: HTMLElement, row: DeckPopoverRow): void {
-    const artHost = popover.querySelector(DECK_CARD_POPOVER_ART_SELECTOR) as HTMLElement | null;
+    const bannerHost = popover.querySelector(DECK_CARD_POPOVER_ART_BANNER_SELECTOR) as HTMLElement | null;
     const nameEl = popover.querySelector(DECK_CARD_POPOVER_CARD_NAME_SELECTOR) as HTMLElement | null;
     const typePrimary = popover.querySelector(DECK_CARD_POPOVER_TYPE_PRIMARY_SELECTOR) as HTMLElement | null;
     const typeSecondary = popover.querySelector(DECK_CARD_POPOVER_TYPE_SECONDARY_SELECTOR) as HTMLElement | null;
     const badgesEl = popover.querySelector(DECK_CARD_POPOVER_BADGES_SELECTOR) as HTMLElement | null;
     const descEl = popover.querySelector(DECK_CARD_POPOVER_DESC_SELECTOR) as HTMLElement | null;
-    if (!artHost || !nameEl || !typePrimary || !typeSecondary || !badgesEl) return;
+    if (!nameEl || !typePrimary || !typeSecondary || !badgesEl) return;
 
     const url = typeof row.imageUrl === 'string' && row.imageUrl.trim() ? row.imageUrl.trim() : '';
-    if (url) {
-        artHost.innerHTML = `<img class="deck-card-popover-hero-img card-art-crop__img" src="${escapeAttr(url)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_EAGER}" />`;
-    } else {
-        artHost.innerHTML = '<div class="deck-card-popover-hero-img-placeholder" aria-hidden="true"></div>';
+    if (bannerHost) {
+        bannerHost.innerHTML = buildCardArtBannerHtml(url, {
+            alt: row.name,
+            loading: 'eager',
+            frameHint: cardArtBannerFrameHintFromType(row.type),
+            variant: 'compact',
+            rootClassExtra: 'deck-card-popover__art-banner',
+        });
     }
     nameEl.textContent = row.name;
     const typeStr = (row.type ?? '').trim();

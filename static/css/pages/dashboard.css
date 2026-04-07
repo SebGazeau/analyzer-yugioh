@@ -745,7 +745,6 @@
   position: relative;
 }
 .card-art-crop__img,
-.card-art-crop .deck-card-popover-hero-img,
 .card-art-crop .search-card-preview__hero-img {
   display: block;
   width: 100%;
@@ -783,70 +782,42 @@
   gap: var(--space-3);
 }
 
-/* Corps : gauche « Dans ton deck », droite fiche (art + infos + effet) */
+/* Bannière illustration (buildCardArtBannerHtml) — bords haut / latéraux alignés sur le panneau */
+.deck-card-popover-banner-mount {
+  min-height: 0;
+}
+.deck-card-popover .deck-card-popover__art-banner {
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-3);
+  width: calc(100% + 2 * var(--space-4));
+  max-width: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+}
+
+/* Corps : gauche texte (nom, stats, effet), droite « Dans ton deck » */
 .deck-card-popover-main {
   display: grid;
-  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 42%);
   gap: var(--space-4);
   align-items: start;
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-border-subtle);
 }
-.deck-card-popover-col--deck {
-  min-width: 0;
-  padding-right: var(--space-3);
-  border-right: 1px solid var(--color-border-subtle);
-}
-.deck-card-popover-col--deck .deck-card-popover-settings-heading {
-  margin-bottom: var(--space-2);
-}
-.deck-card-popover-col--info {
+.deck-card-popover-col--text {
   min-width: 0;
   min-height: 0;
   max-height: min(400px, 72vh);
   display: flex;
   flex-direction: column;
-}
-
-/* Sous-grille fiche : illustration | texte + effet */
-.deck-card-popover-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 40%) 1fr;
-  gap: var(--space-3);
-  align-items: start;
-  flex: 1;
-  min-height: 0;
-}
-.deck-card-popover-hero-col--art {
-  min-width: 0;
-}
-.deck-card-popover-hero-col--text {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
+}
+.deck-card-popover-col--deck {
   min-width: 0;
-  min-height: 0;
-  align-self: stretch;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-border-subtle);
 }
-.deck-card-popover-hero-art {
-  border-radius: var(--radius-md);
-  background: var(--color-bg-sunken);
-  border: 1px solid var(--color-border-subtle);
-  height: 118px;
-  position: relative;
-}
-.deck-card-popover-hero-art-fill {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.deck-card-popover-hero-img-placeholder {
-  width: 100%;
-  height: 100%;
-  min-height: 96px;
-  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-sunken) 100%);
+.deck-card-popover-col--deck .deck-card-popover-settings-heading {
+  margin-bottom: var(--space-2);
 }
 .deck-card-popover-card-desc {
   margin: var(--space-2) 0 0;

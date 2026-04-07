@@ -6,7 +6,7 @@ import {
     DECK_CARD_POPOVER_ACTIONS_CLASS,
     DECK_CARD_POPOVER_MAIN_CLASS,
     DECK_CARD_POPOVER_COL_DECK_CLASS,
-    DECK_CARD_POPOVER_COL_INFO_CLASS,
+    DECK_CARD_POPOVER_COL_TEXT_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_CLASS,
     DECK_CARD_POPOVER_CATS_CLASS,
     DECK_CARD_POPOVER_ASSOCIATED_FULL_BTN_CLASS,
@@ -15,13 +15,12 @@ import {
     DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_ENGINE_CLASS,
     DECK_CARD_POPOVER_ICON_CLASS,
-    DATA_DECK_POPOVER_ART,
+    DATA_DECK_POPOVER_ART_BANNER,
     DATA_DECK_POPOVER_BADGES,
     DATA_DECK_POPOVER_DESC,
     DATA_DECK_POPOVER_NAME,
     DATA_DECK_POPOVER_TYPE_PRIMARY,
     DATA_DECK_POPOVER_TYPE_SECONDARY,
-    DECK_CARD_POPOVER_HERO_CLASS,
     DECK_CARD_POPOVER_INNER_CLASS,
     DECK_CARD_POPOVER_QTY_CLASS,
     DECK_CARD_POPOVER_ROW_CLASS,
@@ -74,7 +73,15 @@ const deckCardPopoverEngineOptionsHtml =
 export const DECK_CARD_POPOVER_SHELL_HTML = `
         <div class="${DECK_CARD_POPOVER_INNER_CLASS}">
             <h4 class="${DECK_CARD_POPOVER_TITLE_CLASS} ${DECK_CARD_POPOVER_TITLE_SR_ONLY_CLASS}">${escapeHtml(DECK_CARD_POPOVER_HEADING_TEXT)}</h4>
+            <div class="deck-card-popover-banner-mount" ${DATA_DECK_POPOVER_ART_BANNER}=""></div>
             <div class="${DECK_CARD_POPOVER_MAIN_CLASS}">
+                <div class="${DECK_CARD_POPOVER_COL_TEXT_CLASS}">
+                    <p class="deck-card-popover-card-name" ${DATA_DECK_POPOVER_NAME}=""></p>
+                    <p class="deck-card-popover-type-primary" ${DATA_DECK_POPOVER_TYPE_PRIMARY}=""></p>
+                    <p class="deck-card-popover-type-secondary" ${DATA_DECK_POPOVER_TYPE_SECONDARY}=""></p>
+                    <div class="deck-card-popover-badge-row" ${DATA_DECK_POPOVER_BADGES}=""></div>
+                    <p class="deck-card-popover-card-desc" ${DATA_DECK_POPOVER_DESC}=""></p>
+                </div>
                 <div class="${DECK_CARD_POPOVER_COL_DECK_CLASS}">
                     <p class="${DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS}">${escapeHtml(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL)}</p>
                     <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
@@ -92,22 +99,6 @@ export const DECK_CARD_POPOVER_SHELL_HTML = `
                     <div class="${DECK_CARD_POPOVER_ROW_CLASS} ${DECK_CARD_POPOVER_CATS_CLASS}">
                         <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_CATEGORIES)}</label>
                         <div class="${DECK_CARD_POPOVER_CAT_CONTAINER_CLASS}"></div>
-                    </div>
-                </div>
-                <div class="${DECK_CARD_POPOVER_COL_INFO_CLASS}">
-                    <div class="${DECK_CARD_POPOVER_HERO_CLASS}">
-                        <div class="deck-card-popover-hero-col deck-card-popover-hero-col--art">
-                            <div class="deck-card-popover-hero-art card-art-crop">
-                                <div class="deck-card-popover-hero-art-fill" ${DATA_DECK_POPOVER_ART}=""></div>
-                            </div>
-                        </div>
-                        <div class="deck-card-popover-hero-col deck-card-popover-hero-col--text">
-                            <p class="deck-card-popover-card-name" ${DATA_DECK_POPOVER_NAME}=""></p>
-                            <p class="deck-card-popover-type-primary" ${DATA_DECK_POPOVER_TYPE_PRIMARY}=""></p>
-                            <p class="deck-card-popover-type-secondary" ${DATA_DECK_POPOVER_TYPE_SECONDARY}=""></p>
-                            <div class="deck-card-popover-badge-row" ${DATA_DECK_POPOVER_BADGES}=""></div>
-                            <p class="deck-card-popover-card-desc" ${DATA_DECK_POPOVER_DESC}=""></p>
-                        </div>
                     </div>
                 </div>
             </div>
