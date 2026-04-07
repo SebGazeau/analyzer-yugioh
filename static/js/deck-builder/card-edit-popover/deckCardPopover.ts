@@ -4,7 +4,11 @@
 import { fetchCardByName } from '../../api.js';
 import { openAssociatedCardsModal } from '../../associations/modal.js';
 import { resolveDeckCardForAssociationName } from '../../associations/modalController.js';
-import { buildCardArtBannerHtml, cardArtBannerFrameHintFromType } from '../../components/cardArtBanner.js';
+import {
+    buildCardArtBannerHtml,
+    CARD_ART_BANNER_IMG_CLASS,
+    cardArtBannerFrameHintFromType,
+} from '../../components/cardArtBanner.js';
 import { buildCardFicheBadgesInnerHtml } from '../../cardFicheBadges.js';
 import { createCategorySelector, isCategorySelectorElement } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
@@ -206,20 +210,36 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             hide();
             return;
         }
+        const margin = DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX;
+        const gap = DECK_CARD_POPOVER_GAP_PX;
         const rect = anchor.getBoundingClientRect();
         const popoverHeight = popoverEl.offsetHeight;
-        const spaceBelow =
-            window.innerHeight - rect.bottom - DECK_CARD_POPOVER_GAP_PX - DECK_CARD_POPOVER_VIEWPORT_MARGIN_PX;
+        const popoverWidth = popoverEl.offsetWidth;
+        const spaceBelow = window.innerHeight - rect.bottom - gap - margin;
         const openAbove = spaceBelow < popoverHeight;
 
-        popoverEl.style.left = cssLengthPx(rect.left);
-        if (openAbove) {
-            popoverEl.style.top = cssLengthPx(rect.top - popoverHeight - DECK_CARD_POPOVER_GAP_PX);
-            popoverEl.classList.add(DECK_CARD_POPOVER_ABOVE_CLASS);
+        let top = openAbove ? rect.top - popoverHeight - gap : rect.bottom + gap;
+        const maxTop = window.innerHeight - margin - popoverHeight;
+        const minTop = margin;
+        if (maxTop >= minTop) {
+            top = Math.min(Math.max(top, minTop), maxTop);
         } else {
-            popoverEl.style.top = cssLengthPx(rect.bottom + DECK_CARD_POPOVER_GAP_PX);
-            popoverEl.classList.remove(DECK_CARD_POPOVER_ABOVE_CLASS);
+            top = minTop;
         }
+
+        let left = rect.left;
+        const maxLeft = window.innerWidth - margin - popoverWidth;
+        const minLeft = margin;
+        if (maxLeft >= minLeft) {
+            left = Math.min(Math.max(left, minLeft), maxLeft);
+        } else {
+            left = minLeft;
+        }
+
+        popoverEl.style.left = cssLengthPx(left);
+        popoverEl.style.top = cssLengthPx(top);
+        if (openAbove) popoverEl.classList.add(DECK_CARD_POPOVER_ABOVE_CLASS);
+        else popoverEl.classList.remove(DECK_CARD_POPOVER_ABOVE_CLASS);
     }
 
     function getOrCreatePopover(): HTMLElement {
@@ -366,6 +386,14 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
 
         fillDeckCardPopoverHero(popover, row);
 
+        const bannerImg = popover.querySelector(
+            `.deck-card-popover__art-banner .${CARD_ART_BANNER_IMG_CLASS}`,
+        ) as HTMLImageElement | null;
+        if (bannerImg) {
+            if (bannerImg.complete) requestAnimationFrame(() => repositionPopover());
+            else bannerImg.addEventListener('load', () => repositionPopover(), { once: true });
+        }
+
         const nameForDesc = row.name.trim();
         if (!row.cardDesc?.trim() && nameForDesc) {
             void fetchCardByName(nameForDesc).then((c) => {
@@ -379,12 +407,14 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
                     descHost.textContent =
                         (row.cardDesc || '').trim() || DECK_CARD_POPOVER_DESC_EMPTY_LABEL;
                 }
+                requestAnimationFrame(() => repositionPopover());
             });
         }
 
         popoverBackdropEl?.classList.add(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
         popover.classList.add(DECK_CARD_POPOVER_OPEN_CLASS);
         repositionPopover();
+        requestAnimationFrame(() => repositionPopover());
     }
 
     function getActiveCell(): { section: DeckSection; index: number } | null {
