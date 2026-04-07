@@ -2,6 +2,9 @@ import { addToDeck } from './deck.js';
 import { DECK_SECTIONS } from './deckSectionOrder.js';
 import {
     SEARCH_BOX_ELEMENT_ID,
+    SEARCH_CARD_PREVIEW_INNER_ID,
+    SEARCH_CARD_PREVIEW_LIVE_ID,
+    SEARCH_CARD_PREVIEW_ROOT_ID,
     SEARCH_RESULTS_CONTAINER_ID,
     SEARCH_RESULTS_LIST_ID,
 } from './searchDomIds.js';
@@ -30,8 +33,19 @@ import {
     STYLE_DISPLAY_NONE,
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
-import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
-import { DOM_EVENT_CLICK, DOM_EVENT_INPUT } from './utils/domEventNames.js';
+import {
+    SEARCH_DEBOUNCE_MS,
+    SEARCH_MIN_QUERY_LENGTH,
+    SEARCH_PREVIEW_DEBOUNCE_MS,
+} from './searchConstants.js';
+import {
+    applySearchCardPreviewCard,
+    applySearchCardPreviewPlaceholder,
+    buildSearchCardPreviewLiveText,
+    resetSearchCardPreview,
+    setSearchCardPreviewRootVisible,
+} from './searchCardPreview.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_INPUT, DOM_EVENT_POINTEROVER } from './utils/domEventNames.js';
 import {
     SEARCH_FILTER_ALL,
     type SearchFilter,
@@ -52,6 +66,9 @@ import { highlightMatch } from './searchHighlightHtml.js';
 let lastResults: SearchApiCard[] = [];
 let lastQuery = '';
 let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
+
+/** Carte affichée par ligne (aperçu au survol). */
+const searchPreviewRowCards = new WeakMap<HTMLElement, SearchApiCard>();
 
 function renderResultRow(card: SearchApiCard, query: string, results: HTMLElement): void {
     const kind = cardTypeKindFromTypeString(card.type);
@@ -83,6 +100,7 @@ function renderResultRow(card: SearchApiCard, query: string, results: HTMLElemen
         if ((e.target as HTMLElement).closest(NATIVE_BUTTON_SELECTOR)) return;
         addToDeck(card);
     });
+    searchPreviewRowCards.set(row, card);
     results.appendChild(row);
 }
 
@@ -135,7 +153,30 @@ export function setupSearch(): void {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     const resultsContainer = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     const results = document.getElementById(SEARCH_RESULTS_LIST_ID) as HTMLElement | null;
+    const previewRoot = document.getElementById(SEARCH_CARD_PREVIEW_ROOT_ID) as HTMLElement | null;
+    const previewLive = document.getElementById(SEARCH_CARD_PREVIEW_LIVE_ID) as HTMLElement | null;
+    const previewInner = document.getElementById(SEARCH_CARD_PREVIEW_INNER_ID) as HTMLElement | null;
     if (!input || !resultsContainer || !results) return;
+
+    const showPreviewPlaceholderStrip = (): void => {
+        if (!previewRoot || !previewInner) return;
+        setSearchCardPreviewRootVisible(previewRoot, true);
+        if (previewLive) previewLive.textContent = '';
+        applySearchCardPreviewPlaceholder(previewInner);
+    };
+
+    const debouncedPreviewCard = debounce((card: SearchApiCard) => {
+        if (!previewLive || !previewInner) return;
+        previewLive.textContent = buildSearchCardPreviewLiveText(card);
+        applySearchCardPreviewCard(previewInner, card);
+    }, SEARCH_PREVIEW_DEBOUNCE_MS);
+
+    results.addEventListener(DOM_EVENT_POINTEROVER, (e) => {
+        const row = (e.target as HTMLElement).closest(`.${SEARCH_RESULT_ROW_CLASS}`) as HTMLElement | null;
+        if (!row || !results.contains(row)) return;
+        const card = searchPreviewRowCards.get(row);
+        if (card) debouncedPreviewCard(card);
+    });
 
     const runSearch = () => {
         const query = input.value.trim();
@@ -153,12 +194,14 @@ export function setupSearch(): void {
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
                 lastResults = [];
+                resetSearchCardPreview(previewRoot, previewLive, previewInner);
                 return;
             }
             lastResults = out.cards;
             lastQuery = query;
             renderResultsList(out.cards, query, results);
             resultsContainer.style.display = STYLE_DISPLAY_FLEX;
+            showPreviewPlaceholderStrip();
         });
     };
 
@@ -172,7 +215,10 @@ export function setupSearch(): void {
                 b.classList.toggle(SEARCH_FILTER_BTN_ACTIVE_CLASS, active);
                 b.setAttribute(ARIA_PRESSED_ATTR, String(active));
             });
-            if (lastResults.length > 0) renderResultsList(lastResults, lastQuery, results);
+            if (lastResults.length > 0) {
+                renderResultsList(lastResults, lastQuery, results);
+                showPreviewPlaceholderStrip();
+            }
         });
     });
 
@@ -186,6 +232,7 @@ export function setupSearch(): void {
             lastQuery = '';
             resultsContainer.style.display = STYLE_DISPLAY_NONE;
             resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
+            resetSearchCardPreview(previewRoot, previewLive, previewInner);
             return;
         }
         debouncedSearch();
@@ -198,6 +245,11 @@ export { highlightMatch } from './searchHighlightHtml.js';
 export function closeSearch(): void {
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     if (el) el.style.display = STYLE_DISPLAY_NONE;
+    resetSearchCardPreview(
+        document.getElementById(SEARCH_CARD_PREVIEW_ROOT_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_PREVIEW_LIVE_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_PREVIEW_INNER_ID) as HTMLElement | null,
+    );
 }
 
 /** Vide l'input et ferme le panneau (raccourci Escape). */

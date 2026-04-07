@@ -6,16 +6,19 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverFormCopy.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
+  DECK_CARD_POPOVER_ASSOCIATED_CLASS,
   DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
+  DECK_CARD_POPOVER_ASSOCIATED_BTN_TITLE,
   DECK_CARD_POPOVER_CLOSE_BTN_TITLE,
   DECK_CARD_POPOVER_HEADING_TEXT,
 } from '../deck-builder/card-edit-popover/deckCardPopoverDomSelectors.js';
 import {
   DECK_CARD_POPOVER_ICON_SVG_ATTRS,
+  DECK_CARD_POPOVER_SVG_ASSOCIATED_PATHS_HTML,
   DECK_CARD_POPOVER_SVG_COVER_INNER_HTML,
   DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML,
   DECK_CARD_POPOVER_SVG_PATH_CLOSE_D,
@@ -34,18 +37,21 @@ describe('deckCardPopoverShell', () => {
     expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_CATS_CLASS).length - 1).toBe(1);
   });
 
-  it('trois icônes partagent les attributs SVG stroke communs', () => {
-    expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_ICON_SVG_ATTRS).length - 1).toBe(3);
+  it('quatre icônes partagent les attributs SVG stroke communs', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_ICON_SVG_ATTRS).length - 1).toBe(4);
   });
 
   it('chemins SVG du shell alignés sur les exports domSelectors', () => {
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`d="${DECK_CARD_POPOVER_SVG_PATH_CLOSE_D}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SVG_COVER_INNER_HTML);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SVG_ASSOCIATED_PATHS_HTML);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_ASSOCIATED_CLASS);
   });
 
   it('titres / aria-label boutons action exportés dans domSelectors', () => {
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_CLOSE_BTN_TITLE);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_ASSOCIATED_BTN_TITLE);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_HEADING_TEXT);
   });
 });

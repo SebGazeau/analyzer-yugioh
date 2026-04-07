@@ -1,5 +1,5 @@
 /**
- * Titres / `aria-label` du popover « Modifier la carte » (actions fermer, supprimer, couverture).
+ * Titres / `aria-label` du popover « Modifier la carte » (actions fermer, supprimer, couverture, associations).
  */
 
 import { DECK_CARD_EDIT_DIALOG_TITLE } from './deckCardEditDialogCopy.js';
@@ -14,3 +14,5 @@ export const DECK_CARD_POPOVER_DELETE_BTN_ARIA_LABEL = 'Supprimer la carte du de
 export const DECK_CARD_POPOVER_COVER_BTN_TITLE =
     'Définir cette carte comme couverture du deck (liste Mes decks)';
 export const DECK_CARD_POPOVER_COVER_BTN_ARIA_LABEL = 'Définir comme couverture du deck';
+export const DECK_CARD_POPOVER_ASSOCIATED_BTN_TITLE = 'Ouvrir le rapport des cartes associées pour cette carte';
+export const DECK_CARD_POPOVER_ASSOCIATED_BTN_ARIA_LABEL = 'Cartes associées';

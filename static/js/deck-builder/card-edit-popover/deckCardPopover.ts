@@ -1,6 +1,8 @@
 /**
- * Popover « Modifier la carte » (quantité, engine, catégories, suppression, couverture).
+ * Popover « Modifier la carte » (quantité, engine, catégories, suppression, couverture, cartes associées).
  */
+import { openAssociatedCardsModal } from '../../associations/modal.js';
+import { resolveDeckCardForAssociationName } from '../../associations/modalController.js';
 import { createCategorySelector, isCategorySelectorElement } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
@@ -33,6 +35,7 @@ import {
     DECK_CARD_POPOVER_BACKDROP_CLASS,
     DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR,
+    DECK_CARD_POPOVER_ASSOCIATED_SELECTOR,
     DECK_CARD_POPOVER_CLOSE_SELECTOR,
     DECK_CARD_POPOVER_COVER_SELECTOR,
     DECK_CARD_POPOVER_DELETE_SELECTOR,
@@ -186,6 +189,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const deleteBtn = popoverEl.querySelector(DECK_CARD_POPOVER_DELETE_SELECTOR);
         const closeBtn = popoverEl.querySelector(DECK_CARD_POPOVER_CLOSE_SELECTOR);
         const coverBtn = popoverEl.querySelector(DECK_CARD_POPOVER_COVER_SELECTOR);
+        const associatedBtn = popoverEl.querySelector(DECK_CARD_POPOVER_ASSOCIATED_SELECTOR);
 
         qtySelect?.addEventListener(DOM_EVENT_CHANGE, () => persistEdits());
         engineSelect?.addEventListener(DOM_EVENT_CHANGE, () => persistEdits());
@@ -204,6 +208,36 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         });
 
         closeBtn?.addEventListener(DOM_EVENT_CLICK, () => dismissSaving());
+        associatedBtn?.addEventListener(DOM_EVENT_CLICK, (e) => {
+            e.stopPropagation();
+            if (popoverSection == null || popoverIndex < 0) return;
+            persistEdits();
+            const sec = popoverSection;
+            const idx = popoverIndex;
+            const arr = getState(sec);
+            const row = arr[idx];
+            hide();
+            if (!row) return;
+            void (async () => {
+                if (row.cardId != null) {
+                    const raw: Record<string, unknown> = {
+                        id: row.cardId,
+                        name: row.name,
+                    };
+                    if (row.imageUrl) raw.image_url = row.imageUrl;
+                    await openAssociatedCardsModal(raw);
+                    return;
+                }
+                const card = await resolveDeckCardForAssociationName(row.name);
+                if (!card) {
+                    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+                        console.warn('[deck-card-popover] Carte introuvable pour les associations :', row.name);
+                    }
+                    return;
+                }
+                await openAssociatedCardsModal(card as Record<string, unknown>);
+            })();
+        });
         coverBtn?.addEventListener(DOM_EVENT_CLICK, async () => {
             const deck = getCurrentLoadedDeck();
             if (popoverSection == null || popoverIndex < 0 || !deck) return;

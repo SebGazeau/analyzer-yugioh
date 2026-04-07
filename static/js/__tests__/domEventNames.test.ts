@@ -9,6 +9,7 @@ import {
     DOM_EVENT_DROP,
     DOM_EVENT_INPUT,
     DOM_EVENT_KEYDOWN,
+    DOM_EVENT_POINTEROVER,
     DOM_EVENT_RESIZE,
     DOM_EVENT_SCROLL,
 } from '../utils/domEventNames.js';
@@ -18,6 +19,7 @@ describe('domEventNames', () => {
         expect(DOM_EVENT_CLICK).toBe('click');
         expect(DOM_EVENT_CHANGE).toBe('change');
         expect(DOM_EVENT_INPUT).toBe('input');
+        expect(DOM_EVENT_POINTEROVER).toBe('pointerover');
         expect(DOM_EVENT_KEYDOWN).toBe('keydown');
         expect(DOM_EVENT_DOM_CONTENT_LOADED).toBe('DOMContentLoaded');
         expect(DOM_EVENT_DRAGSTART).toBe('dragstart');

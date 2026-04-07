@@ -25,3 +25,7 @@ export const DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML = DECK_CARD_POPOVER_SVG_DEL
 /** Rect + cercle + path pour l’icône couverture (galerie). */
 export const DECK_CARD_POPOVER_SVG_COVER_INNER_HTML =
     '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 17l-4.5-4.5L9 20"/>';
+
+/** Deux maillons — cartes associées / liens entre cartes. */
+export const DECK_CARD_POPOVER_SVG_ASSOCIATED_PATHS_HTML =
+    '<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>';

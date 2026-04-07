@@ -16,6 +16,15 @@
 			<button type="button" class="search-filter-btn" data-search-filter="spell" aria-pressed="false">Spell</button>
 			<button type="button" class="search-filter-btn" data-search-filter="trap" aria-pressed="false">Trap</button>
 		</div>
+		<section
+			id="search-card-preview"
+			class="search-card-preview"
+			hidden
+			aria-label="Aperçu de la carte"
+		>
+			<p id="search-card-preview-live" class="search-card-preview__live" aria-live="polite" aria-atomic="true"></p>
+			<div id="search-card-preview-inner" class="search-card-preview__inner"></div>
+		</section>
 		<div class="search-results" id="searchResults" style="display: none;" role="region" aria-label="Résultats de recherche">
 			<div class="search-results-list" id="search-results-list">
 				<!-- Rempli par JS -->

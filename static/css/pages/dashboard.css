@@ -1743,6 +1743,122 @@ tr.analysis-section-header[role="button"]:hover {
   border-color: var(--color-gold);
 }
 
+/* Aperçu carte (survol des résultats) — entre filtres et liste */
+.search-card-preview {
+  position: relative;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.search-card-preview__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.search-card-preview__inner {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.search-card-preview__placeholder {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.search-card-preview__layout {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  min-height: 0;
+  max-height: 240px;
+}
+
+.search-card-preview__art {
+  flex-shrink: 0;
+  width: 100px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.search-card-preview__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+
+.search-card-preview__img-placeholder {
+  width: 100px;
+  height: 146px;
+  background: var(--color-bg-elevated);
+}
+
+.search-card-preview__main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow: hidden;
+}
+
+.search-card-preview__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.search-card-preview__name-en {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+}
+
+.search-card-preview__meta {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+
+.search-card-preview__desc {
+  margin: 0;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: 120px;
+  padding-right: var(--space-1);
+}
+
 /* Bloc intégré sous les filtres (pas une modal) — s’étend jusqu’en bas du viewport dans le builder */
 .search-results {
   margin-top: var(--space-2);

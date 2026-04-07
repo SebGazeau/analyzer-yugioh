@@ -15,4 +15,9 @@ export type SearchApiCard = {
     id?: number;
     deck_copy_id?: number | null;
     frame_type?: string;
+    /** Texte d’effet (DTO recherche). */
+    desc?: string | null;
+    atk?: number | null;
+    def?: number | null;
+    ban_tcg?: string | null;
 } & Record<string, unknown>;

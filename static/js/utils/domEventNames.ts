@@ -4,6 +4,8 @@
 
 export const DOM_EVENT_CLICK = 'click';
 
+export const DOM_EVENT_POINTEROVER = 'pointerover';
+
 export const DOM_EVENT_CHANGE = 'change';
 
 export const DOM_EVENT_INPUT = 'input';
