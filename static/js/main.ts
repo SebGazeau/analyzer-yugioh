@@ -5,7 +5,7 @@
 import { addToDeck, cleanCardTable, exportDeckToFile, importDeckFromFile } from './deck.js';
 import { updateDeckCount, computeGlobalStats } from './stats.js';
 import { DATA_PSEUDO_ATTR, HEADER_AVATAR_SELECTOR } from './appPageDomSelectors.js';
-import { getInitials } from './utils/avatarInitials.js';
+import { getInitials } from './utils/user/index.js';
 import { bindAppTabs } from './tabs.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';

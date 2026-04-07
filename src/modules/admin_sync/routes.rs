@@ -5,6 +5,14 @@ use serde::Deserialize;
 
 use crate::shared::search::cache::CardCache;
 
+/// Redirection `GET /admin` → `/admin/login` (point d’entrée admin sans trailing path).
+#[get("")]
+pub async fn admin_index() -> HttpResponse {
+    HttpResponse::SeeOther()
+        .append_header(("Location", "/admin/login"))
+        .finish()
+}
+
 #[get("/fetch_cards")]
 pub async fn fetch_cards(
     card_cache: web::Data<CardCache>,

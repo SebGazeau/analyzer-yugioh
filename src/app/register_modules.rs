@@ -68,7 +68,7 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
                         }) as Pin<Box<dyn Future<Output = AdminResp>>>
                     }
                 })
-                .service(routes::admin_index)
+                .service(crate::modules::admin_sync::admin_index)
                 .service(routes::admin_login_page)
                 .service(routes::admin_login)
                 .service(routes::admin_logout)

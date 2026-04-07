@@ -31,13 +31,6 @@ pub struct AdminSecret(pub Option<String>);
 
 const SESSION_KEY_ADMIN: &str = "admin_authenticated";
 
-#[get("")]
-pub async fn admin_index() -> HttpResponse {
-    HttpResponse::SeeOther()
-        .append_header(("Location", "/admin/login"))
-        .finish()
-}
-
 #[derive(Deserialize)]
 pub struct AdminLoginForm {
     pub email: String,

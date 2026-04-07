@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **analyzer-yugioh** (2725 symbols, 6033 relationships, 210 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **analyzer-yugioh** (2731 symbols, 6045 relationships, 211 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -97,25 +97,5 @@ To check whether embeddings exist, inspect `.gitnexus/meta.json` — the `stats.
 | Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
 | Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
 | Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
-| Work in the Js area (121 symbols) | `.claude/skills/generated/js/SKILL.md` |
-| Work in the Analysis area (87 symbols) | `.claude/skills/generated/analysis/SKILL.md` |
-| Work in the Associations area (72 symbols) | `.claude/skills/generated/associations/SKILL.md` |
-| Work in the Tests area (68 symbols) | `.claude/skills/generated/tests/SKILL.md` |
-| Work in the Deck-builder area (48 symbols) | `.claude/skills/generated/deck-builder/SKILL.md` |
-| Work in the Routes area (41 symbols) | `.claude/skills/generated/routes/SKILL.md` |
-| Work in the Search area (36 symbols) | `.claude/skills/generated/search/SKILL.md` |
-| Work in the Insights area (35 symbols) | `.claude/skills/generated/insights/SKILL.md` |
-| Work in the Auth area (33 symbols) | `.claude/skills/generated/auth/SKILL.md` |
-| Work in the Images area (31 symbols) | `.claude/skills/generated/images/SKILL.md` |
-| Work in the Deck area (28 symbols) | `.claude/skills/generated/deck/SKILL.md` |
-| Work in the Init area (27 symbols) | `.claude/skills/generated/init/SKILL.md` |
-| Work in the Structs area (25 symbols) | `.claude/skills/generated/structs/SKILL.md` |
-| Work in the Ygorganization area (24 symbols) | `.claude/skills/generated/ygorganization/SKILL.md` |
-| Work in the Security_startup area (24 symbols) | `.claude/skills/generated/security-startup/SKILL.md` |
-| Work in the Konami_catalog area (22 symbols) | `.claude/skills/generated/konami-catalog/SKILL.md` |
-| Work in the Db area (21 symbols) | `.claude/skills/generated/db/SKILL.md` |
-| Work in the Storage area (20 symbols) | `.claude/skills/generated/storage/SKILL.md` |
-| Work in the Cli area (11 symbols) | `.claude/skills/generated/cli/SKILL.md` |
-| Work in the Catalog area (11 symbols) | `.claude/skills/generated/catalog/SKILL.md` |
 
 <!-- gitnexus:end -->

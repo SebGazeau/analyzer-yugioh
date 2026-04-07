@@ -29,23 +29,19 @@ pub async fn run() -> std::io::Result<()> {
         tracing::warn!("Migrations (sync-cards): {} — poursuite.", e);
     }
 
-    match cards_sync::sync_from_ygoprodeck(&pool).await {
-        Ok(s) => {
-            tracing::info!(
-                "sync-cards OK — cartes: {} (upserts {}), lignes sets: {} (upserts {})",
-                s.card_rows,
-                s.cards_affected,
-                s.set_rows,
-                s.sets_affected
-            );
-            eprintln!(
-                "Note: si l’app HTTP tourne déjà, rechargez le cache : GET /admin/reload_cache_from_db (clé admin) ou redémarrage."
-            );
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[fatal] sync-cards: {e}");
-            Err(std::io::Error::other(e.to_string()))
-        }
-    }
+    let s = cards_sync::sync_from_ygoprodeck(&pool).await.map_err(|e| {
+        eprintln!("[fatal] sync-cards: {e}");
+        std::io::Error::from(e)
+    })?;
+    tracing::info!(
+        "sync-cards OK — cartes: {} (upserts {}), lignes sets: {} (upserts {})",
+        s.card_rows,
+        s.cards_affected,
+        s.set_rows,
+        s.sets_affected
+    );
+    eprintln!(
+        "Note: si l’app HTTP tourne déjà, rechargez le cache : GET /admin/reload_cache_from_db (clé admin) ou redémarrage."
+    );
+    Ok(())
 }

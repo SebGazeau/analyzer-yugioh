@@ -67,20 +67,8 @@ fn load_cache_from_file(path: &str) -> CardCache {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    if std::env::args().nth(1).as_deref() == Some("migrate") {
-        return cli::migrate::run().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-cards") {
-        return cli::sync_cards::run().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("konami-pack-index") {
-        return cli::konami_pack_index::run().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-locales-ygo") {
-        return cli::locales_ygo::run().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-locales-konami") {
-        return cli::locales_konami::run().await;
+    if let Some(outcome) = cli::run_subcommand_if_present().await {
+        return outcome;
     }
 
     tracing_subscriber::fmt()

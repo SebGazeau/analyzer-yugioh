@@ -1,0 +1,19 @@
+{
+  "stack": ["actix", "typescript", "html", "css"],
+  "frontend_framework": "none",
+  "backend": "actix",
+
+  "notes": [
+    "Projet Actix web — le HTML doit rester dans des fichiers .html, jamais dans des fichiers .ts",
+    "Pas de framework frontend, TypeScript vanilla + HTML + CSS"
+  ],
+
+  "rules_override": {
+    "ts_max_lines": 300,
+    "rs_max_lines": 400,
+    "html_in_ts": "flag_high_priority",
+    "auto_remove_console_log": true,
+    "auto_remove_unused_imports": true,
+    "auto_fix_var": true
+  }
+}

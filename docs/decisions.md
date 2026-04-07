@@ -1,5 +1,103 @@
 # Décisions d’architecture
 
+## ADR — Point d’entrée process : dispatch CLI
+
+**Contexte** : `main.rs` accumulait une chaîne de `if` par sous-commande ; le point d’entrée mélangait orchestration process et logique serveur.
+
+**Décision** :
+
+- Le mapping `argv[1]` → handler async vit dans `crate::cli::run_subcommand_if_present` ([`src/cli/dispatch.rs`](../src/cli/dispatch.rs)) ; chaque sous-commande garde son module (`migrate`, `sync_cards`, etc.) et son initialisation `tracing` locale.
+- `main` : si `Some(result)` est retourné, propager et quitter ; sinon initialiser `tracing` pour le serveur et lancer `HttpServer` (comportement inchangé).
+
+**Pourquoi** : une seule liste des sous-commandes, moins de duplication, même contrat de sortie `std::io::Result`.
+
+---
+
+## ADR — Frontière HTTP : `src/modules/` vs `src/routes/`
+
+**Contexte** : deux emplacements enregistrent des services Actix ; risque d’ajouter une route métier au mauvais endroit.
+
+**Décision** :
+
+- **`src/modules/<domaine>/`** : nouvelles routes **métier** (catalogue, decks, associations, auth site, sync admin exposé comme handlers, pages). Préférer ce périmètre pour tout handler qui relève d’un domaine produit nommé.
+- **`src/routes/`** : routes **transverses** héritées ou techniques — admin HTML inline / dashboard, images (`/images/*`), garde-fous partagés avec `crate::routes` ; éviter d’y ajouter de la logique métier nouvelle sauf nécessité (ex. contrat stable difficile à déplacer dans une slice dédiée).
+
+**Pourquoi** : alignement avec la réorganisation par feature déjà documentée ci-dessous ; règle simple pour les contributions.
+
+---
+
+## ADR — Cartographie racine `src/` (pipelines, CLI, HTTP)
+
+**Contexte** : plusieurs fichiers à la racine de `src/` complètent `modules/` et `db/` ; sans carte, on ne sait pas où brancher un job ou un handler.
+
+**Décision** — référence rapide (chemins = répertoire ou fichier principal) :
+
+| Zone | Rôle | Déclenché par | Notes |
+|------|------|---------------|--------|
+| `src/main.rs` | Process : CLI dispatch puis serveur | binaire `analyzer-yugioh` | Voir ADR « dispatch CLI ». |
+| `src/cli/` | Sous-commandes `migrate`, `sync-cards`, locales, Konami index | `argv[1]` | Pas d’HTTP. |
+| `src/app.rs` + `app/register_modules.rs` | Composition Actix, enregistrement des routes | HTTP | `make_app`, scope `/admin`, `/web`, static. |
+| `src/modules/` | Handlers métier par domaine | HTTP | Catalogue, decks, associations, `admin_sync`, auth site, pages. |
+| `src/routes/` | Admin HTML session/JWT, images, helpers admin partagés | HTTP | Transversal ; ne pas y placer la logique métier nouvelle. |
+| `src/db/` | SQL partagé, migrations, loaders (`load_all_cards`, YGOrg, Konami…) | HTTP + CLI + jobs | `DbError` ; repositories parfois dans `modules/*/repository.rs`. |
+| `src/cards_sync.rs` | Sync YGOProDeck → `cards` / `card_sets` | CLI `sync-cards`, logique partagée avec admin | `CardSyncError` → `std::io::Error` pour le CLI. |
+| `src/card_locales_sync.rs` | Locales cartes (YGO + Konami) | CLI `sync-locales-*` | S’appuie sur `db`, Konami snapshots. |
+| `src/ygorganization/` + `ygorganization.rs` | Enrichissement / sync YGOrg | HTTP admin, jobs, `db` | Erreurs `YgOrgError`. |
+| `src/konami_catalog/` | Scraping / index catalogue officiel | CLI `konami-pack-index`, locales Konami | |
+| `src/card_metadata_fill.rs` | Heuristique `archetype` / `archetype_source` | HTTP admin `preview` / `apply`, scripts enrichissement | |
+| `src/ygo_api/` | DTO / mapping proche JSON YGOProDeck | `cards_sync`, import admin | |
+| `src/shared/` | Cache recherche, structs communes, utilitaires | Partout côté serveur | |
+| `src/auth/`, `src/images/`, `src/storage/` | Auth API, pipeline images, backends fichier/GCS | HTTP | |
+
+**Pourquoi** : une seule table de navigation pour les slices « pipeline » et « HTTP » sans relire tout le graphe d’imports.
+
+---
+
+## ADR — Plan futur : recherche sémantique / RAG
+
+**Contexte** : le dossier [`legacy/`](../legacy/) contient une implémentation **Qdrant + FastEmbed** (routes `/rag/*`) non portée dans le binaire actuel ; réimplémenter sans reproduire ses dettes (identifiants instables, `Mutex` global, source `cards.json` seule).
+
+**Décision** : le découpage en **slices numérotées** (cadrage → modèle → données → embeddings → index → CLI reindex → HTTP → front optionnel → ops) et les **pièges / radar techno** sont maintenus dans **[`docs/rag-semantic-search-slices.md`](rag-semantic-search-slices.md)**. L’ADR slice 0 formalisera les choix (moteur vectoriel, modèle, hébergement) au lancement du chantier.
+
+**Pourquoi** : éviter le copier-coller du legacy tout en capitalisant sur l’historique et en laissant ouverte la comparaison avec l’état des libs au moment du travail.
+
+---
+
+## ADR — `CardSyncError` → `std::io::Error` et lecture du corps HTTP
+
+**Contexte** : la CLI `sync-cards` mappait l’erreur via `to_string()` ; `response.text().await` utilisait `unwrap_or_default()`, masquant une panne de lecture du corps.
+
+**Décision** :
+
+- `impl From<CardSyncError> for std::io::Error` dans [`src/cards_sync.rs`](../src/cards_sync.rs) — le message affiché reste le `Display` de `CardSyncError`.
+- En cas d’échec de `text().await`, même politique de retry que pour les erreurs réseau / statut non 2xx (incrément `last_msg`, backoff, puis `HttpRetry`).
+
+**Pourquoi** : erreur explicite, pas de corps vide silencieux, pont CLI uniforme.
+
+---
+
+## ADR — `GET /admin` : handler dans `admin_sync`
+
+**Contexte** : la redirection vers `/admin/login` vivait dans `routes/admin.rs` alors qu’elle est le point d’entrée du périmètre « sync / outils admin » déjà regroupé dans `modules::admin_sync`.
+
+**Décision** : handler `admin_index` déplacé vers [`src/modules/admin_sync/routes.rs`](../src/modules/admin_sync/routes.rs) ; enregistrement via `register_core_and_admin_routes`. URL, statut `303 See Other`, en-tête `Location` inchangés.
+
+**Pourquoi** : réduit la surface « routes génériques » pour un comportement aligné sur le module admin métier.
+
+---
+
+## ADR — TypeScript `SearchApiCard.archetype_source`
+
+**Décision** : le champ est typé `string | null | undefined` (plus `unknown`) pour refléter `Option<String>` sérialisé en JSON (absence de clé ou chaîne). Tests : [`static/js/__tests__/services/searchApiTypesParity.test.ts`](../static/js/__tests__/services/searchApiTypesParity.test.ts), tests serde dans [`src/shared/structs/search_card_dto.rs`](../src/shared/structs/search_card_dto.rs).
+
+---
+
+## ADR — `static/js/utils/user/` (avatar)
+
+**Décision** : `getInitials` vit sous [`static/js/utils/user/`](../static/js/utils/user/) avec un `index.ts` ré-export ; [`main.ts`](../static/js/main.ts) importe depuis ce dossier. Permet d’accrocher d’autres utilitaires « profil / utilisateur » sans encombrer la racine `utils/`.
+
+---
+
 ## ADR — Complément métadonnées cartes (phase 1 : prévisualisation)
 
 **Contexte**

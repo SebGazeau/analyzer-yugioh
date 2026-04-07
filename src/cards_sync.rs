@@ -42,6 +42,12 @@ pub enum CardSyncError {
     Db(#[from] DbError),
 }
 
+impl From<CardSyncError> for std::io::Error {
+    fn from(e: CardSyncError) -> Self {
+        std::io::Error::other(e.to_string())
+    }
+}
+
 fn ygoprodeck_url() -> String {
     std::env::var("YGOPRODECK_CARDINFO_URL")
         .unwrap_or_else(|_| DEFAULT_YGOPRODECK_CARDINFO_URL.to_string())
@@ -73,7 +79,16 @@ async fn fetch_body_with_retries(url: &str) -> Result<String, CardSyncError> {
         match client.get(url).send().await {
             Ok(response) => {
                 let status = response.status();
-                let body = response.text().await.unwrap_or_default();
+                let body = match response.text().await {
+                    Ok(b) => b,
+                    Err(e) => {
+                        last_msg = format!("lecture corps HTTP: {e}");
+                        if attempt < MAX_HTTP_ATTEMPTS {
+                            sleep_backoff(attempt).await;
+                        }
+                        continue;
+                    }
+                };
                 if status.is_success() {
                     return Ok(body);
                 }

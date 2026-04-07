@@ -9,7 +9,8 @@ export type SearchApiCard = {
     race?: string;
     level?: number | null;
     archetype?: string | null;
-    archetype_source?: unknown;
+    /** Aligné sur `SearchCardDto.archetype_source` (Rust) : absent ou chaîne, jamais forcé côté client. */
+    archetype_source?: string | null;
     image_url?: string | null;
     id?: number;
     deck_copy_id?: number | null;
