@@ -10,9 +10,12 @@ import {
   DATA_DECK_POPOVER_DESC,
   DECK_CARD_POPOVER_ASSOCIATED_CLASS,
   DECK_CARD_POPOVER_CATS_CLASS,
+  DECK_CARD_POPOVER_COL_DECK_CLASS,
+  DECK_CARD_POPOVER_COL_INFO_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
   DECK_CARD_POPOVER_HERO_CLASS,
   DECK_CARD_POPOVER_INNER_CLASS,
+  DECK_CARD_POPOVER_MAIN_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
   DECK_CARD_POPOVER_ASSOCIATED_BTN_TITLE,
@@ -28,7 +31,15 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverIconsHtml.js';
 
 describe('deckCardPopoverShell', () => {
-  it('structure hero + Quantité / Engine / Catégories', () => {
+  it('grille principale : colonne deck (gauche) puis fiche (droite), actions en dessous', () => {
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_MAIN_CLASS);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_COL_DECK_CLASS);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_COL_INFO_CLASS);
+    const idxDeck = DECK_CARD_POPOVER_SHELL_HTML.indexOf(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
+    const idxHero = DECK_CARD_POPOVER_SHELL_HTML.indexOf(`class="${DECK_CARD_POPOVER_HERO_CLASS}"`);
+    expect(idxDeck).toBeGreaterThan(-1);
+    expect(idxHero).toBeGreaterThan(-1);
+    expect(idxDeck).toBeLessThan(idxHero);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_HERO_CLASS);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL);
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DECK_CARD_POPOVER_LABEL_QTY);

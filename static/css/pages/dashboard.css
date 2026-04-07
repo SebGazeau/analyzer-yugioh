@@ -766,8 +766,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-4);
-  min-width: 300px;
-  max-width: 420px;
+  min-width: 320px;
+  max-width: 520px;
   visibility: hidden;
   opacity: 0;
   transition: opacity var(--duration-fast), visibility var(--duration-fast);
@@ -783,14 +783,39 @@
   gap: var(--space-3);
 }
 
-/* Bandeau « fiche » : grille 2 col (illustration | texte + effet) */
+/* Corps : gauche « Dans ton deck », droite fiche (art + infos + effet) */
+.deck-card-popover-main {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.deck-card-popover-col--deck {
+  min-width: 0;
+  padding-right: var(--space-3);
+  border-right: 1px solid var(--color-border-subtle);
+}
+.deck-card-popover-col--deck .deck-card-popover-settings-heading {
+  margin-bottom: var(--space-2);
+}
+.deck-card-popover-col--info {
+  min-width: 0;
+  min-height: 0;
+  max-height: min(400px, 72vh);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sous-grille fiche : illustration | texte + effet */
 .deck-card-popover-hero {
   display: grid;
   grid-template-columns: minmax(0, 40%) 1fr;
   gap: var(--space-3);
   align-items: start;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border-subtle);
+  flex: 1;
+  min-height: 0;
 }
 .deck-card-popover-hero-col--art {
   min-width: 0;
@@ -801,6 +826,7 @@
   gap: var(--space-1);
   min-width: 0;
   min-height: 0;
+  align-self: stretch;
 }
 .deck-card-popover-hero-art {
   border-radius: var(--radius-md);
@@ -829,7 +855,7 @@
   color: var(--color-text-primary);
   line-height: 1.45;
   white-space: pre-wrap;
-  max-height: 120px;
+  max-height: min(200px, 38vh);
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -946,9 +972,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-top: var(--space-2);
+  margin-top: 0;
   padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: none;
   align-items: center;
   justify-content: center;
 }
