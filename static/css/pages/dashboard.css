@@ -736,6 +736,27 @@
   pointer-events: auto;
 }
 
+/*
+ * Recadrage heuristique « zone illustration » (pas d’URL artwork-only côté API).
+ * Ajustable après retour visuel.
+ */
+.card-art-crop {
+  overflow: hidden;
+  position: relative;
+}
+.card-art-crop__img,
+.card-art-crop .deck-card-popover-hero-img,
+.card-art-crop .search-card-preview__hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 104px;
+  object-fit: cover;
+  object-position: center 72%;
+  transform: scale(1.12);
+  transform-origin: center center;
+}
+
 /* Popover édition carte ─────────────────────────── */
 .deck-card-popover {
   position: fixed;
@@ -745,8 +766,8 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-4);
-  min-width: 280px;
-  max-width: 360px;
+  min-width: 300px;
+  max-width: 420px;
   visibility: hidden;
   opacity: 0;
   transition: opacity var(--duration-fast), visibility var(--duration-fast);
@@ -762,52 +783,57 @@
   gap: var(--space-3);
 }
 
-/* Bandeau « fiche » (art + nom + type + badges) */
+/* Bandeau « fiche » : grille 2 col (illustration | texte + effet) */
 .deck-card-popover-hero {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 40%) 1fr;
   gap: var(--space-3);
+  align-items: start;
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--color-border-subtle);
 }
-.deck-card-popover-hero-art {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--color-bg-sunken);
-  border: 1px solid var(--color-border-subtle);
-  max-height: 140px;
-  position: relative;
+.deck-card-popover-hero-col--art {
+  min-width: 0;
 }
-.deck-card-popover-hero-art::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 55%, var(--color-bg-surface) 100%);
-  pointer-events: none;
-}
-.deck-card-popover-hero-art-fill {
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.deck-card-popover-hero-img {
-  display: block;
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  object-position: top center;
-}
-.deck-card-popover-hero-img-placeholder {
-  width: 100%;
-  height: 120px;
-  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-sunken) 100%);
-}
-.deck-card-popover-hero-text {
+.deck-card-popover-hero-col--text {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
+  min-height: 0;
+}
+.deck-card-popover-hero-art {
+  border-radius: var(--radius-md);
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border-subtle);
+  height: 118px;
+  position: relative;
+}
+.deck-card-popover-hero-art-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.deck-card-popover-hero-img-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 96px;
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-sunken) 100%);
+}
+.deck-card-popover-card-desc {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: var(--space-1);
 }
 .deck-card-popover-card-name {
   margin: 0;
@@ -1864,7 +1890,31 @@ tr.analysis-section-header[role="button"]:hover {
   border-color: var(--color-gold);
 }
 
-/* Aperçu carte (survol des résultats) — entre filtres et liste, style fiche sans actions */
+/* Aperçu flottant (survol résultats) — créé en JS, fixed + style fiche */
+.search-card-float {
+  position: fixed;
+  z-index: calc(var(--z-modal) - 1);
+  left: 0;
+  top: 0;
+  width: min(320px, calc(100vw - 16px));
+  max-height: min(400px, calc(100vh - 16px));
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.search-card-float[hidden] {
+  display: none !important;
+}
+
+/* Classes héritées du layout fiche (inner preview) */
 .search-card-preview {
   position: relative;
   margin-top: var(--space-2);
@@ -1915,30 +1965,19 @@ tr.analysis-section-header[role="button"]:hover {
 .search-card-preview__hero-art {
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  overflow: hidden;
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);
-  max-height: 120px;
+  height: 110px;
   position: relative;
-}
-.search-card-preview__hero-art::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, var(--color-bg-sunken) 100%);
-  pointer-events: none;
-}
-.search-card-preview__hero-img {
-  display: block;
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  object-position: top center;
 }
 .search-card-preview__hero-placeholder {
   width: 100%;
-  height: 100px;
+  height: 100%;
+  min-height: 88px;
   background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-bg-sunken) 100%);
+}
+.search-card-float .search-card-preview__layout--fiche {
+  max-height: min(320px, calc(100vh - 80px));
 }
 
 .search-card-preview__fiche-body {

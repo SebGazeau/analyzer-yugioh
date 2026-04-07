@@ -36,12 +36,14 @@ export const DATA_DECK_POPOVER_NAME = 'data-deck-popover-name';
 export const DATA_DECK_POPOVER_TYPE_PRIMARY = 'data-deck-popover-type-primary';
 export const DATA_DECK_POPOVER_TYPE_SECONDARY = 'data-deck-popover-type-secondary';
 export const DATA_DECK_POPOVER_BADGES = 'data-deck-popover-badges';
+export const DATA_DECK_POPOVER_DESC = 'data-deck-popover-desc';
 
 export const DECK_CARD_POPOVER_ART_SELECTOR = `[${DATA_DECK_POPOVER_ART}]`;
 export const DECK_CARD_POPOVER_CARD_NAME_SELECTOR = `[${DATA_DECK_POPOVER_NAME}]`;
 export const DECK_CARD_POPOVER_TYPE_PRIMARY_SELECTOR = `[${DATA_DECK_POPOVER_TYPE_PRIMARY}]`;
 export const DECK_CARD_POPOVER_TYPE_SECONDARY_SELECTOR = `[${DATA_DECK_POPOVER_TYPE_SECONDARY}]`;
 export const DECK_CARD_POPOVER_BADGES_SELECTOR = `[${DATA_DECK_POPOVER_BADGES}]`;
+export const DECK_CARD_POPOVER_DESC_SELECTOR = `[${DATA_DECK_POPOVER_DESC}]`;
 export const DECK_CARD_POPOVER_ROW_CLASS = 'deck-card-popover-row';
 export const DECK_CARD_POPOVER_CATS_CLASS = 'deck-card-popover-cats';
 export const DECK_CARD_POPOVER_ACTIONS_CLASS = 'deck-card-popover-actions';

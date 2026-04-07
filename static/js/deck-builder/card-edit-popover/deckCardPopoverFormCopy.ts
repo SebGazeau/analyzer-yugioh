@@ -13,6 +13,9 @@ export const DECK_CARD_POPOVER_LABEL_CATEGORIES = 'Catégories';
 /** Au-dessus du formulaire (quantité, engine, catégories), sous le bandeau « fiche ». */
 export const DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL = 'Dans ton deck';
 
+/** Texte d’effet absent (API / cache). */
+export const DECK_CARD_POPOVER_DESC_EMPTY_LABEL = 'Texte non disponible';
+
 /** Libellé de l’option `value=""` du select engine. */
 export const DECK_CARD_POPOVER_ENGINE_OPTION_EMPTY_LABEL = '-';
 

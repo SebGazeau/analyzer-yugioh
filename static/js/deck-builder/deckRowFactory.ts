@@ -29,6 +29,9 @@ export function createDeckRowFromApiCard(card: Card): DeckRow {
               ? cardId
               : undefined;
 
+    const descRaw = card.desc;
+    const cardDesc =
+        typeof descRaw === 'string' && descRaw.trim() ? descRaw.trim() : undefined;
     return {
         name: displayName,
         type: card.type ?? '',
@@ -43,6 +46,7 @@ export function createDeckRowFromApiCard(card: Card): DeckRow {
         maxCopies: incomingMax,
         cardId,
         deckCopyId,
+        cardDesc,
     };
 }
 
@@ -62,6 +66,9 @@ export function createDeckRowFromServerEntry(infoCard: Card, entry: ServerDeckLi
               ? cid
               : undefined;
 
+    const descRaw = infoCard.desc;
+    const cardDesc =
+        typeof descRaw === 'string' && descRaw.trim() ? descRaw.trim() : undefined;
     return {
         name: (infoCard.name_en ?? infoCard.name) ?? '',
         type: infoCard.type ?? '',
@@ -76,5 +83,6 @@ export function createDeckRowFromServerEntry(infoCard: Card, entry: ServerDeckLi
         maxCopies: banTcgToMaxCopies(typeof infoCard.ban_tcg === 'string' ? infoCard.ban_tcg : undefined),
         cardId: cid,
         deckCopyId,
+        cardDesc,
     };
 }

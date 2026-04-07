@@ -2,9 +2,9 @@ import { addToDeck } from './deck.js';
 import { DECK_SECTIONS } from './deckSectionOrder.js';
 import {
     SEARCH_BOX_ELEMENT_ID,
-    SEARCH_CARD_PREVIEW_INNER_ID,
-    SEARCH_CARD_PREVIEW_LIVE_ID,
-    SEARCH_CARD_PREVIEW_ROOT_ID,
+    SEARCH_CARD_FLOAT_INNER_ID,
+    SEARCH_CARD_FLOAT_LIVE_ID,
+    SEARCH_CARD_FLOAT_ROOT_ID,
     SEARCH_RESULTS_CONTAINER_ID,
     SEARCH_RESULTS_LIST_ID,
 } from './searchDomIds.js';
@@ -33,19 +33,21 @@ import {
     STYLE_DISPLAY_NONE,
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
-import {
-    SEARCH_DEBOUNCE_MS,
-    SEARCH_MIN_QUERY_LENGTH,
-    SEARCH_PREVIEW_DEBOUNCE_MS,
-} from './searchConstants.js';
+import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
 import {
     applySearchCardPreviewCard,
-    applySearchCardPreviewPlaceholder,
     buildSearchCardPreviewLiveText,
     resetSearchCardPreview,
     setSearchCardPreviewRootVisible,
 } from './searchCardPreview.js';
-import { DOM_EVENT_CLICK, DOM_EVENT_INPUT, DOM_EVENT_POINTEROVER } from './utils/domEventNames.js';
+import {
+    DOM_EVENT_CLICK,
+    DOM_EVENT_INPUT,
+    DOM_EVENT_POINTERENTER,
+    DOM_EVENT_POINTERLEAVE,
+    DOM_EVENT_POINTERMOVE,
+    DOM_EVENT_POINTEROVER,
+} from './utils/domEventNames.js';
 import {
     SEARCH_FILTER_ALL,
     type SearchFilter,
@@ -62,7 +64,64 @@ import { highlightMatch } from './searchHighlightHtml.js';
 /**
  * Module façade : glue DOM + filtres pour la recherche du builder.
  * Transport HTTP et types : `services/search/searchApi.ts`.
+ *
+ * Aperçu au survol : le panneau suit la souris ; le focus clavier sur les lignes
+ * n’ouvre pas l’aperçu (comportement inchangé, limite connue).
  */
+const SEARCH_FLOAT_OFFSET_PX = 14;
+const SEARCH_FLOAT_VIEWPORT_PAD_PX = 8;
+const SEARCH_FLOAT_HIDE_MS = 120;
+
+function clampSearchFloatPosition(floatEl: HTMLElement, clientX: number, clientY: number): void {
+    floatEl.style.position = 'fixed';
+    const w = floatEl.offsetWidth;
+    const h = floatEl.offsetHeight;
+    let left = clientX + SEARCH_FLOAT_OFFSET_PX;
+    let top = clientY + SEARCH_FLOAT_OFFSET_PX;
+    const maxL = window.innerWidth - SEARCH_FLOAT_VIEWPORT_PAD_PX - w;
+    const maxT = window.innerHeight - SEARCH_FLOAT_VIEWPORT_PAD_PX - h;
+    const minL = SEARCH_FLOAT_VIEWPORT_PAD_PX;
+    const minT = SEARCH_FLOAT_VIEWPORT_PAD_PX;
+    if (left > maxL) left = maxL;
+    if (top > maxT) top = maxT;
+    if (left < minL) left = minL;
+    if (top < minT) top = minT;
+    floatEl.style.left = `${Math.round(left)}px`;
+    floatEl.style.top = `${Math.round(top)}px`;
+}
+
+/** Crée ou retrouve le nœud fixed d’aperçu (hors flux du template). */
+function ensureSearchCardFloat(): {
+    root: HTMLElement;
+    live: HTMLElement;
+    inner: HTMLElement;
+} | null {
+    let root = document.getElementById(SEARCH_CARD_FLOAT_ROOT_ID) as HTMLElement | null;
+    const liveExisting = document.getElementById(SEARCH_CARD_FLOAT_LIVE_ID) as HTMLElement | null;
+    const innerExisting = document.getElementById(SEARCH_CARD_FLOAT_INNER_ID) as HTMLElement | null;
+    if (root && liveExisting && innerExisting) {
+        return { root, live: liveExisting, inner: innerExisting };
+    }
+    if (root?.parentNode) root.remove();
+    root = document.createElement('div');
+    root.id = SEARCH_CARD_FLOAT_ROOT_ID;
+    root.className = 'search-card-float';
+    root.setAttribute('hidden', '');
+    root.setAttribute('aria-label', 'Aperçu de la carte');
+    const live = document.createElement('p');
+    live.id = SEARCH_CARD_FLOAT_LIVE_ID;
+    live.className = 'search-card-preview__live';
+    live.setAttribute('aria-live', 'polite');
+    live.setAttribute('aria-atomic', 'true');
+    const inner = document.createElement('div');
+    inner.id = SEARCH_CARD_FLOAT_INNER_ID;
+    inner.className = 'search-card-preview__inner';
+    root.appendChild(live);
+    root.appendChild(inner);
+    document.body.appendChild(root);
+    return { root, live, inner };
+}
+
 let lastResults: SearchApiCard[] = [];
 let lastQuery = '';
 let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
@@ -153,29 +212,73 @@ export function setupSearch(): void {
     const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     const resultsContainer = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     const results = document.getElementById(SEARCH_RESULTS_LIST_ID) as HTMLElement | null;
-    const previewRoot = document.getElementById(SEARCH_CARD_PREVIEW_ROOT_ID) as HTMLElement | null;
-    const previewLive = document.getElementById(SEARCH_CARD_PREVIEW_LIVE_ID) as HTMLElement | null;
-    const previewInner = document.getElementById(SEARCH_CARD_PREVIEW_INNER_ID) as HTMLElement | null;
     if (!input || !resultsContainer || !results) return;
 
-    const showPreviewPlaceholderStrip = (): void => {
-        if (!previewRoot || !previewInner) return;
-        setSearchCardPreviewRootVisible(previewRoot, true);
-        if (previewLive) previewLive.textContent = '';
-        applySearchCardPreviewPlaceholder(previewInner);
+    const floatEls = ensureSearchCardFloat();
+    if (!floatEls) return;
+    const { root: previewRoot, live: previewLive, inner: previewInner } = floatEls;
+
+    let lastClientX = 0;
+    let lastClientY = 0;
+    let rafPos: number | null = null;
+    let hideTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+    const clearHideTimer = (): void => {
+        if (hideTimer != null) {
+            globalThis.clearTimeout(hideTimer);
+            hideTimer = null;
+        }
     };
 
-    const debouncedPreviewCard = debounce((card: SearchApiCard) => {
-        if (!previewLive || !previewInner) return;
+    const scheduleReposition = (): void => {
+        if (rafPos != null) return;
+        rafPos = window.requestAnimationFrame(() => {
+            rafPos = null;
+            if (!previewRoot || previewRoot.hasAttribute('hidden')) return;
+            clampSearchFloatPosition(previewRoot, lastClientX, lastClientY);
+        });
+    };
+
+    const scheduleHideFloat = (): void => {
+        clearHideTimer();
+        hideTimer = globalThis.setTimeout(() => {
+            hideTimer = null;
+            resetSearchCardPreview(previewRoot, previewLive, previewInner);
+        }, SEARCH_FLOAT_HIDE_MS);
+    };
+
+    const applyPreviewNow = (card: SearchApiCard): void => {
         previewLive.textContent = buildSearchCardPreviewLiveText(card);
         applySearchCardPreviewCard(previewInner, card);
-    }, SEARCH_PREVIEW_DEBOUNCE_MS);
+        setSearchCardPreviewRootVisible(previewRoot, true);
+        scheduleReposition();
+        window.requestAnimationFrame(() => scheduleReposition());
+    };
+
+    previewRoot.addEventListener(DOM_EVENT_POINTERENTER, () => clearHideTimer());
+    previewRoot.addEventListener(DOM_EVENT_POINTERLEAVE, () => scheduleHideFloat());
 
     results.addEventListener(DOM_EVENT_POINTEROVER, (e) => {
         const row = (e.target as HTMLElement).closest(`.${SEARCH_RESULT_ROW_CLASS}`) as HTMLElement | null;
         if (!row || !results.contains(row)) return;
         const card = searchPreviewRowCards.get(row);
-        if (card) debouncedPreviewCard(card);
+        if (!card) return;
+        clearHideTimer();
+        lastClientX = e.clientX;
+        lastClientY = e.clientY;
+        applyPreviewNow(card);
+    });
+
+    results.addEventListener(DOM_EVENT_POINTERMOVE, (e) => {
+        lastClientX = e.clientX;
+        lastClientY = e.clientY;
+        if (!previewRoot.hasAttribute('hidden')) scheduleReposition();
+    });
+
+    resultsContainer.addEventListener(DOM_EVENT_POINTERLEAVE, (e) => {
+        const rel = e.relatedTarget as Node | null;
+        if (rel && previewRoot.contains(rel)) return;
+        scheduleHideFloat();
     });
 
     const runSearch = () => {
@@ -185,6 +288,7 @@ export function setupSearch(): void {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
+            resetSearchCardPreview(previewRoot, previewLive, previewInner);
             return;
         }
 
@@ -201,7 +305,7 @@ export function setupSearch(): void {
             lastQuery = query;
             renderResultsList(out.cards, query, results);
             resultsContainer.style.display = STYLE_DISPLAY_FLEX;
-            showPreviewPlaceholderStrip();
+            resetSearchCardPreview(previewRoot, previewLive, previewInner);
         });
     };
 
@@ -217,7 +321,7 @@ export function setupSearch(): void {
             });
             if (lastResults.length > 0) {
                 renderResultsList(lastResults, lastQuery, results);
-                showPreviewPlaceholderStrip();
+                resetSearchCardPreview(previewRoot, previewLive, previewInner);
             }
         });
     });
@@ -246,9 +350,9 @@ export function closeSearch(): void {
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     if (el) el.style.display = STYLE_DISPLAY_NONE;
     resetSearchCardPreview(
-        document.getElementById(SEARCH_CARD_PREVIEW_ROOT_ID) as HTMLElement | null,
-        document.getElementById(SEARCH_CARD_PREVIEW_LIVE_ID) as HTMLElement | null,
-        document.getElementById(SEARCH_CARD_PREVIEW_INNER_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_FLOAT_ROOT_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_FLOAT_LIVE_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_FLOAT_INNER_ID) as HTMLElement | null,
     );
 }
 

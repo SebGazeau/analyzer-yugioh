@@ -6,6 +6,12 @@ export const DOM_EVENT_CLICK = 'click';
 
 export const DOM_EVENT_POINTEROVER = 'pointerover';
 
+export const DOM_EVENT_POINTERMOVE = 'pointermove';
+
+export const DOM_EVENT_POINTERENTER = 'pointerenter';
+
+export const DOM_EVENT_POINTERLEAVE = 'pointerleave';
+
 export const DOM_EVENT_CHANGE = 'change';
 
 export const DOM_EVENT_INPUT = 'input';

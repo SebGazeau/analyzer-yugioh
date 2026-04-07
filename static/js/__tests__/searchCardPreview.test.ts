@@ -27,6 +27,7 @@ describe('searchCardPreview', () => {
         expect(html).toContain('&lt;script&gt;');
         expect(html).not.toContain('<script>');
         expect(html).toContain('search-card-preview__hero-img');
+        expect(html).toContain('card-art-crop');
         expect(html).toContain('https://example.com/a.jpg');
 
         const inner = document.createElement('div');

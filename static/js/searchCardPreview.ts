@@ -1,5 +1,5 @@
 /**
- * Panneau d’aperçu carte sous la recherche du builder (survol des résultats).
+ * Corps HTML de l’aperçu carte (recherche builder) : utilisé dans le flottant `search-card-float`.
  * Présentation type « fiche » : informatif uniquement, sans actions.
  */
 import { buildCardFicheBadgesInnerHtml } from './cardFicheBadges.js';
@@ -47,7 +47,7 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
     const imgUrl =
         typeof card.image_url === 'string' && card.image_url.trim() ? card.image_url.trim() : '';
     const art = imgUrl
-        ? `<img class="search-card-preview__hero-img" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
+        ? `<img class="search-card-preview__hero-img card-art-crop__img" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
         : `<div class="search-card-preview__hero-placeholder" aria-hidden="true"></div>`;
 
     const { primary: typePri, secondary: typeSec } = typePrimarySecondary(card);
@@ -86,7 +86,7 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
 
     return `
         <div class="search-card-preview__layout search-card-preview__layout--fiche">
-            <div class="search-card-preview__hero-art">${art}</div>
+            <div class="search-card-preview__hero-art card-art-crop">${art}</div>
             <div class="search-card-preview__fiche-body">
                 <h3 class="search-card-preview__name">${escapeHtml(mainName)}</h3>
                 ${nameEnBlock}

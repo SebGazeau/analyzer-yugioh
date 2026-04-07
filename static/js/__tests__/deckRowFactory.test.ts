@@ -22,6 +22,17 @@ describe('deckRowFactory', () => {
         expect(row.categories).toEqual([]);
     });
 
+    it('createDeckRowFromApiCard : propage cardDesc si présent', () => {
+        const card = {
+            name: 'X',
+            name_en: 'X',
+            type: 'Monster',
+            desc: '  Effet test  ',
+        } as Card;
+        const row = createDeckRowFromApiCard(card);
+        expect(row.cardDesc).toBe('Effet test');
+    });
+
     it('createDeckRowFromServerEntry : qty, engine, deck_copy_id serveur', () => {
         const info = {
             name: 'X',

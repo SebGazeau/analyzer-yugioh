@@ -7,6 +7,7 @@ import {
 } from '../deck-builder/card-edit-popover/deckCardPopoverFormCopy.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/deckCardPopoverShell.js';
 import {
+  DATA_DECK_POPOVER_DESC,
   DECK_CARD_POPOVER_ASSOCIATED_CLASS,
   DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
@@ -39,6 +40,9 @@ describe('deckCardPopoverShell', () => {
     const catsRow = `${DECK_CARD_POPOVER_ROW_CLASS} ${DECK_CARD_POPOVER_CATS_CLASS}`;
     expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(`class="${catsRow}"`);
     expect(DECK_CARD_POPOVER_SHELL_HTML.split(DECK_CARD_POPOVER_CATS_CLASS).length - 1).toBe(1);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain(DATA_DECK_POPOVER_DESC);
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain('card-art-crop');
+    expect(DECK_CARD_POPOVER_SHELL_HTML).toContain('deck-card-popover-card-desc');
   });
 
   it('quatre icônes partagent les attributs SVG stroke communs', () => {

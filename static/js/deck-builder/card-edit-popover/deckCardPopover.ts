@@ -1,6 +1,7 @@
 /**
  * Popover « Modifier la carte » (quantité, engine, catégories, suppression, couverture, cartes associées).
  */
+import { fetchCardByName } from '../../api.js';
 import { openAssociatedCardsModal } from '../../associations/modal.js';
 import { resolveDeckCardForAssociationName } from '../../associations/modalController.js';
 import { buildCardFicheBadgesInnerHtml } from '../../cardFicheBadges.js';
@@ -41,6 +42,7 @@ import {
     DECK_CARD_POPOVER_ASSOCIATED_SELECTOR,
     DECK_CARD_POPOVER_BADGES_SELECTOR,
     DECK_CARD_POPOVER_CARD_NAME_SELECTOR,
+    DECK_CARD_POPOVER_DESC_SELECTOR,
     DECK_CARD_POPOVER_CLOSE_SELECTOR,
     DECK_CARD_POPOVER_COVER_SELECTOR,
     DECK_CARD_POPOVER_DELETE_SELECTOR,
@@ -59,6 +61,7 @@ import {
     clampPopoverQuantityFromSelect,
     maxQuantityAllowedForPopoverRow,
 } from './deckCardPopoverQuantity.js';
+import { DECK_CARD_POPOVER_DESC_EMPTY_LABEL } from './deckCardPopoverFormCopy.js';
 
 function fillDeckCardPopoverHero(popover: HTMLElement, row: DeckPopoverRow): void {
     const artHost = popover.querySelector(DECK_CARD_POPOVER_ART_SELECTOR) as HTMLElement | null;
@@ -66,11 +69,12 @@ function fillDeckCardPopoverHero(popover: HTMLElement, row: DeckPopoverRow): voi
     const typePrimary = popover.querySelector(DECK_CARD_POPOVER_TYPE_PRIMARY_SELECTOR) as HTMLElement | null;
     const typeSecondary = popover.querySelector(DECK_CARD_POPOVER_TYPE_SECONDARY_SELECTOR) as HTMLElement | null;
     const badgesEl = popover.querySelector(DECK_CARD_POPOVER_BADGES_SELECTOR) as HTMLElement | null;
+    const descEl = popover.querySelector(DECK_CARD_POPOVER_DESC_SELECTOR) as HTMLElement | null;
     if (!artHost || !nameEl || !typePrimary || !typeSecondary || !badgesEl) return;
 
     const url = typeof row.imageUrl === 'string' && row.imageUrl.trim() ? row.imageUrl.trim() : '';
     if (url) {
-        artHost.innerHTML = `<img class="deck-card-popover-hero-img" src="${escapeAttr(url)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_EAGER}" />`;
+        artHost.innerHTML = `<img class="deck-card-popover-hero-img card-art-crop__img" src="${escapeAttr(url)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_EAGER}" />`;
     } else {
         artHost.innerHTML = '<div class="deck-card-popover-hero-img-placeholder" aria-hidden="true"></div>';
     }
@@ -88,6 +92,10 @@ function fillDeckCardPopoverHero(popover: HTMLElement, row: DeckPopoverRow): voi
         atk: row.atk ?? null,
         def: row.def ?? null,
     });
+    if (descEl) {
+        const d = row.cardDesc?.trim();
+        descEl.textContent = d || DECK_CARD_POPOVER_DESC_EMPTY_LABEL;
+    }
 }
 
 export type { DeckSection };
@@ -109,6 +117,7 @@ export interface DeckPopoverRow {
     attribute?: string;
     atk?: number;
     def?: number;
+    cardDesc?: string;
 }
 
 export interface CreateDeckCardPopoverDeps {
@@ -352,6 +361,22 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
             coverBtnEl.style.display = getCurrentLoadedDeck() ? STYLE_DISPLAY_DEFAULT : STYLE_DISPLAY_NONE;
 
         fillDeckCardPopoverHero(popover, row);
+
+        const nameForDesc = row.name.trim();
+        if (!row.cardDesc?.trim() && nameForDesc) {
+            void fetchCardByName(nameForDesc).then((c) => {
+                if (!popover.classList.contains(DECK_CARD_POPOVER_OPEN_CLASS)) return;
+                const arrNow = getState(section);
+                if (arrNow[index] !== row) return;
+                const d = typeof c?.desc === 'string' ? c.desc.trim() : '';
+                if (d) row.cardDesc = d;
+                const descHost = popover.querySelector(DECK_CARD_POPOVER_DESC_SELECTOR) as HTMLElement | null;
+                if (descHost) {
+                    descHost.textContent =
+                        (row.cardDesc || '').trim() || DECK_CARD_POPOVER_DESC_EMPTY_LABEL;
+                }
+            });
+        }
 
         popoverBackdropEl?.classList.add(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
         popover.classList.add(DECK_CARD_POPOVER_OPEN_CLASS);
