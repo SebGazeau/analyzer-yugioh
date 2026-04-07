@@ -29,6 +29,10 @@ fn test_rate_limit_data() -> web::Data<RateLimitState> {
     web::Data::new(RateLimitState::permissive_for_tests())
 }
 
+fn test_turnstile_config() -> web::Data<crate::auth::turnstile::TurnstileConfig> {
+    web::Data::new(crate::auth::turnstile::TurnstileConfig::disabled())
+}
+
 /// Construit l'`App` depuis ses dépendances.
 /// `admin_secret` : si présent, protège /admin via le header X-Admin-Key.
 /// `session_key` : si présent, active les sessions (CookieSessionStore) et les routes /web.
@@ -36,7 +40,8 @@ fn test_rate_limit_data() -> web::Data<RateLimitState> {
 /// `jwt_secret` + `api_token_issuer_secret` : si présents, activent /api (token + profile).
 /// Swagger UI : si `enable_swagger_ui`, enregistre `/swagger-ui/` et `/api-docs/openapi.json`.
 /// Le corps `api_key` de POST /api/auth/token doit égaler `api_token_issuer_secret` (souvent `API_ISSUER_SECRET`).
-/// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register`, `/admin/login` (sec-10).
+/// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register` (compteur dédié), `/admin/login` (sec-10).
+/// `turnstile` : clés optionnelles ; si les deux sont définies, `/register` exige le jeton widget.
 #[allow(clippy::too_many_arguments)]
 pub fn make_app(
     cache: web::Data<CardCache>,
@@ -51,6 +56,7 @@ pub fn make_app(
     api_token_issuer_secret: Option<String>,
     enable_swagger_ui: bool,
     rate_limit: web::Data<RateLimitState>,
+    turnstile: web::Data<crate::auth::turnstile::TurnstileConfig>,
 ) -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
@@ -85,7 +91,8 @@ pub fn make_app(
             }
         })
         .wrap(cookie_session_middleware(key, session_cookie_settings))
-        .app_data(rate_limit);
+        .app_data(rate_limit)
+        .app_data(turnstile);
     let app = app.app_data(cache).app_data(tera_data).app_data(cards_path);
     let app = if let Some(p) = pool {
         app.app_data(p)
@@ -146,6 +153,7 @@ pub fn configure_app_for_tests_production_cookies() -> App<
         None,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -177,10 +185,11 @@ pub fn configure_app_for_tests() -> App<
         None,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
-/// Tests sec-10 : plafond **2** `POST` site (`/login`, `/register`) par heure et par IP.
+/// Tests sec-10 : plafond **2** `POST` `/login` par heure et par IP (`/register` reste large ici).
 pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
@@ -199,6 +208,8 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
         2,
         Duration::from_secs(3600),
         10_000,
+        Duration::from_secs(3600),
+        10_000,
     ));
     make_app(
         cache,
@@ -213,6 +224,7 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
         None,
         true,
         rl,
+        test_turnstile_config(),
     )
 }
 
@@ -244,6 +256,7 @@ pub fn configure_app_for_tests_without_swagger() -> App<
         None,
         false,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -283,6 +296,7 @@ pub fn configure_app_for_tests_with_api_keys(
         issuer,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -328,5 +342,6 @@ pub fn configure_app_for_tests_with_auth(
         api_token_issuer,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }

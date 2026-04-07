@@ -56,6 +56,9 @@ services:
       LOCAL_STORAGE_PATH: /storage
       RUST_LOG: info
       ADMIN_SECRET: ${ADMIN_SECRET:-}
+      # Optionnel : inscription avec Cloudflare Turnstile (voir .env.example)
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     volumes:
       - cards_data:/app/data
       - image_storage:/storage

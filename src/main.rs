@@ -14,8 +14,10 @@
 //!   IMAGE_IMPORT_ALLOWED_HOST_SUFFIXES — import /images : suffixes hôtes (virgules), défaut ygoprodeck.com
 //!   IMAGE_IMPORT_MAX_BYTES — plafond téléchargement import (1 KiB–100 MiB), défaut 15 MiB
 //!   ENABLE_SWAGGER_UI — `1`/`true`/`yes`/`on` force Swagger ; `0`/`false` désactive. Hors prod : activé par défaut ; en prod : désactivé sauf si activé explicitement.
-//!   SITE_AUTH_RATE_LIMIT_PER_MINUTE — max POST `/login`, `/register` par IP / minute (défaut 30).
+//!   SITE_AUTH_RATE_LIMIT_PER_MINUTE — max POST `/login` par IP / minute (défaut 30).
+//!   REGISTER_RATE_LIMIT_PER_MINUTE — max POST `/register` par IP / minute (défaut 5).
 //!   ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE — max POST `/admin/login` par IP / minute (défaut 15).
+//!   TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY — Cloudflare Turnstile sur `/register` (optionnel si les deux absents ; voir doc Cloudflare pour clés de test).
 //!   YGOPRODECK_CARDINFO_URL — optionnel : URL `cardinfo.php` (défaut API publique v7) pour `sync-cards` / `fetch_cards` (DB).
 //!
 //! Sous-commandes sans serveur HTTP :
@@ -34,7 +36,7 @@ use sqlx::postgres::PgPoolOptions;
 
 use analyzer_yugioh::{
     CARDS_PATH_DEFAULT,
-    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret},
+    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret, turnstile::TurnstileConfig},
     cli, config, db, make_app,
     rate_limit::rate_limit_state_from_env,
     security_startup::{self, StartupSecretError},
@@ -173,6 +175,10 @@ async fn main() -> std::io::Result<()> {
     };
 
     let rate_limit_data = web::Data::new(rate_limit_state_from_env());
+    let turnstile_data = web::Data::new(TurnstileConfig::from_env());
+    if turnstile_data.enabled() {
+        tracing::info!("Turnstile activé sur /register.");
+    }
 
     tracing::info!("Écoute sur 0.0.0.0:{}", port);
     HttpServer::new(move || {
@@ -189,6 +195,7 @@ async fn main() -> std::io::Result<()> {
             api_token_issuer_secret.clone(),
             enable_swagger_ui,
             rate_limit_data.clone(),
+            turnstile_data.clone(),
         )
     })
     .bind(("0.0.0.0", port))?

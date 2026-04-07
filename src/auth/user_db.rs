@@ -1,5 +1,6 @@
 //! Comptes utilisateurs du site : pseudo + mot de passe (Argon2).
 
+use rustrict::{Censor, Type};
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -63,10 +64,22 @@ pub fn normalize_and_validate_pseudo(pseudo: &str) -> Result<String, PseudoError
     Ok(s.to_string())
 }
 
+/// Filtre grossièretés, contenus offensants / sexuels (seuil « inappropriate » de rustrict),
+/// et insultes très graves (mean sévère). Faux positifs possibles : liste ajustable côté produit.
+pub fn validate_pseudo_content(pseudo: &str) -> Result<(), PseudoError> {
+    let mut censor = Censor::from_str(pseudo);
+    if censor.analyze().is(Type::INAPPROPRIATE) {
+        return Err(PseudoError::Inappropriate);
+    }
+    Ok(())
+}
+
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum PseudoError {
     #[error("Le pseudo doit contenir au moins {0} caractères")]
     TooShort(usize),
+    #[error("Ce pseudo n'est pas autorisé (langage inapproprié).")]
+    Inappropriate,
 }
 
 impl PseudoError {
@@ -98,6 +111,7 @@ pub async fn create_user(
     password: &str,
 ) -> Result<Uuid, CreateUserError> {
     let pseudo_ok = normalize_and_validate_pseudo(pseudo).map_err(CreateUserError::Pseudo)?;
+    validate_pseudo_content(&pseudo_ok).map_err(CreateUserError::Pseudo)?;
     validate_password_strength(password).map_err(CreateUserError::Password)?;
     if get_user_by_pseudo(pool, &pseudo_ok).await?.is_some() {
         return Err(CreateUserError::PseudoTaken);
@@ -205,5 +219,19 @@ mod tests {
             normalize_and_validate_pseudo("Bob42").ok(),
             Some("Bob42".to_string())
         );
+    }
+
+    #[test]
+    fn validate_pseudo_content_allows_clean() {
+        assert!(validate_pseudo_content("Alice").is_ok());
+        assert!(validate_pseudo_content("DarkMagician").is_ok());
+    }
+
+    #[test]
+    fn validate_pseudo_content_blocks_listed_profanity() {
+        assert!(matches!(
+            validate_pseudo_content("arse"),
+            Err(PseudoError::Inappropriate)
+        ));
     }
 }
