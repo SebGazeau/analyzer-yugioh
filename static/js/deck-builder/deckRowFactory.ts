@@ -18,7 +18,7 @@ export interface ServerDeckListEntry {
 
 /** Nouvelle ligne (qty 1) à partir d’une carte issue de la recherche / API. */
 export function createDeckRowFromApiCard(card: Card): DeckRow {
-    const displayName = card.name_en ?? card.name;
+    const displayName = (card.name_en ?? card.name) ?? '';
     const cardId = typeof card.id === 'number' && card.id > 0 ? card.id : undefined;
     const incomingMax = banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined);
     const apiDc = (card as { deck_copy_id?: unknown }).deck_copy_id;
@@ -63,7 +63,7 @@ export function createDeckRowFromServerEntry(infoCard: Card, entry: ServerDeckLi
               : undefined;
 
     return {
-        name: infoCard.name_en ?? infoCard.name,
+        name: (infoCard.name_en ?? infoCard.name) ?? '',
         type: infoCard.type ?? '',
         quantity: entry.quantity ?? DECK_DEFAULT_ROW_QUANTITY,
         engine: entry.engine ?? '',

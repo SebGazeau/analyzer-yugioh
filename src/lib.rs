@@ -8,6 +8,7 @@ pub mod modules;
 pub use modules::CARDS_PATH_DEFAULT;
 pub mod card_locales_sync;
 pub mod cards_sync;
+pub mod cli;
 pub mod config;
 pub mod db;
 pub mod images;

@@ -6,16 +6,13 @@ import {
     SEARCH_RESULTS_LIST_ID,
 } from './searchDomIds.js';
 import {
-    DATA_SEARCH_ACTION_ATTR,
     DATA_SEARCH_ERROR_ATTR,
     DATA_SEARCH_FILTER_ATTR,
     SEARCH_ACTION_ASSOCIATED_SELECTOR,
     SEARCH_FILTER_BTN_ACTIVE_CLASS,
     SEARCH_FILTER_BTN_CLASS,
-    SEARCH_HIGHLIGHT_CLASS,
     SEARCH_RESULT_ADD_DECK_SELECTOR,
     SEARCH_RESULT_ADD_SIDE_SELECTOR,
-    SEARCH_RESULT_ASSOCIATED_CLASS,
     SEARCH_RESULT_ROW_CLASS,
 } from './searchDomSelectors.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
@@ -33,7 +30,6 @@ import {
     STYLE_DISPLAY_NONE,
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
-import { searchApiUrl } from './cardSearchApiRoutes.js';
 import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
 import { DOM_EVENT_CLICK, DOM_EVENT_INPUT } from './utils/domEventNames.js';
 import {
@@ -41,41 +37,23 @@ import {
     type SearchFilter,
 } from './searchFilterConstants.js';
 import { escapeHtml, escapeAttr } from './utils/html.js';
-import { TEXT_BLACK_STAR, TEXT_MIDDLE_DOT } from './utils/textPlaceholders.js';
+import { filterCards, getSubtypeLine } from './services/search/searchCardPresentation.js';
+import {
+    fetchSearchResultsForQuery as fetchSearchResultsForQueryFromApi,
+    fetchSearchResultsWithOutcome,
+} from './services/search/searchApi.js';
+import type { SearchApiCard } from './services/search/searchApiTypes.js';
+import { highlightMatch } from './searchHighlightHtml.js';
 
-/** Query `locale` pour `SEARCH_API_PATH` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
-function searchLocaleQuery(): string {
-    const raw = document.documentElement.lang?.trim().toLowerCase() || '';
-    if (!raw || raw.startsWith('en')) return '';
-    const base = raw.split('-')[0];
-    if (!base) return '';
-    return `&locale=${encodeURIComponent(base)}`;
-}
-
-function getSubtypeLine(card: any): string {
-    const t = (card.type ?? '').toLowerCase();
-    const race = card.race ?? '';
-    const level = card.level != null ? card.level : '';
-    const arch =
-        typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
-    if (t.includes('monster')) {
-        const part = race || card.type || '';
-        const line = level ? `${part} ${TEXT_MIDDLE_DOT} ${level}${TEXT_BLACK_STAR}` : part;
-        return arch ? `${line} ${TEXT_MIDDLE_DOT} ${arch}` : line;
-    }
-    return card.type || '';
-}
-
-let lastResults: any[] = [];
+/**
+ * Module façade : glue DOM + filtres pour la recherche du builder.
+ * Transport HTTP et types : `services/search/searchApi.ts`.
+ */
+let lastResults: SearchApiCard[] = [];
 let lastQuery = '';
 let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
 
-function filterCards(cards: any[], filter: SearchFilter): any[] {
-    if (filter === SEARCH_FILTER_ALL) return cards;
-    return cards.filter((c) => cardTypeKindFromTypeString(c.type) === filter);
-}
-
-function renderResultRow(card: any, query: string, results: HTMLElement): void {
+function renderResultRow(card: SearchApiCard, query: string, results: HTMLElement): void {
     const kind = cardTypeKindFromTypeString(card.type);
     // `name` est la locale demandée quand le backend applique `card_locales` ; `name_en` reste l’anglais si présent.
     const mainName = card.name ?? card.name_en ?? '';
@@ -108,20 +86,15 @@ function renderResultRow(card: any, query: string, results: HTMLElement): void {
     results.appendChild(row);
 }
 
-function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement): void {
+function renderResultsList(cards: SearchApiCard[], query: string, resultsEl: HTMLElement): void {
     resultsEl.innerHTML = '';
     const filtered = filterCards(cards, activeFilter);
     filtered.forEach((card) => renderResultRow(card, query, resultsEl));
 }
 
-/** Requête brute recherche (même locale que le builder). */
-export async function fetchSearchResultsForQuery(q: string): Promise<any[]> {
-    const t = q.trim();
-    if (t.length < SEARCH_MIN_QUERY_LENGTH) return [];
-    const res = await fetch(searchApiUrl(t, searchLocaleQuery()));
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+/** Requête brute recherche (même locale que le builder). Réexport du service. */
+export async function fetchSearchResultsForQuery(q: string): Promise<SearchApiCard[]> {
+    return fetchSearchResultsForQueryFromApi(q);
 }
 
 function normName(s: string): string {
@@ -133,7 +106,10 @@ function normName(s: string): string {
 /**
  * Choisit la carte la plus probable dans les résultats (égalité nom / name_en avec l’intention, sinon 1ʳᵉ).
  */
-export function pickBestCardFromSearchResults(cards: any[], intendedName: string): any | null {
+export function pickBestCardFromSearchResults(
+    cards: SearchApiCard[],
+    intendedName: string,
+): SearchApiCard | null {
     if (!cards.length) return null;
     const target = normName(intendedName);
     if (!target) return cards[0];
@@ -171,23 +147,19 @@ export function setupSearch(): void {
             return;
         }
 
-        fetch(searchApiUrl(query, searchLocaleQuery()))
-            .then((res) => {
-                if (!res.ok) throw new Error(String(res.status));
-                return res.json();
-            })
-            .then((data: any[]) => {
-                const cards = data || [];
-                lastResults = cards;
-                lastQuery = query;
-                renderResultsList(cards, query, results);
-                resultsContainer.style.display = STYLE_DISPLAY_FLEX;
-            })
-            .catch(() => {
+        void fetchSearchResultsWithOutcome(query).then((out) => {
+            if (!out.ok) {
                 results.innerHTML = searchResultsFetchErrorRowHtml();
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
-            });
+                lastResults = [];
+                return;
+            }
+            lastResults = out.cards;
+            lastQuery = query;
+            renderResultsList(out.cards, query, results);
+            resultsContainer.style.display = STYLE_DISPLAY_FLEX;
+        });
     };
 
     document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((btn) => {
@@ -221,13 +193,7 @@ export function setupSearch(): void {
 }
 
 export { escapeAttr };
-
-export function highlightMatch(text: string, query: string): string {
-    if (!query.trim()) return text;
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(regex, `<mark class="${SEARCH_HIGHLIGHT_CLASS}">$1</mark>`);
-}
+export { highlightMatch } from './searchHighlightHtml.js';
 
 export function closeSearch(): void {
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;

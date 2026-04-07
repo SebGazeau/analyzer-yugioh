@@ -30,7 +30,7 @@ export function tryAddCardToDeckSection(
     arr: DeckRow[],
     allRowsFlat: readonly DeckRow[],
 ): TryAddCardResult {
-    const displayName = card.name_en ?? card.name;
+    const displayName = (card.name_en ?? card.name) ?? '';
     const cardId = typeof card.id === 'number' && card.id > 0 ? card.id : undefined;
     const incomingMax = banTcgToMaxCopies(typeof card.ban_tcg === 'string' ? card.ban_tcg : undefined);
     const limitKey = deckLimitGroupKeyFromCard(

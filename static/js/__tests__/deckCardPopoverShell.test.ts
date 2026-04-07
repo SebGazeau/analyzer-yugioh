@@ -8,16 +8,18 @@ import { DECK_CARD_POPOVER_SHELL_HTML } from '../deck-builder/card-edit-popover/
 import {
   DECK_CARD_POPOVER_CATS_CLASS,
   DECK_CARD_POPOVER_ENGINE_CLASS,
-  DECK_CARD_POPOVER_ICON_SVG_ATTRS,
   DECK_CARD_POPOVER_INNER_CLASS,
   DECK_CARD_POPOVER_QTY_CLASS,
   DECK_CARD_POPOVER_ROW_CLASS,
   DECK_CARD_POPOVER_CLOSE_BTN_TITLE,
   DECK_CARD_POPOVER_HEADING_TEXT,
+} from '../deck-builder/card-edit-popover/deckCardPopoverDomSelectors.js';
+import {
+  DECK_CARD_POPOVER_ICON_SVG_ATTRS,
   DECK_CARD_POPOVER_SVG_COVER_INNER_HTML,
   DECK_CARD_POPOVER_SVG_DELETE_PATHS_HTML,
   DECK_CARD_POPOVER_SVG_PATH_CLOSE_D,
-} from '../deck-builder/card-edit-popover/deckCardPopoverDomSelectors.js';
+} from '../deck-builder/card-edit-popover/deckCardPopoverIconsHtml.js';
 
 describe('deckCardPopoverShell', () => {
   it('structure Quantité / Engine / Catégories inchangée', () => {

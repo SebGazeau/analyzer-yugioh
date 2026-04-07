@@ -46,7 +46,8 @@ import {
 } from '../utils/cssInlineDisplay.js';
 import { PERCENT_DISPLAY_SCALE } from '../utils/percentScale.js';
 import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
-import { getAllCategories, simulateDrawCounts, type ProbabilityCardEntry } from './probabilityMath.js';
+import { buildHistogramsByCategory } from '../services/analysis/histogramSimulation.js';
+import type { ProbabilityCardEntry } from './probabilityMath.js';
 import type { YgoHandDrawCount } from './yugiohDrawConstants.js';
 
 /** Met à jour le &lt;select&gt; des catégories pour l’histogramme (rempli selon le deck). */
@@ -176,7 +177,8 @@ export function runHistogramSimulation1000(input: {
     handSize: YgoHandDrawCount;
 }): void {
     const { cards, handSize } = input;
-    const categories = getAllCategories(cards).sort();
+    const iterations = DRAW_HISTOGRAM_SIM_ITERATIONS;
+    const { categories, getHistogram } = buildHistogramsByCategory(cards, handSize, iterations);
     if (categories.length === 0 || cards.length === 0) {
         clearHistogramGraphs();
         return;
@@ -190,10 +192,9 @@ export function runHistogramSimulation1000(input: {
     if (select && selectedCategory) {
         select.value = selectedCategory;
     }
-    const iterations = DRAW_HISTOGRAM_SIM_ITERATIONS;
     const headingEl = document.getElementById(DRAW_HISTOGRAM_HEADING_ID);
     const explanationEl = document.getElementById(DRAW_HISTOGRAM_EXPLANATION_ID);
-    const hist = simulateDrawCounts(cards, selectedCategory, handSize, iterations);
+    const hist = getHistogram(selectedCategory);
     if (headingEl) headingEl.textContent = drawHistogramHeadingActive(iterations, selectedCategory);
     if (explanationEl) {
         explanationEl.style.display = STYLE_DISPLAY_BLOCK;
@@ -210,7 +211,7 @@ export function runHistogramSimulation1000(input: {
     if (allContainer) {
         allContainer.innerHTML = '';
         categories.forEach((cat, i) => {
-            const h = simulateDrawCounts(cards, cat, handSize, iterations);
+            const h = getHistogram(cat);
             appendCategoryMiniHistogram(allContainer, cat, h, iterations, i);
         });
     }

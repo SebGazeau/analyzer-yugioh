@@ -57,8 +57,8 @@ pub async fn dashboard(session: Session) -> HttpResponse {
         .replace('"', "&quot;")
         .replace('<', "&lt;")
         .replace('>', "&gt;");
-    HttpResponse::Ok().body(format!(
-        r#"<p>Connecté en tant que <strong>{escaped}</strong>.</p>
-        <form method="post" action="/web/logout"><input type="hidden" name="csrf_token" value="{csrf_esc}"><button type="submit">Déconnexion</button></form>"#,
-    ))
+    let body = include_str!("../../templates/web_inline/dashboard_logged_in.html")
+        .replace("%%USER_ESC%%", &escaped)
+        .replace("%%CSRF_ESC%%", &csrf_esc);
+    HttpResponse::Ok().body(body)
 }

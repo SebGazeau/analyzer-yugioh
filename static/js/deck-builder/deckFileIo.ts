@@ -120,7 +120,7 @@ export async function applyParsedDeckJson(data: unknown, deps: DeckJsonImportDep
                       ? cid
                       : undefined;
             pushRow(section, {
-                name: infoCard.name_en ?? infoCard.name,
+                name: (infoCard.name_en ?? infoCard.name) ?? '',
                 type: infoCard.type ?? '',
                 quantity: card.quantity ?? DECK_DEFAULT_ROW_QUANTITY,
                 engine: card.engine ?? '',

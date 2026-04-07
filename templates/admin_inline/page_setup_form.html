@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Admin – Premier compte</title></head><body>
+<h1>Créer le premier compte admin</h1>
+<p>Renseignez votre email, mot de passe et la clé de setup (ADMIN_SECRET).</p>
+<form method="post" action="/admin/setup">
+  <label>Email <input name="email" type="email" required placeholder="admin@example.com"/></label><br/>
+  <label>Mot de passe <input name="password" type="password" autocomplete="off" required/></label><br/>
+  <label>Clé de setup <input name="setup_key" type="password" autocomplete="off" required/></label><br/>
+  <button type="submit">Créer le compte</button>
+</form>
+<p><a href="/admin/login">Retour à la connexion</a></p>
+</body></html>

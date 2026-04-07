@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "typecheck": "tsc --noEmit",
+    "lint:ts-unused": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "test:frontend": "vitest run",
     "test:coverage": "vitest run --coverage",

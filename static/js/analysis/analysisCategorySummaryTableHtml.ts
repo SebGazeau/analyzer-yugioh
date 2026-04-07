@@ -37,6 +37,16 @@ export function analysisCategorySummaryDotClass(index: number): string {
     return `${ANALYSIS_CATEGORY_DOT_CLASS} ${ANALYSIS_CATEGORY_DOT_MODIFIER_PREFIX}${ANALYSIS_DOT_COLORS[index % ANALYSIS_DOT_COLORS.length]}`;
 }
 
+/** Première cellule d’une ligne « engine » (nom en gras). */
+export function analysisCategorySummaryEngineNameCellHtml(engineName: string): string {
+    return `<strong>${escapeHtml(engineName)}</strong>`;
+}
+
+/** Première cellule d’une ligne « groupe » (nom en gras). */
+export function analysisCategorySummaryGroupNameCellHtml(groupName: string): string {
+    return `<strong>${escapeHtml(groupName)}</strong>`;
+}
+
 /** Contenu HTML d’un `<tr>` d’en-tête de section (une seule `<td>`). */
 export function analysisSectionHeaderRowInnerHtml(title: string, collapsible: boolean): string {
     if (collapsible) {

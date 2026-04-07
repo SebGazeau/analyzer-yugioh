@@ -1,4 +1,3 @@
-import { fetchCardByName } from '../api.js';
 import { addToDeck } from '../deck.js';
 import {
     ARIA_BUSY_ATTR,
@@ -17,8 +16,8 @@ import {
     ASSOCIATIONS_LIVE_REPORT_COPIED,
     associationsLiveCardAddedToDeck,
 } from './associationsLiveCopy.js';
-import { getAssociationCatalog, getQaRelatedCardIds } from './associationFetchCache.js';
-import { associationReportToMarkdown, buildAssociationReport, toAssociationCatalog } from './buildReport.js';
+import { fetchAssociationModalPayload, resolveDeckCardForAssociationName } from './modalController.js';
+import { toAssociationCatalog } from './buildReport.js';
 import {
     associationsModalCatalogLoadErrorParagraphHtml,
     associationsModalReportBodyHtml,
@@ -90,20 +89,6 @@ function setAnchorArt(card: AssociationCatalogCard): void {
     el.innerHTML = associationsModalThumbInnerHtml(card.image_url, name, ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS, 'eager');
 }
 
-function mergeAnchorWithCatalog(
-    anchor: AssociationCatalogCard,
-    catalog: AssociationCatalogCard[],
-): AssociationCatalogCard {
-    const row = catalog.find((c) => c.id === anchor.id);
-    if (!row) return anchor;
-    return {
-        ...anchor,
-        image_url: row.image_url ?? anchor.image_url ?? null,
-        archetype: row.archetype ?? anchor.archetype ?? null,
-        archetype_source: row.archetype_source ?? anchor.archetype_source ?? null,
-    };
-}
-
 function announceAssociationsModal(message: string): void {
     const live = document.getElementById(ASSOCIATIONS_MODAL_LIVE_ID);
     if (!live) return;
@@ -123,12 +108,7 @@ async function addAssociationTileToDeck(tile: Element): Promise<void> {
         announceAssociationsModal(ASSOCIATIONS_LIVE_CANNOT_RESOLVE_CARD_NAME);
         return;
     }
-    let card = await fetchCardByName(searchName);
-    if (!card) {
-        const { fetchSearchResultsForQuery, pickBestCardFromSearchResults } = await import('../search.js');
-        const results = await fetchSearchResultsForQuery(searchName);
-        card = pickBestCardFromSearchResults(results, searchName);
-    }
+    const card = await resolveDeckCardForAssociationName(searchName);
     if (!card) {
         alert(msgAssociationCardNotFound(searchName));
         return;
@@ -268,31 +248,23 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     const panel = document.getElementById(ASSOCIATIONS_MODAL_PANEL_ID);
     panel?.setAttribute(ARIA_BUSY_ATTR, 'true');
 
-    try {
-        const [catalog, ygorgQaRelatedCardIds] = await Promise.all([
-            getAssociationCatalog(),
-            getQaRelatedCardIds(anchor.id),
-        ]);
-        const displayAnchor = mergeAnchorWithCatalog(anchor, catalog);
-        setAnchorArt(displayAnchor);
-
-        const report = buildAssociationReport(displayAnchor, catalog, { ygorgQaRelatedCardIds });
-        const idToName = new Map<number, string>();
-        for (const c of catalog) idToName.set(c.id, c.name_en?.trim() || c.name);
-        const markdown = associationReportToMarkdown(report, idToName);
-        latestAssociationMarkdown = markdown;
-        lastModalCatalogForTiles = catalog;
-        els.body.innerHTML = associationsModalReportBodyHtml(report, catalog, displayAnchor, markdown);
-    } catch {
+    const payload = await fetchAssociationModalPayload(anchor);
+    if (!payload.ok) {
         latestAssociationMarkdown = '';
         lastModalCatalogForTiles = null;
         els.body.innerHTML = associationsModalCatalogLoadErrorParagraphHtml();
-    } finally {
-        els.loading.hidden = true;
-        panel?.removeAttribute(ARIA_BUSY_ATTR);
-        requestAnimationFrame(() => {
-            const closeBtn = els.overlay.querySelector(ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR) as HTMLButtonElement | null;
-            closeBtn?.focus();
-        });
+    } else {
+        const { catalog, displayAnchor, report, markdown } = payload;
+        setAnchorArt(displayAnchor);
+        latestAssociationMarkdown = markdown;
+        lastModalCatalogForTiles = catalog;
+        els.body.innerHTML = associationsModalReportBodyHtml(report, catalog, displayAnchor, markdown);
     }
+
+    els.loading.hidden = true;
+    panel?.removeAttribute(ARIA_BUSY_ATTR);
+    requestAnimationFrame(() => {
+        const closeBtn = els.overlay.querySelector(ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR) as HTMLButtonElement | null;
+        closeBtn?.focus();
+    });
 }

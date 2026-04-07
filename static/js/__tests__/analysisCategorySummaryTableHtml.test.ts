@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES } from '../analysis/analysisCategorySummaryCopy.js';
 import {
     analysisCategorySummaryDotClass,
+    analysisCategorySummaryEngineNameCellHtml,
+    analysisCategorySummaryGroupNameCellHtml,
     analysisCategorySummaryTableDataRowInnerHtml,
     analysisSectionHeaderRowInnerHtml,
     builderCategoryListRowInnerHtml,
@@ -20,6 +22,13 @@ describe('analysisSectionHeaderRowInnerHtml', () => {
         const html = analysisSectionHeaderRowInnerHtml(ANALYSIS_CATEGORY_SUMMARY_SECTION_ENGINES, true);
         expect(html).toContain(ANALYSIS_SECTION_HEADER_TOGGLE_TEXT);
         expect(html).toContain('Engines');
+    });
+});
+
+describe('analysisCategorySummaryEngineNameCellHtml / GroupNameCellHtml', () => {
+    it('échappe le nom dans un strong', () => {
+        expect(analysisCategorySummaryEngineNameCellHtml('Foo & Bar')).toBe('<strong>Foo &amp; Bar</strong>');
+        expect(analysisCategorySummaryGroupNameCellHtml('<x>')).toBe('<strong>&lt;x&gt;</strong>');
     });
 });
 

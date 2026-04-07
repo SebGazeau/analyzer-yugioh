@@ -9,6 +9,8 @@ import {
 } from './analysisCategorySummaryCopy.js';
 import {
     analysisCategorySummaryDotClass,
+    analysisCategorySummaryEngineNameCellHtml,
+    analysisCategorySummaryGroupNameCellHtml,
     analysisCategorySummaryTableDataRowInnerHtml,
     analysisSectionHeaderRowInnerHtml,
     builderCategoryListRowInnerHtml,
@@ -115,7 +117,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
             const dotClass = analysisCategorySummaryDotClass(dataRowIndex++);
             tr.innerHTML = analysisCategorySummaryTableDataRowInnerHtml({
                 dotClass,
-                firstCellContentHtml: `<strong>${escapeHtml(engineName)}</strong>`,
+                firstCellContentHtml: analysisCategorySummaryEngineNameCellHtml(engineName),
                 K,
                 pctDeck: pctDeck(K),
                 probs,
@@ -160,7 +162,7 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         tr.setAttribute(DATA_ANALYSIS_TABLE_SECTION_ATTR, ANALYSIS_TABLE_SECTION_GROUPES);
         tr.innerHTML = analysisCategorySummaryTableDataRowInnerHtml({
             dotClass,
-            firstCellContentHtml: `<strong>${escapeHtml(groupName)}</strong>`,
+            firstCellContentHtml: analysisCategorySummaryGroupNameCellHtml(groupName),
             K,
             pctDeck: pctDeck(K),
             probs,

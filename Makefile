@@ -15,7 +15,7 @@
 include .env
 export
 
-.PHONY: dev watch test test-db test-frontend migrate db-migrate docker-up docker-down docker-dev docker-clean build-frontend assert-npm-linux enrichment-job
+.PHONY: dev watch test test-db test-frontend lint migrate db-migrate docker-up docker-down docker-dev docker-clean build-frontend assert-npm-linux enrichment-job
 
 # Sous WSL, si npm vient de Windows, les scripts lancent CMD.EXE avec un cwd UNC
 # (\\wsl.localhost\...) : vite n'est pas trouvé. Il faut Node/npm installés dans la distro WSL.
@@ -58,6 +58,10 @@ test-db:
 
 test-frontend: assert-npm-linux
 	cd static && npm run test:frontend
+
+# Rust : imports/variables inutilisés (CI recommandé). Front : `cd static && npm run lint:ts-unused` (cible stricte, pas encore verte partout).
+lint:
+	cargo clippy --all-targets -- -W unused
 
 docker-up:
 	docker compose up --build

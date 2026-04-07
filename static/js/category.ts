@@ -35,16 +35,21 @@ export function getCardsByCategory(
     );
 }
 
-interface CategoryContainer extends HTMLElement {
+/** Nœud DOM renvoyé par `createCategorySelector` (méthodes rattachées sur l’élément racine). */
+export interface CategorySelectorElement extends HTMLElement {
     addCategory?: (cat: string) => void;
     setCategories?: (categories: string[]) => void;
     getCategories?: () => string[];
     removeCategory?: (cat: string) => void;
 }
 
-export function createCategorySelector(): CategoryContainer {
+export function isCategorySelectorElement(el: Element | null | undefined): el is CategorySelectorElement {
+    return el != null && typeof (el as CategorySelectorElement).getCategories === 'function';
+}
+
+export function createCategorySelector(): CategorySelectorElement {
     let catSelected: string[] = [];
-    const container = document.createElement('div') as CategoryContainer;
+    const container = document.createElement('div') as CategorySelectorElement;
     container.classList.add(CATEGORY_CONTAINER_CLASS);
     const display = document.createElement('div');
     display.className = CHIPS_CATEGORIES_CLASS;

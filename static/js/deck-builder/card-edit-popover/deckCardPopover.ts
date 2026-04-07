@@ -1,7 +1,7 @@
 /**
  * Popover « Modifier la carte » (quantité, engine, catégories, suppression, couverture).
  */
-import { createCategorySelector } from '../../category.js';
+import { createCategorySelector, isCategorySelectorElement } from '../../category.js';
 import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
@@ -13,7 +13,6 @@ import {
     DOM_EVENT_RESIZE,
     DOM_EVENT_SCROLL,
 } from '../../utils/domEventNames.js';
-import { INTEGER_STRING_DECIMAL_RADIX } from '../../utils/numberParse.js';
 import { KEY_ESCAPE } from '../../utils/keyboardKeys.js';
 import {
     DECK_CARD_POPOVER_GAP_PX,
@@ -21,11 +20,6 @@ import {
     DECK_DEFAULT_MAX_COPIES_PER_CARD,
     DECK_DEFAULT_ROW_QUANTITY,
 } from '../deckConstants.js';
-import {
-    deckLimitGroupKeyRow,
-    maxAllowedForDeckLimitGroup,
-    totalQtyDeckLimitGroup,
-} from '../deckLimitGroups.js';
 import type { DeckSection } from '../../deckSectionOrder.js';
 import {
     deckCellSelector,
@@ -51,6 +45,10 @@ import {
     DECK_CARD_POPOVER_ROOT_CLASS,
 } from './deckCardPopoverDomSelectors.js';
 import { DECK_CARD_POPOVER_SHELL_HTML } from './deckCardPopoverShell.js';
+import {
+    clampPopoverQuantityFromSelect,
+    maxQuantityAllowedForPopoverRow,
+} from './deckCardPopoverQuantity.js';
 
 export type { DeckSection };
 
@@ -113,25 +111,14 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const arr = getState(popoverSection);
         const row = arr[popoverIndex];
         if (!row) return;
-        let newQty = parseInt(
-            qtySelect?.value || String(DECK_DEFAULT_ROW_QUANTITY),
-            INTEGER_STRING_DECIMAL_RADIX,
-        );
-        const key = deckLimitGroupKeyRow(row);
         const flat = allDeckRowsFlat();
-        const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
-        const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
-        const maxForThisRow = Math.min(
-            row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD,
-            Math.max(DECK_DEFAULT_ROW_QUANTITY, maxA - totalOthers),
-        );
-        if (newQty > maxForThisRow) newQty = maxForThisRow;
-        if (newQty < DECK_DEFAULT_ROW_QUANTITY) newQty = DECK_DEFAULT_ROW_QUANTITY;
+        const newQty = clampPopoverQuantityFromSelect(qtySelect?.value || String(DECK_DEFAULT_ROW_QUANTITY), row, flat);
         row.quantity = newQty;
         if (qtySelect) qtySelect.value = String(newQty);
         row.engine = engineSelect?.value || '';
-        if (catContainer?.firstElementChild && typeof (catContainer.firstElementChild as any).getCategories === 'function') {
-            row.categories = (catContainer.firstElementChild as any).getCategories();
+        const catEl = catContainer?.firstElementChild;
+        if (isCategorySelectorElement(catEl) && catEl.getCategories) {
+            row.categories = catEl.getCategories();
         }
         afterDeckDataChange();
         const cell = document.querySelector(deckCellSelector(popoverSection, popoverIndex));
@@ -259,14 +246,8 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         const engineSelect = popover.querySelector(DECK_CARD_POPOVER_ENGINE_SELECTOR) as HTMLSelectElement;
         const catContainer = popover.querySelector(DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR) as HTMLElement;
         if (qtySelect) {
-            const key = deckLimitGroupKeyRow(row);
             const flat = allDeckRowsFlat();
-            const maxA = maxAllowedForDeckLimitGroup(flat, key, row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD);
-            const totalOthers = totalQtyDeckLimitGroup(flat, key) - row.quantity;
-            const cap = Math.min(
-                row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD,
-                Math.max(DECK_DEFAULT_ROW_QUANTITY, maxA - totalOthers),
-            );
+            const cap = maxQuantityAllowedForPopoverRow(row, flat);
             qtySelect.innerHTML = '';
             for (let q = DECK_DEFAULT_ROW_QUANTITY; q <= cap; q++) {
                 const opt = document.createElement('option');
@@ -284,7 +265,7 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         if (catContainer) {
             catContainer.innerHTML = '';
             const selector = createCategorySelector();
-            if (row.categories.length) (selector as any).setCategories?.(row.categories);
+            if (row.categories.length) selector.setCategories?.(row.categories);
             catContainer.appendChild(selector);
         }
 
