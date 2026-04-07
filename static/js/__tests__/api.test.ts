@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchCardByName } from '../api.js';
+import { CARD_API_PATH, SEARCH_API_PATH } from '../cardSearchApiRoutes.js';
+import { HTTP_STATUS_NOT_FOUND, HTTP_STATUS_OK } from '../utils/httpMime.js';
 
 describe('api.ts', () => {
   beforeEach(() => {
@@ -8,7 +10,7 @@ describe('api.ts', () => {
   });
 
   it('fetchCardByName returns null if fetch fails', async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response('', { status: 404 }) as any);
+    vi.mocked(fetch).mockResolvedValue(new Response('', { status: HTTP_STATUS_NOT_FOUND }) as any);
     const result = await fetchCardByName('foo');
     expect(result).toBeNull();
   });
@@ -21,12 +23,12 @@ describe('api.ts', () => {
   it('fetchCardByName returns card when /card?name= succeeds', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.includes('/card?name=')) {
+      if (u.includes(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
-          new Response(JSON.stringify({ id: 1, name: 'Dark Magician', type: 'Normal Monster' }), { status: 200 }),
+          new Response(JSON.stringify({ id: 1, name: 'Dark Magician', type: 'Normal Monster' }), { status: HTTP_STATUS_OK }),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     });
     const result = await fetchCardByName('Dark Magician');
     expect(result).not.toBeNull();
@@ -38,13 +40,13 @@ describe('api.ts', () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       callCount += 1;
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.includes('Ash%20Blossom%20%26%20Joyous')) return Promise.resolve(new Response('', { status: 404 }) as any);
+      if (u.includes('Ash%20Blossom%20%26%20Joyous')) return Promise.resolve(new Response('', { status: HTTP_STATUS_NOT_FOUND }) as any);
       if (u.includes('Ash%20Blossom%20and%20Joyous')) {
         return Promise.resolve(
-          new Response(JSON.stringify({ id: 2, name: 'Ash Blossom & Joyous Spring' }), { status: 200 }),
+          new Response(JSON.stringify({ id: 2, name: 'Ash Blossom & Joyous Spring' }), { status: HTTP_STATUS_OK }),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     });
     const result = await fetchCardByName('Ash Blossom & Joyous Spring');
     expect(result?.name).toBe('Ash Blossom & Joyous Spring');
@@ -54,16 +56,16 @@ describe('api.ts', () => {
   it('fetchCardByName falls back to /search when length >= 4 and no exact match', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.startsWith('/card?')) return Promise.resolve(new Response('', { status: 404 }) as any);
-      if (u.startsWith('/search?')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) return Promise.resolve(new Response('', { status: HTTP_STATUS_NOT_FOUND }) as any);
+      if (u.startsWith(`${SEARCH_API_PATH}?`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify([{ id: 3, name: 'Raigeki', name_en: 'Raigeki', type: 'Spell' }]),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     });
     const result = await fetchCardByName('Raigeki');
     expect(result?.name).toBe('Raigeki');
@@ -72,10 +74,10 @@ describe('api.ts', () => {
   it('fetchCardByName returns null when /card returns invalid JSON (no card.name)', async () => {
     vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
       const u = typeof input === 'string' ? input : input instanceof Request ? input.url : input.href;
-      if (u.includes('/card?')) {
-        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 })); // no name
+      if (u.includes(`${CARD_API_PATH}?`)) {
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: HTTP_STATUS_OK })); // no name
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     });
     const result = await fetchCardByName('NoName');
     expect(result).toBeNull();

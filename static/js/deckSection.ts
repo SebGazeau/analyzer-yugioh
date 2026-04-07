@@ -1,0 +1,31 @@
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
+
+export { DECK_SECTIONS, type DeckSection };
+
+/** Construit un `Record<DeckSection, T>` dans l’ordre canonique (évite de dupliquer `Object.fromEntries` + `map`). */
+export function mapDeckSections<T>(perSection: (section: DeckSection) => T): Record<DeckSection, T> {
+    return Object.fromEntries(DECK_SECTIONS.map((s) => [s, perSection(s)])) as Record<DeckSection, T>;
+}
+
+/** Un tableau vide par zone (état initial, import YDK, etc.). */
+export function emptyArraysByDeckSection<T>(): Record<DeckSection, T[]> {
+    return mapDeckSections(() => [] as T[]);
+}
+
+/**
+ * Au moins une clé `main` / `extra` / `side` a une valeur truthy (ex. import JSON).
+ * Note : `[]` est truthy en JS ; un objet `{ main: [] }` est donc accepté comme « présent ».
+ */
+export function hasTruthyDeckSectionData(o: object): boolean {
+    const r = o as Partial<Record<DeckSection, unknown>>;
+    return DECK_SECTIONS.some((s) => Boolean(r[s]));
+}
+
+/** Nombre de cartes par zone (builder / résumé). */
+export type DeckSectionCounts = Record<DeckSection, number>;
+
+/** Valide une chaîne issue du DOM (`data-deck-cell-section`, JSON DnD, etc.). */
+export function isDeckSection(value: string): value is DeckSection {
+    return (DECK_SECTIONS as readonly string[]).includes(value);
+}
+

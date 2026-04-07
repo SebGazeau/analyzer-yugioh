@@ -27,6 +27,12 @@
                     <input type="checkbox" id="accept_conditions" name="accept_conditions" value="on" required>
                     <label for="accept_conditions">J'accepte les conditions d'utilisation du site.</label>
                 </div>
+                {% if turnstile_enabled %}
+                <div class="auth-form__group">
+                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark"></div>
+                </div>
+                {% endif %}
                 <button type="submit" class="btn btn--primary auth-form__submit btn--block">Créer mon compte</button>
             </form>
         </div>

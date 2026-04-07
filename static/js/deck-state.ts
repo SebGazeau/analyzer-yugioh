@@ -3,7 +3,26 @@
  * Section D du plan de migration — fonctions testables sans effet de bord.
  */
 
-export type DeckSection = 'main' | 'extra' | 'side';
+import {
+    DECK_DEFAULT_MAX_COPIES_PER_CARD,
+    DECK_DEFAULT_ROW_QUANTITY,
+} from './deck-builder/deckConstants.js';
+import { maxCardsForZone, MIN_MAIN_CARDS } from './deck-move.js';
+import { INTEGER_STRING_DECIMAL_RADIX } from './utils/numberParse.js';
+import {
+    emptyArraysByDeckSection,
+    mapDeckSections,
+    type DeckSectionCounts,
+} from './deckSection.js';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
+import {
+    YDK_EXPORT_HEADER_LINE,
+    YDK_SECTION_MARKER_EXTRA,
+    YDK_SECTION_MARKER_MAIN,
+    YDK_SECTION_MARKER_SIDE_OPEN,
+} from './deckYdkCopy.js';
+
+export type { DeckSection };
 
 export interface DeckEntry {
     id: number;
@@ -19,11 +38,10 @@ export interface DeckState {
     side: DeckEntry[];
 }
 
-const MAX_COPIES = 3;
-const MIN_MAIN = 40;
-const MAX_MAIN = 60;
-const MAX_EXTRA = 15;
-const MAX_SIDE = 15;
+/** Snapshot neuf : trois zones vides (tests, pas de mutation partagée si rappelé à chaque test). */
+export function createEmptyDeckState(): DeckState {
+    return { ...emptyArraysByDeckSection<DeckEntry>() };
+}
 
 function sectionCount(entries: DeckEntry[]): number {
     return entries.reduce((s, e) => s + e.quantity, 0);
@@ -44,29 +62,41 @@ function addOrIncrement(
 
     const existing = entries.find((x) => x.id === card.id);
     const currentQty = existing ? existing.quantity : 0;
-    if (currentQty >= MAX_COPIES) return { entries: [...entries], ok: false };
+    if (currentQty >= DECK_DEFAULT_MAX_COPIES_PER_CARD) return { entries: [...entries], ok: false };
 
-    const newQty = currentQty + 1;
+    const newQty = currentQty + DECK_DEFAULT_ROW_QUANTITY;
     const newEntries = existing
         ? entries.map((e) => (e.id === card.id ? { ...e, quantity: newQty } : e))
-        : [...entries, { id: card.id, name: card.name, quantity: 1, engine: card.engine, categories: card.categories }];
+        : [
+              ...entries,
+              {
+                  id: card.id,
+                  name: card.name,
+                  quantity: DECK_DEFAULT_ROW_QUANTITY,
+                  engine: card.engine,
+                  categories: card.categories,
+              },
+          ];
     return { entries: newEntries, ok: true };
 }
 
 /** Retourne le nombre total de cartes (main + extra + side). */
 export function getDeckSize(state: DeckState): number {
-    return sectionCount(state.main) + sectionCount(state.extra) + sectionCount(state.side);
+    return DECK_SECTIONS.reduce((sum, s) => sum + sectionCount(state[s]), 0);
 }
 
-/** Vérifie les limites officielles : main 40–60, extra ≤15, side ≤15. */
+/** Vérifie les limites officielles : Main ≥ {@link MIN_MAIN_CARDS} et ≤ max zone, Extra/Side ≤ plafonds. */
 export function isLegal(state: DeckState): boolean {
-    const main = sectionCount(state.main);
-    const extra = sectionCount(state.extra);
-    const side = sectionCount(state.side);
-    return main >= MIN_MAIN && main <= MAX_MAIN && extra <= MAX_EXTRA && side <= MAX_SIDE;
+    const c: DeckSectionCounts = mapDeckSections((s) => sectionCount(state[s]));
+    return (
+        c.main >= MIN_MAIN_CARDS &&
+        c.main <= maxCardsForZone(DECK_SECTIONS[0]) &&
+        c.extra <= maxCardsForZone(DECK_SECTIONS[1]) &&
+        c.side <= maxCardsForZone(DECK_SECTIONS[2])
+    );
 }
 
-/** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte 3 exemplaires et taille de zone. */
+/** Ajoute une carte dans la section donnée (ou déduite si extra). Respecte le max exemplaires TCG et la taille de zone. */
 export function addCard(
     state: DeckState,
     card: { id: number; name: string; type?: string; engine?: string; categories?: string[] },
@@ -74,14 +104,10 @@ export function addCard(
 ): { state: DeckState; ok: boolean } {
     const isExtra = (t: string) =>
         /fusion|synchro|xyz|link/i.test(t || '');
-    const targetSection: DeckSection = section ?? (isExtra(card.type || '') ? 'extra' : 'main');
+    const targetSection: DeckSection =
+        section ?? (isExtra(card.type || '') ? DECK_SECTIONS[1] : DECK_SECTIONS[0]);
 
-    const maxBySection: Record<DeckSection, number> = {
-        main: MAX_MAIN,
-        extra: MAX_EXTRA,
-        side: MAX_SIDE,
-    };
-    const max = maxBySection[targetSection];
+    const max = maxCardsForZone(targetSection);
     const current = state[targetSection];
     const { entries: nextEntries, ok } = addOrIncrement(current, card, max);
     if (!ok) return { state: { ...state }, ok: false };
@@ -103,57 +129,56 @@ export function removeCard(
 ): DeckState {
     const entries = state[section].map((e) => {
         if (e.id !== cardId) return e;
-        if (e.quantity <= 1) return null;
-        return { ...e, quantity: e.quantity - 1 };
+        if (e.quantity <= DECK_DEFAULT_ROW_QUANTITY) return null;
+        return { ...e, quantity: e.quantity - DECK_DEFAULT_ROW_QUANTITY };
     }).filter((e): e is DeckEntry => e !== null);
     return { ...state, [section]: entries };
 }
 
+const YDK_SECTION_OPEN: Record<DeckSection, string> = {
+    [DECK_SECTIONS[0]]: YDK_SECTION_MARKER_MAIN,
+    [DECK_SECTIONS[1]]: YDK_SECTION_MARKER_EXTRA,
+    [DECK_SECTIONS[2]]: YDK_SECTION_MARKER_SIDE_OPEN,
+};
+
 /** Export YDK : #main, #extra, !side, une ligne par id de carte (répété quantity fois). */
 export function exportDeckToYDK(state: DeckState): string {
-    const lines: string[] = ['#created by ...', '#main'];
-    for (const e of state.main) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
-    }
-    lines.push('#extra');
-    for (const e of state.extra) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
-    }
-    lines.push('!side');
-    for (const e of state.side) {
-        for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
+    const lines: string[] = [YDK_EXPORT_HEADER_LINE];
+    for (const s of DECK_SECTIONS) {
+        lines.push(YDK_SECTION_OPEN[s]);
+        for (const e of state[s]) {
+            for (let i = 0; i < e.quantity; i++) lines.push(String(e.id));
+        }
     }
     return lines.join('\n');
 }
 
 /** Import YDK : parse les blocs #main, #extra, !side et agrège par id. */
 export function importDeckFromYDK(ydk: string): { state: DeckState; error?: string } {
-    const main: DeckEntry[] = [];
-    const extra: DeckEntry[] = [];
-    const side: DeckEntry[] = [];
-    const sections: Record<DeckSection, DeckEntry[]> = { main, extra, side };
-    let section: DeckSection = 'main';
+    const sections = emptyArraysByDeckSection<DeckEntry>();
+    let section: DeckSection = DECK_SECTIONS[0];
     const lines = ydk.split(/\r?\n/);
 
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed.startsWith('#')) {
-            if (trimmed.toLowerCase() === '#extra') section = 'extra';
-            else if (trimmed.toLowerCase() === '#main') section = 'main';
+            const low = trimmed.toLowerCase();
+            if (low === YDK_SECTION_MARKER_EXTRA.toLowerCase()) section = DECK_SECTIONS[1];
+            else if (low === YDK_SECTION_MARKER_MAIN.toLowerCase()) section = DECK_SECTIONS[0];
             continue;
         }
-        if (trimmed.toLowerCase() === '!side') {
-            section = 'side';
+        if (trimmed.toLowerCase() === YDK_SECTION_MARKER_SIDE_OPEN.toLowerCase()) {
+            section = DECK_SECTIONS[2];
             continue;
         }
-        const id = parseInt(trimmed, 10);
+        const id = parseInt(trimmed, INTEGER_STRING_DECIMAL_RADIX);
         if (Number.isNaN(id) || trimmed !== String(id)) continue; // comment or invalid
 
         const arr = sections[section];
         const existing = arr.find((e) => e.id === id);
-        if (existing) existing.quantity += 1;
-        else arr.push({ id, name: '', quantity: 1 });
+        if (existing) existing.quantity += DECK_DEFAULT_ROW_QUANTITY;
+        else arr.push({ id, name: '', quantity: DECK_DEFAULT_ROW_QUANTITY });
     }
 
-    return { state: { main, extra, side } };
+    return { state: { ...sections } };
 }

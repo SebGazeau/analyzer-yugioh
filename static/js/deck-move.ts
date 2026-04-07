@@ -2,13 +2,18 @@
  * Logique pure déplacement / réorganisation des cartes (drag-and-drop builder).
  */
 
-export type DeckSection = 'main' | 'extra' | 'side';
+import { DECK_SECTIONS, type DeckSection } from './deckSectionOrder.js';
+
+export type { DeckSection };
 
 export interface DeckRowLike {
     type: string;
     frame_type?: string;
     quantity: number;
 }
+
+/** Minimum de cartes en Main pour un deck légal (construction classique). */
+export const MIN_MAIN_CARDS = 40;
 
 export const MAX_MAIN_CARDS = 60;
 export const MAX_EXTRA_CARDS = 15;
@@ -39,8 +44,8 @@ export function isExtraDeckRowLike(row: DeckRowLike): boolean {
  * Une carte non-Extra ne peut pas aller en Extra (→ null).
  */
 export function resolveTargetZone(row: DeckRowLike, requested: DeckSection): DeckSection | null {
-    if (requested === 'extra' && !isExtraDeckRowLike(row)) return null;
-    if (requested === 'main' && isExtraDeckRowLike(row)) return 'extra';
+    if (requested === DECK_SECTIONS[1] && !isExtraDeckRowLike(row)) return null;
+    if (requested === DECK_SECTIONS[0] && isExtraDeckRowLike(row)) return DECK_SECTIONS[1];
     return requested;
 }
 
@@ -55,13 +60,12 @@ export function sameZoneInsertIndex(fromIdx: number, dropOnIdx: number, length: 
     return dropOnIdx;
 }
 
+const MAX_CARDS_BY_ZONE: Record<DeckSection, number> = {
+    [DECK_SECTIONS[0]]: MAX_MAIN_CARDS,
+    [DECK_SECTIONS[1]]: MAX_EXTRA_CARDS,
+    [DECK_SECTIONS[2]]: MAX_SIDE_CARDS,
+};
+
 export function maxCardsForZone(zone: DeckSection): number {
-    switch (zone) {
-        case 'main':
-            return MAX_MAIN_CARDS;
-        case 'extra':
-            return MAX_EXTRA_CARDS;
-        case 'side':
-            return MAX_SIDE_CARDS;
-    }
+    return MAX_CARDS_BY_ZONE[zone];
 }

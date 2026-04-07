@@ -1,20 +1,22 @@
 // Fonctions d'accès à l'API
-export interface Card {
-    name: string;
-    name_en?: string;
-    [key: string]: any;
-}
+import { cardApiByNameUrl } from './cardSearchApiRoutes.js';
+import { SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
+import { fetchSearchResultsForQuery } from './services/search/searchApi.js';
+import type { SearchApiCard } from './services/search/searchApiTypes.js';
 
-/** Récupère une carte par nom exact (pour l'import). Essaie /card puis /search avec variantes. */
+/** Carte telle que renvoyée par l’API (champs optionnels selon l’endpoint). */
+export type Card = SearchApiCard;
+
+/** Récupère une carte par nom exact (pour l'import). Essaie carte par nom puis recherche, avec variantes. */
 export async function fetchCardByName(name: string): Promise<Card | null> {
     const trimmed = name.trim();
     if (!trimmed) return null;
 
     const tryExact = async (n: string): Promise<Card | null> => {
-        const r = await fetch(`/card?name=${encodeURIComponent(n)}`);
+        const r = await fetch(cardApiByNameUrl(n));
         if (!r.ok) return null;
-        const card = await r.json();
-        return card && typeof card === 'object' && card.name ? card : null;
+        const card = (await r.json()) as SearchApiCard;
+        return card && typeof card === 'object' && typeof card.name === 'string' && card.name ? card : null;
     };
 
     let card = await tryExact(trimmed);
@@ -32,11 +34,9 @@ export async function fetchCardByName(name: string): Promise<Card | null> {
         if (card) return card;
     }
 
-    if (trimmed.length >= 4) {
-        const r = await fetch(`/search?q=${encodeURIComponent(trimmed)}`);
-        if (!r.ok) return null;
-        const cards: Card[] = await r.json();
-        return cards.find((c: Card) => c.name === trimmed || c.name_en === trimmed) || null;
+    if (trimmed.length >= SEARCH_MIN_QUERY_LENGTH) {
+        const cards = await fetchSearchResultsForQuery(trimmed);
+        return cards.find((c) => c.name === trimmed || c.name_en === trimmed) || null;
     }
     return null;
 } 

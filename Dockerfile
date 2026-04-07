@@ -18,6 +18,7 @@ RUN rm -f src/main.rs
 
 COPY src ./src
 COPY migrations ./migrations
+COPY templates ./templates
 RUN touch src/main.rs && cargo build --release --bin analyzer-yugioh --features gcs
 
 # ==============================================================================

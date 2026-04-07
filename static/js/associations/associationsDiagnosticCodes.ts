@@ -1,0 +1,24 @@
+/**
+ * Codes et gravités stables des entrées `Diagnostic` du rapport associations (logique + tests + UI).
+ */
+
+import type { DiagnosticSeverity } from './types.js';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_INFO: DiagnosticSeverity = 'info';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_WARN: DiagnosticSeverity = 'warn';
+
+export const ASSOCIATION_DIAGNOSTIC_SEVERITY_ERROR: DiagnosticSeverity = 'error';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_EMPTY_CATALOG = 'EMPTY_CATALOG';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_YGORG_EFFECT_EN_AVAILABLE = 'YGORG_EFFECT_EN_AVAILABLE';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_NO_ARCHETYPE_ON_ANCHOR = 'NO_ARCHETYPE_ON_ANCHOR';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_LARGE_GROUP_TRUNCATED = 'LARGE_GROUP_TRUNCATED';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_NO_DESC_IN_CATALOG = 'NO_DESC_IN_CATALOG';
+
+export const ASSOCIATION_DIAGNOSTIC_CODE_NAME_WORD_CITATION_SKIPPED_TOO_BROAD =
+    'NAME_WORD_CITATION_SKIPPED_TOO_BROAD';

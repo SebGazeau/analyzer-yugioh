@@ -1,5 +1,7 @@
 /** Types partagés pour les suggestions / insights deck (extensible). */
 
+import type { DeckSectionMainSide } from '../deckSectionMainSide.js';
+
 /** Sous-ensemble des champs `DeckRow` nécessaires aux règles (sans dépendre de deck.ts). */
 export interface InsightDeckRow {
     name: string;
@@ -40,7 +42,7 @@ export interface MatchingCardPreview {
     name: string;
     quantity: number;
     imageUrl?: string;
-    section: 'main' | 'side';
+    section: DeckSectionMainSide;
 }
 
 /**

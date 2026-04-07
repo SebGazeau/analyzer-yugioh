@@ -14,8 +14,10 @@
 //!   IMAGE_IMPORT_ALLOWED_HOST_SUFFIXES — import /images : suffixes hôtes (virgules), défaut ygoprodeck.com
 //!   IMAGE_IMPORT_MAX_BYTES — plafond téléchargement import (1 KiB–100 MiB), défaut 15 MiB
 //!   ENABLE_SWAGGER_UI — `1`/`true`/`yes`/`on` force Swagger ; `0`/`false` désactive. Hors prod : activé par défaut ; en prod : désactivé sauf si activé explicitement.
-//!   SITE_AUTH_RATE_LIMIT_PER_MINUTE — max POST `/login`, `/register` par IP / minute (défaut 30).
+//!   SITE_AUTH_RATE_LIMIT_PER_MINUTE — max POST `/login` par IP / minute (défaut 30).
+//!   REGISTER_RATE_LIMIT_PER_MINUTE — max POST `/register` par IP / minute (défaut 5).
 //!   ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE — max POST `/admin/login` par IP / minute (défaut 15).
+//!   TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY — Cloudflare Turnstile sur `/register` (optionnel si les deux absents ; voir doc Cloudflare pour clés de test).
 //!   YGOPRODECK_CARDINFO_URL — optionnel : URL `cardinfo.php` (défaut API publique v7) pour `sync-cards` / `fetch_cards` (DB).
 //!
 //! Sous-commandes sans serveur HTTP :
@@ -34,8 +36,8 @@ use sqlx::postgres::PgPoolOptions;
 
 use analyzer_yugioh::{
     CARDS_PATH_DEFAULT,
-    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret},
-    card_locales_sync, cards_sync, config, db, konami_catalog, make_app,
+    auth::{api::resolve_api_token_issuer_secret, jwt::JwtSecret, turnstile::TurnstileConfig},
+    cli, config, db, make_app,
     rate_limit::rate_limit_state_from_env,
     security_startup::{self, StartupSecretError},
     session_cookies::SessionCookieSettings,
@@ -67,20 +69,8 @@ fn load_cache_from_file(path: &str) -> CardCache {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    if std::env::args().nth(1).as_deref() == Some("migrate") {
-        return run_migrate_only().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-cards") {
-        return run_sync_cards_only().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("konami-pack-index") {
-        return run_konami_pack_index_only().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-locales-ygo") {
-        return run_sync_locales_ygo_only().await;
-    }
-    if std::env::args().nth(1).as_deref() == Some("sync-locales-konami") {
-        return run_sync_locales_konami_only().await;
+    if let Some(outcome) = cli::run_subcommand_if_present().await {
+        return outcome;
     }
 
     tracing_subscriber::fmt()
@@ -185,6 +175,10 @@ async fn main() -> std::io::Result<()> {
     };
 
     let rate_limit_data = web::Data::new(rate_limit_state_from_env());
+    let turnstile_data = web::Data::new(TurnstileConfig::from_env());
+    if turnstile_data.enabled() {
+        tracing::info!("Turnstile activé sur /register.");
+    }
 
     tracing::info!("Écoute sur 0.0.0.0:{}", port);
     HttpServer::new(move || {
@@ -201,6 +195,7 @@ async fn main() -> std::io::Result<()> {
             api_token_issuer_secret.clone(),
             enable_swagger_ui,
             rate_limit_data.clone(),
+            turnstile_data.clone(),
         )
     })
     .bind(("0.0.0.0", port))?
@@ -214,254 +209,6 @@ fn session_key_from_secret(secret: &str) -> Key {
     let n = b.len().min(64);
     arr[..n].copy_from_slice(&b[..n]);
     Key::from(&arr)
-}
-
-/// Applique uniquement les migrations SQL embarquées (`sqlx::migrate!`), puis quitte.
-/// Usage : `DATABASE_URL=… ./analyzer-yugioh migrate` ou `cargo run -- migrate`.
-/// Code de sortie non nul si échec (CI / job Cloud Run avant trafic).
-async fn run_migrate_only() -> std::io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_target(false)
-        .init();
-
-    let url = std::env::var("DATABASE_URL").map_err(|_| {
-        eprintln!("[fatal] DATABASE_URL requis pour la sous-commande migrate.");
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
-    })?;
-
-    let pool = PgPoolOptions::new()
-        .max_connections(1)
-        .connect(&url)
-        .await
-        .map_err(|e| {
-            eprintln!("[fatal] Connexion Postgres : {e}");
-            std::io::Error::other(e)
-        })?;
-
-    db::run_migrations(&pool).await.map_err(|e| {
-        eprintln!("[fatal] Migrations : {e}");
-        std::io::Error::other(e.to_string())
-    })?;
-
-    tracing::info!("Migrations appliquées avec succès.");
-    Ok(())
-}
-
-/// Synchronise `cards` + `card_sets` depuis l’API JSON YGOProDeck (retries HTTP), puis quitte.
-/// Usage : `DATABASE_URL=… ./analyzer-yugioh sync-cards` (même image Docker que l’app).
-/// Optionnel : `YGOPRODECK_CARDINFO_URL` pour surcharger l’URL.
-async fn run_sync_cards_only() -> std::io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_target(false)
-        .init();
-
-    let url = std::env::var("DATABASE_URL").map_err(|_| {
-        eprintln!("[fatal] DATABASE_URL requis pour sync-cards.");
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
-    })?;
-
-    let pool = PgPoolOptions::new()
-        .max_connections(3)
-        .connect(&url)
-        .await
-        .map_err(|e| {
-            eprintln!("[fatal] Connexion Postgres : {e}");
-            std::io::Error::other(e)
-        })?;
-
-    if let Err(e) = db::run_migrations(&pool).await {
-        tracing::warn!("Migrations (sync-cards): {} — poursuite.", e);
-    }
-
-    match cards_sync::sync_from_ygoprodeck(&pool).await {
-        Ok(s) => {
-            tracing::info!(
-                "sync-cards OK — cartes: {} (upserts {}), lignes sets: {} (upserts {})",
-                s.card_rows,
-                s.cards_affected,
-                s.set_rows,
-                s.sets_affected
-            );
-            eprintln!(
-                "Note: si l’app HTTP tourne déjà, rechargez le cache : GET /admin/reload_cache_from_db (clé admin) ou redémarrage."
-            );
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[fatal] sync-cards: {e}");
-            Err(std::io::Error::other(e.to_string()))
-        }
-    }
-}
-
-/// Index des packs sur le site Konami → table `konami_catalog_snapshots`.
-async fn run_konami_pack_index_only() -> std::io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_target(false)
-        .init();
-
-    let url = std::env::var("DATABASE_URL").map_err(|_| {
-        eprintln!("[fatal] DATABASE_URL requis pour konami-pack-index.");
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
-    })?;
-
-    let locale = std::env::var("KONAMI_LOCALE").unwrap_or_else(|_| "en".to_string());
-
-    let pool = PgPoolOptions::new()
-        .max_connections(2)
-        .connect(&url)
-        .await
-        .map_err(|e| {
-            eprintln!("[fatal] Connexion Postgres : {e}");
-            std::io::Error::other(e)
-        })?;
-
-    if let Err(e) = db::run_migrations(&pool).await {
-        tracing::warn!("Migrations (konami-pack-index): {} — poursuite.", e);
-    }
-
-    match konami_catalog::sync_pack_index(&pool, locale.trim()).await {
-        Ok(n) => {
-            tracing::info!("konami-pack-index OK — {n} pack(s)");
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[fatal] konami-pack-index: {e}");
-            Err(std::io::Error::other(e.to_string()))
-        }
-    }
-}
-
-/// `card_locales` depuis l’API YGOProDeck par langue.
-async fn run_sync_locales_ygo_only() -> std::io::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_target(false)
-        .init();
-
-    let url = std::env::var("DATABASE_URL").map_err(|_| {
-        eprintln!("[fatal] DATABASE_URL requis pour sync-locales-ygo.");
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
-    })?;
-
-    let raw = std::env::var("CARD_LOCALES_YGO").unwrap_or_else(|_| "fr,de,it,pt".to_string());
-    let locales: Vec<String> = raw
-        .split(',')
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
-    if locales.is_empty() {
-        eprintln!("[fatal] CARD_LOCALES_YGO ne contient aucune locale.");
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "CARD_LOCALES_YGO",
-        ));
-    }
-
-    let pool = PgPoolOptions::new()
-        .max_connections(3)
-        .connect(&url)
-        .await
-        .map_err(|e| {
-            eprintln!("[fatal] Connexion Postgres : {e}");
-            std::io::Error::other(e)
-        })?;
-
-    if let Err(e) = db::run_migrations(&pool).await {
-        tracing::warn!("Migrations (sync-locales-ygo): {} — poursuite.", e);
-    }
-
-    match card_locales_sync::sync_ygoprodeck_locales(&pool, &locales).await {
-        Ok(s) => {
-            tracing::info!(
-                ?s.locales_processed,
-                ?s.rows_filtered_per_locale,
-                total_upserts = s.total_upserts,
-                "sync-locales-ygo OK"
-            );
-            eprintln!(
-                "Note: `card_locales` est lu à la volée pour GET /search?locale=… (reload cache inutile pour les seules traductions). Après un sync-cards avec l’app déjà up : GET /admin/reload_cache_from_db."
-            );
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[fatal] sync-locales-ygo: {e}");
-            Err(std::io::Error::other(e.to_string()))
-        }
-    }
-}
-
-/// `card_locales` depuis les pages Konami (après `konami-pack-index` pour `KONAMI_LOCALE`).
-async fn run_sync_locales_konami_only() -> std::io::Result<()> {
-    use std::time::Duration;
-
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .with_target(false)
-        .init();
-
-    let url = std::env::var("DATABASE_URL").map_err(|_| {
-        eprintln!("[fatal] DATABASE_URL requis pour sync-locales-konami.");
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, "DATABASE_URL")
-    })?;
-
-    let locale = std::env::var("KONAMI_LOCALE").unwrap_or_else(|_| "en".to_string());
-    let max_packs = std::env::var("KONAMI_LOCALE_SYNC_MAX_PACKS")
-        .ok()
-        .and_then(|s| s.parse().ok());
-    let max_details = std::env::var("KONAMI_LOCALE_SYNC_MAX_DETAILS")
-        .ok()
-        .and_then(|s| s.parse().ok());
-    let delay_ms: u64 = std::env::var("KONAMI_REQUEST_DELAY_MS")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(250);
-
-    let pool = PgPoolOptions::new()
-        .max_connections(2)
-        .connect(&url)
-        .await
-        .map_err(|e| {
-            eprintln!("[fatal] Connexion Postgres : {e}");
-            std::io::Error::other(e)
-        })?;
-
-    if let Err(e) = db::run_migrations(&pool).await {
-        tracing::warn!("Migrations (sync-locales-konami): {} — poursuite.", e);
-    }
-
-    match konami_catalog::sync_pack_card_locales(
-        &pool,
-        locale.trim(),
-        max_packs,
-        max_details,
-        Duration::from_millis(delay_ms),
-    )
-    .await
-    {
-        Ok(s) => {
-            tracing::info!(
-                packs = s.packs_processed,
-                listing_rows = s.listing_rows_seen,
-                details = s.detail_fetches,
-                upserts = s.rows_upserted,
-                skip_no_pc = s.skipped_no_passcode,
-                skip_unknown = s.skipped_unknown_card_id,
-                "sync-locales-konami OK"
-            );
-            eprintln!(
-                "Note: `card_locales` sert pour /search?locale=… sans reload. Après sync-cards avec l’app déjà up : GET /admin/reload_cache_from_db."
-            );
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("[fatal] sync-locales-konami: {e}");
-            Err(std::io::Error::other(e.to_string()))
-        }
-    }
 }
 
 fn validate_production_or_exit(admin: Option<&str>, session: Option<&str>) {

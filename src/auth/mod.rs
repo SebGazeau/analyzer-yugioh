@@ -5,6 +5,7 @@ pub mod api;
 pub mod csrf;
 pub mod jwt;
 pub mod session;
+pub mod turnstile;
 pub mod user_db;
 pub mod web;
 

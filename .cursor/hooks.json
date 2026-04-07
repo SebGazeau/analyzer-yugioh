@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "hooks/after-edit.sh"
+      }
+    ],
+    "stop": [
+      {
+        "command": "hooks/on-stop.sh"
+      }
+    ]
+  }
+}

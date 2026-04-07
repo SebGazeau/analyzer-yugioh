@@ -1,34 +1,20 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
+import { createCategorySelector, getCardsByCategory } from '../category.js';
+import { categoryOptions } from '../categoryData.js';
 import {
-  CATEGORY_GROUPS,
-  categoryOptions,
-  createCategorySelector,
-  getCardsByCategory,
-} from '../category.js';
-
-describe('category.ts — données pures', () => {
-  it('CATEGORY_GROUPS a des clés et valeurs tableau de chaînes', () => {
-    expect(Object.keys(CATEGORY_GROUPS).length).toBeGreaterThan(0);
-    for (const [groupName, cats] of Object.entries(CATEGORY_GROUPS)) {
-      expect(Array.isArray(cats)).toBe(true);
-      cats.forEach((c) => expect(typeof c).toBe('string'));
-    }
-  });
-
-  it('toutes les catégories des groupes sont dans categoryOptions', () => {
-    const allFromGroups = new Set(Object.values(CATEGORY_GROUPS).flat());
-    for (const cat of allFromGroups) {
-      expect(categoryOptions).toContain(cat);
-    }
-  });
-});
+  CATEGORY_CONTAINER_CLASS,
+  DROPDOWN_EMPTY_MESSAGE_CLASS,
+  DROPDOWN_EMPTY_MESSAGE_TEXT,
+  DROPDOWN_LIST_CLASS,
+} from '../categoryDomSelectors.js';
+import { DOM_EVENT_CLICK } from '../utils/domEventNames.js';
 
 describe('category.ts — createCategorySelector (DOM)', () => {
   it('retourne un élément avec la classe category-container', () => {
     const el = createCategorySelector();
     expect(el).toBeInstanceOf(HTMLElement);
-    expect(el.classList.contains('category-container')).toBe(true);
+    expect(el.classList.contains(CATEGORY_CONTAINER_CLASS)).toBe(true);
   });
 
   it('getCategories retourne un tableau vide au départ', () => {
@@ -65,6 +51,15 @@ describe('category.ts — createCategorySelector (DOM)', () => {
     el.removeCategory?.('Hand Trap');
     expect(el.getCategories?.()).toEqual(expect.arrayContaining(['Starter']));
     expect(el.getCategories?.()).not.toContain('Hand Trap');
+  });
+
+  it('dropdown sans options affiche le message avec classe (style via CSS)', () => {
+    const el = createCategorySelector();
+    el.setCategories?.([...categoryOptions]);
+    el.dispatchEvent(new MouseEvent(DOM_EVENT_CLICK, { bubbles: true }));
+    const list = el.querySelector(`.${DROPDOWN_LIST_CLASS}`);
+    const empty = list?.querySelector(`.${DROPDOWN_EMPTY_MESSAGE_CLASS}`);
+    expect(empty?.textContent).toBe(DROPDOWN_EMPTY_MESSAGE_TEXT);
   });
 });
 

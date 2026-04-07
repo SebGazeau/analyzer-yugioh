@@ -1,27 +1,25 @@
 // Point d'entrée du front-end (module ES6)
 // Interfaces : Decks | Builder | Analysis | Suggestions (onglet Suggestions dynamique).
+// Arborescence : modules domaine sous `deck-builder/`, `associations/`, `services/`, `init/` ;
+// la racine `js/` reste volontairement plate pour l’instant — regrouper si elle grossit encore.
 import { addToDeck, cleanCardTable, exportDeckToFile, importDeckFromFile } from './deck.js';
 import { updateDeckCount, computeGlobalStats } from './stats.js';
+import { DATA_PSEUDO_ATTR, HEADER_AVATAR_SELECTOR } from './appPageDomSelectors.js';
+import { getInitials } from './utils/user/index.js';
 import { bindAppTabs } from './tabs.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
 import { initAnalysis } from './init/analysis.js';
 import { bindSuggestionsAddToDeck, bindSuggestionsFindCard } from './init/suggestions.js';
-
-function getInitials(pseudo: string | null): string {
-    if (!pseudo || !pseudo.trim()) return '?';
-    const parts = pseudo.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return pseudo.slice(0, 2).toUpperCase().padEnd(2, pseudo[0]);
-}
+import { DOM_EVENT_DOM_CONTENT_LOADED } from './utils/domEventNames.js';
 
 function bindAvatarInitials(): void {
-    document.querySelectorAll<HTMLElement>('.header-avatar[data-pseudo]').forEach((el) => {
-        el.textContent = getInitials(el.getAttribute('data-pseudo'));
+    document.querySelectorAll<HTMLElement>(HEADER_AVATAR_SELECTOR).forEach((el) => {
+        el.textContent = getInitials(el.getAttribute(DATA_PSEUDO_ATTR));
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     bindAvatarInitials();
     bindAppTabs();
     initDecks();

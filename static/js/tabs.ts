@@ -1,32 +1,57 @@
 /** Navigation par onglets (header) — extrait pour éviter les cycles avec insights/panel. */
 
-export const TAB_PANEL_IDS = ['builder', 'decks', 'analysis', 'suggestions'] as const;
+import { ARIA_SELECTED_ATTR } from './utils/ariaAttrs.js';
+import { DOM_EVENT_CLICK } from './utils/domEventNames.js';
+
+export const TAB_ID_BUILDER = 'builder' as const;
+export const TAB_ID_DECKS = 'decks' as const;
+export const TAB_ID_ANALYSIS = 'analysis' as const;
+export const TAB_ID_SUGGESTIONS = 'suggestions' as const;
+
+export const TAB_PANEL_IDS = [
+    TAB_ID_BUILDER,
+    TAB_ID_DECKS,
+    TAB_ID_ANALYSIS,
+    TAB_ID_SUGGESTIONS,
+] as const;
+
+export type TabPanelId = (typeof TAB_PANEL_IDS)[number];
+
+/** Attribut `data-tab` sur les liens d’en-tête. */
+export const TAB_DATA_ATTR = 'data-tab';
+
+export const APP_TAB_SELECTOR = '.app-tab';
+export const APP_TAB_ACTIVE_CLASS = 'app-tab--active';
+/** Lien d’onglet actif : `.app-tab.app-tab--active`. */
+export const APP_TAB_ACTIVE_SELECTOR = `${APP_TAB_SELECTOR}.${APP_TAB_ACTIVE_CLASS}`;
+
+export const TAB_PANEL_ACTIVE_CLASS = 'tab-panel--active';
 
 export function setActiveTab(tabId: string): void {
-    document.querySelectorAll('.app-tab').forEach((a) => {
-        a.classList.remove('app-tab--active');
-        a.setAttribute('aria-selected', 'false');
+    document.querySelectorAll(APP_TAB_SELECTOR).forEach((a) => {
+        a.classList.remove(APP_TAB_ACTIVE_CLASS);
+        a.setAttribute(ARIA_SELECTED_ATTR, 'false');
     });
-    const activeTab = document.querySelector(`.app-tab[data-tab="${tabId}"]`);
+    const activeTab = document.querySelector(`${APP_TAB_SELECTOR}[${TAB_DATA_ATTR}="${tabId}"]`);
     if (activeTab) {
-        activeTab.classList.add('app-tab--active');
-        activeTab.setAttribute('aria-selected', 'true');
+        activeTab.classList.add(APP_TAB_ACTIVE_CLASS);
+        activeTab.setAttribute(ARIA_SELECTED_ATTR, 'true');
     }
     TAB_PANEL_IDS.forEach((id) => {
         const panel = document.getElementById(id);
         if (panel) {
-            panel.classList.toggle('tab-panel--active', id === tabId);
+            panel.classList.toggle(TAB_PANEL_ACTIVE_CLASS, id === tabId);
         }
     });
 }
 
 export function bindAppTabs(): void {
-    setActiveTab('builder');
-    document.querySelectorAll<HTMLAnchorElement>('.app-tab').forEach((a) => {
-        a.addEventListener('click', (e) => {
+    setActiveTab(TAB_ID_BUILDER);
+    document.querySelectorAll<HTMLAnchorElement>(APP_TAB_SELECTOR).forEach((a) => {
+        a.addEventListener(DOM_EVENT_CLICK, (e) => {
             e.preventDefault();
             if (a.hidden) return;
-            const tabId = a.getAttribute('data-tab') || '';
+            const tabId = a.getAttribute(TAB_DATA_ATTR) || '';
             setActiveTab(tabId);
         });
     });

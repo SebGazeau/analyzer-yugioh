@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { collectDeckInsights } from '../../insights/collect.js';
+import { TEXT_EN_DASH } from '../../utils/textPlaceholders.js';
 import {
     buildSuggestedNumberXyz,
     computeSeventhTachyonInsight,
@@ -44,6 +45,7 @@ describe('computeSeventhTachyonInsight', () => {
         expect(i).not.toBeNull();
         expect(i!.severity).toBe('info');
         expect(i!.summary).toMatch(/101|107|Number/i);
+        expect(i!.summary).toContain(TEXT_EN_DASH);
         const sug = i!.details?.seventhTachyon?.suggestedNumberXyz;
         expect(sug).toBeDefined();
         expect(sug!.length).toBe(NUMBER_10X_CATALOG.length);
@@ -146,6 +148,34 @@ describe('computeSeventhTachyonInsight', () => {
         const names = groups![0].targets.map((t) => t.name).sort();
         expect(names).toEqual(['Match Attr Only', 'Match Both', 'Match Race Only']);
         expect(i!.details?.seventhTachyon?.uniqueTargetCount).toBe(3);
+    });
+
+    it('monstre dont le type contient « spell » (ex. tuner) reste une cible Main, pas une magie', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [
+                row({
+                    name: 'Spell Tuner Body',
+                    type: 'Effect Spell Tuner Monster',
+                    level: 4,
+                    race: 'Spellcaster',
+                    attribute: 'LIGHT',
+                }),
+            ],
+            extra: [
+                row({
+                    name: 'Number 104: Masquerade',
+                    type: 'Xyz Monster',
+                    level: 4,
+                    race: 'Spellcaster',
+                    attribute: 'LIGHT',
+                }),
+            ],
+            side: [row({ name: 'Seventh Tachyon', type: 'Normal Spell Card' })],
+        };
+        const i = computeSeventhTachyonInsight(deck);
+        expect(i!.severity).toBe('active');
+        const targets = i!.details?.seventhTachyon?.xyzGroups?.[0]?.targets.map((t) => t.name) ?? [];
+        expect(targets).toContain('Spell Tuner Body');
     });
 
     it('agrège plusieurs Numbers distincts et compte les cibles uniques', () => {

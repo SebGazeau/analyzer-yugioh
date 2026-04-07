@@ -1,9 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+    ASSOCIATION_CATALOG_PREFETCH_IDLE_TIMEOUT_MS,
+    ASSOCIATION_CATALOG_PREFETCH_SET_TIMEOUT_MS,
+} from '../../associations/associationCatalogPrefetchTiming.js';
+import {
     getAssociationCatalog,
     getQaRelatedCardIds,
+    prefetchAssociationCatalogWhenIdle,
     resetAssociationFetchCache,
 } from '../../associations/associationFetchCache.js';
+import {
+    ASSOCIATIONS_API_CATALOG_URL,
+    associationsApiQaRelatedUrl,
+} from '../../associations/associationsApiRoutes.js';
 
 afterEach(() => {
     resetAssociationFetchCache();
@@ -12,6 +21,33 @@ afterEach(() => {
 });
 
 describe('associationFetchCache', () => {
+    it('prefetchAssociationCatalogWhenIdle utilise requestIdleCallback avec timeout', () => {
+        const ric = vi.fn();
+        vi.stubGlobal('requestIdleCallback', ric);
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
+
+        prefetchAssociationCatalogWhenIdle();
+
+        expect(ric).toHaveBeenCalledWith(expect.any(Function), {
+            timeout: ASSOCIATION_CATALOG_PREFETCH_IDLE_TIMEOUT_MS,
+        });
+    });
+
+    it('sans requestIdleCallback, prefetch planifie setTimeout', () => {
+        vi.stubGlobal('requestIdleCallback', undefined as unknown as typeof requestIdleCallback);
+        vi.useFakeTimers();
+        const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
+
+        prefetchAssociationCatalogWhenIdle();
+
+        expect(setTimeoutSpy).toHaveBeenCalledWith(
+            expect.any(Function),
+            ASSOCIATION_CATALOG_PREFETCH_SET_TIMEOUT_MS,
+        );
+        vi.useRealTimers();
+    });
+
     it('ne refetch le catalogue qu’une fois par session', async () => {
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
@@ -31,7 +67,7 @@ describe('associationFetchCache', () => {
         const b = await getAssociationCatalog();
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock).toHaveBeenCalledWith('/associations/catalog');
+        expect(fetchMock).toHaveBeenCalledWith(ASSOCIATIONS_API_CATALOG_URL);
         expect(a.length).toBe(1);
         expect(b).toBe(a);
     });
@@ -61,13 +97,13 @@ describe('associationFetchCache', () => {
         const fetchMock = vi
             .fn()
             .mockImplementation((url: string) => {
-                if (url === '/associations/catalog') {
+                if (url === ASSOCIATIONS_API_CATALOG_URL) {
                     return Promise.resolve({
                         ok: true,
                         json: async () => [{ id: 1, name: 'A', name_en: null, archetype: null, desc: null }],
                     });
                 }
-                if (url.startsWith('/associations/qa_related?card_id=7')) {
+                if (url.startsWith(associationsApiQaRelatedUrl(7))) {
                     return Promise.resolve({ ok: true, json: async () => [10, 20] });
                 }
                 return Promise.resolve({ ok: false, json: async () => null });

@@ -3,6 +3,34 @@
  * - bindDeckList : interface Decks (liste Mes decks, rafraîchir, charger).
  * - bindDeckToolbar : interface Builder (clear, export, import, save, update).
  */
+import { DECK_COVER_CHANGED_EVENT } from '../deck-builder/deckCoverEvents.js';
+import {
+    DECK_ACTION_NEW_DECK_SELECTOR,
+    DECK_BTN_CLEAR_DECK_ID,
+    DECK_BTN_EXPORT_JSON_ID,
+    DECK_BTN_IMPORT_JSON_TRIGGER_ID,
+    DECK_BTN_REFRESH_DECKS_ID,
+    DECK_BTN_SAVE_SERVER_ID,
+    DECK_BTN_UPDATE_SERVER_ID,
+    DECK_IMPORT_JSON_INPUT_ID,
+    DECK_MY_DECKS_EMPTY_ID,
+    DECK_MY_DECKS_LIST_ID,
+    DECK_NAME_INPUT_ID,
+    DECK_SAVED_ITEM_CLASS,
+} from '../deck-builder/deckConstants.js';
+import {
+    DATA_DECK_ID_ATTR,
+    DECK_SAVED_ITEM_BODY_CLASS,
+    DECK_SAVED_ITEM_COVER_CLASS,
+    DECK_SAVED_ITEM_COVER_IMG_CLASS,
+    DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS,
+    DECK_SAVED_ITEM_DELETE_SELECTOR,
+    DECK_SAVED_ITEM_DUPLICATE_SELECTOR,
+    deckSavedListItemLoadTitle,
+} from '../deck-builder/deckSavedListDomSelectors.js';
+import { DOM_EVENT_CHANGE, DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
+import { KEY_ENTER, KEY_SPACE } from '../utils/keyboardKeys.js';
+import { deckSavedListItemBodyInnerHtml } from '../deck-builder/deckSavedListItemBodyHtml.js';
 import {
     listMyDecks,
     loadDeckFromServer,
@@ -15,12 +43,24 @@ import {
     importDeckFromFile,
     getDeckCover,
 } from '../deck.js';
-import { escapeHtml, formatDeckDate } from '../utils/html.js';
+import { PAGE_DECKS_SELECTOR } from '../appPageDomSelectors.js';
+import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { IMG_LOADING_LAZY, ROLE_ATTR, ROLE_BUTTON, TABINDEX_ATTR, TABINDEX_ZERO } from '../utils/htmlAttrs.js';
+import { setActiveTab, TAB_ID_BUILDER } from '../tabs.js';
+import {
+    MSG_DECK_DELETE_FAILED,
+    MSG_DECK_LOAD_FAILED,
+    MSG_DECK_UPDATED,
+    msgConfirmDeleteDeck,
+    msgDeckDuplicated,
+    msgDeckSavedWithId,
+    msgErrorPrefixed,
+} from '../utils/userDialogMessages.js';
 
 /** Rafraîchit la liste « Mes decks » (appelée au load et après save/update). */
 export async function refreshMyDecksList(): Promise<void> {
-    const ul = document.getElementById('my-decks-list');
-    const emptyEl = document.getElementById('my-decks-empty');
+    const ul = document.getElementById(DECK_MY_DECKS_LIST_ID);
+    const emptyEl = document.getElementById(DECK_MY_DECKS_EMPTY_ID);
     if (!ul) return;
     const decks = await listMyDecks();
     ul.innerHTML = '';
@@ -29,67 +69,67 @@ export async function refreshMyDecksList(): Promise<void> {
     }
     for (const d of decks) {
         const li = document.createElement('li');
-        li.className = 'deck-saved-item';
-        li.setAttribute('data-deck-id', String(d.id));
-        li.setAttribute('role', 'button');
-        li.setAttribute('tabindex', '0');
-        li.title = `Charger le deck « ${escapeHtml(d.name)} »`;
+        li.className = DECK_SAVED_ITEM_CLASS;
+        li.setAttribute(DATA_DECK_ID_ATTR, String(d.id));
+        li.setAttribute(ROLE_ATTR, ROLE_BUTTON);
+        li.setAttribute(TABINDEX_ATTR, TABINDEX_ZERO);
+        li.title = deckSavedListItemLoadTitle(d.name);
         const coverFromApi = d.cover_image_url != null ? { imageUrl: d.cover_image_url, name: d.cover_card_name ?? '' } : null;
         const cover = coverFromApi ?? getDeckCover(d.id);
         const coverEl = document.createElement('div');
-        coverEl.className = 'deck-saved-item-cover';
+        coverEl.className = DECK_SAVED_ITEM_COVER_CLASS;
         if (cover?.imageUrl) {
             const img = document.createElement('img');
-            img.className = 'deck-saved-item-cover-img';
+            img.className = DECK_SAVED_ITEM_COVER_IMG_CLASS;
             img.src = cover.imageUrl;
             img.alt = '';
-            img.loading = 'lazy';
+            img.loading = IMG_LOADING_LAZY;
             coverEl.appendChild(img);
         } else {
             const placeholder = document.createElement('div');
-            placeholder.className = 'deck-saved-item-cover-placeholder';
-            placeholder.setAttribute('aria-hidden', 'true');
+            placeholder.className = DECK_SAVED_ITEM_COVER_PLACEHOLDER_CLASS;
+            placeholder.setAttribute(ARIA_HIDDEN_ATTR, 'true');
             coverEl.appendChild(placeholder);
         }
         li.appendChild(coverEl);
-        const meta = d.created_at ? `<span class="deck-saved-item-meta">${formatDeckDate(d.created_at)}</span>` : '';
-        const trashSvg = '<svg class="deck-saved-item-delete-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
-        const copySvg = '<svg class="deck-saved-item-duplicate-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
         const bodyEl = document.createElement('div');
-        bodyEl.className = 'deck-saved-item-body';
-        bodyEl.innerHTML = `<span class="deck-saved-item-name">${escapeHtml(d.name)}</span><div class="deck-saved-item-footer">${meta}<div class="deck-saved-item-actions"><button type="button" class="deck-saved-item-duplicate" data-deck-duplicate="${d.id}" title="Dupliquer le deck">${copySvg}</button><button type="button" class="deck-saved-item-delete" data-deck-delete="${d.id}" title="Supprimer le deck">${trashSvg}</button></div></div>`;
+        bodyEl.className = DECK_SAVED_ITEM_BODY_CLASS;
+        bodyEl.innerHTML = deckSavedListItemBodyInnerHtml({
+            deckName: d.name,
+            deckId: d.id,
+            createdAtIso: d.created_at ?? null,
+        });
         li.appendChild(bodyEl);
-        const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>('.deck-saved-item-duplicate');
-        duplicateBtn?.addEventListener('click', async (e) => {
+        const duplicateBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DUPLICATE_SELECTOR);
+        duplicateBtn?.addEventListener(DOM_EVENT_CLICK, async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const r = await duplicateDeckOnServer(d.id);
-            if (r.error) alert('Erreur: ' + r.error);
+            if (r.error) alert(msgErrorPrefixed(r.error));
             else {
                 await refreshMyDecksList();
-                alert(`Deck dupliqué : « ${d.name} (copie) »`);
+                alert(msgDeckDuplicated(d.name));
             }
         });
-        const deleteBtn = bodyEl.querySelector<HTMLButtonElement>('.deck-saved-item-delete');
-        deleteBtn?.addEventListener('click', async (e) => {
+        const deleteBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DELETE_SELECTOR);
+        deleteBtn?.addEventListener(DOM_EVENT_CLICK, async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!confirm(`Supprimer le deck « ${escapeHtml(d.name)} » ?`)) return;
+            if (!confirm(msgConfirmDeleteDeck(d.name))) return;
             const ok = await deleteDeckFromServer(d.id);
-            if (!ok) alert('Impossible de supprimer le deck.');
+            if (!ok) alert(MSG_DECK_DELETE_FAILED);
             else await refreshMyDecksList();
         });
         const loadDeck = async () => {
             const ok = await loadDeckFromServer(d.id);
-            if (!ok) alert('Impossible de charger le deck');
+            if (!ok) alert(MSG_DECK_LOAD_FAILED);
             else {
-                const { setActiveTab } = await import('../main.js');
-                setActiveTab('builder');
+                setActiveTab(TAB_ID_BUILDER);
             }
         };
-        li.addEventListener('click', loadDeck);
-        li.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+        li.addEventListener(DOM_EVENT_CLICK, loadDeck);
+        li.addEventListener(DOM_EVENT_KEYDOWN, (e) => {
+            if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
                 e.preventDefault();
                 loadDeck();
             }
@@ -100,21 +140,21 @@ export async function refreshMyDecksList(): Promise<void> {
 
 /** Interface Decks : liste Mes decks (rafraîchir, clic sur carte = charger) + carte New Deck. */
 export function bindDeckList(): void {
-    const pageDecks = document.querySelector('[data-page="decks"]');
+    const pageDecks = document.querySelector(PAGE_DECKS_SELECTOR);
     if (!pageDecks) return;
-    document.getElementById('btn-refresh-decks')?.addEventListener('click', refreshMyDecksList);
-    window.addEventListener('deck-cover-changed', () => refreshMyDecksList());
+    document.getElementById(DECK_BTN_REFRESH_DECKS_ID)?.addEventListener(DOM_EVENT_CLICK, refreshMyDecksList);
+    window.addEventListener(DECK_COVER_CHANGED_EVENT, () => refreshMyDecksList());
     refreshMyDecksList();
 
-    const newDeckCard = pageDecks.querySelector<HTMLElement>('[data-deck-action="new-deck"]');
-    newDeckCard?.addEventListener('click', () => {
+    const newDeckCard = pageDecks.querySelector<HTMLElement>(DECK_ACTION_NEW_DECK_SELECTOR);
+    newDeckCard?.addEventListener(DOM_EVENT_CLICK, () => {
         cleanCardTable();
-        import('../main.js').then((m) => m.setActiveTab('builder'));
-        const nameInput = document.getElementById('deck-name-input') as HTMLInputElement | null;
+        setActiveTab(TAB_ID_BUILDER);
+        const nameInput = document.getElementById(DECK_NAME_INPUT_ID) as HTMLInputElement | null;
         nameInput?.focus();
     });
-    newDeckCard?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    newDeckCard?.addEventListener(DOM_EVENT_KEYDOWN, (e) => {
+        if (e.key === KEY_ENTER || e.key === KEY_SPACE) {
             e.preventDefault();
             newDeckCard.click();
         }
@@ -123,26 +163,26 @@ export function bindDeckList(): void {
 
 /** Interface Builder : toolbar (clear, export, import, save, update). */
 export function bindDeckToolbar(): void {
-    const importInput = document.getElementById('import-json') as HTMLInputElement | null;
+    const importInput = document.getElementById(DECK_IMPORT_JSON_INPUT_ID) as HTMLInputElement | null;
 
-    document.getElementById('btn-clear-deck')?.addEventListener('click', cleanCardTable);
-    document.getElementById('btn-export-json')?.addEventListener('click', exportDeckToFile);
-    document.getElementById('btn-import-json-trigger')?.addEventListener('click', () => importInput?.click());
-    if (importInput) importInput.addEventListener('change', importDeckFromFile);
+    document.getElementById(DECK_BTN_CLEAR_DECK_ID)?.addEventListener(DOM_EVENT_CLICK, cleanCardTable);
+    document.getElementById(DECK_BTN_EXPORT_JSON_ID)?.addEventListener(DOM_EVENT_CLICK, exportDeckToFile);
+    document.getElementById(DECK_BTN_IMPORT_JSON_TRIGGER_ID)?.addEventListener(DOM_EVENT_CLICK, () => importInput?.click());
+    if (importInput) importInput.addEventListener(DOM_EVENT_CHANGE, importDeckFromFile);
 
-    document.getElementById('btn-save-server')?.addEventListener('click', async () => {
+    document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await saveDeckToServer();
-        if (r.error) alert('Erreur: ' + r.error);
+        if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.id) {
-            alert('Deck enregistré (id: ' + r.id + ')');
+            alert(msgDeckSavedWithId(r.id));
             await refreshMyDecksList();
         }
     });
-    document.getElementById('btn-update-server')?.addEventListener('click', async () => {
+    document.getElementById(DECK_BTN_UPDATE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await updateDeckOnServer();
-        if (r.error) alert('Erreur: ' + r.error);
+        if (r.error) alert(msgErrorPrefixed(r.error));
         else if (r.ok) {
-            alert('Deck mis à jour.');
+            alert(MSG_DECK_UPDATED);
             await refreshMyDecksList();
         }
     });

@@ -9,14 +9,22 @@ import {
   saveDeckToServer,
   updateDeckOnServer,
 } from '../deck.js';
+import { CARD_API_PATH } from '../cardSearchApiRoutes.js';
+import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from '../deck-builder/deckApiRoutes.js';
+import { DECK_GRID_IDS, DECK_TABLE_GRID_CLASS } from '../deck-builder/deckConstants.js';
+import {
+  HTTP_METHOD_POST,
+  HTTP_METHOD_PUT,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_OK,
+  HTTP_STATUS_UNAUTHORIZED,
+} from '../utils/httpMime.js';
+import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
+import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 
 /** DOM minimal pour loadDeckFromServer (grilles + category-summary). */
 function minimalDOM() {
-  document.body.innerHTML =
-    '<div id="deck-main-grid" class="deck-table-grid"></div>' +
-    '<div id="deck-extra-grid" class="deck-table-grid"></div>' +
-    '<div id="deck-side-grid" class="deck-table-grid"></div>' +
-    '<div id="category-summary-body"></div>';
+  document.body.innerHTML = htmlDeckGrids(DECK_TABLE_GRID_CLASS) + htmlCategorySummaryBody();
 }
 
 describe('Save/Load deck — fetch mocké', () => {
@@ -29,11 +37,11 @@ describe('Save/Load deck — fetch mocké', () => {
     let postBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks' && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: HTTP_STATUS_OK }));
       }
-      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([]), { status: HTTP_STATUS_OK }));
     }));
     const r = await saveDeckToServer();
     expect(r.id).toBe(1);
@@ -46,7 +54,7 @@ describe('Save/Load deck — fetch mocké', () => {
   it('load deck avec 0 extra ne plante pas (fetch mocké retourne deck sans extra)', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/')) {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -56,41 +64,41 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Card A', type: 'Effect Monster' }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);
-    const extraGrid = document.getElementById('deck-extra-grid');
-    expect(extraGrid?.querySelectorAll('.deck-card-cell').length ?? 0).toBe(0);
+    const extraGrid = document.getElementById(DECK_GRID_IDS.extra);
+    expect(extraGrid?.querySelectorAll(DECK_CARD_CELL_SELECTOR).length ?? 0).toBe(0);
   });
 
   it('listMyDecks retourne la liste quand fetch ok', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks') {
+      if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify([
               { id: 1, name: 'Deck A', is_public: false, created_at: '2024-01-01' },
               { id: 2, name: 'Deck B', is_public: true, created_at: '2024-01-02' },
             ]),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const decks = await listMyDecks();
     expect(decks).toHaveLength(2);
@@ -99,7 +107,7 @@ describe('Save/Load deck — fetch mocké', () => {
   });
 
   it('listMyDecks retourne [] quand fetch !ok', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 401 })));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: HTTP_STATUS_UNAUTHORIZED })));
     const decks = await listMyDecks();
     expect(decks).toEqual([]);
   });
@@ -121,32 +129,32 @@ describe('Save/Load deck — fetch mocké', () => {
     let putBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/') && init?.method === 'PUT') {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`) && init?.method === HTTP_METHOD_PUT) {
         putUrl = u;
         putBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 1 }), { status: HTTP_STATUS_OK }));
       }
-      if (u === '/decks') {
+      if (u === DECK_API_COLLECTION_URL) {
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 1, name: 'Deck', main: [{ name: 'C', quantity: 1 }], extra: [], side: [] }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         return Promise.resolve(
-          new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: 200 }),
+          new Response(JSON.stringify({ id: 1, name: 'C', type: 'Monster' }), { status: HTTP_STATUS_OK }),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);
     const updateResult = await updateDeckOnServer();
     expect(updateResult.error).toBeUndefined();
     expect(updateResult.ok).toBe(true);
-    expect(putUrl).toContain('/decks/1');
+    expect(putUrl).toBe(deckApiDeckByIdUrl(1));
     expect(putBody).toHaveProperty('main');
   });
 
@@ -154,7 +162,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let postBody: unknown = null;
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u === '/decks/7' && !init?.method) {
+      if (u === deckApiDeckByIdUrl(7) && !init?.method) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -164,15 +172,15 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      if (u === '/decks' && init?.method === 'POST') {
+      if (u === DECK_API_COLLECTION_URL && init?.method === HTTP_METHOD_POST) {
         postBody = init.body ? JSON.parse(init.body as string) : null;
-        return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: 200 }));
+        return Promise.resolve(new Response(JSON.stringify({ id: 99 }), { status: HTTP_STATUS_OK }));
       }
-      return Promise.resolve(new Response('', { status: 404 }));
+      return Promise.resolve(new Response('', { status: HTTP_STATUS_NOT_FOUND }));
     }));
     const r = await duplicateDeckOnServer(7);
     expect(r.id).toBe(99);
@@ -186,7 +194,7 @@ describe('Save/Load deck — fetch mocké', () => {
     let cardCalls = 0;
     vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
       const u = typeof url === 'string' ? url : url.toString();
-      if (u.startsWith('/decks/')) {
+      if (u.startsWith(`${DECK_API_COLLECTION_URL}/`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -196,20 +204,20 @@ describe('Save/Load deck — fetch mocké', () => {
               extra: [],
               side: [],
             }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      if (u.startsWith('/card?name=')) {
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
         cardCalls += 1;
         return Promise.resolve(
           new Response(
             JSON.stringify({ id: 14558127, name: 'Ash Blossom & Joyous Spring', type: 'Tuner Monster' }),
-            { status: 200 },
+            { status: HTTP_STATUS_OK },
           ),
         );
       }
-      return Promise.resolve(new Response('[]', { status: 200 }));
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
     const ok = await loadDeckFromServer(1);
     expect(ok).toBe(true);

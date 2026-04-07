@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { E2E_DECK_GRID } from './deckDomSelectors.js';
+import { E2E_SEARCH_BOX } from './searchDomSelectors.js';
 
 test.describe('Recherche et locale', () => {
     test('une requête /search inclut locale=fr quand html lang est fr', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('#deck-main-grid')).toBeVisible({ timeout: 15_000 });
+        await expect(page.locator(E2E_DECK_GRID.main)).toBeVisible({ timeout: 15_000 });
 
         await page.evaluate(() => {
             document.documentElement.lang = 'fr';
@@ -17,7 +19,7 @@ test.describe('Recherche et locale', () => {
             { timeout: 12_000 },
         );
 
-        const box = page.locator('#search-box');
+        const box = page.locator(E2E_SEARCH_BOX);
         await expect(box).toBeVisible();
         await box.fill('abcd');
 

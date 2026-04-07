@@ -32,3 +32,49 @@ pub struct SearchCardDto {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub desc: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SearchCardDto;
+
+    fn minimal_dto(archetype_source: Option<String>) -> SearchCardDto {
+        SearchCardDto {
+            id: 1,
+            deck_copy_id: 1,
+            name: "Test".to_string(),
+            name_en: None,
+            card_type: "Monster".to_string(),
+            attribute: None,
+            race: None,
+            level: None,
+            archetype: None,
+            archetype_source,
+            atk: None,
+            def: None,
+            frame_type: None,
+            ygoprodeck_url: None,
+            image_url: None,
+            ban_tcg: None,
+            desc: None,
+        }
+    }
+
+    #[test]
+    fn serde_omits_archetype_source_when_none() {
+        let json = serde_json::to_string(&minimal_dto(None)).expect("serialize");
+        assert!(
+            !json.contains("archetype_source"),
+            "clé absente pour parité front (champ optionnel omis) : {json}"
+        );
+    }
+
+    #[test]
+    fn serde_includes_archetype_source_when_some() {
+        let json = serde_json::to_string(&minimal_dto(Some("ygorg_effect_en".to_string())))
+            .expect("serialize");
+        assert!(
+            json.contains("\"archetype_source\":\"ygorg_effect_en\""),
+            "{json}"
+        );
+    }
+}

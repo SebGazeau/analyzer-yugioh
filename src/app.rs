@@ -6,17 +6,15 @@ use std::sync::Arc;
 
 use std::time::Duration;
 
-use actix_files::Files;
 use actix_web::cookie::Key;
 use actix_web::dev::Service;
-use actix_web::http::StatusCode;
 use actix_web::middleware::Compress;
-use actix_web::{App, HttpResponse, web};
+use actix_web::{App, web};
 use sqlx::PgPool;
 use tera::Tera;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::auth::{ApiDoc, api, web as auth_web};
+use crate::auth::{ApiDoc, api};
 use crate::rate_limit::{RateLimitState, login_post_blocked_response};
 use crate::routes;
 use crate::session_cookies::{SessionCookieSettings, cookie_session_middleware};
@@ -25,8 +23,14 @@ use crate::shared::utils::templates::create_template;
 use crate::storage::Storage;
 use utoipa::OpenApi;
 
+mod register_modules;
+
 fn test_rate_limit_data() -> web::Data<RateLimitState> {
     web::Data::new(RateLimitState::permissive_for_tests())
+}
+
+fn test_turnstile_config() -> web::Data<crate::auth::turnstile::TurnstileConfig> {
+    web::Data::new(crate::auth::turnstile::TurnstileConfig::disabled())
 }
 
 /// Construit l'`App` depuis ses dépendances.
@@ -36,7 +40,8 @@ fn test_rate_limit_data() -> web::Data<RateLimitState> {
 /// `jwt_secret` + `api_token_issuer_secret` : si présents, activent /api (token + profile).
 /// Swagger UI : si `enable_swagger_ui`, enregistre `/swagger-ui/` et `/api-docs/openapi.json`.
 /// Le corps `api_key` de POST /api/auth/token doit égaler `api_token_issuer_secret` (souvent `API_ISSUER_SECRET`).
-/// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register`, `/admin/login` (sec-10).
+/// `rate_limit` : fenêtres fixes sur `POST` `/login`, `/register` (compteur dédié), `/admin/login` (sec-10).
+/// `turnstile` : clés optionnelles ; si les deux sont définies, `/register` exige le jeton widget.
 #[allow(clippy::too_many_arguments)]
 pub fn make_app(
     cache: web::Data<CardCache>,
@@ -51,6 +56,7 @@ pub fn make_app(
     api_token_issuer_secret: Option<String>,
     enable_swagger_ui: bool,
     rate_limit: web::Data<RateLimitState>,
+    turnstile: web::Data<crate::auth::turnstile::TurnstileConfig>,
 ) -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
@@ -85,7 +91,8 @@ pub fn make_app(
             }
         })
         .wrap(cookie_session_middleware(key, session_cookie_settings))
-        .app_data(rate_limit);
+        .app_data(rate_limit)
+        .app_data(turnstile);
     let app = app.app_data(cache).app_data(tera_data).app_data(cards_path);
     let app = if let Some(p) = pool {
         app.app_data(p)
@@ -104,81 +111,10 @@ pub fn make_app(
     } else {
         app
     };
-    let app = app
-        .service(Files::new("/static", "static"))
-        .service(crate::modules::pages::index)
-        .service(crate::modules::catalog::count)
-        .service(crate::modules::catalog::search)
-        .service(crate::modules::associations::associations_catalog)
-        .service(crate::modules::associations::associations_qa_related)
-        .service(crate::modules::catalog::card_by_name)
-        .service(crate::modules::catalog::validate_deck)
-        .service(crate::modules::decks::create_deck_handler)
-        .service(crate::modules::decks::list_decks_handler)
-        .service(crate::modules::decks::get_deck_handler)
-        .service(crate::modules::decks::update_deck_handler)
-        .service(crate::modules::decks::delete_deck_handler)
-        .service(crate::modules::site_auth::register_page)
-        .service(crate::modules::site_auth::register_submit)
-        .service(crate::modules::site_auth::login_submit)
-        .service(crate::modules::site_auth::logout_submit)
-        .service(routes::import_image)
-        .service(routes::list_images)
-        .service(routes::get_image)
-        .service(routes::serve_image_file)
-        .service(
-            web::scope("/admin")
-                .wrap_fn({
-                    let secret = admin_secret.clone();
-                    move |req, srv| {
-                        let secret = secret.clone();
-                        let authorized = routes::is_admin_allowed(&req, &secret);
-                        type AdminResp = Result<
-                            actix_web::dev::ServiceResponse<
-                                actix_web::body::EitherBody<
-                                    actix_web::body::BoxBody,
-                                    actix_web::body::BoxBody,
-                                >,
-                            >,
-                            actix_web::Error,
-                        >;
-                        if !authorized {
-                            let res = req
-                                .into_response(
-                                    HttpResponse::build(StatusCode::FORBIDDEN).body("Accès refusé"),
-                                )
-                                .map_into_right_body();
-                            let f: Pin<Box<dyn Future<Output = AdminResp>>> =
-                                Box::pin(async move { Ok(res) });
-                            return f;
-                        }
-                        let fut = srv.call(req);
-                        Box::pin(async move {
-                            let res = fut.await?.map_into_left_body::<actix_web::body::BoxBody>();
-                            Ok(res)
-                        }) as Pin<Box<dyn Future<Output = AdminResp>>>
-                    }
-                })
-                .service(routes::admin_index)
-                .service(routes::admin_login_page)
-                .service(routes::admin_login)
-                .service(routes::admin_logout)
-                .service(routes::admin_setup_page)
-                .service(routes::admin_setup)
-                .service(crate::modules::admin_sync::fetch_cards)
-                .service(crate::modules::admin_sync::reload_cache_from_db)
-                .service(crate::modules::admin_sync::enrich_ygorganization)
-                .service(crate::modules::admin_sync::preview_card_metadata_fill)
-                .service(crate::modules::admin_sync::apply_card_metadata_fill)
-                .service(routes::admin_import)
-                .service(routes::admin_rehydrate_storage),
-        )
-        .service(
-            web::scope("/web")
-                .service(auth_web::login_page)
-                .service(auth_web::logout)
-                .service(auth_web::dashboard),
-        );
+    let app = app.configure({
+        let admin = admin_secret.clone();
+        move |c| register_modules::register_core_and_admin_routes(c, admin)
+    });
     if enable_swagger_ui {
         app.service(
             SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
@@ -217,6 +153,7 @@ pub fn configure_app_for_tests_production_cookies() -> App<
         None,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -248,10 +185,11 @@ pub fn configure_app_for_tests() -> App<
         None,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
-/// Tests sec-10 : plafond **2** `POST` site (`/login`, `/register`) par heure et par IP.
+/// Tests sec-10 : plafond **2** `POST` `/login` par heure et par IP (`/register` reste large ici).
 pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
     impl actix_web::dev::ServiceFactory<
         actix_web::dev::ServiceRequest,
@@ -270,6 +208,8 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
         2,
         Duration::from_secs(3600),
         10_000,
+        Duration::from_secs(3600),
+        10_000,
     ));
     make_app(
         cache,
@@ -284,6 +224,7 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
         None,
         true,
         rl,
+        test_turnstile_config(),
     )
 }
 
@@ -315,6 +256,7 @@ pub fn configure_app_for_tests_without_swagger() -> App<
         None,
         false,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -354,6 +296,7 @@ pub fn configure_app_for_tests_with_api_keys(
         issuer,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }
 
@@ -399,5 +342,6 @@ pub fn configure_app_for_tests_with_auth(
         api_token_issuer,
         true,
         test_rate_limit_data(),
+        test_turnstile_config(),
     )
 }

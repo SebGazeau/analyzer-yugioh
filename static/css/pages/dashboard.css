@@ -932,6 +932,16 @@
 .deck-card-popover .dropdown-list div:hover {
   background: var(--color-bg-elevated);
 }
+.deck-card-popover .dropdown-list .dropdown-list__empty {
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+.deck-card-popover .dropdown-list .dropdown-list__empty:hover {
+  background: var(--color-bg-surface);
+}
 
 /* ── Deck table grid (legacy, caché si grille cartes utilisée) ── */
 .deck-table-grid {

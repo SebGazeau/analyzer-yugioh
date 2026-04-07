@@ -1,6 +1,26 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { searchApiUrl } from '../cardSearchApiRoutes.js';
+import {
+  SEARCH_DEBOUNCE_MS,
+  SEARCH_DEBOUNCE_TEST_OVERRUN_MS,
+  SEARCH_MIN_QUERY_LENGTH,
+} from '../searchConstants.js';
+import { DOM_EVENT_INPUT } from '../utils/domEventNames.js';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
+import {
+  SEARCH_BOX_ELEMENT_ID,
+  SEARCH_RESULTS_CONTAINER_ID,
+  SEARCH_RESULTS_LIST_ID,
+} from '../searchDomIds.js';
+import {
+  DATA_SEARCH_ARCHETYPE_SOURCE_ATTR,
+  DATA_SEARCH_ERROR_ATTR,
+  SEARCH_ERROR_STATE_CLASS,
+  SEARCH_RESULT_META_CLASS,
+  SEARCH_RESULT_ROW_CLASS,
+} from '../searchDomSelectors.js';
+import { STYLE_DISPLAY_BLOCK, STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
 import results3 from './fixtures/search/results-3-cards.json';
 
 describe('search.ts — helpers purs', () => {
@@ -53,12 +73,14 @@ describe('search.ts — helpers purs', () => {
   });
 });
 
+const SEARCH_TEST_SETTLE_MS = SEARCH_DEBOUNCE_MS + SEARCH_DEBOUNCE_TEST_OVERRUN_MS;
+
 describe('search.ts — DOM', () => {
   beforeEach(() => {
     document.body.innerHTML =
-      '<input id="search-box" type="text" />' +
-      '<div id="searchResults" style="display:none">' +
-      '<div id="search-results-list"></div>' +
+      `<input id="${SEARCH_BOX_ELEMENT_ID}" type="text" />` +
+      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:none">` +
+      `<div id="${SEARCH_RESULTS_LIST_ID}"></div>` +
       '</div>';
   });
 
@@ -66,29 +88,29 @@ describe('search.ts — DOM', () => {
     vi.restoreAllMocks();
   });
 
-  it('input avec moins de 4 caractères ne déclenche pas de fetch', async () => {
+  it('input avec moins de SEARCH_MIN_QUERY_LENGTH ne déclenche pas de fetch', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('[]'));
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    input.value = 'ab';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     await Promise.resolve();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 
-  it('input avec 4+ caractères déclenche un fetch après le debounce', async () => {
+  it('input avec SEARCH_MIN_QUERY_LENGTH+ caractères déclenche un fetch après le debounce', async () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     expect(fetchSpy).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(350);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('/search?q=Dark'));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });
@@ -101,11 +123,11 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([{ name: 'Test', name_en: 'Test' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'abcd';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringMatching(/\/search\?q=abcd&locale=fr/));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('abcd', '&locale=fr')));
     document.documentElement.lang = prevLang;
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -117,18 +139,18 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
     input.value = 'D';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Da';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Dar';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining('/search?q=Dark'));
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining(searchApiUrl('Dark')));
     vi.useRealTimers();
     fetchSpy.mockRestore();
   });
@@ -139,23 +161,23 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify(results3)),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
     await Promise.resolve();
-    const items = list.querySelectorAll('.search-result-row');
+    const items = list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`);
     expect(items.length).toBe(3);
     // Affichage prioritaire sur `name` (locale API), puis `name_en`.
     expect(list.textContent).toContain('Magicien Sombre');
     expect(list.textContent).toContain('Dragon Blanc aux Yeux Bleus');
     expect(list.textContent).toContain('Trou Noir');
-    const firstRow = list.querySelector('.search-result-row');
-    const meta = firstRow?.querySelector('.search-result-meta');
+    const firstRow = list.querySelector(`.${SEARCH_RESULT_ROW_CLASS}`);
+    const meta = firstRow?.querySelector(`.${SEARCH_RESULT_META_CLASS}`);
     expect(meta?.textContent).toContain('Magician');
-    const badge = firstRow?.querySelector('[data-search-archetype-source="ygorg_effect_en"]');
+    const badge = firstRow?.querySelector(`[${DATA_SEARCH_ARCHETYPE_SOURCE_ATTR}="ygorg_effect_en"]`);
     expect(badge).not.toBeNull();
     expect(badge?.textContent).toContain('YGOrg');
     vi.useRealTimers();
@@ -168,13 +190,13 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'XyZz';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
-    expect(list.querySelectorAll('.search-result-row').length).toBe(0);
+    expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(0);
     expect(list.innerHTML).toBe('');
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -186,15 +208,15 @@ describe('search.ts — DOM', () => {
       new Response(JSON.stringify([{ name: 'Card', name_en: 'Card' }])),
     );
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Card';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
-    expect(list.querySelectorAll('.search-result-row').length).toBe(1);
-    input.value = 'ab';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(list.querySelectorAll(`.${SEARCH_RESULT_ROW_CLASS}`).length).toBe(1);
+    input.value = 'a'.repeat(SEARCH_MIN_QUERY_LENGTH - 1);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
     expect(list.innerHTML).toBe('');
     vi.useRealTimers();
   });
@@ -203,15 +225,15 @@ describe('search.ts — DOM', () => {
     vi.useFakeTimers();
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
     setupSearch();
-    const input = document.getElementById('search-box') as HTMLInputElement;
-    const container = document.getElementById('searchResults')!;
-    const list = document.getElementById('search-results-list')!;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement;
+    const container = document.getElementById(SEARCH_RESULTS_CONTAINER_ID)!;
+    const list = document.getElementById(SEARCH_RESULTS_LIST_ID)!;
     input.value = 'Dark';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(350);
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(SEARCH_TEST_SETTLE_MS);
     await Promise.resolve();
-    expect(container.getAttribute('data-search-error')).toBe('true');
-    expect(list.querySelector('.search-error-state')).not.toBeNull();
+    expect(container.getAttribute(DATA_SEARCH_ERROR_ATTR)).toBe('true');
+    expect(list.querySelector(`.${SEARCH_ERROR_STATE_CLASS}`)).not.toBeNull();
     expect(list.textContent).toContain('Erreur');
     vi.useRealTimers();
     fetchSpy.mockRestore();
@@ -219,10 +241,10 @@ describe('search.ts — DOM', () => {
 
   it('closeSearch cache le panneau de résultats', () => {
     document.body.innerHTML =
-      '<div id="searchResults" style="display:block"><div id="search-results-list"></div></div>';
-    const el = document.getElementById('searchResults') as HTMLElement;
-    expect(el.style.display).toBe('block');
+      `<div id="${SEARCH_RESULTS_CONTAINER_ID}" style="display:${STYLE_DISPLAY_BLOCK}"><div id="${SEARCH_RESULTS_LIST_ID}"></div></div>`;
+    const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement;
+    expect(el.style.display).toBe(STYLE_DISPLAY_BLOCK);
     closeSearch();
-    expect(el.style.display).toBe('none');
+    expect(el.style.display).toBe(STYLE_DISPLAY_NONE);
   });
 }); 

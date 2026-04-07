@@ -1,5 +1,8 @@
 //! Limitation du débit sur les POST d’authentification (sec-10).
 //!
+//! `/login` et `/register` ont des compteurs **distincts** : l’inscription peut être plafonnée
+//! plus bas pour limiter bots / comptes jetables sans pénaliser les connexions.
+//!
 //! Fenêtre fixe par clé (IP du pair, sans port). Derrière un proxy de confiance, brancher
 //! une extraction d’IP réelle (ex. `X-Forwarded-For`) reste un chantier séparé.
 
@@ -57,10 +60,11 @@ impl FixedWindowLimiter {
     }
 }
 
-/// Limite « site » (`POST /login`, `/register`) et « admin » (`POST /admin/login`).
+/// Limite `POST /login`, `POST /register` (séparé) et `POST /admin/login`.
 #[derive(Debug)]
 pub struct RateLimitState {
     pub site: FixedWindowLimiter,
+    pub register: FixedWindowLimiter,
     pub admin: FixedWindowLimiter,
 }
 
@@ -68,11 +72,14 @@ impl RateLimitState {
     pub fn new(
         site_window: Duration,
         site_max: u32,
+        register_window: Duration,
+        register_max: u32,
         admin_window: Duration,
         admin_max: u32,
     ) -> Self {
         Self {
             site: FixedWindowLimiter::new(site_window, site_max),
+            register: FixedWindowLimiter::new(register_window, register_max),
             admin: FixedWindowLimiter::new(admin_window, admin_max),
         }
     }
@@ -80,6 +87,8 @@ impl RateLimitState {
     /// Valeur très permissive pour les tests d’intégration (évite les courses sur `unknown`).
     pub fn permissive_for_tests() -> Self {
         Self::new(
+            Duration::from_secs(60),
+            50_000,
             Duration::from_secs(60),
             50_000,
             Duration::from_secs(60),
@@ -98,10 +107,13 @@ pub fn rate_limit_state_from_env() -> RateLimitState {
             .unwrap_or(default)
     }
     let site = parse_u32("SITE_AUTH_RATE_LIMIT_PER_MINUTE", 30);
+    let register = parse_u32("REGISTER_RATE_LIMIT_PER_MINUTE", 5);
     let admin = parse_u32("ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE", 15);
     RateLimitState::new(
         Duration::from_secs(60),
         site,
+        Duration::from_secs(60),
+        register,
         Duration::from_secs(60),
         admin,
     )
@@ -122,8 +134,12 @@ pub fn peer_ip_key(peer: Option<&str>) -> String {
         .unwrap_or_else(|| s.to_string())
 }
 
-pub fn site_auth_post_path(path: &str) -> bool {
-    matches!(path, "/login" | "/register")
+pub fn site_login_post_path(path: &str) -> bool {
+    path == "/login"
+}
+
+pub fn site_register_post_path(path: &str) -> bool {
+    path == "/register"
 }
 
 pub fn admin_login_post_path(path: &str) -> bool {
@@ -149,7 +165,14 @@ pub fn login_post_blocked_response(
                 .body(body),
         );
     }
-    if site_auth_post_path(path) && !lim.site.check(&key) {
+    if site_register_post_path(path) && !lim.register.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if site_login_post_path(path) && !lim.site.check(&key) {
         return Some(
             HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
                 .insert_header(("Retry-After", "60"))
@@ -196,11 +219,13 @@ mod tests {
     }
 
     #[test]
-    fn site_auth_post_path_excludes_removed_web_login() {
-        assert!(site_auth_post_path("/login"));
-        assert!(site_auth_post_path("/register"));
+    fn site_login_and_register_paths() {
+        assert!(site_login_post_path("/login"));
+        assert!(!site_login_post_path("/register"));
+        assert!(site_register_post_path("/register"));
+        assert!(!site_register_post_path("/login"));
         assert!(
-            !site_auth_post_path("/web/login"),
+            !site_login_post_path("/web/login"),
             "POST /web/login supprimé (sec-11)"
         );
     }

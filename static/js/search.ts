@@ -1,128 +1,100 @@
 import { addToDeck } from './deck.js';
-import { archetypeSourceUi } from './associations/archetypeSourceUi.js';
+import { DECK_SECTIONS } from './deckSectionOrder.js';
+import {
+    SEARCH_BOX_ELEMENT_ID,
+    SEARCH_RESULTS_CONTAINER_ID,
+    SEARCH_RESULTS_LIST_ID,
+} from './searchDomIds.js';
+import {
+    DATA_SEARCH_ERROR_ATTR,
+    DATA_SEARCH_FILTER_ATTR,
+    SEARCH_ACTION_ASSOCIATED_SELECTOR,
+    SEARCH_FILTER_BTN_ACTIVE_CLASS,
+    SEARCH_FILTER_BTN_CLASS,
+    SEARCH_RESULT_ADD_DECK_SELECTOR,
+    SEARCH_RESULT_ADD_SIDE_SELECTOR,
+    SEARCH_RESULT_ROW_CLASS,
+} from './searchDomSelectors.js';
 import { openAssociatedCardsModal } from './associations/modal.js';
+import {
+    searchResultArchetypeSourceBadgeHtml,
+    searchResultRowFragmentHtml,
+    searchResultThumbInnerHtml,
+} from './searchResultRowHtml.js';
+import { searchResultsFetchErrorRowHtml } from './searchFetchErrorHtml.js';
 import { debounce } from './utils/debounce.js';
+import { ARIA_PRESSED_ATTR } from './utils/ariaAttrs.js';
+import { NATIVE_BUTTON_SELECTOR } from './utils/dom.js';
+import {
+    STYLE_DISPLAY_FLEX,
+    STYLE_DISPLAY_NONE,
+} from './utils/cssInlineDisplay.js';
+import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
+import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_INPUT } from './utils/domEventNames.js';
+import {
+    SEARCH_FILTER_ALL,
+    type SearchFilter,
+} from './searchFilterConstants.js';
+import { escapeHtml, escapeAttr } from './utils/html.js';
+import { filterCards, getSubtypeLine } from './services/search/searchCardPresentation.js';
+import {
+    fetchSearchResultsForQuery as fetchSearchResultsForQueryFromApi,
+    fetchSearchResultsWithOutcome,
+} from './services/search/searchApi.js';
+import type { SearchApiCard } from './services/search/searchApiTypes.js';
+import { highlightMatch } from './searchHighlightHtml.js';
 
-const SEARCH_DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 4;
-
-/** Query `locale` pour `/search` : aligné sur `<html lang>` (ex. fr → cartes `card_locales.fr`). */
-function searchLocaleQuery(): string {
-    const raw = document.documentElement.lang?.trim().toLowerCase() || '';
-    if (!raw || raw.startsWith('en')) return '';
-    const base = raw.split('-')[0];
-    if (!base) return '';
-    return `&locale=${encodeURIComponent(base)}`;
-}
-
-type SearchFilter = 'all' | 'monster' | 'spell' | 'trap';
-
-function getCardTypeKind(card: { type?: string }): 'monster' | 'spell' | 'trap' {
-    const t = (card.type ?? '').toLowerCase();
-    if (t.includes('monster')) return 'monster';
-    if (t.includes('spell')) return 'spell';
-    if (t.includes('trap')) return 'trap';
-    return 'monster';
-}
-
-function getSubtypeLine(card: any): string {
-    const t = (card.type ?? '').toLowerCase();
-    const race = card.race ?? '';
-    const level = card.level != null ? card.level : '';
-    const arch =
-        typeof card.archetype === 'string' && card.archetype.trim() ? card.archetype.trim() : '';
-    if (t.includes('monster')) {
-        const part = race || card.type || '';
-        const line = level ? `${part} · ${level}★` : part;
-        return arch ? `${line} · ${arch}` : line;
-    }
-    return card.type || '';
-}
-
-function archetypeSourceBadgeHtml(card: any): string {
-    const src = card.archetype_source;
-    if (typeof src !== 'string' || !src.trim()) return '';
-    const { short, title } = archetypeSourceUi(src.trim());
-    if (!short) return '';
-    return `<span class="search-result-arch-source" data-search-archetype-source="${escapeAttr(src.trim())}" title="${escapeAttr(title)}">${escapeHtml(short)}</span>`;
-}
-
-let lastResults: any[] = [];
+/**
+ * Module façade : glue DOM + filtres pour la recherche du builder.
+ * Transport HTTP et types : `services/search/searchApi.ts`.
+ */
+let lastResults: SearchApiCard[] = [];
 let lastQuery = '';
-let activeFilter: SearchFilter = 'all';
+let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
 
-function filterCards(cards: any[], filter: SearchFilter): any[] {
-    if (filter === 'all') return cards;
-    return cards.filter((c) => getCardTypeKind(c) === filter);
-}
-
-function renderResultRow(card: any, query: string, results: HTMLElement): void {
-    const kind = getCardTypeKind(card);
-    const letter = kind === 'monster' ? 'M' : kind === 'spell' ? 'S' : 'T';
+function renderResultRow(card: SearchApiCard, query: string, results: HTMLElement): void {
+    const kind = cardTypeKindFromTypeString(card.type);
     // `name` est la locale demandée quand le backend applique `card_locales` ; `name_en` reste l’anglais si présent.
     const mainName = card.name ?? card.name_en ?? '';
     const subtype = getSubtypeLine(card);
-    const imgUrl = card.image_url;
-    const thumbContent = imgUrl
-        ? `<img class="search-result-thumb-img" src="${escapeAttr(imgUrl)}" alt="" loading="lazy" />`
-        : `<span class="search-result-initial search-result-initial--${kind}" aria-hidden="true">${letter}</span>`;
-
+    const thumbInner = searchResultThumbInnerHtml(card.image_url, kind);
     const row = document.createElement('div');
-    row.className = 'search-result-row';
-    row.innerHTML = `
-        <div class="search-result-thumb">${thumbContent}</div>
-        <div class="search-result-info">
-            <span class="search-result-name">${highlightMatch(mainName, query)}</span>
-            <div class="search-result-meta">
-                <span class="search-result-subtype">${escapeHtml(subtype)}</span>
-                ${archetypeSourceBadgeHtml(card)}
-            </div>
-        </div>
-        <div class="search-result-actions">
-            <button type="button" class="search-result-add search-result-add--deck" title="Ajouter au deck (Main/Extra)" aria-label="Ajouter au deck">+</button>
-            <button type="button" class="search-result-add search-result-add--side" title="Ajouter au Side" aria-label="Ajouter au Side">Side</button>
-            <button type="button" class="search-result-associated" data-search-action="associated" title="Cartes associées (catalogue complet)">c. associés</button>
-        </div>
-    `;
-    row.querySelector('.search-result-add--deck')?.addEventListener('click', (e) => {
+    row.className = SEARCH_RESULT_ROW_CLASS;
+    row.innerHTML = searchResultRowFragmentHtml({
+        nameHighlightedHtml: highlightMatch(mainName, query),
+        subtypeEscapedHtml: escapeHtml(subtype),
+        archetypeBadgeHtml: searchResultArchetypeSourceBadgeHtml(card.archetype_source),
+        thumbInnerHtml: thumbInner,
+    });
+    row.querySelector(SEARCH_RESULT_ADD_DECK_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
         addToDeck(card);
     });
-    row.querySelector('.search-result-add--side')?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_RESULT_ADD_SIDE_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
-        addToDeck(card, 'side');
+        addToDeck(card, DECK_SECTIONS[2]);
     });
-    row.querySelector('[data-search-action="associated"]')?.addEventListener('click', (e) => {
+    row.querySelector(SEARCH_ACTION_ASSOCIATED_SELECTOR)?.addEventListener(DOM_EVENT_CLICK, (e) => {
         e.stopPropagation();
         void openAssociatedCardsModal(card as Record<string, unknown>);
     });
-    row.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).closest('button')) return;
+    row.addEventListener(DOM_EVENT_CLICK, (e) => {
+        if ((e.target as HTMLElement).closest(NATIVE_BUTTON_SELECTOR)) return;
         addToDeck(card);
     });
     results.appendChild(row);
 }
 
-function escapeHtml(s: string): string {
-    const div = document.createElement('div');
-    div.textContent = s;
-    return div.innerHTML;
-}
-
-function renderResultsList(cards: any[], query: string, resultsEl: HTMLElement): void {
+function renderResultsList(cards: SearchApiCard[], query: string, resultsEl: HTMLElement): void {
     resultsEl.innerHTML = '';
     const filtered = filterCards(cards, activeFilter);
     filtered.forEach((card) => renderResultRow(card, query, resultsEl));
 }
 
-/** Requête brute `/search` (même locale que le builder). */
-export async function fetchSearchResultsForQuery(q: string): Promise<any[]> {
-    const t = q.trim();
-    if (t.length < MIN_QUERY_LENGTH) return [];
-    const res = await fetch(`/search?q=${encodeURIComponent(t)}${searchLocaleQuery()}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+/** Requête brute recherche (même locale que le builder). Réexport du service. */
+export async function fetchSearchResultsForQuery(q: string): Promise<SearchApiCard[]> {
+    return fetchSearchResultsForQueryFromApi(q);
 }
 
 function normName(s: string): string {
@@ -134,7 +106,10 @@ function normName(s: string): string {
 /**
  * Choisit la carte la plus probable dans les résultats (égalité nom / name_en avec l’intention, sinon 1ʳᵉ).
  */
-export function pickBestCardFromSearchResults(cards: any[], intendedName: string): any | null {
+export function pickBestCardFromSearchResults(
+    cards: SearchApiCard[],
+    intendedName: string,
+): SearchApiCard | null {
     if (!cards.length) return null;
     const target = normName(intendedName);
     if (!target) return cards[0];
@@ -148,63 +123,54 @@ export function pickBestCardFromSearchResults(cards: any[], intendedName: string
 
 /** Remplit la recherche du builder et lance une requête (ex. depuis l’onglet Suggestions). */
 export function runSearchWithQuery(q: string): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     if (!input) return;
     const trimmed = q.trim();
-    if (trimmed.length < MIN_QUERY_LENGTH) return;
+    if (trimmed.length < SEARCH_MIN_QUERY_LENGTH) return;
     input.value = trimmed;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event(DOM_EVENT_INPUT, { bubbles: true }));
 }
 
 export function setupSearch(): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
-    const resultsContainer = document.getElementById('searchResults') as HTMLElement | null;
-    const results = document.getElementById('search-results-list') as HTMLElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
+    const resultsContainer = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
+    const results = document.getElementById(SEARCH_RESULTS_LIST_ID) as HTMLElement | null;
     if (!input || !resultsContainer || !results) return;
 
     const runSearch = () => {
         const query = input.value.trim();
-        resultsContainer.removeAttribute('data-search-error');
-        if (query.length < MIN_QUERY_LENGTH) {
+        resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
+        if (query.length < SEARCH_MIN_QUERY_LENGTH) {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
             return;
         }
 
-        fetch(`/search?q=${encodeURIComponent(query)}${searchLocaleQuery()}`)
-            .then((res) => {
-                if (!res.ok) throw new Error(String(res.status));
-                return res.json();
-            })
-            .then((data: any[]) => {
-                const cards = data || [];
-                lastResults = cards;
-                lastQuery = query;
-                renderResultsList(cards, query, results);
-                resultsContainer.style.display = 'flex';
-            })
-            .catch(() => {
-                results.innerHTML = '';
-                const errEl = document.createElement('div');
-                errEl.className = 'search-error-state';
-                errEl.setAttribute('data-search-error', 'true');
-                errEl.textContent = 'Erreur de recherche. Réessayez.';
-                results.appendChild(errEl);
-                resultsContainer.style.display = 'flex';
-                resultsContainer.setAttribute('data-search-error', 'true');
-            });
+        void fetchSearchResultsWithOutcome(query).then((out) => {
+            if (!out.ok) {
+                results.innerHTML = searchResultsFetchErrorRowHtml();
+                resultsContainer.style.display = STYLE_DISPLAY_FLEX;
+                resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
+                lastResults = [];
+                return;
+            }
+            lastResults = out.cards;
+            lastQuery = query;
+            renderResultsList(out.cards, query, results);
+            resultsContainer.style.display = STYLE_DISPLAY_FLEX;
+        });
     };
 
-    document.querySelectorAll('.search-filter-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const filter = (btn.getAttribute('data-search-filter') ?? 'all') as SearchFilter;
+    document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((btn) => {
+        btn.addEventListener(DOM_EVENT_CLICK, () => {
+            const filter = (btn.getAttribute(DATA_SEARCH_FILTER_ATTR) ?? SEARCH_FILTER_ALL) as SearchFilter;
             activeFilter = filter;
-            document.querySelectorAll('.search-filter-btn').forEach((b) => {
-                const f = b.getAttribute('data-search-filter');
+            document.querySelectorAll(`.${SEARCH_FILTER_BTN_CLASS}`).forEach((b) => {
+                const f = b.getAttribute(DATA_SEARCH_FILTER_ATTR);
                 const active = f === filter;
-                b.classList.toggle('active', active);
-                b.setAttribute('aria-pressed', String(active));
+                b.classList.toggle(SEARCH_FILTER_BTN_ACTIVE_CLASS, active);
+                b.setAttribute(ARIA_PRESSED_ATTR, String(active));
             });
             if (lastResults.length > 0) renderResultsList(lastResults, lastQuery, results);
         });
@@ -212,44 +178,36 @@ export function setupSearch(): void {
 
     const debouncedSearch = debounce(runSearch, SEARCH_DEBOUNCE_MS);
 
-    input.addEventListener('input', () => {
+    input.addEventListener(DOM_EVENT_INPUT, () => {
         const query = input.value.trim();
-        if (query.length < MIN_QUERY_LENGTH) {
+        if (query.length < SEARCH_MIN_QUERY_LENGTH) {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
-            resultsContainer.style.display = 'none';
-            resultsContainer.removeAttribute('data-search-error');
+            resultsContainer.style.display = STYLE_DISPLAY_NONE;
+            resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
             return;
         }
         debouncedSearch();
     });
 }
 
-export function escapeAttr(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-export function highlightMatch(text: string, query: string): string {
-    if (!query.trim()) return text;
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
-}
+export { escapeAttr };
+export { highlightMatch } from './searchHighlightHtml.js';
 
 export function closeSearch(): void {
-    const el = document.getElementById('searchResults') as HTMLElement | null;
-    if (el) el.style.display = 'none';
+    const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
+    if (el) el.style.display = STYLE_DISPLAY_NONE;
 }
 
 /** Vide l'input et ferme le panneau (raccourci Escape). */
 export function clearSearch(): void {
-    const input = document.getElementById('search-box') as HTMLInputElement | null;
+    const input = document.getElementById(SEARCH_BOX_ELEMENT_ID) as HTMLInputElement | null;
     if (input) input.value = '';
     closeSearch();
 }
 
 /** Focus sur le champ recherche (raccourci Ctrl+F). */
 export function focusSearch(): void {
-    document.getElementById('search-box')?.focus();
+    document.getElementById(SEARCH_BOX_ELEMENT_ID)?.focus();
 }

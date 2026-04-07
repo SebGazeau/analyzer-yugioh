@@ -15,6 +15,7 @@ COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY xtask ./xtask
 COPY src ./src
 COPY migrations ./migrations
+COPY templates ./templates
 RUN cargo build --release --bin analyzer-yugioh
 
 # Le code source sera monté en volume ; on lance le watch au démarrage

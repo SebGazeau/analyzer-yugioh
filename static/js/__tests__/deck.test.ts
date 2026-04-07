@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
+import { DECK_GRID_IDS } from '../deck-builder/deckConstants.js';
+import { DECK_CARD_CELL_SELECTOR } from '../deck-builder/grid/deckGridDomSelectors.js';
+import { htmlCategorySummaryBody, htmlDeckGrids } from './helpers/deckTestDom.js';
 import {
   cleanCardNameFromCell,
   cleanCardTable,
@@ -10,13 +13,16 @@ import {
 } from '../deck.js';
 import {
   addCard,
+  createEmptyDeckState,
   exportDeckToYDK,
   getDeckSize,
   importDeckFromYDK,
   isLegal,
   removeCard,
+  type DeckEntry,
   type DeckState,
 } from '../deck-state.js';
+import { TEXT_EM_DASH } from '../utils/textPlaceholders.js';
 
 describe('deck.ts', () => {
   it('isExtraDeckCard identifies Fusion, Synchro, XYZ, Link', () => {
@@ -35,9 +41,7 @@ describe('deck.ts', () => {
   });
 
   it('exportDeckToFile crée un blob et déclenche téléchargement (grille vide)', () => {
-    document.body.innerHTML =
-      '<div id="deck-main-grid"></div><div id="deck-extra-grid"></div><div id="deck-side-grid"></div>' +
-      '<div id="category-summary-body"></div>';
+    document.body.innerHTML = htmlDeckGrids() + htmlCategorySummaryBody();
     const createObjectURL = vi.fn().mockReturnValue('blob:mock');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
@@ -56,20 +60,17 @@ describe('deck.ts', () => {
 
   it('cleanCardTable vide le state et les grilles cartes', () => {
     document.body.innerHTML =
-      '<div id="category-summary-body"></div>' +
-      '<div id="deck-main-grid" class="deck-cards-grid"></div>' +
-      '<div id="deck-extra-grid" class="deck-cards-grid"></div>' +
-      '<div id="deck-side-grid" class="deck-cards-grid"></div>';
+      htmlCategorySummaryBody() + htmlDeckGrids('deck-cards-grid');
     cleanCardTable();
     const state = getDeckState();
     expect(state.main.length).toBe(0);
     expect(state.extra.length).toBe(0);
     expect(state.side.length).toBe(0);
-    expect(document.querySelectorAll('#deck-main-grid .deck-card-cell').length).toBe(0);
+    expect(document.querySelectorAll(`#${DECK_GRID_IDS.main} ${DECK_CARD_CELL_SELECTOR}`).length).toBe(0);
   });
 
   it('cleanCardNameFromCell removes placeholder prefix', () => {
-    expect(cleanCardNameFromCell('— Dark Magician')).toBe('Dark Magician');
+    expect(cleanCardNameFromCell(`${TEXT_EM_DASH} Dark Magician`)).toBe('Dark Magician');
     expect(cleanCardNameFromCell('Blue-Eyes White Dragon')).toBe('Blue-Eyes White Dragon');
   });
 
@@ -121,7 +122,19 @@ describe('deck.ts', () => {
 });
 
 describe('deck-state.ts — logique pure', () => {
-  const emptyState: DeckState = { main: [], extra: [], side: [] };
+  const emptyState: DeckState = createEmptyDeckState();
+
+  function testDeck(main: DeckEntry[], extra: DeckEntry[] = [], side: DeckEntry[] = []): DeckState {
+    return { main, extra, side };
+  }
+
+  it('createEmptyDeckState isole les tableaux entre appels', () => {
+    const a = createEmptyDeckState();
+    const b = createEmptyDeckState();
+    a.main.push({ id: 1, name: 'x', quantity: 1 });
+    expect(b.main).toHaveLength(0);
+    expect(getDeckSize(a)).toBe(1);
+  });
 
   it('addCard(deck, card) augmente le count de 1', () => {
     const card = { id: 1, name: 'Test' };
@@ -133,11 +146,7 @@ describe('deck-state.ts — logique pure', () => {
   });
 
   it('addCard quand count = 3 rejette (limite 3 exemplaires)', () => {
-    let state: DeckState = {
-      main: [{ id: 1, name: 'X', quantity: 3 }],
-      extra: [],
-      side: [],
-    };
+    let state: DeckState = testDeck([{ id: 1, name: 'X', quantity: 3 }]);
     const { ok } = addCard(state, { id: 1, name: 'X' }, 'main');
     expect(ok).toBe(false);
     expect(getDeckSize(state)).toBe(3);
@@ -153,69 +162,54 @@ describe('deck-state.ts — logique pure', () => {
   });
 
   it('removeCard(deck, cardId) diminue le count', () => {
-    const state: DeckState = {
-      main: [{ id: 10, name: 'A', quantity: 2 }],
-      extra: [],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 10, name: 'A', quantity: 2 }]);
     const next = removeCard(state, 10, 'main');
     expect(getDeckSize(next)).toBe(1);
     expect(next.main[0].quantity).toBe(1);
   });
 
   it('removeCard dernière copie retire la carte du deck', () => {
-    const state: DeckState = {
-      main: [{ id: 10, name: 'A', quantity: 1 }],
-      extra: [],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 10, name: 'A', quantity: 1 }]);
     const next = removeCard(state, 10, 'main');
     expect(next.main).toHaveLength(0);
     expect(getDeckSize(next)).toBe(0);
   });
 
   it('getDeckSize(deck) = somme main + extra + side', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'A', quantity: 40 }],
-      extra: [{ id: 2, name: 'B', quantity: 15 }],
-      side: [{ id: 3, name: 'C', quantity: 15 }],
-    };
+    const state: DeckState = testDeck(
+      [{ id: 1, name: 'A', quantity: 40 }],
+      [{ id: 2, name: 'B', quantity: 15 }],
+      [{ id: 3, name: 'C', quantity: 15 }],
+    );
     expect(getDeckSize(state)).toBe(70);
   });
 
   it('isLegal(deck) false quand main < 40', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'A', quantity: 39 }],
-      extra: [],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'A', quantity: 39 }]);
     expect(isLegal(state)).toBe(false);
   });
 
   it('isLegal(deck) false quand extra > 15', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'A', quantity: 40 }],
-      extra: [{ id: 2, name: 'B', quantity: 16 }],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'A', quantity: 40 }], [
+      { id: 2, name: 'B', quantity: 16 },
+    ]);
     expect(isLegal(state)).toBe(false);
   });
 
   it('isLegal(deck) true pour 40 main, 15 extra, 15 side', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'A', quantity: 40 }],
-      extra: [{ id: 2, name: 'B', quantity: 15 }],
-      side: [{ id: 3, name: 'C', quantity: 15 }],
-    };
+    const state: DeckState = testDeck(
+      [{ id: 1, name: 'A', quantity: 40 }],
+      [{ id: 2, name: 'B', quantity: 15 }],
+      [{ id: 3, name: 'C', quantity: 15 }],
+    );
     expect(isLegal(state)).toBe(true);
   });
 
   it('exportDeckToYDK produit le format attendu', () => {
-    const state: DeckState = {
-      main: [{ id: 46986414, name: 'Blue-Eyes', quantity: 2 }],
-      extra: [{ id: 89631139, name: 'DM', quantity: 1 }],
-      side: [],
-    };
+    const state: DeckState = testDeck(
+      [{ id: 46986414, name: 'Blue-Eyes', quantity: 2 }],
+      [{ id: 89631139, name: 'DM', quantity: 1 }],
+    );
     const ydk = exportDeckToYDK(state);
     expect(ydk).toContain('#main');
     expect(ydk).toContain('#extra');
@@ -241,21 +235,15 @@ describe('deck-state.ts — logique pure', () => {
   });
 
   it('addCard rejette quand la zone main est pleine (60)', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'Filler', quantity: 60 }],
-      extra: [],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'Filler', quantity: 60 }]);
     const { ok } = addCard(state, { id: 2, name: 'New' }, 'main');
     expect(ok).toBe(false);
   });
 
   it('addCard rejette quand la zone extra est pleine (15)', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'F', quantity: 40 }],
-      extra: [{ id: 2, name: 'E', quantity: 15 }],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'F', quantity: 40 }], [
+      { id: 2, name: 'E', quantity: 15 },
+    ]);
     const { ok } = addCard(state, { id: 3, name: 'X', type: 'Fusion Monster' });
     expect(ok).toBe(false);
   });
@@ -268,20 +256,14 @@ describe('deck-state.ts — logique pure', () => {
   });
 
   it('isLegal false quand main > 60', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'X', quantity: 61 }],
-      extra: [],
-      side: [],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'X', quantity: 61 }]);
     expect(isLegal(state)).toBe(false);
   });
 
   it('isLegal false quand side > 15', () => {
-    const state: DeckState = {
-      main: [{ id: 1, name: 'X', quantity: 40 }],
-      extra: [],
-      side: [{ id: 2, name: 'S', quantity: 16 }],
-    };
+    const state: DeckState = testDeck([{ id: 1, name: 'X', quantity: 40 }], [], [
+      { id: 2, name: 'S', quantity: 16 },
+    ]);
     expect(isLegal(state)).toBe(false);
   });
 
