@@ -5,6 +5,7 @@
 @import './components/associations-modal.css';
 @import './components/button.css';
 @import './components/header.css';
+@import './components/card-art-banner.css';
 @import './pages/auth.css';
 @import './pages/dashboard.css';
 @import './pages/decks.css';

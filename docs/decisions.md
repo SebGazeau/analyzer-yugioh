@@ -221,3 +221,17 @@
 - Le crate **`db`** (et modules existants `cards_sync`, `ygorganization`) restent les briques bas niveau ; le pipeline les enchaîne sans dupliquer le SQL dans les handlers.
 
 **Pourquoi** : une seule source de vérité pour l’ordre des étapes de sync, alignement prod avec Cloud Job, serveur HTTP focalisé sur le trafic et le cache.
+
+---
+
+## 2026-04-07 — Builder : aperçu recherche flottant + fiche popover (2 col, desc)
+
+**Contexte** : pas d’URL « artwork only » dans le pipeline cartes ; l’aperçu sous les filtres occupait trop de place verticale ; le popover deck ne montrait pas le texte d’effet.
+
+**Décision** :
+
+- **Illustration** : recadrage **CSS** réutilisable (`.card-art-crop` / `object-position` heuristique) pour le popover et l’aperçu recherche.
+- **Popover** : bandeau en **grille 2 colonnes** (art | nom, types, badges, zone desc scrollable) ; `DeckRow` / factory portent `cardDesc` ; complément **lazy** via `fetchCardByName` si la ligne n’a pas encore de `desc`.
+- **Recherche** : nœud **`#search-card-float`** en `position: fixed`, créé dans `setupSearch`, suit le pointeur (clamp viewport) ; `pointerenter` / `pointerleave` sur le flottant pour permettre le scroll du texte sans masquer immédiatement au passage souris.
+
+**Pourquoi** : moins de hauteur dans le flux, même langage visuel fiche + effet lisible ; limite connue : le flottant reste orienté souris (pas d’aperçu au focus clavier sur les lignes).

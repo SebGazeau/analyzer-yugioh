@@ -7,6 +7,8 @@ export type SearchApiCard = {
     name_en?: string;
     type?: string;
     race?: string;
+    /** Attribut monstre (ex. DARK), aligné sur le DTO recherche. */
+    attribute?: string | null;
     level?: number | null;
     archetype?: string | null;
     /** Aligné sur `SearchCardDto.archetype_source` (Rust) : absent ou chaîne, jamais forcé côté client. */
@@ -15,4 +17,9 @@ export type SearchApiCard = {
     id?: number;
     deck_copy_id?: number | null;
     frame_type?: string;
+    /** Texte d’effet (DTO recherche). */
+    desc?: string | null;
+    atk?: number | null;
+    def?: number | null;
+    ban_tcg?: string | null;
 } & Record<string, unknown>;

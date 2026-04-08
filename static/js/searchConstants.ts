@@ -5,6 +5,9 @@
 
 export const SEARCH_DEBOUNCE_MS = 300;
 
+/** Délai avant mise à jour de l’aperçu carte (survol liste de résultats). */
+export const SEARCH_PREVIEW_DEBOUNCE_MS = 200;
+
 /** Longueur minimale de requête pour appeler `/search` (widget + `fetchSearchResultsForQuery`). */
 export const SEARCH_MIN_QUERY_LENGTH = 4;
 

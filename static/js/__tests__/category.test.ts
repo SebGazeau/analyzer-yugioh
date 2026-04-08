@@ -4,10 +4,12 @@ import { createCategorySelector, getCardsByCategory } from '../category.js';
 import { categoryOptions } from '../categoryData.js';
 import {
   CATEGORY_CONTAINER_CLASS,
+  CHIPS_PLACEHOLDER_CLASS,
   DROPDOWN_EMPTY_MESSAGE_CLASS,
   DROPDOWN_EMPTY_MESSAGE_TEXT,
   DROPDOWN_LIST_CLASS,
 } from '../categoryDomSelectors.js';
+import { ARIA_LABEL_ATTR } from '../utils/ariaAttrs.js';
 import { DOM_EVENT_CLICK } from '../utils/domEventNames.js';
 
 describe('category.ts — createCategorySelector (DOM)', () => {
@@ -15,6 +17,18 @@ describe('category.ts — createCategorySelector (DOM)', () => {
     const el = createCategorySelector();
     expect(el).toBeInstanceOf(HTMLElement);
     expect(el.classList.contains(CATEGORY_CONTAINER_CLASS)).toBe(true);
+  });
+
+  it('placeholder + aria-label quand options fournies', () => {
+    const el = createCategorySelector({ placeholder: 'Catégories', ariaLabel: 'Choisir des catégories' });
+    expect(el.getAttribute(ARIA_LABEL_ATTR)).toBe('Choisir des catégories');
+    const ph = el.querySelector(`.${CHIPS_PLACEHOLDER_CLASS}`);
+    expect(ph?.textContent).toBe('Catégories');
+  });
+
+  it('sans placeholder : zone chips sans span placeholder au départ', () => {
+    const el = createCategorySelector();
+    expect(el.querySelector(`.${CHIPS_PLACEHOLDER_CLASS}`)).toBeNull();
   });
 
   it('getCategories retourne un tableau vide au départ', () => {

@@ -2,9 +2,13 @@ import { addToDeck } from './deck.js';
 import { DECK_SECTIONS } from './deckSectionOrder.js';
 import {
     SEARCH_BOX_ELEMENT_ID,
+    SEARCH_CARD_FLOAT_INNER_ID,
+    SEARCH_CARD_FLOAT_LIVE_ID,
+    SEARCH_CARD_FLOAT_ROOT_ID,
     SEARCH_RESULTS_CONTAINER_ID,
     SEARCH_RESULTS_LIST_ID,
 } from './searchDomIds.js';
+import { attachSearchCardPreviewHover } from './searchCardPreviewFloat.js';
 import {
     DATA_SEARCH_ERROR_ATTR,
     DATA_SEARCH_FILTER_ATTR,
@@ -31,6 +35,7 @@ import {
 } from './utils/cssInlineDisplay.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LENGTH } from './searchConstants.js';
+import { resetSearchCardPreview } from './searchCardPreview.js';
 import { DOM_EVENT_CLICK, DOM_EVENT_INPUT } from './utils/domEventNames.js';
 import {
     SEARCH_FILTER_ALL,
@@ -48,10 +53,17 @@ import { highlightMatch } from './searchHighlightHtml.js';
 /**
  * Module façade : glue DOM + filtres pour la recherche du builder.
  * Transport HTTP et types : `services/search/searchApi.ts`.
+ *
+ * Aperçu au survol : le panneau suit la souris ; le focus clavier sur les lignes
+ * n’ouvre pas l’aperçu (comportement inchangé, limite connue).
  */
+
 let lastResults: SearchApiCard[] = [];
 let lastQuery = '';
 let activeFilter: SearchFilter = SEARCH_FILTER_ALL;
+
+/** Carte affichée par ligne (aperçu au survol). */
+const searchPreviewRowCards = new WeakMap<HTMLElement, SearchApiCard>();
 
 function renderResultRow(card: SearchApiCard, query: string, results: HTMLElement): void {
     const kind = cardTypeKindFromTypeString(card.type);
@@ -83,6 +95,7 @@ function renderResultRow(card: SearchApiCard, query: string, results: HTMLElemen
         if ((e.target as HTMLElement).closest(NATIVE_BUTTON_SELECTOR)) return;
         addToDeck(card);
     });
+    searchPreviewRowCards.set(row, card);
     results.appendChild(row);
 }
 
@@ -137,6 +150,20 @@ export function setupSearch(): void {
     const results = document.getElementById(SEARCH_RESULTS_LIST_ID) as HTMLElement | null;
     if (!input || !resultsContainer || !results) return;
 
+    const resetFloatPreview = (): void =>
+        resetSearchCardPreview(
+            document.getElementById(SEARCH_CARD_FLOAT_ROOT_ID) as HTMLElement | null,
+            document.getElementById(SEARCH_CARD_FLOAT_LIVE_ID) as HTMLElement | null,
+            document.getElementById(SEARCH_CARD_FLOAT_INNER_ID) as HTMLElement | null,
+        );
+
+    attachSearchCardPreviewHover({
+        delegateRoot: results,
+        leaveRoot: resultsContainer,
+        itemSelector: `.${SEARCH_RESULT_ROW_CLASS}`,
+        resolveCard: (el) => searchPreviewRowCards.get(el) ?? null,
+    });
+
     const runSearch = () => {
         const query = input.value.trim();
         resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
@@ -144,6 +171,7 @@ export function setupSearch(): void {
             results.innerHTML = '';
             lastResults = [];
             lastQuery = '';
+            resetFloatPreview();
             return;
         }
 
@@ -153,12 +181,14 @@ export function setupSearch(): void {
                 resultsContainer.style.display = STYLE_DISPLAY_FLEX;
                 resultsContainer.setAttribute(DATA_SEARCH_ERROR_ATTR, 'true');
                 lastResults = [];
+                resetFloatPreview();
                 return;
             }
             lastResults = out.cards;
             lastQuery = query;
             renderResultsList(out.cards, query, results);
             resultsContainer.style.display = STYLE_DISPLAY_FLEX;
+            resetFloatPreview();
         });
     };
 
@@ -172,7 +202,10 @@ export function setupSearch(): void {
                 b.classList.toggle(SEARCH_FILTER_BTN_ACTIVE_CLASS, active);
                 b.setAttribute(ARIA_PRESSED_ATTR, String(active));
             });
-            if (lastResults.length > 0) renderResultsList(lastResults, lastQuery, results);
+            if (lastResults.length > 0) {
+                renderResultsList(lastResults, lastQuery, results);
+                resetFloatPreview();
+            }
         });
     });
 
@@ -186,6 +219,7 @@ export function setupSearch(): void {
             lastQuery = '';
             resultsContainer.style.display = STYLE_DISPLAY_NONE;
             resultsContainer.removeAttribute(DATA_SEARCH_ERROR_ATTR);
+            resetFloatPreview();
             return;
         }
         debouncedSearch();
@@ -198,6 +232,11 @@ export { highlightMatch } from './searchHighlightHtml.js';
 export function closeSearch(): void {
     const el = document.getElementById(SEARCH_RESULTS_CONTAINER_ID) as HTMLElement | null;
     if (el) el.style.display = STYLE_DISPLAY_NONE;
+    resetSearchCardPreview(
+        document.getElementById(SEARCH_CARD_FLOAT_ROOT_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_FLOAT_LIVE_ID) as HTMLElement | null,
+        document.getElementById(SEARCH_CARD_FLOAT_INNER_ID) as HTMLElement | null,
+    );
 }
 
 /** Vide l'input et ferme le panneau (raccourci Escape). */

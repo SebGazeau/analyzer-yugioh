@@ -110,6 +110,8 @@ export interface DeckRow {
     cardId?: number;
     /** Identité « règle exemplaires » (alias *always treated as*, ex. White Dragon + Albaz) : plusieurs lignes OK, total ≤ max. */
     deckCopyId?: number;
+    /** Texte d’effet / description (rempli à l’ajout ou au chargement API). */
+    cardDesc?: string;
 }
 
 export type DeckBuilderGridState = Record<DeckSection, DeckRow[]>;

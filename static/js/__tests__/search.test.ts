@@ -10,6 +10,9 @@ import { DOM_EVENT_INPUT } from '../utils/domEventNames.js';
 import { closeSearch, escapeAttr, highlightMatch, pickBestCardFromSearchResults, setupSearch } from '../search.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
+  SEARCH_CARD_FLOAT_INNER_ID,
+  SEARCH_CARD_FLOAT_LIVE_ID,
+  SEARCH_CARD_FLOAT_ROOT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
   SEARCH_RESULTS_LIST_ID,
 } from '../searchDomIds.js';
@@ -86,6 +89,13 @@ describe('search.ts — DOM', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('setupSearch crée le nœud flottant d’aperçu (#search-card-float)', () => {
+    setupSearch();
+    expect(document.getElementById(SEARCH_CARD_FLOAT_ROOT_ID)).not.toBeNull();
+    expect(document.getElementById(SEARCH_CARD_FLOAT_LIVE_ID)).not.toBeNull();
+    expect(document.getElementById(SEARCH_CARD_FLOAT_INNER_ID)).not.toBeNull();
   });
 
   it('input avec moins de SEARCH_MIN_QUERY_LENGTH ne déclenche pas de fetch', async () => {
