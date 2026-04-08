@@ -8,12 +8,17 @@ import {
     DECK_CARD_POPOVER_COL_DECK_CLASS,
     DECK_CARD_POPOVER_COL_TEXT_CLASS,
     DECK_CARD_POPOVER_CAT_CONTAINER_CLASS,
+    DECK_CARD_POPOVER_CATEGORIES_LABEL_ID,
+    DECK_CARD_POPOVER_CATEGORIES_LABEL_TEXT_CLASS,
     DECK_CARD_POPOVER_CATS_CLASS,
     DECK_CARD_POPOVER_ASSOCIATED_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_CLOSE_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_COVER_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_DELETE_FULL_BTN_CLASS,
     DECK_CARD_POPOVER_ENGINE_CLASS,
+    DECK_CARD_POPOVER_ENGINE_INPUT_ID,
+    DECK_CARD_POPOVER_FIELD_LABEL_CLASS,
+    DECK_CARD_POPOVER_FIELD_LABEL_STACK_CLASS,
     DECK_CARD_POPOVER_ICON_CLASS,
     DATA_DECK_POPOVER_ART_BANNER,
     DATA_DECK_POPOVER_BADGES,
@@ -23,6 +28,7 @@ import {
     DATA_DECK_POPOVER_TYPE_SECONDARY,
     DECK_CARD_POPOVER_INNER_CLASS,
     DECK_CARD_POPOVER_QTY_CLASS,
+    DECK_CARD_POPOVER_QTY_INPUT_ID,
     DECK_CARD_POPOVER_ROW_CLASS,
     DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS,
     DECK_CARD_POPOVER_TITLE_CLASS,
@@ -85,20 +91,22 @@ export const DECK_CARD_POPOVER_SHELL_HTML = `
                 <div class="${DECK_CARD_POPOVER_COL_DECK_CLASS}">
                     <p class="${DECK_CARD_POPOVER_SETTINGS_HEADING_CLASS}">${escapeHtml(DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL)}</p>
                     <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
-                        <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_QTY)}</label>
-                        <select class="${DECK_CARD_POPOVER_QTY_CLASS}">
+                        <label class="${DECK_CARD_POPOVER_FIELD_LABEL_CLASS}" for="${DECK_CARD_POPOVER_QTY_INPUT_ID}">${escapeHtml(DECK_CARD_POPOVER_LABEL_QTY)}</label>
+                        <select id="${DECK_CARD_POPOVER_QTY_INPUT_ID}" class="${DECK_CARD_POPOVER_QTY_CLASS}" ${ARIA_LABEL_ATTR}="${escapeAttr(DECK_CARD_POPOVER_LABEL_QTY)}" ${TITLE_ATTR}="${escapeAttr(DECK_CARD_POPOVER_LABEL_QTY)}">
                             ${deckCardPopoverQtyOptionsHtml}
                         </select>
                     </div>
                     <div class="${DECK_CARD_POPOVER_ROW_CLASS}">
-                        <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_ENGINE)}</label>
-                        <select class="${DECK_CARD_POPOVER_ENGINE_CLASS}">
+                        <label class="${DECK_CARD_POPOVER_FIELD_LABEL_CLASS}" for="${DECK_CARD_POPOVER_ENGINE_INPUT_ID}">${escapeHtml(DECK_CARD_POPOVER_LABEL_ENGINE)}</label>
+                        <select id="${DECK_CARD_POPOVER_ENGINE_INPUT_ID}" class="${DECK_CARD_POPOVER_ENGINE_CLASS}" ${ARIA_LABEL_ATTR}="${escapeAttr(DECK_CARD_POPOVER_LABEL_ENGINE)}" ${TITLE_ATTR}="${escapeAttr(DECK_CARD_POPOVER_LABEL_ENGINE)}">
                             ${deckCardPopoverEngineOptionsHtml}
                         </select>
                     </div>
                     <div class="${DECK_CARD_POPOVER_ROW_CLASS} ${DECK_CARD_POPOVER_CATS_CLASS}">
-                        <label>${escapeHtml(DECK_CARD_POPOVER_LABEL_CATEGORIES)}</label>
-                        <div class="${DECK_CARD_POPOVER_CAT_CONTAINER_CLASS}"></div>
+                        <div class="${DECK_CARD_POPOVER_FIELD_LABEL_CLASS} ${DECK_CARD_POPOVER_FIELD_LABEL_STACK_CLASS}">
+                            <span id="${DECK_CARD_POPOVER_CATEGORIES_LABEL_ID}" class="${DECK_CARD_POPOVER_CATEGORIES_LABEL_TEXT_CLASS}">${escapeHtml(DECK_CARD_POPOVER_LABEL_CATEGORIES)}</span>
+                            <div class="${DECK_CARD_POPOVER_CAT_CONTAINER_CLASS}"></div>
+                        </div>
                     </div>
                 </div>
             </div>

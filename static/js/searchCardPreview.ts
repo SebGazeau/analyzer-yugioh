@@ -3,11 +3,11 @@
  * Présentation type « fiche » : informatif uniquement, sans actions.
  */
 import { buildCardFicheBadgesInnerHtml } from './cardFicheBadges.js';
+import { buildCardArtBannerHtml, cardArtBannerFrameHintFromType } from './components/cardArtBanner.js';
 import type { SearchApiCard } from './services/search/searchApiTypes.js';
 import { cardTypeKindFromTypeString } from './utils/cardTypeKind.js';
 import { CARD_TYPE_KIND_MONSTER } from './utils/cardTypeKindConstants.js';
-import { escapeAttr, escapeHtml } from './utils/html.js';
-import { IMG_LOADING_ATTR, IMG_LOADING_LAZY } from './utils/htmlAttrs.js';
+import { escapeHtml } from './utils/html.js';
 
 export const SEARCH_CARD_PREVIEW_PLACEHOLDER_TEXT =
     'Survolez un résultat pour afficher le nom, les stats et le texte de la carte.';
@@ -46,9 +46,13 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
 
     const imgUrl =
         typeof card.image_url === 'string' && card.image_url.trim() ? card.image_url.trim() : '';
-    const art = imgUrl
-        ? `<img class="search-card-preview__hero-img card-art-crop__img" src="${escapeAttr(imgUrl)}" alt="" ${IMG_LOADING_ATTR}="${IMG_LOADING_LAZY}" />`
-        : `<div class="search-card-preview__hero-placeholder" aria-hidden="true"></div>`;
+    const bannerHtml = buildCardArtBannerHtml(imgUrl, {
+        alt: mainName,
+        loading: 'lazy',
+        variant: 'compact',
+        frameHint: cardArtBannerFrameHintFromType(card.type),
+        rootClassExtra: 'search-card-preview__art-banner',
+    });
 
     const { primary: typePri, secondary: typeSec } = typePrimarySecondary(card);
     const typePriBlock = typePri
@@ -86,7 +90,7 @@ export function buildSearchCardPreviewInnerHtml(card: SearchApiCard): string {
 
     return `
         <div class="search-card-preview__layout search-card-preview__layout--fiche">
-            <div class="search-card-preview__hero-art card-art-crop">${art}</div>
+            ${bannerHtml}
             <div class="search-card-preview__fiche-body">
                 <h3 class="search-card-preview__name">${escapeHtml(mainName)}</h3>
                 ${nameEnBlock}

@@ -10,8 +10,13 @@ import {
     cardArtBannerFrameHintFromType,
 } from '../../components/cardArtBanner.js';
 import { buildCardFicheBadgesInnerHtml } from '../../cardFicheBadges.js';
-import { createCategorySelector, isCategorySelectorElement } from '../../category.js';
-import { ARIA_HIDDEN_ATTR, ARIA_LABEL_ATTR, ARIA_MODAL_ATTR } from '../../utils/ariaAttrs.js';
+import { createCategorySelector, isCategorySelectorElement, type CategorySelectorElement } from '../../category.js';
+import {
+    ARIA_HIDDEN_ATTR,
+    ARIA_LABEL_ATTR,
+    ARIA_LABELLEDBY_ATTR,
+    ARIA_MODAL_ATTR,
+} from '../../utils/ariaAttrs.js';
 import { STYLE_DISPLAY_DEFAULT, STYLE_DISPLAY_NONE } from '../../utils/cssInlineDisplay.js';
 import { cssLengthPx } from '../../utils/cssInlineLength.js';
 import { HTML_DATASET_VALUE_BOUND, ROLE_ATTR, ROLE_DIALOG } from '../../utils/htmlAttrs.js';
@@ -41,6 +46,7 @@ import {
     DECK_CARD_POPOVER_ABOVE_CLASS,
     DECK_CARD_POPOVER_BACKDROP_CLASS,
     DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS,
+    DECK_CARD_POPOVER_CATEGORIES_LABEL_ID,
     DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR,
     DECK_CARD_POPOVER_ART_BANNER_SELECTOR,
     DECK_CARD_POPOVER_ASSOCIATED_SELECTOR,
@@ -65,7 +71,11 @@ import {
     clampPopoverQuantityFromSelect,
     maxQuantityAllowedForPopoverRow,
 } from './deckCardPopoverQuantity.js';
-import { DECK_CARD_POPOVER_DESC_EMPTY_LABEL } from './deckCardPopoverFormCopy.js';
+import {
+    DECK_CARD_POPOVER_CATEGORIES_PLACEHOLDER,
+    DECK_CARD_POPOVER_DESC_EMPTY_LABEL,
+    DECK_CARD_POPOVER_LABEL_CATEGORIES,
+} from './deckCardPopoverFormCopy.js';
 
 function fillDeckCardPopoverHero(popover: HTMLElement, row: DeckPopoverRow): void {
     const bannerHost = popover.querySelector(DECK_CARD_POPOVER_ART_BANNER_SELECTOR) as HTMLElement | null;
@@ -190,7 +200,15 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         if (badge) badge.textContent = DECK_CARD_QTY_DISPLAY_PREFIX + row.quantity;
     }
 
+    function teardownOpenCategorySelector(): void {
+        if (!popoverEl) return;
+        const catHost = popoverEl.querySelector(DECK_CARD_POPOVER_CAT_CONTAINER_SELECTOR) as HTMLElement | null;
+        const root = catHost?.firstElementChild as CategorySelectorElement | null;
+        root?.teardown?.();
+    }
+
     function hide(): void {
+        teardownOpenCategorySelector();
         popoverBackdropEl?.classList.remove(DECK_CARD_POPOVER_BACKDROP_OPEN_CLASS);
         if (popoverEl) popoverEl.classList.remove(DECK_CARD_POPOVER_OPEN_CLASS);
         popoverSection = null;
@@ -374,9 +392,15 @@ export function createDeckCardPopover(deps: CreateDeckCardPopoverDeps): DeckCard
         }
         if (engineSelect) engineSelect.value = row.engine || '';
         if (catContainer) {
+            const prevRoot = catContainer.firstElementChild as CategorySelectorElement | null;
+            prevRoot?.teardown?.();
             catContainer.innerHTML = '';
-            const selector = createCategorySelector();
+            const selector = createCategorySelector({
+                placeholder: DECK_CARD_POPOVER_CATEGORIES_PLACEHOLDER,
+                ariaLabel: DECK_CARD_POPOVER_LABEL_CATEGORIES,
+            });
             if (row.categories.length) selector.setCategories?.(row.categories);
+            selector.setAttribute(ARIA_LABELLEDBY_ATTR, DECK_CARD_POPOVER_CATEGORIES_LABEL_ID);
             catContainer.appendChild(selector);
         }
 

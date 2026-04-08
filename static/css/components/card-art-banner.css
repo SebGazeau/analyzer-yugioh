@@ -1,0 +1,100 @@
+/*
+ * Bannière « illustration carte » : image HD recadrée en format panoramique,
+ * sans hauteur pleine carte, avec fondu bas (révèle le fond du parent — aligner sur le modal/panneau).
+ *
+ * Usage :
+ *   <div class="card-art-banner">
+ *     <div class="card-art-banner__clip">
+ *       <img class="card-art-banner__img" src="..." alt="" />
+ *     </div>
+ *   </div>
+ *
+ * Personnalisation (optionnel) sur le root :
+ *   style="--card-art-banner-h: 160px; --card-art-pos-y: 32%; --card-art-scale: 1.2;
+ *          --card-art-fade-stop: 58%;"
+ *
+ * Défauts calibrés pour un cadrage type portrait carte (zoom léger, centre un peu haut).
+ */
+
+.card-art-banner {
+  --card-art-banner-h: clamp(104px, 20vw, 200px);
+  --card-art-pos-y: 22%;
+  --card-art-scale: 1.31;
+  --card-art-fade-stop: 52%;
+  position: relative;
+  width: 100%;
+  height: var(--card-art-banner-h);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-bg-sunken);
+}
+
+.card-art-banner__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.card-art-banner__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center var(--card-art-pos-y);
+  transform: scale(var(--card-art-scale));
+  transform-origin: center var(--card-art-pos-y);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 var(--card-art-fade-stop),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 var(--card-art-fade-stop),
+    transparent 100%
+  );
+}
+
+/* Sorts / pièges : illustration souvent plus centrée verticalement */
+.card-art-banner--spell .card-art-banner__img,
+.card-art-banner--trap .card-art-banner__img {
+  --card-art-pos-y: 48%;
+  transform-origin: center 48%;
+}
+
+.card-art-banner__placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    var(--color-bg-elevated) 0%,
+    var(--color-bg-sunken) 55%,
+    var(--color-bg-base) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 var(--card-art-fade-stop, 52%),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 var(--card-art-fade-stop, 52%),
+    transparent 100%
+  );
+}
+
+/* Variante plus basse (ex. popover deck — hauteur surchargée par .deck-card-popover__art-banner si besoin) */
+.card-art-banner--compact {
+  --card-art-banner-h: clamp(56px, 10vw, 150px);
+  border-radius: var(--radius-md);
+}
+
+/* Bandeau plus héro (modal pleine largeur) */
+.card-art-banner--hero {
+  --card-art-banner-h: clamp(120px, 26vw, 240px);
+  --card-art-fade-stop: 48%;
+}

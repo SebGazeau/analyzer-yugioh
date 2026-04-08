@@ -49,6 +49,16 @@ export const DECK_CARD_POPOVER_TYPE_SECONDARY_SELECTOR = `[${DATA_DECK_POPOVER_T
 export const DECK_CARD_POPOVER_BADGES_SELECTOR = `[${DATA_DECK_POPOVER_BADGES}]`;
 export const DECK_CARD_POPOVER_DESC_SELECTOR = `[${DATA_DECK_POPOVER_DESC}]`;
 export const DECK_CARD_POPOVER_ROW_CLASS = 'deck-card-popover-row';
+/** Libellé au-dessus d’un champ (quantité, engine, catégories). */
+export const DECK_CARD_POPOVER_FIELD_LABEL_CLASS = 'deck-card-popover-field-label';
+/** Colonne libellé + widget (ex. catégories : `<div>` non associable avec `for`). */
+export const DECK_CARD_POPOVER_FIELD_LABEL_STACK_CLASS = 'deck-card-popover-field-label--stack';
+/** `id` stables (singleton popover) pour `<label for="…">` sur les `<select>`. */
+export const DECK_CARD_POPOVER_QTY_INPUT_ID = 'deck-card-popover-qty';
+export const DECK_CARD_POPOVER_ENGINE_INPUT_ID = 'deck-card-popover-engine';
+/** Texte visible « Catégories » — référencé par `aria-labelledby` sur le widget (pas de `<label>` englobant : évite d’activer le 1er bouton ×). */
+export const DECK_CARD_POPOVER_CATEGORIES_LABEL_ID = 'deck-card-popover-categories-label';
+export const DECK_CARD_POPOVER_CATEGORIES_LABEL_TEXT_CLASS = 'deck-card-popover-field-label-text';
 export const DECK_CARD_POPOVER_CATS_CLASS = 'deck-card-popover-cats';
 export const DECK_CARD_POPOVER_ACTIONS_CLASS = 'deck-card-popover-actions';
 export const DECK_CARD_POPOVER_ICON_BTN_CLASS = 'deck-card-popover-icon-btn';

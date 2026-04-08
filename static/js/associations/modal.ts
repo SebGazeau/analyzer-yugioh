@@ -1,10 +1,11 @@
 import { addToDeck } from '../deck.js';
+import { attachSearchCardPreviewHover } from '../searchCardPreviewFloat.js';
 import {
     ARIA_BUSY_ATTR,
     ARIA_LABELLEDBY_ATTR,
     ARIA_MODAL_ATTR,
 } from '../utils/ariaAttrs.js';
-import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN } from '../utils/domEventNames.js';
+import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN, DOM_EVENT_TOGGLE } from '../utils/domEventNames.js';
 import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
@@ -32,6 +33,8 @@ import {
     ASSOCIATIONS_ACTION_EXPAND_TILES_SELECTOR,
     ASSOCIATIONS_ADD_DECK_SELECTOR,
     ASSOCIATIONS_CLOSE_SELECTOR,
+    ASSOCIATIONS_MODAL_ACC_CLASS,
+    ASSOCIATIONS_MODAL_ACC_LIST_CLASS,
     ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
     ASSOCIATIONS_MODAL_ANCHOR_IMG_CLASS,
     ASSOCIATIONS_MODAL_BODY_ID,
@@ -45,6 +48,7 @@ import {
     ASSOCIATIONS_MODAL_ROOT_CLASS,
     ASSOCIATIONS_MODAL_ROOT_ID,
     ASSOCIATIONS_MODAL_SUBTITLE_ID,
+    ASSOCIATIONS_MODAL_TILE_CLASS,
     ASSOCIATIONS_MODAL_TITLE_ID,
     ASSOCIATIONS_MODAL_TILE_GRID_UL_SELECTOR,
     ASSOCIATIONS_MODAL_TILE_MORE_LI_SELECTOR,
@@ -52,6 +56,7 @@ import {
     DATA_ASSOCIATIONS_REST_IDS_ATTR,
     DATA_CARD_ID_ATTR,
 } from './associationsDomSelectors.js';
+import { associationCatalogCardToSearchApiCard } from './catalogToSearchPreview.js';
 import type { AssociationCatalogCard } from './types.js';
 
 /** Markdown du dernier rapport affiché (copie presse-papiers). */
@@ -59,6 +64,20 @@ let latestAssociationMarkdown = '';
 let associationsReturnFocus: HTMLElement | null = null;
 /** Catalogue du dernier rapport affiché (expansion « Voir plus » des tuiles). */
 let lastModalCatalogForTiles: AssociationCatalogCard[] | null = null;
+/** Détache l’aperçu au survol des tuiles (évite les écouteurs dupliqués). */
+let associationsTilePreviewDetach: (() => void) | null = null;
+
+/** Un seul groupe d’angles ouvert à la fois (accordéon exclusif). */
+function closeOtherAssociationAngleAccordions(opened: HTMLDetailsElement): void {
+    const list = opened.closest(`.${ASSOCIATIONS_MODAL_ACC_LIST_CLASS}`);
+    if (!list) return;
+    const selector = `details.${ASSOCIATIONS_MODAL_ACC_CLASS}`;
+    for (const node of list.querySelectorAll(selector)) {
+        if (node !== opened && node instanceof HTMLDetailsElement) {
+            node.open = false;
+        }
+    }
+}
 
 function handleExpandAssociationTiles(btn: HTMLButtonElement): void {
     const cat = lastModalCatalogForTiles;
@@ -159,6 +178,17 @@ function ensureModalElements(): {
             anchorArtId: ASSOCIATIONS_MODAL_ANCHOR_ART_ID,
         });
         document.body.appendChild(overlay);
+        // `toggle` sur <details> ne bubble pas : délégation uniquement en phase capture.
+        overlay.addEventListener(
+            DOM_EVENT_TOGGLE,
+            (e: Event) => {
+                const t = e.target;
+                if (!(t instanceof HTMLDetailsElement)) return;
+                if (!t.classList.contains(ASSOCIATIONS_MODAL_ACC_CLASS) || !t.open) return;
+                closeOtherAssociationAngleAccordions(t);
+            },
+            true,
+        );
         overlay.addEventListener(DOM_EVENT_CLICK, (e) => {
             const el = e.target as HTMLElement;
             const addTile = el.closest(ASSOCIATIONS_ADD_DECK_SELECTOR);
@@ -203,6 +233,8 @@ function ensureModalElements(): {
 }
 
 export function closeAssociationsModal(): void {
+    associationsTilePreviewDetach?.();
+    associationsTilePreviewDetach = null;
     lastModalCatalogForTiles = null;
     const el = document.getElementById(ASSOCIATIONS_MODAL_ROOT_ID);
     if (el) {
@@ -229,6 +261,9 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
     const anchorList = toAssociationCatalog([anchorRaw]);
     const anchor = anchorList[0];
     if (!anchor) return;
+
+    associationsTilePreviewDetach?.();
+    associationsTilePreviewDetach = null;
 
     associationsReturnFocus = document.activeElement as HTMLElement | null;
 
@@ -263,6 +298,26 @@ export async function openAssociatedCardsModal(anchorRaw: Record<string, unknown
 
     els.loading.hidden = true;
     panel?.removeAttribute(ARIA_BUSY_ATTR);
+
+    const panelEl = document.getElementById(ASSOCIATIONS_MODAL_PANEL_ID) as HTMLElement | null;
+    const cat = lastModalCatalogForTiles;
+    if (cat && cat.length > 0 && panelEl) {
+        const idToCard = new Map<number, AssociationCatalogCard>();
+        for (const c of cat) idToCard.set(c.id, c);
+        associationsTilePreviewDetach = attachSearchCardPreviewHover({
+            delegateRoot: els.body,
+            leaveRoot: panelEl,
+            itemSelector: `li.${ASSOCIATIONS_MODAL_TILE_CLASS}`,
+            resolveCard: (li) => {
+                const idStr = li.getAttribute(DATA_CARD_ID_ATTR);
+                const id = idStr ? parseInt(idStr, INTEGER_STRING_DECIMAL_RADIX) : NaN;
+                if (!Number.isFinite(id)) return null;
+                const row = idToCard.get(id);
+                return row ? associationCatalogCardToSearchApiCard(row) : null;
+            },
+        });
+    }
+
     requestAnimationFrame(() => {
         const closeBtn = els.overlay.querySelector(ASSOCIATIONS_MODAL_CLOSE_BTN_SELECTOR) as HTMLButtonElement | null;
         closeBtn?.focus();

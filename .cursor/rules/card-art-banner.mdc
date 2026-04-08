@@ -1,0 +1,37 @@
+---
+description: Bannière illustration carte (panoramique + fondu) — card-art-banner
+globs:
+  - "static/js/**/*.ts"
+  - "static/css/**/*.css"
+alwaysApply: false
+---
+
+# Composant « card art banner »
+
+## Quand l’utiliser
+- Aperçu / fiche / modal où tu veux une **bandeau horizontal** (pas la carte entière), **zone illustration** mise en avant, **fondu bas** vers le fond du conteneur.
+- Pour une **vignette dans une grille** ou un **petit crop latéral**, garder plutôt **`.card-art-crop`** (`dashboard.css`) + `card-art-crop__img`.
+
+## Fichiers
+- Styles : `static/css/components/card-art-banner.css` (déjà importé via `static/css/main.css`).
+- API TS : `static/js/components/cardArtBanner.ts` — **`buildCardArtBannerHtml`**, **`cardArtBannerFrameHintFromType`**. Pas de globale window : **importer** le module.
+
+## Usage minimal
+```ts
+import { buildCardArtBannerHtml, cardArtBannerFrameHintFromType } from './components/cardArtBanner.js';
+
+el.innerHTML = buildCardArtBannerHtml(imageUrl, {
+  frameHint: cardArtBannerFrameHintFromType(card.type),
+  variant: 'default', // 'compact' | 'hero'
+  loading: 'eager',
+});
+```
+
+## Contrainte visuelle
+Le fondu utilise un **`mask-image`** sur l’img : le bas est **transparent**. Le **parent direct** (ou la zone derrière la bannière) doit avoir le **même fond** que le panneau (ex. `var(--color-bg-surface)`) pour un fondu propre.
+
+## Ajustements fins
+Variables CSS optionnelles sur le root `.card-art-banner` : `--card-art-banner-h`, `--card-art-pos-y`, `--card-art-scale`, `--card-art-fade-stop` (voir commentaires en tête du fichier CSS).
+
+## Tests
+Nouveau comportement du helper : étendre `static/js/__tests__/cardArtBanner.test.ts`.

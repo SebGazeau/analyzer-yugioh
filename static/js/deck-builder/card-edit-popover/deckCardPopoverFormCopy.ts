@@ -10,6 +10,10 @@ export const DECK_CARD_POPOVER_LABEL_ENGINE = 'Engine';
 
 export const DECK_CARD_POPOVER_LABEL_CATEGORIES = 'Catégories';
 
+/** Texte gris dans la zone chips quand aucune catégorie (indication au rouvrir du popover). */
+export const DECK_CARD_POPOVER_CATEGORIES_PLACEHOLDER =
+    'Cliquer pour choisir des rôles (Starter, Extender, Hand Trap…)';
+
 /** Au-dessus du formulaire (quantité, engine, catégories), sous le bandeau « fiche ». */
 export const DECK_CARD_POPOVER_SETTINGS_SECTION_LABEL = 'Dans ton deck';
 

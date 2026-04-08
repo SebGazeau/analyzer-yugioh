@@ -4,6 +4,9 @@
 
 export const DOM_EVENT_CLICK = 'click';
 
+/** `<details>` ouverture / fermeture (accordéons natifs). */
+export const DOM_EVENT_TOGGLE = 'toggle';
+
 export const DOM_EVENT_POINTEROVER = 'pointerover';
 
 export const DOM_EVENT_POINTERMOVE = 'pointermove';

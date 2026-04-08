@@ -114,4 +114,11 @@
   --duration-normal: 160ms;
   --duration-slow:   260ms;
   --ease-default:    cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Scrollbar — discret, fondu au fond (WebKit + Firefox) */
+  --scrollbar-size: 6px;
+  --scrollbar-track: var(--color-bg-base);
+  --scrollbar-thumb: rgba(139, 144, 168, 0.22);
+  --scrollbar-thumb-hover: rgba(139, 144, 168, 0.38);
+  --scrollbar-thumb-active: rgba(139, 144, 168, 0.52);
 }
