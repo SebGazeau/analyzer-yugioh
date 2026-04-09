@@ -96,7 +96,10 @@ export async function apiListMyDecks(): Promise<DeckListItem[]> {
     return res.json();
 }
 
-export async function apiCreateDeck(name: string, sections: DeckSectionsPayload): Promise<{ id?: number; error?: string }> {
+export async function apiCreateDeck(
+    name: string,
+    sections: DeckSectionsPayload,
+): Promise<{ id?: number; error?: string; unauthorized?: boolean }> {
     const body = { name: name.trim(), ...sections };
     const res = await fetch(DECK_API_COLLECTION_URL, {
         ...DECK_FETCH_INIT,
@@ -106,7 +109,10 @@ export async function apiCreateDeck(name: string, sections: DeckSectionsPayload)
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
-        return { error: deckApiErrorMessage(res, data) };
+        return {
+            error: deckApiErrorMessage(res, data),
+            unauthorized: res.status === HTTP_STATUS_UNAUTHORIZED,
+        };
     }
     const id = data.id as number;
     return id != null ? { id } : {};

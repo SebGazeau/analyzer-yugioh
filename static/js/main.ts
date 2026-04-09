@@ -7,6 +7,7 @@ import { updateDeckCount, computeGlobalStats } from './stats.js';
 import { DATA_PSEUDO_ATTR, HEADER_AVATAR_SELECTOR } from './appPageDomSelectors.js';
 import { getInitials } from './utils/user/index.js';
 import { bindAppTabs } from './tabs.js';
+import { bindBuilderDeckDraftLifecycle } from './init/builderDeckDraft.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
 import { initAnalysis } from './init/analysis.js';
@@ -22,6 +23,7 @@ function bindAvatarInitials(): void {
 document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     bindAvatarInitials();
     bindAppTabs();
+    bindBuilderDeckDraftLifecycle();
     initDecks();
     initBuilder();
     initAnalysis();

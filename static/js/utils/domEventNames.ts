@@ -21,6 +21,8 @@ export const DOM_EVENT_INPUT = 'input';
 
 export const DOM_EVENT_KEYDOWN = 'keydown';
 
+export const DOM_EVENT_SUBMIT = 'submit';
+
 export const DOM_EVENT_DOM_CONTENT_LOADED = 'DOMContentLoaded';
 
 export const DOM_EVENT_DRAGSTART = 'dragstart';
@@ -34,3 +36,6 @@ export const DOM_EVENT_DROP = 'drop';
 export const DOM_EVENT_SCROLL = 'scroll';
 
 export const DOM_EVENT_RESIZE = 'resize';
+
+/** Fermeture / navigation BFCache (filet de sauvegarde brouillon). */
+export const DOM_EVENT_PAGEHIDE = 'pagehide';

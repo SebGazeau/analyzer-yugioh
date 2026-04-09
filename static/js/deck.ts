@@ -31,10 +31,17 @@ import {
     buildDeckSectionsPayload,
 } from './deck-builder/deckApi.js';
 import {
+    applyParsedDeckJson,
     buildDeckJsonExportPayload,
     downloadJsonFile,
     runDeckImportFromFileInput,
+    type DeckJsonImportDeps,
 } from './deck-builder/deckFileIo.js';
+import {
+    clearBuilderDeckDraftFromSession,
+    deckSectionsHaveRows,
+    writeBuilderDeckDraftToSession,
+} from './deck-builder/builderDeckDraft.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { deckCellSelector } from './deck-builder/grid/deckGridDomSelectors.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
@@ -269,12 +276,20 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     return true;
 }
 
-export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
+export async function saveDeckToServer(): Promise<{
+    id?: number;
+    error?: string;
+    unauthorized?: boolean;
+}> {
     const name = getDeckName() || prompt(MSG_PROMPT_DECK_NAME) || '';
     if (!name.trim()) return {};
     const sections = buildDeckSectionsPayload(getDeckState());
     const result = await apiCreateDeck(name, sections);
+    if (result.unauthorized) {
+        persistBuilderDeckDraftSync();
+    }
     if (result.id != null) {
+        clearBuilderDeckDraftFromSession();
         setCurrentLoadedDeck(result.id, name.trim());
         setDeckName(name.trim());
     }
@@ -346,19 +361,33 @@ export function exportDeckToFile(): void {
     downloadJsonFile(DECK_EXPORT_JSON_FILE_NAME, buildDeckJsonExportPayload(getDeckState()));
 }
 
-export function importDeckFromFile(event: Event): void {
-    runDeckImportFromFileInput(event, {
+function getDeckJsonImportDeps(): DeckJsonImportDeps {
+    return {
         fetchCardByName,
         banTcgToMaxCopies,
         resetDeck: cleanCardTable,
         pushRow: (section, row) => {
             getState(section).push(row as DeckRow);
         },
-        refreshAllGrids: () => {
-            renderAllDeckGridSections();
-        },
+        refreshAllGrids: renderAllDeckGridSections,
         afterImportStats: () => syncBuilderStatsFromDeck(),
-    });
+    };
+}
+
+/** Import JSON (fichier ou brouillon session) : résolution des cartes par nom via l’API. */
+export async function importDeckFromJsonData(data: unknown): Promise<string[]> {
+    return applyParsedDeckJson(data, getDeckJsonImportDeps());
+}
+
+/** Sauvegarde synchrone du deck courant avant navigation auth (`sessionStorage`, même onglet). */
+export function persistBuilderDeckDraftSync(): void {
+    const state = getDeckState();
+    if (!deckSectionsHaveRows(state)) return;
+    writeBuilderDeckDraftToSession(getDeckName(), buildDeckJsonExportPayload(state));
+}
+
+export function importDeckFromFile(event: Event): void {
+    runDeckImportFromFileInput(event, getDeckJsonImportDeps());
 }
 
 /** No-op pour compatibilité : la grille cartes n'a pas de tri par colonne. */
