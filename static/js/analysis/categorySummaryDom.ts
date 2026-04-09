@@ -1,5 +1,6 @@
 /**
  * DOM : tableau Analysis (engines, catégories, groupes), hero probas, bandeaux catégories.
+ * Rendu découpé en helpers exportés pour tests et réordonnancement futur du template.
  */
 
 import {
@@ -63,6 +64,9 @@ import { updateHistogramCategorySelect } from './drawHistogramDom.js';
 import { YGO_FIRST_HAND_DRAW_COUNT, YGO_SECOND_HAND_DRAW_COUNT, type YgoHandDrawCount } from './yugiohDrawConstants.js';
 import { hypergeometricProbRowStrings } from './probabilityMath.js';
 
+/** Référence « premier groupe » pour le hero (voir pickFirstReferenceGroup). */
+export type AnalysisReferenceGroup = { name: string; K: number } | null;
+
 function addSectionHeader(tbody: HTMLElement, title: string, sectionId?: string): void {
     const tr = document.createElement('tr');
     tr.className = ANALYSIS_SECTION_HEADER_ROW_CLASS;
@@ -89,12 +93,10 @@ export interface AnalysisCategorySummaryDomInput {
     handSize: YgoHandDrawCount;
 }
 
-export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryDomInput): void {
-    const tbody = document.getElementById(CATEGORY_SUMMARY_BODY_ELEMENT_ID);
-    if (!tbody) return;
-
+/** Reconstruit uniquement le tbody du tableau Analysis (engines, catégories, groupes). */
+export function renderAnalysisCategorySummaryTableBody(tbody: HTMLElement, input: AnalysisCategorySummaryDomInput): void {
     tbody.innerHTML = '';
-    const { simulationBanner, summary, engineSummary, totalCards, numDraws, handSize } = input;
+    const { simulationBanner, summary, engineSummary, totalCards, numDraws } = input;
 
     if (simulationBanner) {
         addSectionHeader(tbody, simulationBanner);
@@ -169,8 +171,10 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
         });
         tbody.appendChild(tr);
     });
+}
 
-    const ref = pickFirstReferenceGroup(engineSummary, summary);
+/** Met à jour les trois cartes hero + la ligne de référence (onglet Analysis). */
+export function renderAnalysisHeroMetrics(ref: AnalysisReferenceGroup, totalCards: number, handSize: YgoHandDrawCount): void {
     const firstGroupName = ref?.name ?? '';
     const firstK = ref?.K ?? 0;
     const firstEl = document.getElementById(ANALYSIS_HERO_FIRST_ID);
@@ -196,7 +200,13 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 ? analysisHeroGroupReferenceLabel(firstGroupName, firstK, totalCards)
                 : '';
     }
+}
 
+/** Met à jour les mini-stats du Builder (miroir du hero Analysis). */
+export function renderBuilderStatsHeroMirror(ref: AnalysisReferenceGroup, totalCards: number, handSize: YgoHandDrawCount): void {
+    const firstK = ref?.K ?? 0;
+    const enginePct =
+        totalCards > 0 && firstK > 0 ? hypergeometricProbRowStrings(firstK, totalCards, handSize)[0] : TEXT_EM_DASH;
     const builderFirst = document.getElementById(BUILDER_STATS_FIRST_ID);
     const builderSecond = document.getElementById(BUILDER_STATS_SECOND_ID);
     const builderEngine = document.getElementById(BUILDER_STATS_ENGINE_ID);
@@ -211,9 +221,15 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
                 ? hypergeometricProbRowStrings(firstK, totalCards, YGO_SECOND_HAND_DRAW_COUNT)[0]
                 : TEXT_EM_DASH;
     if (builderEngine) builderEngine.textContent = enginePct;
+}
 
+/** Rafraîchit le menu catégories de l’histogramme à partir des clés du résumé. */
+export function syncHistogramCategorySelectFromSummary(summary: CategoryEngineSummaryMap): void {
     updateHistogramCategorySelect(Object.keys(summary).sort());
+}
 
+/** Bandeau composition (Analysis), barre latérale Builder, liste tri par catégorie. */
+export function renderCategoryDistributionBarsAndBuilderList(summary: CategoryEngineSummaryMap): void {
     const entries = categoryEntriesSorted(summary);
     const sumAll = entries.reduce((s, e) => s + e.K, 0);
 
@@ -267,8 +283,23 @@ export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryD
     }
 }
 
+/** Orchestrateur : tableau + hero + histogramme + bandeaux (comportement inchangé pour l’app). */
+export function renderAnalysisCategorySummaryDom(input: AnalysisCategorySummaryDomInput): void {
+    const tbody = document.getElementById(CATEGORY_SUMMARY_BODY_ELEMENT_ID);
+    if (!tbody) return;
+
+    renderAnalysisCategorySummaryTableBody(tbody, input);
+
+    const ref = pickFirstReferenceGroup(input.engineSummary, input.summary);
+    renderAnalysisHeroMetrics(ref, input.totalCards, input.handSize);
+    renderBuilderStatsHeroMirror(ref, input.totalCards, input.handSize);
+    syncHistogramCategorySelectFromSummary(input.summary);
+    renderCategoryDistributionBarsAndBuilderList(input.summary);
+}
+
 /** Vide le tbody du tableau catégories (ex. reset deck avant rechargement). */
 export function clearCategorySummaryTableBody(): void {
     const tbody = document.getElementById(CATEGORY_SUMMARY_BODY_ELEMENT_ID);
-    if (tbody) tbody.innerHTML = '';
+    if (!tbody) return;
+    tbody.innerHTML = '';
 }

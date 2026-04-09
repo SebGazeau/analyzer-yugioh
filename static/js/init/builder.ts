@@ -1,5 +1,5 @@
 /**
- * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, collapsibles zones.
+ * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, replis zones deck.
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
