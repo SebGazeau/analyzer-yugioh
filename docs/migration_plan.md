@@ -179,7 +179,7 @@
 - API : POST/GET/GET:id/PUT/DELETE `/decks` (pool optionnel → 503 si absent)
 - Front : bouton « Sauvegarder sur le serveur », section « Mes decks » (liste, Rafraîchir, Charger)
 - Tests HTTP : 5 tests (sans pool → 503)
-- docs/todo.md §4 coché
+- [`roadmap-produit-et-technique.md`](roadmap-produit-et-technique.md) §5 — persistance decks
 
 ---
 
