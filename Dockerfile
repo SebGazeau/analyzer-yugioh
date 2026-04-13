@@ -9,9 +9,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Cache des deps (workspace : membre `xtask` obligatoire)
+# Cache des deps (workspace : `xtask` + `crates/ygo-engine` obligatoires)
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY xtask ./xtask
+COPY crates/ygo-engine ./crates/ygo-engine
 RUN mkdir -p src && echo 'fn main() {}' > src/main.rs
 RUN cargo build --release --bin analyzer-yugioh --features gcs
 RUN rm -f src/main.rs

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Analyse display — Admin</title>
+  %%STYLE%%
+  <style>
+    .ygo-form label { display: block; margin: 0.35rem 0 0.1rem; font-size: 0.9rem; }
+    .ygo-form input[type="text"], .ygo-form input[type="number"] { max-width: 20rem; }
+    .ygo-cards { margin-top: 1rem; border-collapse: collapse; width: 100%; max-width: 72rem; }
+    .ygo-cards th, .ygo-cards td { border: 1px solid #ccc; padding: 0.25rem 0.35rem; font-size: 0.85rem; vertical-align: middle; }
+    .ygo-cards th { background: #f0f0f0; text-align: left; }
+    .ygo-cards input, .ygo-cards select { width: 100%; min-width: 4rem; box-sizing: border-box; }
+    .ygo-results { margin-top: 1.25rem; padding: 0.75rem; border: 1px solid #bbb; max-width: 48rem; display: none; }
+    .ygo-results.visible { display: block; }
+    .ygo-ev-grid { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.75rem; margin: 0.5rem 0; font-size: 0.95rem; }
+    .risk-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.9rem; }
+    .risk-Low { background: #d4edda; color: #155724; }
+    .risk-Medium { background: #fff3cd; color: #856404; }
+    .risk-High { background: #f8d7da; color: #721c24; }
+    .risk-SpecPlay { background: #e7d4f5; color: #4a148c; }
+    .ygo-flags { margin: 0.5rem 0; padding-left: 1.2rem; }
+    .ygo-top-table { width: 100%; max-width: 40rem; border-collapse: collapse; margin-top: 0.5rem; }
+    .ygo-top-table th, .ygo-top-table td { border: 1px solid #ccc; padding: 0.3rem 0.4rem; text-align: left; }
+    .ygo-err { color: #721c24; margin-top: 0.5rem; }
+    .ygo-load-row { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: flex-end; margin: 0.75rem 0; }
+    .ygo-load-msg { font-size: 0.9rem; color: #444; margin: 0.35rem 0; min-height: 1.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .ygo-load-spinner {
+      display: none;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #ccc;
+      border-top-color: #333;
+      border-radius: 50%;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+    .ygo-load-spinner.ygo-load-spinner--on {
+      display: inline-block;
+      animation: ygo-spin 0.75s linear infinite;
+    }
+    @keyframes ygo-spin { to { transform: rotate(360deg); } }
+    .ygo-link { text-decoration: none; font-size: 1.1rem; }
+    .ygo-card-group-header td { background: #e8e8e8; font-weight: 600; border: 1px solid #ccc; padding: 0.35rem 0.5rem; }
+    .ygo-card-group-header small { font-weight: 400; color: #555; margin-left: 0.35rem; }
+    .ygo-card-version .ygo-version-first-cell { padding-left: 1.1rem; }
+    .ygo-version-prefix { color: #666; font-family: ui-monospace, monospace; margin-right: 0.2rem; }
+    .ygo-version-rarity-label { color: #333; }
+    .ygo-legend { margin: 0.75rem 0 1rem; padding: 0.5rem 0.65rem; border: 1px solid #ccc; background: #fafafa; font-size: 0.88rem; max-width: 72rem; }
+    .ygo-legend summary { cursor: pointer; font-weight: 600; }
+    .ygo-legend dl { margin: 0.5rem 0 0; display: grid; grid-template-columns: minmax(7rem, 10rem) 1fr; gap: 0.25rem 0.75rem; }
+    .ygo-legend dt { font-weight: 600; color: #333; }
+    .ygo-legend dd { margin: 0; color: #444; }
+    .ygo-ev-label { cursor: help; border-bottom: 1px dotted #999; }
+    .ygo-product { margin: 0.75rem 0 1rem; padding: 0.5rem 0.65rem; border: 1px solid #ccc; background: #fafafa; max-width: 72rem; font-size: 0.88rem; }
+    .ygo-product summary { cursor: pointer; font-weight: 600; }
+    .ygo-product textarea { width: 100%; max-width: 40rem; min-height: 5rem; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    .ygo-product .ygo-product-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-top: 0.5rem; }
+    .ygo-derive-warn { color: #664d00; margin: 0.35rem 0 0; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+<h1>Analyse display / case (YGO)</h1>
+%%ACTIONS%%
+
+<p class="admin-help">Outil interne : estime la <strong>valeur attendue (EV)</strong> d’une unité d’achat (display ou case) à partir de cartes, prix et hypothèses de liquidité. Connexion <strong>session admin</strong> (cookies) ou en-tête <code>X-Admin-Key</code> selon la config. Les champs envoyés au calculateur sont ceux du formulaire ci-dessous (JSON <code>DisplayInput</code>). La dérivation des pondérations accepte <code>derive_mode</code> (<code>slot_mass</code> ou <code>case_expected_copies</code>).</p>
+
+<details class="ygo-legend">
+  <summary>Légende — à quoi correspondent les infos</summary>
+  <dl>
+    <dt>Chargement API</dt>
+    <dd>Interroge YGOPRODECK : liste du set (passcodes + signaux), puis prix Cardmarket par carte. Ne modifie pas l’analyse tant que vous n’avez pas cliqué sur Analyze.</dd>
+    <dt>Nom du set (API)</dt>
+    <dd>Doit correspondre au nom de set côté YGOPRODECK / Cardmarket (ex. « Legacy of Destruction »). Paramètre <code>name</code> de <code>GET /admin/ygo/set</code>.</dd>
+    <dt>Prix min. filtre</dt>
+    <dd>Seuil en EUR sur le <em>prix Cardmarket global</em> renvoyé dans <code>card_prices</code> pour garder une carte candidate. Défaut 2,00.</dd>
+    <dt>Coût (<code>display_cost</code>)</dt>
+    <dd>Montant payé pour <strong>l’unité analysée</strong> (un display ou une case) : sert à comparer l’EV et le niveau de risque. Alignez ce montant avec le mode de dérivation (masse relative vs espérances par case).</dd>
+    <dt>Nouveau set</dt>
+    <dd>Coche si les prix sont encore instables : ajoute un avertissement dans les résultats (<code>is_new_set</code>).</dd>
+    <dt>Lignes « version »</dt>
+    <dd>Chaque ligne avec champs est une entrée <code>CardData</code> : une impression / prix Cardmarket. Le groupe grisé = une même carte (même passcode).</dd>
+    <dt>EV de base / pessimiste / optimiste</dt>
+    <dd>Scénarios de décote sur le « prix réalisable » (×1, ×0,75, ×1,15) avant somme pondérée par la probabilité de tirage.</dd>
+    <dt>Prix d’achat prudent / équitable</dt>
+    <dd>Indicateurs dérivés de l’EV de base (70 % et 85 %) pour borner un prix d’achat raisonnable de l’unité (display ou case).</dd>
+    <dt>Top cartes</dt>
+    <dd>Cartes qui contribuent le plus à l’EV (après probabilité et décotes liquidité / réimpression).</dd>
+  </dl>
+</details>
+
+<form id="ygo-form" class="ygo-form">
+  <h2 style="margin-top:0;font-size:1.05rem;">Chargement YGOPRODECK</h2>
+  <p class="admin-help">Renseignez le nom du set tel qu’attendu par l’API, puis <strong>Charger les cartes</strong>. Le serveur enchaîne une requête « liste du set » puis une requête prix par carte (d’où le délai). Les lignes du tableau sont ensuite éditables avant Analyze.</p>
+  <div class="ygo-load-row">
+    <div>
+      <label for="ygo_api_set_name" title="Identique au nom de set côté YGOPRODECK (cardinfo).">Nom du set (API)</label>
+      <input type="text" id="ygo_api_set_name" name="ygo_api_set_name" autocomplete="off" style="min-width:16rem;"
+        title="Ex. « Legacy of Destruction ». Envoyé tel quel à GET /admin/ygo/set?name=…">
+    </div>
+    <div>
+      <label for="ygo_min_price" title="Filtre sur le prix global Cardmarket (premier élément card_prices), pas sur chaque version.">Prix min. filtre (EUR)</label>
+      <input type="number" id="ygo_min_price" name="ygo_min_price" step="0.01" min="0" value="2" style="max-width:6rem;"
+        title="Cartes avec prix global strictement au-dessus de ce seuil (défaut 2). Paramètre min_price de GET /set.">
+    </div>
+    <button type="button" id="btn-load-set"
+      title="Remplit le tableau depuis YGOPRODECK (liste du set + prix Cardmarket par passcode). Peut prendre plusieurs secondes.">Charger les cartes</button>
+  </div>
+  <p id="ygo-load-msg" class="ygo-load-msg" aria-live="polite">
+    <span id="ygo-load-spinner" class="ygo-load-spinner" aria-hidden="true"></span>
+    <span id="ygo-load-msg-text"></span>
+  </p>
+  <p id="ygo-load-err" class="ygo-err" hidden></p>
+
+  <label for="set_name" title="Champ libre pour vos notes ; absent du JSON envoyé à Analyze.">Nom du set (référence locale, non envoyé à l’API d’analyse)</label>
+  <input type="text" id="set_name" name="set_name" autocomplete="off"
+    title="Non utilisé par le moteur — uniquement pour vous repérer sur la page.">
+
+  <label for="display_cost" title="Montant payé pour l’unité analysée (display ou case) ; comparé à l’EV pour le risque.">Coût de l’unité (EUR, JSON <code>display_cost</code>)</label>
+  <input type="number" id="display_cost" name="display_cost" step="0.01" min="0" value="0" required
+    title="Champ JSON display_cost : coût d’achat de l’unité (display ou case selon votre analyse).">
+
+  <label title="Si coché, le moteur ajoute un drapeau de risque sur la volatilité des prix."><input type="checkbox" id="is_new_set" name="is_new_set"> Nouveau set (prix instables)</label>
+
+  <h2 style="margin-top:1rem;font-size:1.05rem;">Cartes</h2>
+  <p class="admin-help">Chaque <strong>ligne avec champs</strong> devient un objet <code>CardData</code> dans le JSON (nom, rareté moteur, probabilité, prix, stock, vélocité, tendance, risque réimpression). Après chargement API, les lignes grisées regroupent les versions d’une même carte ; la colonne « Nom » sur une sous-ligne affiche le libellé rareté Cardmarket si disponible. Les listes déroulantes utilisent les <strong>noms d’enum Rust</strong> attendus par le serveur.</p>
+  <p class="admin-help" title="Convention affichée dans docs/decisions.md">Indiquez le <strong>coût du display</strong> pour <strong>une unité</strong> (un display scellé ou une case, selon votre analyse) ; alignez les comptages ci-dessous sur la même unité.</p>
+
+  <details class="ygo-product">
+    <summary>Composition produit — dériver les pondérations (<code>pull_probability</code>)</summary>
+    <fieldset style="border:0;padding:0;margin:0.5rem 0 0.75rem;">
+      <legend style="font-weight:600;font-size:0.9rem;">Mode <code>derive_mode</code></legend>
+      <label style="display:block;margin:0.2rem 0;">
+        <input type="radio" name="ygo_derive_mode" id="ygo-derive-slot" value="slot_mass" checked>
+        <strong>slot_mass</strong> — comptages <em>relatifs</em> par rareté ; somme des pondérations = <code>1 − bulk_mass</code> (unité « un tirage »).
+      </label>
+      <label style="display:block;margin:0.2rem 0;">
+        <input type="radio" name="ygo_derive_mode" id="ygo-derive-case" value="case_expected_copies">
+        <strong>case_expected_copies</strong> — quotas de hits <em>par case</em> + cartes distinctes dans le set ; remplit l’<strong>espérance d’exemplaires</strong> par ligne (voir <code>docs/decisions.md</code>).
+      </label>
+    </fieldset>
+    <p class="admin-help" id="ygo-product-help-slot">Une ligne par rareté : libellé puis tabulation ou « | » puis le nombre (masse relative). Les libellés matchent la colonne « Nom / version » (Cardmarket) ou la rareté moteur. Répartition uniforme entre les lignes d’une même clé ; puis normalisation pour somme = <code>1 − bulk_mass</code>.</p>
+    <p class="admin-help" id="ygo-product-help-case" hidden>Comptages : hits <strong>par case</strong> par rareté (Q<sub>k</sub>). Distincts : nombre de cartes <strong>distinctes du set</strong> par rareté (D<sub>k</sub>). Chaque ligne reçoit <code>Q_k / D_k</code> (approximation uniforme avec remise). <code>bulk_mass</code> est ignoré (restez à 0).</p>
+    <label for="ygo-rarity-counts">Comptages par rareté (libellé, tab ou <code>|</code>, nombre)</label>
+    <textarea id="ygo-rarity-counts" name="ygo_rarity_counts" rows="6" spellcheck="false" placeholder="Starlight Rare&#9;1&#10;Secret Rare&#9;3"></textarea>
+    <div id="ygo-distinct-block" style="margin-top:0.5rem;">
+      <label for="ygo-distinct-counts" title="Requis en mode case : une ligne par rareté, même format que les comptages.">Cartes distinctes dans le set (mode case)</label>
+      <textarea id="ygo-distinct-counts" name="ygo_distinct_counts" rows="4" spellcheck="false" placeholder="Secret Rare&#9;10"></textarea>
+    </div>
+    <div class="ygo-product-row">
+      <div>
+        <label for="ygo-bulk-mass" title="Part réservée au bulk hors tableau (mode slot_mass uniquement).">bulk_mass (0–1)</label>
+        <input type="number" id="ygo-bulk-mass" name="ygo_bulk_mass" step="0.01" min="0" max="1" value="0" style="max-width:6rem;">
+      </div>
+      <div>
+        <label for="ygo-cards-per-booster" title="Non utilisé par la dérivation — réservé évolution.">Cartes / booster</label>
+        <input type="number" id="ygo-cards-per-booster" step="1" min="0" value="" placeholder="—" style="max-width:5rem;" disabled>
+      </div>
+      <div>
+        <label for="ygo-boosters-per-display" title="Non utilisé par la dérivation — réservé évolution.">Boosters / display</label>
+        <input type="number" id="ygo-boosters-per-display" step="1" min="0" value="" placeholder="—" style="max-width:5rem;" disabled>
+      </div>
+      <div>
+        <label for="ygo-displays-per-case" title="Optionnel : envoyé dans le JSON (non utilisé par le serveur) pour vos notes ou conversions manuelles.">Displays / case</label>
+        <input type="number" id="ygo-displays-per-case" step="1" min="0" value="" placeholder="—" style="max-width:5rem;">
+      </div>
+      <button type="button" id="btn-derive-pulls" title="POST /admin/ygo/derive-pulls — remplit la colonne des pondérations selon le mode choisi.">Appliquer aux pondérations</button>
+    </div>
+    <p id="ygo-derive-warn" class="ygo-derive-warn" hidden></p>
+  </details>
+
+  <button type="button" id="btn-add-card" title="Ajoute une ligne vide (saisie manuelle), au même format que les lignes chargées.">Ajouter une carte</button>
+
+  <table class="ygo-cards" aria-label="Liste des cartes">
+    <thead>
+      <tr>
+        <th title="Nom de la carte. En sous-ligne après chargement : libellé rareté tel que Cardmarket (peut différer de la colonne Rareté moteur).">Nom / version</th>
+        <th title="Rareté pour le moteur ygo-engine (enum Rust). Starlight etc. sont regroupées en SecretRare pour le calcul.">Rareté (moteur)</th>
+        <th id="ygo-th-pull" title="pull_probability : en mode slot_mass, probabilité de tirage ; en mode case, espérance d’exemplaires par case.">Prob. / espér.</th>
+        <th title="market_price : prix marché en EUR pour cette version (souvent depuis Cardmarket).">Prix marché (EUR)</th>
+        <th title="available_copies : exemplaires disponibles ou pertinents pour la liquidité dans le modèle.">Exemplaires</th>
+        <th title="sell_velocity_per_week : ventes par semaine (proxy de liquidité, avec la tendance et le stock).">Vélocité / sem.</th>
+        <th title="price_trend : Rising, Stable ou Declining — influence le score de liquidité.">Tendance prix</th>
+        <th title="reprint_risk : Low, Medium, High — décote si réédition probable.">Risque réimpr.</th>
+        <th title="Lien vers la fiche Cardmarket de cette version (cardmarket_url), si fourni par l’API.">CM</th>
+        <th title="Retire cette ligne du tableau (n’envoie plus cette carte à Analyze)."></th>
+      </tr>
+    </thead>
+    <tbody id="card-rows"></tbody>
+  </table>
+
+  <p style="margin-top:0.75rem;">
+    <button type="submit" id="btn-analyze"
+      title="Envoie display_cost, is_new_set et toutes les lignes CardData vers POST /admin/ygo/analyze et affiche l’EV et les indicateurs.">Analyze</button>
+  </p>
+</form>
+
+<div id="ygo-results" class="ygo-results" role="region" aria-label="Résultats">
+  <h2 style="margin-top:0;font-size:1.05rem;">Résultats</h2>
+  <p class="admin-help" style="margin-top:0;font-size:0.88rem;">Réponse JSON <code>AnalysisResult</code> du moteur. Survolez un libellé pour une courte définition.</p>
+  <div class="ygo-ev-grid">
+    <span class="ygo-ev-label" title="Somme des (probabilité × prix réalisable) avec multiplicateur de scénario neutre (1,0) sur chaque carte.">EV de base</span><span id="r-base_ev"></span>
+    <span class="ygo-ev-label" title="Même calcul avec décote 0,75 sur le prix réalisable (scénario défavorable).">EV pessimiste</span><span id="r-pessimistic_ev"></span>
+    <span class="ygo-ev-label" title="Même calcul avec facteur 1,15 sur le prix réalisable (scénario favorable).">EV optimiste</span><span id="r-optimistic_ev"></span>
+    <span class="ygo-ev-label" title="Environ 70 % de l’EV de base : plafond d’achat prudent du display.">Prix d’achat prudent</span><span id="r-safe_buy_price"></span>
+    <span class="ygo-ev-label" title="Environ 85 % de l’EV de base : estimation « équitable » du prix d’achat.">Prix d’achat équitable</span><span id="r-fair_buy_price"></span>
+    <span class="ygo-ev-label" title="Égal à l’EV de base : seuil où le display se rentabilise en moyenne.">Prix seuil (breakeven)</span><span id="r-breakeven_price"></span>
+    <span class="ygo-ev-label" title="Low / Medium / High / SpecPlay : synthèse coût du display vs EV et scénario pessimiste.">Niveau de risque</span><span id="r-risk-wrap"></span>
+  </div>
+  <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem;" title="Messages texte du moteur (concentration, liquidité, nouveau set, etc.).">Alertes</h3>
+  <ul id="r-flags" class="ygo-flags"></ul>
+  <h3 style="font-size:1rem;margin:0.75rem 0 0.25rem;" title="Cartes triées par contribution à l’EV (pull × valeur réalisable).">Top cartes (contribution)</h3>
+  <table class="ygo-top-table">
+    <thead><tr>
+      <th title="Nom affiché côté moteur pour cette contribution.">Nom</th>
+      <th title="Score entre 0 et 1 combinant vélocité, tendance, stock et risque réimpression.">Score liquidité</th>
+      <th title="pull_probability × prix réalisable (carte) dans le scénario de base.">Valeur réalisable</th>
+    </tr></thead>
+    <tbody id="r-top-cards"></tbody>
+  </table>
+  <p id="ygo-error" class="ygo-err" hidden></p>
+</div>
+
+<script>
+(function () {
+  var RARITIES = ['Common', 'Rare', 'SuperRare', 'UltraRare', 'SecretRare'];
+  var TRENDS = ['Rising', 'Stable', 'Declining'];
+  var REPRINT = ['Low', 'Medium', 'High'];
+
+  /** Infobulles pour les champs générés (alignées sur les en-têtes du tableau). */
+  var YGO_ROW_TITLES = {
+    versionCell: 'Sous-ligne = une version Cardmarket. Le texte après « |- » reprend la rareté telle que renvoyée par l’API (peut différer de la colonne Rareté moteur).',
+    nameManual: 'Nom de la carte envoyé au moteur (CardData.name).',
+    rarity: 'Rareté pour le moteur ygo-engine (enum Rust) : influence probabilité par défaut et autres règles.',
+    pull: 'pull_probability — voir mode derive : probabilité (slot) ou espérance d’exemplaires par case.',
+    price: 'market_price — prix marché en EUR pour cette version (souvent issu de Cardmarket).',
+    copies: 'available_copies — exemplaires ou stock pris en compte pour la liquidité.',
+    velocity: 'sell_velocity_per_week — ventes estimées par semaine (proxy de liquidité).',
+    trend: 'price_trend — Rising, Stable ou Declining ; modifie le score de liquidité.',
+    reprint: 'reprint_risk — Low, Medium ou High ; décote « réimpression » sur le prix réalisable.',
+    remove: 'Retirer cette ligne ; elle ne sera plus incluse dans le JSON Analyze.',
+    cmDash: 'Pas de lien Cardmarket pour cette ligne.'
+  };
+
+  var YGO_RISK_TITLES = {
+    Low: 'EV nettement au-dessus du coût et scénario pessimiste acceptable.',
+    Medium: 'Risque modéré : marge sur le coût plus serrée selon le pessimiste.',
+    High: 'Risque élevé : le scénario pessimiste rapproche ou dépasse le coût du display.',
+    SpecPlay: 'EV de base inférieur au coût : le display est spéculatif au vu des hypothèses.'
+  };
+
+  function el(tag, attrs, children) {
+    var n = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      if (k === 'text') n.textContent = attrs[k];
+      else if (k === 'html') n.innerHTML = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    }
+    (children || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+
+  function selectOptions(values, defVal) {
+    var s = el('select', { 'data-f': 'field' });
+    values.forEach(function (v) {
+      s.appendChild(el('option', { value: v, text: v }));
+    });
+    s.value = defVal;
+    return s;
+  }
+
+  function appendVersionRowCells(tr, opts) {
+    opts = opts || {};
+    if (opts.cardmarket_url) tr.setAttribute('data-cm-url', opts.cardmarket_url);
+    var cmRare = opts.cardmarket_set_rarity != null && String(opts.cardmarket_set_rarity).trim();
+    if (cmRare) tr.setAttribute('data-cm-set-rarity', String(cmRare));
+    var nameCellKids = [];
+    if (opts.groupedVersion) {
+      if (opts.id != null && opts.id !== '') {
+        nameCellKids.push(el('input', { type: 'hidden', 'data-f': 'id', value: String(opts.id) }));
+      }
+      nameCellKids.push(el('input', { type: 'hidden', 'data-f': 'name', value: opts.name || '' }));
+      nameCellKids.push(el('span', { class: 'ygo-version-prefix', text: '|-' }));
+      var disp = cmRare || (opts.rarity || '');
+      nameCellKids.push(el('span', { class: 'ygo-version-rarity-label', text: ' ' + disp }));
+    } else {
+      if (opts.id != null && opts.id !== '') {
+        nameCellKids.push(el('input', { type: 'hidden', 'data-f': 'id', value: String(opts.id) }));
+      }
+      nameCellKids.push(el('input', { type: 'text', 'data-f': 'name', placeholder: 'Nom', autocomplete: 'off', value: opts.name || '' }));
+    }
+    var nameTdAttrs = opts.groupedVersion ? { class: 'ygo-version-first-cell', title: YGO_ROW_TITLES.versionCell } : null;
+    var nameTd = el('td', nameTdAttrs, nameCellKids);
+    tr.appendChild(nameTd);
+    var defR = opts.rarity || 'UltraRare';
+    tr.appendChild(el('td', null, [selectOptions(RARITIES, defR)]));
+    tr.appendChild(el('td', null, [el('input', { type: 'number', 'data-f': 'pull', step: 'any', min: '0', value: String(opts.pull != null ? opts.pull : 0.1) })]));
+    tr.appendChild(el('td', null, [el('input', { type: 'number', 'data-f': 'price', step: '0.01', min: '0', value: String(opts.price != null ? opts.price : 10) })]));
+    tr.appendChild(el('td', null, [el('input', { type: 'number', 'data-f': 'copies', step: '1', min: '0', value: String(opts.copies != null ? opts.copies : 0) })]));
+    tr.appendChild(el('td', null, [el('input', { type: 'number', 'data-f': 'velocity', step: '0.1', min: '0', value: String(opts.velocity != null ? opts.velocity : 5) })]));
+    var defT = opts.trend || 'Stable';
+    var defRep = opts.reprint || 'Low';
+    tr.appendChild(el('td', null, [selectOptions(TRENDS, defT)]));
+    tr.appendChild(el('td', null, [selectOptions(REPRINT, defRep)]));
+    var cmCell = el('td', null, []);
+    var url = opts.cardmarket_url;
+    if (url) {
+      cmCell.appendChild(el('a', {
+        href: url,
+        class: 'ygo-link',
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        title: 'Ouvrir la page Cardmarket pour cette version (cardmarket_url).',
+        html: '&#128279;'
+      }));
+    } else {
+      var dash = el('span', { title: YGO_ROW_TITLES.cmDash, text: '—' });
+      cmCell.appendChild(dash);
+    }
+    tr.appendChild(cmCell);
+    var rm = el('button', { type: 'button', text: 'Suppr.', title: YGO_ROW_TITLES.remove });
+    rm.addEventListener('click', function () { tr.remove(); });
+    tr.appendChild(el('td', null, [rm]));
+    var sel = tr.querySelectorAll('select');
+    sel[0].setAttribute('data-f', 'rarity');
+    sel[1].setAttribute('data-f', 'trend');
+    sel[2].setAttribute('data-f', 'reprint');
+    if (opts.groupedVersion) {
+      var labelSpan = tr.querySelector('.ygo-version-rarity-label');
+      if (labelSpan && sel[0] && !tr.getAttribute('data-cm-set-rarity')) {
+        sel[0].addEventListener('change', function () {
+          labelSpan.textContent = ' ' + sel[0].value;
+        });
+      }
+    }
+
+    var nameField = tr.querySelector('[data-f=name]');
+    if (nameField && nameField.tagName === 'INPUT' && nameField.type !== 'hidden') {
+      nameField.setAttribute('title', YGO_ROW_TITLES.nameManual);
+    }
+    sel[0].setAttribute('title', YGO_ROW_TITLES.rarity);
+    sel[1].setAttribute('title', YGO_ROW_TITLES.trend);
+    sel[2].setAttribute('title', YGO_ROW_TITLES.reprint);
+    syncPullInputTitle(tr.querySelector('[data-f=pull]'));
+    tr.querySelector('[data-f=price]').setAttribute('title', YGO_ROW_TITLES.price);
+    tr.querySelector('[data-f=copies]').setAttribute('title', YGO_ROW_TITLES.copies);
+    tr.querySelector('[data-f=velocity]').setAttribute('title', YGO_ROW_TITLES.velocity);
+  }
+
+  function addCardRow(opts) {
+    opts = opts || {};
+    var tbody = document.getElementById('card-rows');
+    var tr = el('tr');
+    tr.className = 'ygo-card-version';
+    appendVersionRowCells(tr, Object.assign({}, opts, { groupedVersion: false }));
+    tbody.appendChild(tr);
+  }
+
+  function groupCardsById(cards) {
+    var map = Object.create(null);
+    (cards || []).forEach(function (c) {
+      var key = (c.id != null && String(c.id) !== '') ? String(c.id) : ('n:' + String(c.name || ''));
+      if (!map[key]) {
+        map[key] = { id: c.id, name: c.name || '', versions: [] };
+      }
+      map[key].versions.push(c);
+    });
+    var groups = Object.keys(map).map(function (k) { return map[k]; });
+    groups.forEach(function (g) {
+      g.versions.sort(function (a, b) {
+        return (Number(b.market_price) || 0) - (Number(a.market_price) || 0);
+      });
+      g.maxPrice = g.versions.reduce(function (m, v) {
+        return Math.max(m, Number(v.market_price) || 0);
+      }, 0);
+    });
+    groups.sort(function (a, b) {
+      return b.maxPrice - a.maxPrice;
+    });
+    return groups;
+  }
+
+  function renderGroupedSetCards(cards) {
+    var tbody = document.getElementById('card-rows');
+    tbody.textContent = '';
+    var groups = groupCardsById(cards);
+    groups.forEach(function (g) {
+      var htr = el('tr', { class: 'ygo-card-group-header' });
+      var htd = el('td', {
+        colspan: '10',
+        title: 'En-tête de groupe : toutes les lignes suivantes partagent le même passcode (id) et le même nom ; chaque sous-ligne est une version / prix Cardmarket distinct.'
+      });
+      htd.appendChild(el('strong', { text: g.name || '—' }));
+      if (g.id != null && String(g.id) !== '') {
+        htd.appendChild(el('small', { text: ' (' + String(g.id) + ')' }));
+      }
+      htr.appendChild(htd);
+      tbody.appendChild(htr);
+      g.versions.forEach(function (c) {
+        var tr = el('tr');
+        tr.className = 'ygo-card-version';
+        var o = {
+          groupedVersion: true,
+          id: c.id,
+          name: c.name,
+          rarity: c.rarity,
+          pull: c.pull_probability,
+          price: c.market_price,
+          copies: c.available_copies,
+          velocity: c.sell_velocity_per_week,
+          trend: c.price_trend,
+          reprint: c.reprint_risk
+        };
+        if (c.cardmarket_url) o.cardmarket_url = c.cardmarket_url;
+        if (c.cardmarket_set_rarity) o.cardmarket_set_rarity = c.cardmarket_set_rarity;
+        appendVersionRowCells(tr, o);
+        tbody.appendChild(tr);
+      });
+    });
+  }
+
+  function setLoadControlsDisabled(disabled) {
+    document.getElementById('btn-load-set').disabled = !!disabled;
+    document.getElementById('ygo_api_set_name').disabled = !!disabled;
+    document.getElementById('ygo_min_price').disabled = !!disabled;
+  }
+
+  function setLoadSpinner(on) {
+    var sp = document.getElementById('ygo-load-spinner');
+    if (on) sp.classList.add('ygo-load-spinner--on');
+    else sp.classList.remove('ygo-load-spinner--on');
+  }
+
+  function num(el, def) {
+    var v = parseFloat(el && el.value);
+    return isFinite(v) ? v : def;
+  }
+
+  function intNum(el, def) {
+    var v = parseInt(el && el.value, 10);
+    return isFinite(v) && v >= 0 ? v : def;
+  }
+
+  function collectCards() {
+    var rows = document.querySelectorAll('#card-rows tr.ygo-card-version');
+    var cards = [];
+    rows.forEach(function (tr) {
+      var nameInp = tr.querySelector('[data-f=name]');
+      var name = nameInp && nameInp.value.trim();
+      if (!name) return;
+      var idInp = tr.querySelector('[data-f=id]');
+      var cid = idInp && idInp.value.trim();
+      var row = {
+        id: cid || String(cards.length),
+        name: name,
+        rarity: tr.querySelector('[data-f=rarity]').value,
+        pull_probability: num(tr.querySelector('[data-f=pull]'), 0),
+        market_price: num(tr.querySelector('[data-f=price]'), 0),
+        available_copies: intNum(tr.querySelector('[data-f=copies]'), 0),
+        sell_velocity_per_week: num(tr.querySelector('[data-f=velocity]'), 0),
+        price_trend: tr.querySelector('[data-f=trend]').value,
+        reprint_risk: tr.querySelector('[data-f=reprint]').value
+      };
+      var cm = tr.getAttribute('data-cm-url');
+      if (cm) row.cardmarket_url = cm;
+      var cmr = tr.getAttribute('data-cm-set-rarity');
+      if (cmr) row.cardmarket_set_rarity = cmr;
+      cards.push(row);
+    });
+    return cards;
+  }
+
+  function parseCountsTextarea(raw) {
+    var out = [];
+    (raw || '').split(/\r?\n/).forEach(function (line) {
+      var t = line.trim();
+      if (!t) return;
+      var parts = t.indexOf('\t') >= 0 ? t.split('\t') : t.split('|');
+      if (parts.length < 2) return;
+      var label = parts[0].trim();
+      var n = parseInt(String(parts[1]).trim(), 10);
+      if (!label || !isFinite(n) || n < 0) return;
+      out.push({ label: label, count: n });
+    });
+    return out;
+  }
+
+  function isCaseDeriveMode() {
+    var el = document.getElementById('ygo-derive-case');
+    return el && el.checked;
+  }
+
+  function syncPullInputTitle(inp) {
+    if (!inp) return;
+    if (isCaseDeriveMode()) {
+      inp.setAttribute('title', 'pull_probability — mode case : espérance du nombre d’exemplaires de cette ligne par case (peut dépasser 1).');
+    } else {
+      inp.setAttribute('title', 'pull_probability — mode slot : probabilité estimée pour cette ligne ; somme des lignes typiquement ≤ 1 (hors bulk).');
+    }
+  }
+
+  function applyPullColumnHeaderAndTitles() {
+    var th = document.getElementById('ygo-th-pull');
+    if (th) {
+      th.textContent = isCaseDeriveMode() ? 'Espér. / case' : 'Prob. tirage';
+      th.setAttribute('title', isCaseDeriveMode()
+        ? 'pull_probability = espérance d’exemplaires de cette ligne par case ouverte.'
+        : 'pull_probability = probabilité estimée de tirer cette ligne dans l’unité analysée.');
+    }
+    document.querySelectorAll('#card-rows tr.ygo-card-version [data-f=pull]').forEach(syncPullInputTitle);
+  }
+
+  function syncDeriveModeUi() {
+    var caseOn = isCaseDeriveMode();
+    var bulkEl = document.getElementById('ygo-bulk-mass');
+    if (bulkEl) {
+      bulkEl.disabled = caseOn;
+      if (caseOn) bulkEl.value = '0';
+    }
+    var hs = document.getElementById('ygo-product-help-slot');
+    var hc = document.getElementById('ygo-product-help-case');
+    if (hs) hs.hidden = caseOn;
+    if (hc) hc.hidden = !caseOn;
+    var db = document.getElementById('ygo-distinct-block');
+    if (db) db.style.opacity = caseOn ? '1' : '0.65';
+    applyPullColumnHeaderAndTitles();
+  }
+
+  function collectRowsForDerive() {
+    var rows = [];
+    document.querySelectorAll('#card-rows tr.ygo-card-version').forEach(function (tr) {
+      var cm = tr.getAttribute('data-cm-set-rarity');
+      var sel = tr.querySelector('[data-f=rarity]');
+      var motor = sel ? sel.value : 'Rare';
+      rows.push({
+        cardmarket_set_rarity: cm || null,
+        rarity_motor: motor
+      });
+    });
+    return rows;
+  }
+
+  function fmtMoney(x) {
+    if (typeof x !== 'number' || !isFinite(x)) return '—';
+    return x.toFixed(2) + ' EUR';
+  }
+
+  function fmtNum(x) {
+    if (typeof x !== 'number' || !isFinite(x)) return '—';
+    return String(x);
+  }
+
+  function showError(msg) {
+    var p = document.getElementById('ygo-error');
+    p.textContent = msg || '';
+    p.hidden = !msg;
+  }
+
+  function renderResults(data) {
+    var box = document.getElementById('ygo-results');
+    box.classList.add('visible');
+    showError('');
+    document.getElementById('r-base_ev').textContent = fmtMoney(data.base_ev);
+    document.getElementById('r-pessimistic_ev').textContent = fmtMoney(data.pessimistic_ev);
+    document.getElementById('r-optimistic_ev').textContent = fmtMoney(data.optimistic_ev);
+    document.getElementById('r-safe_buy_price').textContent = fmtMoney(data.safe_buy_price);
+    document.getElementById('r-fair_buy_price').textContent = fmtMoney(data.fair_buy_price);
+    document.getElementById('r-breakeven_price').textContent = fmtMoney(data.breakeven_price);
+
+    var wrap = document.getElementById('r-risk-wrap');
+    wrap.textContent = '';
+    var lvl = data.risk_level;
+    var badge = el('span', {
+      class: 'risk-badge risk-' + lvl,
+      text: String(lvl),
+      title: YGO_RISK_TITLES[lvl] || 'Niveau de risque synthétique (risk_level).'
+    });
+    wrap.appendChild(badge);
+
+    var ul = document.getElementById('r-flags');
+    ul.textContent = '';
+    (data.risk_flags || []).forEach(function (f) {
+      ul.appendChild(el('li', { text: f }));
+    });
+
+    var tb = document.getElementById('r-top-cards');
+    tb.textContent = '';
+    (data.top_cards || []).forEach(function (c) {
+      var tr = el('tr');
+      tr.appendChild(el('td', { text: c.card_name || '' }));
+      tr.appendChild(el('td', { text: fmtNum(c.liquidity_score) }));
+      tr.appendChild(el('td', { text: fmtMoney(c.realizable_value) }));
+      tb.appendChild(tr);
+    });
+  }
+
+  function showLoadErr(msg) {
+    var p = document.getElementById('ygo-load-err');
+    p.textContent = msg || '';
+    p.hidden = !msg;
+  }
+
+  function setLoadMsg(msg) {
+    document.getElementById('ygo-load-msg-text').textContent = msg || '';
+  }
+
+  document.getElementById('btn-load-set').addEventListener('click', function () {
+    var apiSet = document.getElementById('ygo_api_set_name').value.trim();
+    if (!apiSet) {
+      showLoadErr('Nom du set API requis.');
+      return;
+    }
+    showLoadErr('');
+    setLoadControlsDisabled(true);
+    setLoadSpinner(true);
+    setLoadMsg('Chargement des cartes... (peut prendre quelques secondes)');
+    var mp = document.getElementById('ygo_min_price').value.trim();
+    var q = '/admin/ygo/set?name=' + encodeURIComponent(apiSet);
+    if (mp) q += '&min_price=' + encodeURIComponent(mp);
+    fetch(q, { method: 'GET', headers: { Accept: 'application/json' }, credentials: 'include' })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            throw new Error(res.status + (t ? ': ' + t : ''));
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        setLoadMsg('');
+        renderGroupedSetCards(data.cards || []);
+        syncDeriveModeUi();
+        showLoadErr(data.warning || '');
+      })
+      .catch(function (e) {
+        setLoadMsg('');
+        showLoadErr(e.message || String(e));
+      })
+      .finally(function () {
+        setLoadSpinner(false);
+        setLoadControlsDisabled(false);
+      });
+  });
+
+  document.getElementById('ygo-derive-slot').addEventListener('change', syncDeriveModeUi);
+  document.getElementById('ygo-derive-case').addEventListener('change', syncDeriveModeUi);
+
+  document.getElementById('btn-derive-pulls').addEventListener('click', function () {
+    var warnEl = document.getElementById('ygo-derive-warn');
+    warnEl.textContent = '';
+    warnEl.hidden = true;
+    var counts = parseCountsTextarea(document.getElementById('ygo-rarity-counts').value);
+    var rows = collectRowsForDerive();
+    if (!counts.length) {
+      warnEl.textContent = 'Saisissez au moins un comptage (libellé, tab ou |, puis nombre entier ≥ 0).';
+      warnEl.hidden = false;
+      return;
+    }
+    if (!rows.length) {
+      warnEl.textContent = 'Ajoutez ou chargez au moins une ligne de carte dans le tableau.';
+      warnEl.hidden = false;
+      return;
+    }
+    var caseMode = isCaseDeriveMode();
+    var bulk = num(document.getElementById('ygo-bulk-mass'), 0);
+    if (!caseMode && (bulk < 0 || bulk > 1)) {
+      warnEl.textContent = 'bulk_mass doit être entre 0 et 1.';
+      warnEl.hidden = false;
+      return;
+    }
+    if (caseMode && bulk > 1e-9) {
+      warnEl.textContent = 'En mode case, bulk_mass doit rester à 0.';
+      warnEl.hidden = false;
+      return;
+    }
+    var distinct = parseCountsTextarea(document.getElementById('ygo-distinct-counts').value);
+    if (caseMode && !distinct.length) {
+      warnEl.textContent = 'Mode case : saisissez les cartes distinctes par rareté (textarea « distincts »).';
+      warnEl.hidden = false;
+      return;
+    }
+    var payload = { counts: counts, rows: rows };
+    if (caseMode) {
+      payload.derive_mode = 'case_expected_copies';
+      payload.distinct_counts = distinct;
+    } else {
+      payload.derive_mode = 'slot_mass';
+    }
+    if (bulk > 0 && !caseMode) payload.bulk_mass = bulk;
+    var dpc = intNum(document.getElementById('ygo-displays-per-case'), NaN);
+    if (isFinite(dpc) && dpc > 0) payload.displays_per_case = dpc;
+    fetch('/admin/ygo/derive-pulls', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(res.status + (t ? ': ' + t : ''));
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var probs = data.pull_probabilities || [];
+      var domRows = document.querySelectorAll('#card-rows tr.ygo-card-version');
+      if (probs.length !== domRows.length) {
+        warnEl.textContent = 'Réponse inattendue : nombre de probabilités différent du nombre de lignes.';
+        warnEl.hidden = false;
+        return;
+      }
+      domRows.forEach(function (tr, i) {
+        var inp = tr.querySelector('[data-f=pull]');
+        if (inp) inp.value = String(probs[i]);
+      });
+      if (data.warning) {
+        warnEl.textContent = data.warning;
+        warnEl.hidden = false;
+      }
+    }).catch(function (e) {
+      warnEl.textContent = e.message || String(e);
+      warnEl.hidden = false;
+    });
+  });
+
+  document.getElementById('btn-add-card').addEventListener('click', function () { addCardRow(); });
+
+  document.getElementById('ygo-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var cards = collectCards();
+    var payload = {
+      display_cost: num(document.getElementById('display_cost'), 0),
+      is_new_set: document.getElementById('is_new_set').checked,
+      cards: cards
+    };
+    fetch('/admin/ygo/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(res.status + (t ? ': ' + t : ''));
+        });
+      }
+      return res.json();
+    }).then(renderResults).catch(function (e) {
+      document.getElementById('ygo-results').classList.add('visible');
+      showError(e.message || String(e));
+    });
+  });
+
+  addCardRow();
+  syncDeriveModeUi();
+})();
+</script>
+</body>
+</html>

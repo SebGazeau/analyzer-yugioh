@@ -52,3 +52,10 @@ pub fn error_setup_key() -> &'static str {
 pub fn error_admin_exists() -> &'static str {
     include_str!("../../templates/admin_inline/error_admin_exists.html")
 }
+
+/// Page outil « analyse display » (formulaire + JS inline).
+pub fn render_ygo_analysis() -> String {
+    include_str!("../../templates/admin_inline/ygo_analysis.html")
+        .replace("%%STYLE%%", ADMIN_DASHBOARD_STYLE)
+        .replace("%%ACTIONS%%", ADMIN_DASHBOARD_ACTIONS_HTML)
+}

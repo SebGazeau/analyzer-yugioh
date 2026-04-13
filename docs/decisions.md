@@ -235,3 +235,48 @@
 - **Recherche** : nœud **`#search-card-float`** en `position: fixed`, créé dans `setupSearch`, suit le pointeur (clamp viewport) ; `pointerenter` / `pointerleave` sur le flottant pour permettre le scroll du texte sans masquer immédiatement au passage souris.
 
 **Pourquoi** : moins de hauteur dans le flux, même langage visuel fiche + effet lisible ; limite connue : le flottant reste orienté souris (pas d’aperçu au focus clavier sur les lignes).
+
+---
+
+## 2026-04-12 — Métadonnées produit display : dérivation des `pull_probability`
+
+**Contexte** : le moteur [`crates/ygo-engine`](../crates/ygo-engine) attend des `pull_probability` déjà renseignées ; les défauts YGOPRODECK (mapper par rareté moteur) ne reflètent pas la composition réelle d’un display scellé.
+
+**Décision** :
+
+- Une couche **`product_model`** ([`src/modules/ygo/product_model.rs`](../src/modules/ygo/product_model.rs)) et une route **`POST /admin/ygo/derive-pulls`** calculent des probas à partir de **comptages par libellé de rareté par display** et des lignes du tableau (`cardmarket_set_rarity` si présent, sinon `rarity` moteur), avec **clé normalisée** : minuscules, sans espaces ni ponctuation (ex. « Secret Rare » et `SecretRare` → même clé).
+- **Répartition** : masse `count_L / Σ counts` pour le libellé `L`, répartie **uniformément** entre les lignes dont la clé matche `L`.
+- **Somme** : après affectation, mise à l’échelle pour que la somme des probas sur les lignes vaille **`1 − bulk_mass`** (paramètre optionnel `bulk_mass` ∈ \[0, 1\], défaut 0) — le reste représente une masse hors tableau (bulk non modélisé).
+- **`display_cost`** : l’outil ne convertit pas automatiquement display ↔ case ; l’utilisateur doit aligner le **coût** sur l’**unité** analysée (un display vs une case) et les **comptages** sur la même unité.
+- Champs **`cards_per_booster`**, **`boosters_per_display`**, **`displays_per_case`** : acceptés dans le JSON pour compatibilité future, **ignorés** par la v1 de dérivation.
+
+**Pourquoi** : garder `analyze()` inchangé tout en permettant d’ancrer les probas sur des hypothèses explicites ; avertir l’utilisateur lorsque des comptages n’ont aucune ligne correspondante.
+
+---
+
+## 2026-04-12 — Case scellée : mode `case_expected_copies` (quotas + distincts)
+
+**Contexte** : analyser une **case** avec des quotas de hits par rareté et un nombre de **cartes distinctes** dans le set par rareté ; le mode « masse relative » (`slot_mass`) ne convient pas (somme des pondérations = 1, interprétation « un tirage »).
+
+**Décision** :
+
+- **`derive_mode`** dans le JSON `DerivePullsRequest` : `slot_mass` (défaut, comportement inchangé) ou **`case_expected_copies`**.
+- **`distinct_counts`** : même structure que `counts` (libellé + entier) ; en mode case, pour chaque clé `k` issue de `counts` avec un quota `Q_k > 0`, une entrée **distincte** `D_k > 0` est requise (même normalisation de clé que les comptages).
+- **Sémantique** : pour chaque ligne du tableau dont la clé est `k`, `pull_probability` = **espérance du nombre d’exemplaires de cette ligne par case** : `E_i = Q_k / D_k` (hits i.i.d. uniformes sur les `D_k` cartes du set — approximation **avec remise** ; la variance réelle sans remise n’est pas modélisée ici).
+- **Cohérence** : si le nombre de lignes du tableau qui matchent `k` est `m_k` et `m_k > D_k` → **erreur** (plus de lignes modélisées que de cartes distinctes). Si `m_k < D_k` → **warning** : une partie des hits attendus tombe sur des cartes absentes du tableau (EV sous-estimée côté lignes listées).
+- **`bulk_mass`** : **non pris en charge** en mode case (doit être 0 ou absent) — sinon erreur explicite.
+- **`display_cost`** : inchangé côté moteur ; l’utilisateur saisit le **coût de la case** lorsque les `pull_probability` sont des espérances par case.
+- **Évolution** : simulation Monte Carlo ou agrégation sans remise pourrait compléter l’EV ponctuelle ; hors scope de cette slice (moteur linéaire conservé).
+- **Piste Monte Carlo (non implémentée)** : échantillonner des ouvertures de case (tirages par rareté avec ou sans remise au sein du pool `D_k`), en déduire une distribution du **profit net** ou des quantiles ; resterait un module ou endpoint **séparé** de `POST /admin/ygo/analyze` pour ne pas mélanger signal EV ponctuel et analyse de risque simulée.
+
+**Pourquoi** : linéarité de l’espérance ⇒ `analyze()` reste `Σ pull_probability × prix_réalisable` avec une lecture monétaire cohérente « par case » sans modifier `ygo-engine`.
+
+---
+
+## 2026-04-12 — Konami : comptages rareté / display pour dérivation auto
+
+**Contexte** : besoin éventuel d’importer des totaux officiels.
+
+**Constat** : le module [`src/konami_catalog/`](../src/konami_catalog/) indexe listes de packs et pages liste de cartes (`parse_pack_index_html`, `parse_pack_listing_card_rows`) — **pas** de extraction des comptages « rareté par display / case » dans le code actuel.
+
+**Décision** : pas d’import automatique Konami pour cette slice ; saisie manuelle ou JSON via l’admin. Une évolution ultérieure exigerait une source HTML/PDF stable et un parseur dédié + validation manuelle.

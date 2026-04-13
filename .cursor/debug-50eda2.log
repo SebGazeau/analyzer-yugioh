@@ -1,0 +1,13 @@
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":true,"path":"/"},"timestamp":1776076026240,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":true,"path":"/"},"timestamp":1776076044099,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":true,"path":"/"},"timestamp":1776076055024,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":true,"path":"/"},"timestamp":1776076059993,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"init/builderDeckDraft.ts:tryRestore","message":"draft_restore_network_failure_cleared_silent","data":{"clearedDraft":true},"timestamp":1776076060506,"runId":"post-fix","hypothesisId":"H5"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":false,"path":"/"},"timestamp":1776076073146,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"deckApi.ts:apiListMyDecks","message":"deck_list_not_ok","data":{"status":401,"returnsEmptyArraySilently":true},"timestamp":1776076073163,"hypothesisId":"H2-H3"}
+{"sessionId":"50eda2","location":"init/builderDeckDraft.ts:tryRestore","message":"draft_restore_network_failure_cleared_silent","data":{"clearedDraft":true},"timestamp":1776076073724,"runId":"post-fix","hypothesisId":"H5"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":true,"path":"/"},"timestamp":1776076079444,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"init/builderDeckDraft.ts:tryRestore","message":"draft_restore_network_failure_cleared_silent","data":{"clearedDraft":true},"timestamp":1776076079957,"runId":"post-fix","hypothesisId":"H5"}
+{"sessionId":"50eda2","location":"main.ts:DOMContentLoaded","message":"header_auth_ssr_snapshot","data":{"showsLoggedInChrome":false,"path":"/"},"timestamp":1776076087823,"hypothesisId":"H1"}
+{"sessionId":"50eda2","location":"deckApi.ts:apiListMyDecks","message":"deck_list_not_ok","data":{"status":401,"returnsEmptyArraySilently":true},"timestamp":1776076087830,"hypothesisId":"H2-H3"}
+{"sessionId":"50eda2","location":"init/builderDeckDraft.ts:tryRestore","message":"draft_restore_network_failure_cleared_silent","data":{"clearedDraft":true},"timestamp":1776076088355,"runId":"post-fix","hypothesisId":"H5"}

@@ -195,6 +195,15 @@ pub async fn admin_logout(session: Session) -> HttpResponse {
         .finish()
 }
 
+/// Page HTML : analyse display (EV), JS inline vers `POST /admin/ygo/analyze`.
+#[get("/ygo")]
+pub async fn admin_ygo_analysis_page() -> HttpResponse {
+    let body = admin_inline_html::render_ygo_analysis();
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(body)
+}
+
 #[derive(Deserialize)]
 pub struct RehydrateQuery {
     #[serde(default)]

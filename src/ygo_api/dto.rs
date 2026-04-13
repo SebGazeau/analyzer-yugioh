@@ -38,6 +38,45 @@ pub struct ApiCard {
     /// Impressions / sets (optionnel selon la requête API).
     #[serde(default)]
     pub card_sets: Option<Vec<ApiCardSet>>,
+    /// Métadonnées `misc=yes` (vues, formats, etc.).
+    #[serde(default)]
+    pub misc_info: Option<Vec<ApiMiscInfo>>,
+    /// Signal prix global (ex. plus bas Cardmarket toutes versions).
+    #[serde(default)]
+    pub card_prices: Option<Vec<ApiCardPrice>>,
+}
+
+/// Bloc `misc_info[]` renvoyé par `cardinfo.php` avec `misc=yes`.
+#[derive(Debug, Deserialize, Clone)]
+pub struct ApiMiscInfo {
+    pub views: Option<u64>,
+    pub viewsweek: Option<u64>,
+    pub upvotes: Option<u32>,
+    pub downvotes: Option<u32>,
+    pub tcg_date: Option<String>,
+    pub formats: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ApiCardPrice {
+    pub cardmarket_price: Option<String>,
+}
+
+/// Réponse de `getCardPrices.php`.
+#[derive(Debug, Deserialize, Clone)]
+pub struct CardPricesResponse {
+    pub cardmarket: Option<Vec<CardmarketVersion>>,
+}
+
+/// Une version Cardmarket pour une carte.
+#[derive(Debug, Deserialize, Clone)]
+pub struct CardmarketVersion {
+    pub set_name: String,
+    pub set_code: String,
+    pub set_rarity: String,
+    pub set_price: String,
+    #[serde(default)]
+    pub set_url: Option<String>,
 }
 
 /// Une entrée `card_sets[]` dans la réponse `cardinfo.php` v7.
@@ -198,5 +237,24 @@ mod tests {
         let j = r#"{"id":2,"name":"Y","type":"Spell Card"}"#;
         let c: ApiCard = serde_json::from_str(j).expect("parse");
         assert!(c.card_set_rows().is_empty());
+    }
+
+    #[test]
+    fn deserializes_misc_info_and_card_prices() {
+        let j = r#"{"id":3,"name":"Z","type":"Spell Card","misc_info":[{"viewsweek":200,"views":1}],"card_prices":[{"cardmarket_price":"12.50"}]}"#;
+        let c: ApiCard = serde_json::from_str(j).expect("parse");
+        let m = c.misc_info.as_ref().expect("misc");
+        assert_eq!(m[0].viewsweek, Some(200));
+        let p = c.card_prices.as_ref().expect("prices");
+        assert_eq!(p[0].cardmarket_price.as_deref(), Some("12.50"));
+    }
+
+    #[test]
+    fn deserializes_card_prices_response_cardmarket() {
+        let j = r#"{"cardmarket":[{"set_name":"LOB","set_code":"LOB-","set_rarity":"Ultra Rare","set_price":"9.99","set_url":"https://example.com/x"}]}"#;
+        let r: CardPricesResponse = serde_json::from_str(j).expect("parse");
+        let v = r.cardmarket.as_ref().unwrap().first().unwrap();
+        assert_eq!(v.set_name, "LOB");
+        assert_eq!(v.set_url.as_deref(), Some("https://example.com/x"));
     }
 }

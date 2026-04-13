@@ -84,8 +84,8 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     const extraGrid = document.getElementById(DECK_GRID_IDS.extra);
     expect(extraGrid?.querySelectorAll(DECK_CARD_CELL_SELECTOR).length ?? 0).toBe(0);
   });
@@ -155,8 +155,8 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     const updateResult = await updateDeckOnServer();
     expect(updateResult.error).toBeUndefined();
     expect(updateResult.ok).toBe(true);
@@ -259,8 +259,8 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     expect(cardCalls).toBeGreaterThanOrEqual(1);
   });
 });

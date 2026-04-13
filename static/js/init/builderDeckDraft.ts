@@ -47,6 +47,21 @@ function isSameOriginLoginForm(form: HTMLFormElement): boolean {
     }
 }
 
+/**
+ * Erreur typique quand `fetch` échoue avant une réponse HTTP (CORS, réseau, onglet dégradé).
+ * Exposé pour tests unitaires.
+ */
+export function isLikelyFetchNetworkFailure(e: unknown): boolean {
+    if (!(e instanceof Error)) return false;
+    const m = e.message;
+    return (
+        m === 'Failed to fetch' ||
+        m === 'Load failed' ||
+        m === 'NetworkError when attempting to fetch resource.' ||
+        m.startsWith('NetworkError ')
+    );
+}
+
 /** À appeler une fois au chargement de l’app (avant ou après init builder). */
 export function bindBuilderDeckDraftLifecycle(): void {
     document.addEventListener(
@@ -100,6 +115,10 @@ export async function tryRestoreBuilderDeckDraftOnLoad(): Promise<void> {
             alert(msgImportCardsNotFound(failed));
         }
     } catch (e: unknown) {
+        if (isLikelyFetchNetworkFailure(e)) {
+            clearBuilderDeckDraftFromSession();
+            return;
+        }
         const msg = e instanceof Error ? e.message : String(e);
         alert(`${MSG_BUILDER_DRAFT_RESTORE_FAILED_PREFIX}${msg}`);
     }

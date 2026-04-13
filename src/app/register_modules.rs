@@ -70,6 +70,7 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
                 })
                 .service(crate::modules::admin_sync::admin_index)
                 .service(routes::admin_login_page)
+                .service(routes::admin_ygo_analysis_page)
                 .service(routes::admin_login)
                 .service(routes::admin_logout)
                 .service(routes::admin_setup_page)
@@ -81,6 +82,7 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
                 .service(crate::modules::admin_sync::apply_card_metadata_fill)
                 .service(routes::admin_import)
                 .service(routes::admin_rehydrate_storage)
+                .configure(crate::modules::ygo::routes::register)
         })
         .service(
             web::scope("/web")

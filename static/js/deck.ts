@@ -25,7 +25,7 @@ import {
     apiCreateDeck,
     apiDeleteDeck,
     apiDuplicateDeck,
-    apiFetchDeckById,
+    apiFetchDeckByIdDetailed,
     apiListMyDecks,
     apiUpdateDeck,
     buildDeckSectionsPayload,
@@ -296,7 +296,7 @@ export async function saveDeckToServer(): Promise<{
     return result;
 }
 
-export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
+export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string; unauthorized?: boolean }> {
     const deck = getCurrentLoadedDeck();
     if (!deck) return { error: MSG_UPDATE_DECK_NOT_LOADED };
     const sections = buildDeckSectionsPayload(getDeckState());
@@ -314,13 +314,19 @@ export async function listMyDecks(): Promise<
 }
 
 /** Duplique un deck serveur : nouveau deck nommé « {nom} (copie) » avec le même contenu. */
-export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string }> {
+export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string; unauthorized?: boolean }> {
     return apiDuplicateDeck(id);
 }
 
-export async function loadDeckFromServer(id: number): Promise<boolean> {
-    const data = await apiFetchDeckById(id);
-    if (!data) return false;
+export async function loadDeckFromServer(id: number): Promise<{ ok: boolean; unauthorized?: boolean }> {
+    const outcome = await apiFetchDeckByIdDetailed(id);
+    if (outcome.status === 'unauthorized') {
+        return { ok: false, unauthorized: true };
+    }
+    if (outcome.status !== 'ok') {
+        return { ok: false };
+    }
+    const data = outcome.data;
     cleanCardTable();
 
     const pushSection = async (raw: unknown, section: DeckSection) => {
@@ -344,17 +350,17 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         );
     }
     syncBuilderStatsFromDeck();
-    return true;
+    return { ok: true };
 }
 
-/** Supprime un deck sur le serveur (DELETE /decks/:id). Retourne true si succès. */
-export async function deleteDeckFromServer(id: number): Promise<boolean> {
-    const ok = await apiDeleteDeck(id);
-    if (!ok) return false;
+/** Supprime un deck sur le serveur (DELETE /decks/:id). */
+export async function deleteDeckFromServer(id: number): Promise<{ ok: boolean; unauthorized?: boolean }> {
+    const r = await apiDeleteDeck(id);
+    if (!r.ok) return r;
     const loaded = getCurrentLoadedDeck();
     if (loaded?.id === id) clearCurrentLoadedDeck();
     removeDeckCoverFromStorage(id);
-    return true;
+    return { ok: true };
 }
 
 export function exportDeckToFile(): void {

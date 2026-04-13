@@ -38,6 +38,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 regex = "1"
 rustrict = "0.7"
 scraper = "0.22"
+ygo-engine = { path = "crates/ygo-engine" }
 
 [features]
 default = []
@@ -51,5 +52,5 @@ optional = true
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [workspace]
-members = [".", "xtask"]
+members = [".", "crates/ygo-engine", "xtask"]
 resolver = "3"

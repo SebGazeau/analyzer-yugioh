@@ -68,6 +68,17 @@ export function buildDeckSectionsPayload(sections: Record<DeckSection, DeckRowPa
     return mapDeckSections((s) => sections[s].map(deckRowToEntryPayload)) as DeckSectionsPayload;
 }
 
+/**
+ * Session expirée alors que le HTML affiche encore le chrome « connecté » (SSR) :
+ * recharge la page pour resynchroniser l’en-tête avec le cookie réel.
+ */
+function reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res: Response, source: string): void {
+    if (res.status !== HTTP_STATUS_UNAUTHORIZED) return;
+    if (typeof document === 'undefined') return;
+    if (!document.querySelector('[data-auth-action="logout"]')) return;
+    window.location.reload();
+}
+
 function deckApiErrorMessage(res: Response, data: Record<string, unknown>): string {
     if (res.status === HTTP_STATUS_UNAUTHORIZED) {
         return typeof data.error === 'string' ? data.error : MSG_DECK_API_AUTH_REQUIRED;
@@ -92,7 +103,10 @@ export type DeckListItem = {
 
 export async function apiListMyDecks(): Promise<DeckListItem[]> {
     const res = await fetch(DECK_API_COLLECTION_URL, DECK_FETCH_INIT);
-    if (!res.ok) return [];
+    if (!res.ok) {
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiListMyDecks');
+        return [];
+    }
     return res.json();
 }
 
@@ -109,9 +123,11 @@ export async function apiCreateDeck(
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
+        const unauthorized = res.status === HTTP_STATUS_UNAUTHORIZED;
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiCreateDeck');
         return {
             error: deckApiErrorMessage(res, data),
-            unauthorized: res.status === HTTP_STATUS_UNAUTHORIZED,
+            unauthorized,
         };
     }
     const id = data.id as number;
@@ -123,7 +139,7 @@ export async function apiUpdateDeck(
     name: string,
     sections: DeckSectionsPayload,
     cover: { name: string; imageUrl: string } | null,
-): Promise<{ ok?: boolean; error?: string }> {
+): Promise<{ ok?: boolean; error?: string; unauthorized?: boolean }> {
     const body: Record<string, unknown> = { name, ...sections };
     if (cover) {
         body.cover_card_name = cover.name;
@@ -137,16 +153,21 @@ export async function apiUpdateDeck(
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
-        return { error: deckApiErrorMessage(res, data) };
+        const unauthorized = res.status === HTTP_STATUS_UNAUTHORIZED;
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiUpdateDeck');
+        return { error: deckApiErrorMessage(res, data), unauthorized };
     }
     return { ok: true };
 }
 
-export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error?: string }> {
+export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error?: string; unauthorized?: boolean }> {
     const res = await fetch(deckApiDeckByIdUrl(id), DECK_FETCH_INIT);
     if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-        if (res.status === HTTP_STATUS_UNAUTHORIZED) return { error: deckApiErrorMessage(res, data) };
+        if (res.status === HTTP_STATUS_UNAUTHORIZED) {
+            reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiDuplicateDeck:get');
+            return { error: deckApiErrorMessage(res, data), unauthorized: true };
+        }
         return { error: typeof data.error === 'string' ? data.error : MSG_DECK_API_DECK_NOT_FOUND };
     }
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -162,21 +183,45 @@ export async function apiDuplicateDeck(id: number): Promise<{ id?: number; error
     });
     const postData = (await postRes.json().catch(() => ({}))) as Record<string, unknown>;
     if (!postRes.ok) {
-        return { error: deckApiErrorMessage(postRes, postData) };
+        const unauthorized = postRes.status === HTTP_STATUS_UNAUTHORIZED;
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(postRes, 'apiDuplicateDeck:post');
+        return { error: deckApiErrorMessage(postRes, postData), ...(unauthorized ? { unauthorized: true } : {}) };
     }
     const newId = postData.id as number;
     return newId != null ? { id: newId } : {};
 }
 
-/** GET deck par id — corps JSON ou null si échec HTTP. */
-export async function apiFetchDeckById(id: number): Promise<Record<string, unknown> | null> {
+export type FetchDeckByIdOutcome =
+    | { status: 'ok'; data: Record<string, unknown> }
+    | { status: 'unauthorized' }
+    | { status: 'other_error' };
+
+/** GET deck par id avec distinction 401 (session) vs autre erreur. */
+export async function apiFetchDeckByIdDetailed(id: number): Promise<FetchDeckByIdOutcome> {
     const res = await fetch(deckApiDeckByIdUrl(id), DECK_FETCH_INIT);
-    if (!res.ok) return null;
+    if (!res.ok) {
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiFetchDeckById');
+        if (res.status === HTTP_STATUS_UNAUTHORIZED) return { status: 'unauthorized' };
+        return { status: 'other_error' };
+    }
     const data = await res.json().catch(() => null);
-    return data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+    if (data && typeof data === 'object') {
+        return { status: 'ok', data: data as Record<string, unknown> };
+    }
+    return { status: 'other_error' };
 }
 
-export async function apiDeleteDeck(id: number): Promise<boolean> {
+/** GET deck par id — corps JSON ou null si échec HTTP. */
+export async function apiFetchDeckById(id: number): Promise<Record<string, unknown> | null> {
+    const o = await apiFetchDeckByIdDetailed(id);
+    return o.status === 'ok' ? o.data : null;
+}
+
+export async function apiDeleteDeck(id: number): Promise<{ ok: boolean; unauthorized?: boolean }> {
     const res = await fetch(deckApiDeckByIdUrl(id), { ...DECK_FETCH_INIT, method: HTTP_METHOD_DELETE });
-    return res.ok;
+    if (!res.ok) {
+        reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res, 'apiDeleteDeck');
+        return { ok: false, unauthorized: res.status === HTTP_STATUS_UNAUTHORIZED };
+    }
+    return { ok: true };
 }

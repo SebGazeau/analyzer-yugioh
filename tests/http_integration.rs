@@ -360,6 +360,169 @@ async fn test_admin_import_without_key_returns_403() {
 }
 
 #[actix_web::test]
+async fn test_admin_ygo_analyze_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/analyze")
+        .insert_header(("content-type", "application/json"))
+        .set_payload(r#"{"display_cost":1.0,"is_new_set":false,"cards":[]}"#)
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_analyze_with_key_returns_200_json() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/analyze")
+        .insert_header(("x-admin-key", "secret-key"))
+        .insert_header(("content-type", "application/json"))
+        .set_payload(r#"{"display_cost":10.0,"is_new_set":false,"cards":[]}"#)
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+    let bytes = test::read_body(resp).await;
+    let v: serde_json::Value = serde_json::from_slice(&bytes).expect("json");
+    assert_eq!(v["base_ev"], serde_json::json!(0.0));
+    assert_eq!(v["top_cards"], serde_json::json!([]));
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_analyze_invalid_json_returns_400() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/analyze")
+        .insert_header(("x-admin-key", "secret-key"))
+        .insert_header(("content-type", "application/json"))
+        .set_payload("{not-json")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 400);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_health_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/ygo/health")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_health_with_key_returns_200() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/ygo/health")
+        .insert_header(("x-admin-key", "secret-key"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+    let body = test::read_body(resp).await;
+    assert_eq!(String::from_utf8_lossy(&body), "ok");
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_set_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/ygo/set?name=Test")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_derive_pulls_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/derive-pulls")
+        .insert_header(("content-type", "application/json"))
+        .set_payload(r#"{"counts":[],"rows":[]}"#)
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_derive_pulls_with_key_returns_200_json() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let payload = serde_json::json!({
+        "counts": [{"label": "Rare", "count": 2}],
+        "rows": [
+            {"cardmarket_set_rarity": null, "rarity_motor": "Rare"},
+            {"cardmarket_set_rarity": null, "rarity_motor": "Rare"}
+        ]
+    });
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/derive-pulls")
+        .insert_header(("x-admin-key", "secret-key"))
+        .insert_header(("content-type", "application/json"))
+        .set_payload(payload.to_string())
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+    let bytes = test::read_body(resp).await;
+    let v: serde_json::Value = serde_json::from_slice(&bytes).expect("json");
+    let arr = v["pull_probabilities"].as_array().expect("array");
+    assert_eq!(arr.len(), 2);
+    assert!((arr[0].as_f64().unwrap() - 0.5).abs() < 1e-9);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_derive_pulls_case_mode_returns_200_json() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let payload = serde_json::json!({
+        "derive_mode": "case_expected_copies",
+        "counts": [{"label": "Secret Rare", "count": 10}],
+        "distinct_counts": [{"label": "Secret Rare", "count": 5}],
+        "rows": [
+            {"cardmarket_set_rarity": "Secret Rare", "rarity_motor": "SecretRare"},
+            {"cardmarket_set_rarity": "Secret Rare", "rarity_motor": "SecretRare"}
+        ]
+    });
+    let req = test::TestRequest::post()
+        .uri("/admin/ygo/derive-pulls")
+        .insert_header(("x-admin-key", "secret-key"))
+        .insert_header(("content-type", "application/json"))
+        .set_payload(payload.to_string())
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+    let bytes = test::read_body(resp).await;
+    let v: serde_json::Value = serde_json::from_slice(&bytes).expect("json");
+    let arr = v["pull_probabilities"].as_array().expect("array");
+    assert_eq!(arr.len(), 2);
+    let exp = 10.0 / 5.0;
+    assert!((arr[0].as_f64().unwrap() - exp).abs() < 1e-9);
+    assert!((arr[1].as_f64().unwrap() - exp).abs() < 1e-9);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_page_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get().uri("/admin/ygo").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_ygo_page_with_key_returns_200_html() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/ygo")
+        .insert_header(("x-admin-key", "secret-key"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+    let body = test::read_body(resp).await;
+    let s = String::from_utf8_lossy(&body);
+    assert!(s.contains("Analyse display"), "page HTML attendue");
+}
+
+#[actix_web::test]
 async fn test_preview_card_metadata_fill_without_key_returns_403() {
     let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
     let req = test::TestRequest::get()

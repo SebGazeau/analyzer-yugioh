@@ -1,0 +1,9 @@
+[package]
+name = "ygo-engine"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Pure decision-support logic for display EV (no I/O)"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
