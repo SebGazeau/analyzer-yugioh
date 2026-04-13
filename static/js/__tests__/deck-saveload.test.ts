@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Card } from '../api.js';
+import { BUILDER_DECK_DRAFT_SESSION_KEY } from '../deck-builder/builderDeckDraft.js';
+import { DECK_NAME_INPUT_ID } from '../deck-builder/deckConstants.js';
 import {
+  addToDeck,
   clearCurrentLoadedDeck,
   duplicateDeckOnServer,
   getCurrentLoadedDeck,
@@ -30,6 +34,7 @@ function minimalDOM() {
 describe('Save/Load deck — fetch mocké', () => {
   beforeEach(() => {
     minimalDOM();
+    sessionStorage.clear();
     vi.stubGlobal('prompt', vi.fn().mockReturnValue('My Deck'));
   });
 
@@ -45,6 +50,7 @@ describe('Save/Load deck — fetch mocké', () => {
     }));
     const r = await saveDeckToServer();
     expect(r.id).toBe(1);
+    expect(sessionStorage.getItem(BUILDER_DECK_DRAFT_SESSION_KEY)).toBeNull();
     expect(postBody).toHaveProperty('name', 'My Deck');
     expect(postBody).toHaveProperty('main');
     expect(postBody).toHaveProperty('extra');
@@ -78,8 +84,8 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     const extraGrid = document.getElementById(DECK_GRID_IDS.extra);
     expect(extraGrid?.querySelectorAll(DECK_CARD_CELL_SELECTOR).length ?? 0).toBe(0);
   });
@@ -149,13 +155,47 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     const updateResult = await updateDeckOnServer();
     expect(updateResult.error).toBeUndefined();
     expect(updateResult.ok).toBe(true);
     expect(putUrl).toBe(deckApiDeckByIdUrl(1));
     expect(putBody).toHaveProperty('main');
+  });
+
+  it('saveDeckToServer en 401 persiste un brouillon et expose unauthorized', async () => {
+    document.body.innerHTML =
+      `<input id="${DECK_NAME_INPUT_ID}" value="GuestDeck" />` +
+      htmlDeckGrids(DECK_TABLE_GRID_CLASS) +
+      htmlCategorySummaryBody();
+    vi.stubGlobal('fetch', vi.fn((url: string | URL) => {
+      const u = typeof url === 'string' ? url : url.toString();
+      if (u.startsWith(`${CARD_API_PATH}?`)) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 101, name: 'Card A', type: 'Normal Monster' }),
+            { status: HTTP_STATUS_OK },
+          ),
+        );
+      }
+      if (u === DECK_API_COLLECTION_URL) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: 'Connexion requise' }), { status: HTTP_STATUS_UNAUTHORIZED }),
+        );
+      }
+      return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
+    }));
+    const card = { id: 101, name: 'Card A', type: 'Normal Monster' } as Card;
+    await addToDeck(card);
+    const r = await saveDeckToServer();
+    expect(r.unauthorized).toBe(true);
+    expect(r.id).toBeUndefined();
+    const raw = sessionStorage.getItem(BUILDER_DECK_DRAFT_SESSION_KEY);
+    expect(raw).toBeTruthy();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.name).toBe('GuestDeck');
+    expect(parsed.main.length).toBeGreaterThanOrEqual(1);
   });
 
   it('duplicateDeckOnServer GET puis POST avec nom « (copie) »', async () => {
@@ -219,8 +259,8 @@ describe('Save/Load deck — fetch mocké', () => {
       }
       return Promise.resolve(new Response('[]', { status: HTTP_STATUS_OK }));
     }));
-    const ok = await loadDeckFromServer(1);
-    expect(ok).toBe(true);
+    const loaded = await loadDeckFromServer(1);
+    expect(loaded.ok).toBe(true);
     expect(cardCalls).toBeGreaterThanOrEqual(1);
   });
 });

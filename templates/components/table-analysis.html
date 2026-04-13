@@ -12,15 +12,60 @@
     </colgroup>
     <thead>
       <tr>
-        <th title="Engine, catégorie ou groupe">Catégorie</th>
-        <th title="Nombre de cartes">Count</th>
-        <th title="Pourcentage du deck">% Deck</th>
-        <th title="P(au moins 1 en main de 5)">P(≥1 IN 5)</th>
-        <th>≥2</th>
-        <th>≥3</th>
-        <th>≥4</th>
-        <th>≥5</th>
-        <th>≥6</th>
+        <th scope="col" title="Engine, catégorie ou groupe">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">Ligne</span>
+            <span class="analysis-th-hint">Engine / catégorie / groupe</span>
+          </span>
+        </th>
+        <th scope="col" title="Nombre de cartes du groupe dans le Main Deck">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">Nb</span>
+            <span class="analysis-th-hint">Cartes</span>
+          </span>
+        </th>
+        <th scope="col" title="Part du Main Deck">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">% Deck</span>
+            <span class="analysis-th-hint">Part du Main</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥1) pour le nombre de cartes piochées (5 ou 6, ou deck restant si simulation)">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥1</span>
+            <span class="analysis-th-hint">Tirage actif</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥2), même tirage que la colonne ≥1">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥2</span>
+            <span class="analysis-th-hint">Même tirage</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥3), même tirage">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥3</span>
+            <span class="analysis-th-hint">Même tirage</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥4), même tirage">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥4</span>
+            <span class="analysis-th-hint">Même tirage</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥5), même tirage">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥5</span>
+            <span class="analysis-th-hint">Même tirage</span>
+          </span>
+        </th>
+        <th scope="col" title="P(≥6) : utile surtout pour une main à 6 cartes (sinon « — »)">
+          <span class="analysis-th-stack">
+            <span class="analysis-th-label">≥6</span>
+            <span class="analysis-th-hint">Main 6</span>
+          </span>
+        </th>
       </tr>
     </thead>
     <tbody id="category-summary-body">

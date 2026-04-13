@@ -53,7 +53,7 @@ fn ygoprodeck_url() -> String {
         .unwrap_or_else(|_| DEFAULT_YGOPRODECK_CARDINFO_URL.to_string())
 }
 
-fn http_client() -> Result<Client, CardSyncError> {
+pub(crate) fn http_client() -> Result<Client, CardSyncError> {
     Client::builder()
         .timeout(HTTP_TIMEOUT)
         .user_agent(concat!(

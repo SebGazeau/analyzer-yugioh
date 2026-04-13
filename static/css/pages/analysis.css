@@ -4,6 +4,89 @@
  * Scope : .page-analysis. Pour matrice de droits, cibler cette section.
  */
 
+/* ── Sommaire interne (ancres) ─────────────────── */
+.page-analysis .analysis-toc {
+  margin-bottom: var(--space-5);
+}
+.page-analysis .analysis-toc-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.page-analysis .analysis-toc-link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-gold);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.page-analysis .analysis-toc-link:hover,
+.page-analysis .analysis-toc-link:focus-visible {
+  border-bottom-color: var(--color-gold);
+}
+
+/* ── Blocs de section (data-analysis-section) ───── */
+.page-analysis .analysis-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.page-analysis .analysis-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.page-analysis .analysis-section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
+  letter-spacing: 0.02em;
+}
+.page-analysis .analysis-section-lead {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-4);
+  max-width: 72ch;
+  line-height: 1.5;
+}
+.page-analysis .analysis-overview {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
+  max-width: 72ch;
+  line-height: 1.5;
+}
+
+/* ── En-têtes tableau à deux lignes ─────────────── */
+.page-analysis .analysis-table .analysis-th-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.page-analysis .analysis-table .analysis-th-label {
+  line-height: 1.2;
+}
+.page-analysis .analysis-table .analysis-th-hint {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+  white-space: normal;
+}
+
 /* ── Titre section (NOM_DU_DECK — Analyse) ──────── */
 .analysis-title .analysis-deck-name {
   font-family: var(--font-display);
@@ -116,19 +199,6 @@
 }
 
 /* ── Deck composition strip (Main zone) ─────────── */
-.deck-composition-wrap {
-  margin-bottom: var(--space-6);
-}
-
-.deck-composition-label {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-2);
-  display: block;
-}
-
 .deck-composition-strip {
   display: flex;
   width: 100%;

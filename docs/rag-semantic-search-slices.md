@@ -1,5 +1,7 @@
 # Plan par slices — Recherche sémantique / RAG (post-legacy)
 
+**Vue d’ensemble + lien ADR :** [`roadmap-produit-et-technique.md`](roadmap-produit-et-technique.md) §4. Ce fichier reste la **référence détaillée** des slices et pièges legacy.
+
 Document de **cadrage** pour un chantier futur : réintroduire une couche **embeddings + index vectoriel** dans `analyzer-yugioh`, en tirant parti de l’historique [`legacy/`](../legacy/) **sans** en faire un copier-coller.
 
 ## 1. Ce que le legacy apporte (référence)

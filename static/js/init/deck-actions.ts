@@ -57,6 +57,15 @@ import {
     msgErrorPrefixed,
 } from '../utils/userDialogMessages.js';
 
+/** Après 401, `deckApi` peut lancer un reload : éviter l’alerte « erreur » si le chrome SSR indique encore connecté. */
+function shouldSkipErrorAlertDueToStaleSessionReload(unauthorized?: boolean): boolean {
+    return Boolean(
+        unauthorized &&
+            typeof document !== 'undefined' &&
+            document.querySelector('[data-auth-action="logout"]'),
+    );
+}
+
 /** Rafraîchit la liste « Mes decks » (appelée au load et après save/update). */
 export async function refreshMyDecksList(): Promise<void> {
     const ul = document.getElementById(DECK_MY_DECKS_LIST_ID);
@@ -105,8 +114,9 @@ export async function refreshMyDecksList(): Promise<void> {
             e.preventDefault();
             e.stopPropagation();
             const r = await duplicateDeckOnServer(d.id);
-            if (r.error) alert(msgErrorPrefixed(r.error));
-            else {
+            if (r.error && !shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
+                alert(msgErrorPrefixed(r.error));
+            } else if (!r.error) {
                 await refreshMyDecksList();
                 alert(msgDeckDuplicated(d.name));
             }
@@ -116,14 +126,16 @@ export async function refreshMyDecksList(): Promise<void> {
             e.preventDefault();
             e.stopPropagation();
             if (!confirm(msgConfirmDeleteDeck(d.name))) return;
-            const ok = await deleteDeckFromServer(d.id);
-            if (!ok) alert(MSG_DECK_DELETE_FAILED);
-            else await refreshMyDecksList();
+            const del = await deleteDeckFromServer(d.id);
+            if (!del.ok && !shouldSkipErrorAlertDueToStaleSessionReload(del.unauthorized)) {
+                alert(MSG_DECK_DELETE_FAILED);
+            } else if (del.ok) await refreshMyDecksList();
         });
         const loadDeck = async () => {
-            const ok = await loadDeckFromServer(d.id);
-            if (!ok) alert(MSG_DECK_LOAD_FAILED);
-            else {
+            const loaded = await loadDeckFromServer(d.id);
+            if (!loaded.ok && !shouldSkipErrorAlertDueToStaleSessionReload(loaded.unauthorized)) {
+                alert(MSG_DECK_LOAD_FAILED);
+            } else if (loaded.ok) {
                 setActiveTab(TAB_ID_BUILDER);
             }
         };
@@ -172,16 +184,22 @@ export function bindDeckToolbar(): void {
 
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await saveDeckToServer();
-        if (r.error) alert(msgErrorPrefixed(r.error));
-        else if (r.id) {
+        if (r.error) {
+            if (!shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
+                alert(msgErrorPrefixed(r.error));
+            }
+        } else if (r.id) {
             alert(msgDeckSavedWithId(r.id));
             await refreshMyDecksList();
         }
     });
     document.getElementById(DECK_BTN_UPDATE_SERVER_ID)?.addEventListener(DOM_EVENT_CLICK, async () => {
         const r = await updateDeckOnServer();
-        if (r.error) alert(msgErrorPrefixed(r.error));
-        else if (r.ok) {
+        if (r.error) {
+            if (!shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
+                alert(msgErrorPrefixed(r.error));
+            }
+        } else if (r.ok) {
             alert(MSG_DECK_UPDATED);
             await refreshMyDecksList();
         }

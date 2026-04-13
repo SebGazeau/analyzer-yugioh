@@ -10,9 +10,10 @@ RUN apt-get update \
     && cargo install cargo-watch \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier workspace (xtask est membre — requis pour `cargo build`)
+# Copier workspace (xtask + ygo-engine sont membres / deps path — requis pour `cargo build`)
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY xtask ./xtask
+COPY crates/ygo-engine ./crates/ygo-engine
 COPY src ./src
 COPY migrations ./migrations
 COPY templates ./templates

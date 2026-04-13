@@ -25,16 +25,23 @@ import {
     apiCreateDeck,
     apiDeleteDeck,
     apiDuplicateDeck,
-    apiFetchDeckById,
+    apiFetchDeckByIdDetailed,
     apiListMyDecks,
     apiUpdateDeck,
     buildDeckSectionsPayload,
 } from './deck-builder/deckApi.js';
 import {
+    applyParsedDeckJson,
     buildDeckJsonExportPayload,
     downloadJsonFile,
     runDeckImportFromFileInput,
+    type DeckJsonImportDeps,
 } from './deck-builder/deckFileIo.js';
+import {
+    clearBuilderDeckDraftFromSession,
+    deckSectionsHaveRows,
+    writeBuilderDeckDraftToSession,
+} from './deck-builder/builderDeckDraft.js';
 import { bindDeckDragAndDropRoot, executeDeckRowMove } from './deck-builder/grid/deckDragDrop.js';
 import { deckCellSelector } from './deck-builder/grid/deckGridDomSelectors.js';
 import { renderDeckGridSection } from './deck-builder/grid/deckGridRender.js';
@@ -269,19 +276,27 @@ export async function addToDeck(card: Card, sectionOverride?: DeckSection): Prom
     return true;
 }
 
-export async function saveDeckToServer(): Promise<{ id?: number; error?: string }> {
+export async function saveDeckToServer(): Promise<{
+    id?: number;
+    error?: string;
+    unauthorized?: boolean;
+}> {
     const name = getDeckName() || prompt(MSG_PROMPT_DECK_NAME) || '';
     if (!name.trim()) return {};
     const sections = buildDeckSectionsPayload(getDeckState());
     const result = await apiCreateDeck(name, sections);
+    if (result.unauthorized) {
+        persistBuilderDeckDraftSync();
+    }
     if (result.id != null) {
+        clearBuilderDeckDraftFromSession();
         setCurrentLoadedDeck(result.id, name.trim());
         setDeckName(name.trim());
     }
     return result;
 }
 
-export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string }> {
+export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: string; unauthorized?: boolean }> {
     const deck = getCurrentLoadedDeck();
     if (!deck) return { error: MSG_UPDATE_DECK_NOT_LOADED };
     const sections = buildDeckSectionsPayload(getDeckState());
@@ -299,13 +314,19 @@ export async function listMyDecks(): Promise<
 }
 
 /** Duplique un deck serveur : nouveau deck nommé « {nom} (copie) » avec le même contenu. */
-export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string }> {
+export async function duplicateDeckOnServer(id: number): Promise<{ id?: number; error?: string; unauthorized?: boolean }> {
     return apiDuplicateDeck(id);
 }
 
-export async function loadDeckFromServer(id: number): Promise<boolean> {
-    const data = await apiFetchDeckById(id);
-    if (!data) return false;
+export async function loadDeckFromServer(id: number): Promise<{ ok: boolean; unauthorized?: boolean }> {
+    const outcome = await apiFetchDeckByIdDetailed(id);
+    if (outcome.status === 'unauthorized') {
+        return { ok: false, unauthorized: true };
+    }
+    if (outcome.status !== 'ok') {
+        return { ok: false };
+    }
+    const data = outcome.data;
     cleanCardTable();
 
     const pushSection = async (raw: unknown, section: DeckSection) => {
@@ -329,36 +350,50 @@ export async function loadDeckFromServer(id: number): Promise<boolean> {
         );
     }
     syncBuilderStatsFromDeck();
-    return true;
+    return { ok: true };
 }
 
-/** Supprime un deck sur le serveur (DELETE /decks/:id). Retourne true si succès. */
-export async function deleteDeckFromServer(id: number): Promise<boolean> {
-    const ok = await apiDeleteDeck(id);
-    if (!ok) return false;
+/** Supprime un deck sur le serveur (DELETE /decks/:id). */
+export async function deleteDeckFromServer(id: number): Promise<{ ok: boolean; unauthorized?: boolean }> {
+    const r = await apiDeleteDeck(id);
+    if (!r.ok) return r;
     const loaded = getCurrentLoadedDeck();
     if (loaded?.id === id) clearCurrentLoadedDeck();
     removeDeckCoverFromStorage(id);
-    return true;
+    return { ok: true };
 }
 
 export function exportDeckToFile(): void {
     downloadJsonFile(DECK_EXPORT_JSON_FILE_NAME, buildDeckJsonExportPayload(getDeckState()));
 }
 
-export function importDeckFromFile(event: Event): void {
-    runDeckImportFromFileInput(event, {
+function getDeckJsonImportDeps(): DeckJsonImportDeps {
+    return {
         fetchCardByName,
         banTcgToMaxCopies,
         resetDeck: cleanCardTable,
         pushRow: (section, row) => {
             getState(section).push(row as DeckRow);
         },
-        refreshAllGrids: () => {
-            renderAllDeckGridSections();
-        },
+        refreshAllGrids: renderAllDeckGridSections,
         afterImportStats: () => syncBuilderStatsFromDeck(),
-    });
+    };
+}
+
+/** Import JSON (fichier ou brouillon session) : résolution des cartes par nom via l’API. */
+export async function importDeckFromJsonData(data: unknown): Promise<string[]> {
+    return applyParsedDeckJson(data, getDeckJsonImportDeps());
+}
+
+/** Sauvegarde synchrone du deck courant avant navigation auth (`sessionStorage`, même onglet). */
+export function persistBuilderDeckDraftSync(): void {
+    const state = getDeckState();
+    if (!deckSectionsHaveRows(state)) return;
+    writeBuilderDeckDraftToSession(getDeckName(), buildDeckJsonExportPayload(state));
+}
+
+export function importDeckFromFile(event: Event): void {
+    runDeckImportFromFileInput(event, getDeckJsonImportDeps());
 }
 
 /** No-op pour compatibilité : la grille cartes n'a pas de tri par colonne. */

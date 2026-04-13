@@ -1,5 +1,5 @@
 /**
- * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, collapsibles zones.
+ * Init interface Builder (data-page="builder") : recherche, deck courant, grilles, toolbar, replis zones deck.
  * Pour matrice de droits : désactiver ou masquer [data-page="builder"] + ne pas appeler initBuilder().
  */
 import { BTN_ANALYZE_LINK_ID, LIVE_STATS_CONTAINER_ID } from '../analysis/builderShellDomIds.js';
@@ -30,6 +30,7 @@ import { DECK_SORT_CHANGED_EVENT } from '../deck-builder/deckSortEvents.js';
 import { syncBuilderStatsFromDeck } from '../stats.js';
 import { setupSearch } from '../search.js';
 import { enableGridRowDeletion, enableColumnSort, setMainDeckSortByType, setMainDeckSortByCategory, getMainDeckSortState, refreshDeckSaveUpdateButtons, bindDeckDragAndDrop } from '../deck.js';
+import { tryRestoreBuilderDeckDraftOnLoad } from './builderDeckDraft.js';
 import { bindDeckToolbar } from './deck-actions.js';
 import { bindKeyboard } from './keyboard.js';
 import { bindCollapsibles } from './collapsibles.js';
@@ -122,4 +123,6 @@ export function initBuilder(): void {
     bindKeyboard();
     bindCollapsibles();
     bindDeckDragAndDrop();
+
+    void tryRestoreBuilderDeckDraftOnLoad().then(() => updateBuilderSortIndicators());
 }
