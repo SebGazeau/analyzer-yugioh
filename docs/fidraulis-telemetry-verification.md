@@ -6,6 +6,6 @@ Avant d’activer `FIDRAULIS_INSIGHT_TELEMETRY=1` (persist) en environnement par
 
 1. Mettre `FIDRAULIS_INSIGHT_TELEMETRY=log` et redémarrer l’instance.
 2. Se connecter, ouvrir un deck avec Fidraulis + au moins un Synchro Extra candidat, **sauvegarder** (PUT deck OK).
-3. Vérifier dans les logs serveur une ligne `fidraulis_telemetry_post` (cible `tracing`, filtre `fidraulis_telemetry`) avec `persist=false`, les listes `cooc` / `verified` / `heuristic`, et `missing_cache` vide si le cache cartes contient toutes les cartes du payload.
+3. Vérifier dans les logs serveur une ligne `fidraulis_telemetry_post` (cible `tracing`, filtre `fidraulis_telemetry`) avec `persist=false`, les champs `verified` / `heuristic`, et `missing_cache` vide si le cache cartes contient toutes les cartes du payload.
 4. Joindre à la PR une **capture** du réseau (POST `/insights/fidraulis/telemetry` → 200 JSON `mode: log`) ou l’extrait de log correspondant.
 5. Passer à `persist` seulement après validation des agrégats attendus (migration SQL appliquée).

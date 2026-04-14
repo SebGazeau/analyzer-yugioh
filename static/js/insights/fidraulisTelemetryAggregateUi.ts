@@ -87,7 +87,7 @@ export async function loadFidraulisAggregateEncart(): Promise<void> {
         <td>${escapeHtml(it.name)}</td>
         <td>${it.passcode}</td>
         <td>${it.community_score}</td>
-        <td>${it.synergy_verified_pass} / ${it.synergy_heuristic_pass} / ${it.cooccurrence_extra_with_fid}</td>
+        <td>${it.synergy_verified_pass} / ${it.synergy_heuristic_pass}</td>
       </tr>`,
             )
             .join('');

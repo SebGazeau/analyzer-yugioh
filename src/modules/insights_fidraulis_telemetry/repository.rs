@@ -41,30 +41,16 @@ pub async fn get_last_fingerprint(
     Ok(row.map(|x| x.0))
 }
 
-/// Applique les incréments d’une sauvegarde validée (transaction).
+/// Applique les incréments d’une sauvegarde validée (transaction) — uniquement synchros « ressource GY ».
 pub async fn apply_telemetry_increments(
     pool: &PgPool,
     site_user_id: Uuid,
     deck_id: i32,
     fingerprint: &str,
-    cooccurrence: &[i64],
     synergy_verified: &[i64],
     synergy_heuristic: &[i64],
 ) -> Result<(), sqlx::Error> {
     let mut tx = pool.begin().await?;
-    for &p in cooccurrence {
-        sqlx::query(
-            r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
-               VALUES ($1, $2, 1, 0, 0, NOW(), NOW())
-               ON CONFLICT (passcode, rule_version) DO UPDATE SET
-                 cooccurrence_extra_with_fid = insight_fidraulis_passcode_stats.cooccurrence_extra_with_fid + 1,
-                 last_seen_at = NOW()"#,
-        )
-        .bind(p)
-        .bind(RULE_VERSION)
-        .execute(&mut *tx)
-        .await?;
-    }
     for &p in synergy_verified {
         sqlx::query(
             r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
@@ -129,7 +115,8 @@ pub async fn list_aggregate_page(
                   synergy_heuristic_pass
              FROM insight_fidraulis_passcode_stats
              WHERE rule_version = $1
-             ORDER BY (synergy_verified_pass * 10 + synergy_heuristic_pass + cooccurrence_extra_with_fid) DESC,
+               AND (synergy_verified_pass + synergy_heuristic_pass) > 0
+             ORDER BY (synergy_verified_pass * 10 + synergy_heuristic_pass) DESC,
                       passcode ASC
              LIMIT $2 OFFSET $3"#,
     )

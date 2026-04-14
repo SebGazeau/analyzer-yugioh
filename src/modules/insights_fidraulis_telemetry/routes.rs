@@ -105,7 +105,7 @@ pub async fn post_fidraulis_telemetry(
         None => {
             return HttpResponse::BadRequest().json(serde_json::json!({
                 "error": "no_fidraulis_synergy",
-                "message": "Pas de Fidraulis détecté dans les zones envoyées, ou Extra sans passcodes exploitables (rien à enregistrer)."
+                "message": "Pas de Fidraulis détecté, ou aucun Synchro Extra « ressource GY » dans l’Extra (rien à enregistrer)."
             }));
         }
     };
@@ -144,7 +144,6 @@ pub async fn post_fidraulis_telemetry(
         deck_id = body.deck_id,
         fingerprint = %analysis.fingerprint,
         persist = matches!(env::fidraulis_telemetry_mode(), FidraulisTelemetryMode::Persist),
-        cooc = ?analysis.cooccurrence_passcodes,
         verified = ?analysis.synergy_verified,
         heuristic = ?analysis.synergy_heuristic,
         missing_cache = ?missing_cache,
@@ -158,7 +157,6 @@ pub async fn post_fidraulis_telemetry(
         return HttpResponse::Ok().json(serde_json::json!({
             "mode": "log",
             "accepted": {
-                "cooccurrence": analysis.cooccurrence_passcodes,
                 "synergy_verified": analysis.synergy_verified,
                 "synergy_heuristic": analysis.synergy_heuristic,
             },
@@ -171,7 +169,6 @@ pub async fn post_fidraulis_telemetry(
         site_user_id,
         body.deck_id,
         &analysis.fingerprint,
-        &analysis.cooccurrence_passcodes,
         &analysis.synergy_verified,
         &analysis.synergy_heuristic,
     )
@@ -197,7 +194,6 @@ pub async fn post_fidraulis_telemetry(
     HttpResponse::Ok().json(serde_json::json!({
         "mode": "persist",
         "accepted": {
-            "cooccurrence": analysis.cooccurrence_passcodes,
             "synergy_verified": analysis.synergy_verified,
             "synergy_heuristic": analysis.synergy_heuristic,
         },
@@ -300,8 +296,7 @@ pub async fn get_fidraulis_telemetry_aggregate(
             .find(|c| c.id() == r.passcode as u64)
             .map(|c| c.as_str().to_string())
             .unwrap_or_else(|| format!("passcode {}", r.passcode));
-        let score =
-            r.synergy_verified_pass * 10 + r.synergy_heuristic_pass + r.cooccurrence_extra_with_fid;
+        let score = r.synergy_verified_pass * 10 + r.synergy_heuristic_pass;
         items.push(AggregateItem {
             passcode: r.passcode,
             name,

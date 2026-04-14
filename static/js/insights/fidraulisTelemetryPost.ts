@@ -11,14 +11,15 @@
  * Handler HTTP serveur : `post_fidraulis_telemetry` dans
  * `src/modules/insights_fidraulis_telemetry/routes.rs` (POST `/insights/fidraulis/telemetry`).
  *
- * Aligné serveur : Fidraulis en Main/Side + au moins une carte Extra avec passcode
- * (cooccurrence) ; l’insight UI « Synchro ressource GY » peut être absent.
+ * Aligné serveur : même périmètre que l’insight `fidraulis_gy_synchro` — au moins un Synchro
+ * Extra « ressource GY » (allowlist ou heuristique) avec Fidraulis en Main/Side.
  */
 import { getDeckState } from '../deck.js';
 import {
     FIDRAULIS_HARMONIA_PASSCODE,
     normalizedNameIndicatesFidraulisHarmonia,
 } from './fidraulisGy.js';
+import { builderGridQualifiesForFidraulisTelemetryPost } from './fidraulisTelemetryPostGate.js';
 import {
     computeFidraulisTelemetryFingerprint,
     type FidraulisTelemetryZoneRow,
@@ -97,10 +98,12 @@ export async function postFidraulisTelemetryAfterDeckSave(
     const extra = rowsToZonePayload(extraRows);
     const side = rowsToZonePayload(sideRows);
 
-    const hasFid = zonesDeclareFidraulis(main, side);
-    const extraPasscodes = extra.filter((r) => r.passcode > 0 && r.qty > 0).length;
+    if (!builderGridQualifiesForFidraulisTelemetryPost(s)) {
+        return;
+    }
 
-    if (!hasFid || extraPasscodes === 0) {
+    const hasFid = zonesDeclareFidraulis(main, side);
+    if (!hasFid) {
         return;
     }
 

@@ -304,8 +304,8 @@
 **Décision** :
 
 - **Env** `FIDRAULIS_INSIGHT_TELEMETRY` : `off` (défaut) → 404 ; `log` → `tracing` sans SQL ; `on` / `persist` → écritures + GET.
-- **POST** `/insights/fidraulis/telemetry` : session site + en-tête `X-CSRF-Token` ; corps `deck_id`, `fingerprint` (SHA-256 de chaîne canonique `rule_version|zones`), zones `main`/`extra`/`side` en `{ passcode, qty }` ; re-vérif Rust sur `CardCache` (parité allowlist + heuristique + `api_type_line`) ; **204** si empreinte inchangée pour `(user, deck)` ; JSON `accepted` / `rejected.not_in_cache`.
-- **GET** `/insights/fidraulis/aggregate` : pagination `limit`/`offset` ; score `verified*10 + heuristic + cooccurrence` ; cache mémoire ~45 s côté serveur ; invalidation après POST persist.
+- **POST** `/insights/fidraulis/telemetry` : session site + en-tête `X-CSRF-Token` ; corps `deck_id`, `fingerprint` (SHA-256 de chaîne canonique `rule_version|zones`), zones `main`/`extra`/`side` en `{ passcode, qty }` ; re-vérif Rust sur `CardCache` (parité allowlist + heuristique + `api_type_line`) ; **204** si empreinte inchangée pour `(user, deck)` ; JSON `accepted.synergy_verified` / `accepted.synergy_heuristic` / `rejected.not_in_cache` (pas de persistance pour l’Extra « brut » hors critères synchro ressource GY).
+- **GET** `/insights/fidraulis/aggregate` : pagination `limit`/`offset` ; lignes avec `synergy_verified_pass + synergy_heuristic_pass > 0` ; score `verified*10 + heuristic` ; cache mémoire ~45 s côté serveur ; invalidation après POST persist.
 - **Empreinte** : documentée dans [`docs/fidraulis-telemetry-verification.md`](fidraulis-telemetry-verification.md) ; alignement TS [`static/js/insights/fidraulisTelemetryFingerprint.ts`](../static/js/insights/fidraulisTelemetryFingerprint.ts) / Rust `fingerprint` module.
 - **CGU / confidentialité** : livrable séparé (voir [`TASK.md`](../TASK.md) entrée dédiée).
 
