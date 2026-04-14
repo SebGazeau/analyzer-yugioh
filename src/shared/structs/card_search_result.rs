@@ -22,6 +22,8 @@ pub struct CardSearchResult {
     image_url: Option<String>,
     ban_tcg: Option<String>,
     card_desc: Option<String>,
+    /// Ligne `type` brute YGOProDeck (ex. « Synchro Tuner Monster »). Vide si construit hors JSON API.
+    api_type_line: String,
 }
 
 impl CardSearchResult {
@@ -43,6 +45,7 @@ impl CardSearchResult {
         image_url: Option<String>,
         ban_tcg: Option<String>,
         card_desc: Option<String>,
+        api_type_line: Option<String>,
     ) -> Self {
         Self {
             id,
@@ -61,7 +64,13 @@ impl CardSearchResult {
             image_url,
             ban_tcg,
             card_desc,
+            api_type_line: api_type_line.unwrap_or_default(),
         }
+    }
+
+    /// Ligne de type API d’origine (Synchro, Xyz, etc.), pour heuristiques serveur.
+    pub fn api_type_line(&self) -> &str {
+        self.api_type_line.as_str()
     }
 
     /// URL externe (YGOProDeck) ou None. Utilisé pour résoudre vers notre image stockée.
@@ -71,6 +80,10 @@ impl CardSearchResult {
 
     pub fn id(&self) -> u64 {
         self.id
+    }
+
+    pub fn card_type_enum(&self) -> CardType {
+        self.card_type
     }
 
     pub fn card_name(&self) -> &CardName {
@@ -104,7 +117,11 @@ impl CardSearchResult {
             deck_copy_id: canonical_deck_passcode(self, all_cards),
             name: self.card_name.as_str().to_string(),
             name_en: self.card_name_en.as_ref().map(|n| n.as_str().to_string()),
-            card_type: format!("{:?}", self.card_type),
+            card_type: if self.api_type_line.is_empty() {
+                format!("{:?}", self.card_type)
+            } else {
+                self.api_type_line.clone()
+            },
             attribute: self.attribute.as_ref().map(|a| format!("{a:?}")),
             race: self.race.clone(),
             level: self.level,
@@ -180,6 +197,7 @@ pub enum CardSearchResultError {
 impl TryFrom<RawCardSearchResult> for CardSearchResult {
     type Error = CardSearchResultError;
     fn try_from(raw: RawCardSearchResult) -> Result<Self, Self::Error> {
+        let api_type_line = raw.card_type_raw.clone();
         Ok(Self {
             id: raw.id,
             card_name: CardName::try_from(raw.name)
@@ -191,7 +209,7 @@ impl TryFrom<RawCardSearchResult> for CardSearchResult {
                         .map_err(|e| CardSearchResultError::InvalidCardNameEn(e.to_string()))
                 })
                 .transpose()?,
-            card_type: CardType::try_from(raw.card_type_raw.as_str())
+            card_type: CardType::try_from(api_type_line.as_str())
                 .map_err(|e| CardSearchResultError::InvalidCardType(e.to_string()))?,
             attribute: raw
                 .attribute
@@ -212,6 +230,7 @@ impl TryFrom<RawCardSearchResult> for CardSearchResult {
             image_url: raw.image_url,
             ban_tcg: raw.ban_tcg,
             card_desc: raw.card_desc.filter(|s| !s.trim().is_empty()),
+            api_type_line,
         })
     }
 }
@@ -248,6 +267,7 @@ mod tests {
             def,
             frame_type.clone(),
             ygoprodeck_url.clone(),
+            None,
             None,
             None,
             None,
@@ -298,6 +318,7 @@ mod tests {
             def,
             frame_type.clone(),
             ygoprodeck_url.clone(),
+            None,
             None,
             None,
             None,

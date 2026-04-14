@@ -289,9 +289,18 @@ export async function saveDeckToServer(): Promise<{
         persistBuilderDeckDraftSync();
     }
     if (result.id != null) {
+        const newDeckId = result.id;
         clearBuilderDeckDraftFromSession();
-        setCurrentLoadedDeck(result.id, name.trim());
+        setCurrentLoadedDeck(newDeckId, name.trim());
         setDeckName(name.trim());
+        // Télémétrie Fidraulis (`static/js/insights/fidraulisTelemetryPost.ts` → POST
+        // `/insights/fidraulis/telemetry`, handler Rust `post_fidraulis_telemetry`).
+        // Snapshot synchrone : le `import()` async peut s’exécuter après alert/refresh/chargement,
+        // moment où un `getDeckState()` seul serait vide.
+        const gridSnapshot = getDeckState();
+        void import('./insights/fidraulisTelemetryPost.js')
+            .then((m) => m.postFidraulisTelemetryAfterDeckSave(newDeckId, gridSnapshot))
+            .catch(() => {});
     }
     return result;
 }
@@ -303,7 +312,14 @@ export async function updateDeckOnServer(): Promise<{ ok?: boolean; error?: stri
     const name = getDeckName() || deck.name;
     const cover = getDeckCover(deck.id);
     const result = await apiUpdateDeck(deck.id, name, sections, cover);
-    if (result.ok) setCurrentLoadedDeck(deck.id, name);
+    if (result.ok) {
+        setCurrentLoadedDeck(deck.id, name);
+        // Même snapshot synchrone que `saveDeckToServer` (voir commentaire là-bas).
+        const gridSnapshot = getDeckState();
+        void import('./insights/fidraulisTelemetryPost.js')
+            .then((m) => m.postFidraulisTelemetryAfterDeckSave(deck.id, gridSnapshot))
+            .catch(() => {});
+    }
     return result;
 }
 

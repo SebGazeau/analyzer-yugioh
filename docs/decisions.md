@@ -280,3 +280,33 @@
 **Constat** : le module [`src/konami_catalog/`](../src/konami_catalog/) indexe listes de packs et pages liste de cartes (`parse_pack_index_html`, `parse_pack_listing_card_rows`) — **pas** de extraction des comptages « rareté par display / case » dans le code actuel.
 
 **Décision** : pas d’import automatique Konami pour cette slice ; saisie manuelle ou JSON via l’admin. Une évolution ultérieure exigerait une source HTML/PDF stable et un parseur dédié + validation manuelle.
+
+---
+
+## ADR — Insights « Fidraulis » : allowlist + heuristique texte
+
+**Contexte** : pour **Fidraulis Harmonia**, le deckbuilder doit aider à repérer des **Synchros Extra** dont un effet peut s’activer après **envoi au Cimetière** ; inférer cela uniquement depuis le texte d’effet est **non fiable** (multilingue, formulations PSCT).
+
+**Décision** :
+
+- **`kind`** `fidraulis_gy_synchro` : liste les Synchros Extra du deck courant avec badge **Vérifié** (passcode dans [`static/js/insights/fidraulisGyAllowlist.ts`](../static/js/insights/fidraulisGyAllowlist.ts)) ou **Heuristique** (motifs limités sur `cardDesc` dans [`static/js/services/insights/fidraulisGyHeuristic.ts`](../static/js/services/insights/fidraulisGyHeuristic.ts)).
+- **Priorité** : si allowlist et heuristique s’appliquent à la même carte, **Vérifié** l’emporte.
+- **Sans candidat** : pas d’insight (évite un onglet bruité).
+
+**Pourquoi** : livrer une valeur deck-building tout en assumant explicitement les limites ; la allowlist reste la source de vérité pour les cartes critiques, l’heuristique élargit la couverture avec avertissement UI.
+
+---
+
+## ADR — Télémétrie agrégée Fidraulis (POST après sauvegarde + GET)
+
+**Contexte** : agréger des signaux « deck sauvegardé avec insight Fidraulis non nul » pour proposer un encart stats sans exposer les decks individuels.
+
+**Décision** :
+
+- **Env** `FIDRAULIS_INSIGHT_TELEMETRY` : `off` (défaut) → 404 ; `log` → `tracing` sans SQL ; `on` / `persist` → écritures + GET.
+- **POST** `/insights/fidraulis/telemetry` : session site + en-tête `X-CSRF-Token` ; corps `deck_id`, `fingerprint` (SHA-256 de chaîne canonique `rule_version|zones`), zones `main`/`extra`/`side` en `{ passcode, qty }` ; re-vérif Rust sur `CardCache` (parité allowlist + heuristique + `api_type_line`) ; **204** si empreinte inchangée pour `(user, deck)` ; JSON `accepted` / `rejected.not_in_cache`.
+- **GET** `/insights/fidraulis/aggregate` : pagination `limit`/`offset` ; score `verified*10 + heuristic + cooccurrence` ; cache mémoire ~45 s côté serveur ; invalidation après POST persist.
+- **Empreinte** : documentée dans [`docs/fidraulis-telemetry-verification.md`](fidraulis-telemetry-verification.md) ; alignement TS [`static/js/insights/fidraulisTelemetryFingerprint.ts`](../static/js/insights/fidraulisTelemetryFingerprint.ts) / Rust `fingerprint` module.
+- **CGU / confidentialité** : livrable séparé (voir [`TASK.md`](../TASK.md) entrée dédiée).
+
+**Pourquoi** : anti-flood par empreinte, pas de confiance aveugle au client (re-hash + règles serveur), rollback par feature flag.

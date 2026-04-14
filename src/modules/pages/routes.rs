@@ -7,6 +7,7 @@ use actix_web::{HttpResponse, get, web};
 
 use crate::auth::csrf;
 use crate::auth::session::SITE_USER_SESSION_KEY;
+use crate::modules::insights_fidraulis_telemetry::env as fid_telemetry_env;
 use crate::modules::template_error::TemplateError;
 
 #[get("/")]
@@ -29,6 +30,10 @@ pub async fn index(
     ctx.insert("user_pseudo", &user_pseudo);
     let login_error = query.get("login_error").is_some();
     ctx.insert("login_error", &login_error);
+    ctx.insert(
+        "fidraulis_telemetry_mode",
+        fid_telemetry_env::fidraulis_telemetry_mode_template_value(),
+    );
     let body = tera.render("index.html", &ctx).map_err(TemplateError)?;
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")

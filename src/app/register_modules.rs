@@ -26,6 +26,8 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
         .service(crate::modules::decks::get_deck_handler)
         .service(crate::modules::decks::update_deck_handler)
         .service(crate::modules::decks::delete_deck_handler)
+        .service(crate::modules::insights_fidraulis_telemetry::post_fidraulis_telemetry)
+        .service(crate::modules::insights_fidraulis_telemetry::get_fidraulis_telemetry_aggregate)
         .service(crate::modules::site_auth::register_page)
         .service(crate::modules::site_auth::register_submit)
         .service(crate::modules::site_auth::login_submit)

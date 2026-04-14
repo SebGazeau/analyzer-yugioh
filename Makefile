@@ -9,13 +9,17 @@
 #  make docker-up  -> simulation Cloud Run complète (build Docker, ~3 min)
 #  make docker-down -> stoppe le container
 #  make docker-dev  -> mode dev : code monté en volume, recompile à chaque modification (cargo watch)
+#  make docker-dev MIGRATE=1 -> idem, après avoir appliqué les migrations (réseau Docker, host db OK)
+#  make docker-db-migrate -> migrations seules dans le conteneur dev (DATABASE_URL=@db:…)
 #  make docker-clean -> stoppe + efface le volume (repart de zéro)
 # ==============================================================================
 
 include .env
 export
 
-.PHONY: dev watch test test-db test-frontend lint migrate db-migrate docker-up docker-down docker-dev docker-clean build-frontend assert-npm-linux enrichment-job
+COMPOSE_DEV := docker compose -f docker-compose.yml -f docker-compose.dev.yml
+
+.PHONY: dev watch test test-db test-frontend lint migrate db-migrate docker-up docker-down docker-dev docker-db-migrate docker-clean build-frontend assert-npm-linux enrichment-job
 
 # Sous WSL, si npm vient de Windows, les scripts lancent CMD.EXE avec un cwd UNC
 # (\\wsl.localhost\...) : vite n'est pas trouvé. Il faut Node/npm installés dans la distro WSL.
@@ -69,10 +73,19 @@ docker-up:
 docker-down:
 	docker compose down
 
+# Migrations sur la DB du compose (hostname `db` résolu dans le conteneur).
+docker-db-migrate:
+	$(COMPOSE_DEV) run --rm --build app cargo run -- migrate
+
 # Mode dev : compile le front (TS), puis app recompile à chaque modification (cargo watch)
+# Optionnel : MIGRATE=1 pour lancer `cargo run -- migrate` dans le réseau Docker avant le watch.
 docker-dev: assert-npm-linux
 	cd static && npm run build
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+	@if [ "$(MIGRATE)" = "1" ]; then \
+	  echo "make: migrations (conteneur app, réseau Docker)…"; \
+	  $(COMPOSE_DEV) run --rm --build app cargo run -- migrate; \
+	fi
+	$(COMPOSE_DEV) up --build
 
 docker-clean:
 	docker compose down -v

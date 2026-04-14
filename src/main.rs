@@ -19,6 +19,7 @@
 //!   ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE — max POST `/admin/login` par IP / minute (défaut 15).
 //!   TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY — Cloudflare Turnstile sur `/register` (optionnel si les deux absents ; voir doc Cloudflare pour clés de test).
 //!   YGOPRODECK_CARDINFO_URL — optionnel : URL `cardinfo.php` (défaut API publique v7) pour `sync-cards` / `fetch_cards` (DB).
+//!   FIDRAULIS_INSIGHT_TELEMETRY — télémétrie agrégée Fidraulis : absent/`0`/`off` = désactivé (404) ; `log` = logs seulement ; `1`/`on`/`persist` = écriture SQL + GET agrégat.
 //!
 //! Sous-commandes sans serveur HTTP :
 //!   `migrate` — migrations SQL puis exit.

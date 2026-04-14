@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
+    insightsFidraulisGyRowsHtml,
     insightsNumberSuggestionRowsHtml,
     insightsSeventhTachyonDetailRowsHtml,
     insightsSummaryRowsHtml,
 } from '../../insights/insightsPanelTableHtml.js';
 import {
     INSIGHTS_DETAIL_ROW_DATA_ATTR,
+    INSIGHTS_FIND_CARD_DATA_ATTR,
     INSIGHTS_KIND_DATA_ATTR,
     INSIGHTS_MATCHES_MAIN_DATA_ATTR,
     INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR,
     INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUGGEST_ROW_DATA_ATTR,
 } from '../../insights/insightsDomSelectors.js';
-import type { DeckInsight, NumberXyzSuggestion, SeventhTachyonXyzGroup } from '../../insights/types.js';
+import type { DeckInsight, FidraulisGyResourceRow, NumberXyzSuggestion, SeventhTachyonXyzGroup } from '../../insights/types.js';
 import { TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 
 describe('insightsSummaryRowsHtml', () => {
@@ -74,5 +76,18 @@ describe('insightsSeventhTachyonDetailRowsHtml', () => {
         const c102Idx = html.indexOf('C102');
         expect(c102Idx).toBeGreaterThan(-1);
         expect(html.slice(c102Idx)).toContain(TEXT_EM_DASH);
+    });
+});
+
+describe('insightsFidraulisGyRowsHtml', () => {
+    it('émet badge confiance et bouton chercher', () => {
+        const rows: FidraulisGyResourceRow[] = [
+            { name: 'Enigmaster Packbit', quantity: 1, trust: 'verified', cardId: 72444406, note: 'Enigmaster Packbit' },
+        ];
+        const html = insightsFidraulisGyRowsHtml(rows);
+        expect(html).toContain(INSIGHTS_FIND_CARD_DATA_ATTR);
+        expect(html).toContain('Enigmaster Packbit');
+        expect(html).toContain('data-insights-fidraulis-trust="verified"');
+        expect(html).toContain('suggestions-trust-badge--verified');
     });
 });

@@ -2,14 +2,19 @@ import { getDeckState } from '../deck.js';
 import { collectDeckInsights } from './collect.js';
 import {
     INSIGHTS_DETAIL_TBODY_SELECTOR,
+    INSIGHTS_FIDRAULIS_TBODY_SELECTOR,
     INSIGHTS_NAV_TAB_SELECTOR,
     INSIGHTS_NUMBER_TBODY_SELECTOR,
     INSIGHTS_PAGE_HELP_SELECTOR,
     INSIGHTS_SUMMARY_TBODY_SELECTOR,
     SUGGESTIONS_DETAIL_WRAP_SELECTOR,
+    SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR,
+    SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
 } from './insightsDomSelectors.js';
+import { INSIGHT_FIDRAULIS_GY_INTRO_LEAD } from './fidraulisGyCopy.js';
 import {
+    insightsFidraulisGyRowsHtml,
     insightsNumberSuggestionRowsHtml,
     insightsSeventhTachyonDetailRowsHtml,
     insightsSummaryRowsHtml,
@@ -22,6 +27,7 @@ import {
     TAB_ID_SUGGESTIONS,
 } from '../tabs.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
+import { loadFidraulisAggregateEncart } from './fidraulisTelemetryAggregateUi.js';
 
 /**
  * Synchronise l’onglet Suggestions (header) + page tableaux avec le deck courant.
@@ -50,6 +56,12 @@ export function refreshInsightsUI(): void {
         const numberBody = document.querySelector(INSIGHTS_NUMBER_TBODY_SELECTOR);
         if (numberWrap) numberWrap.hidden = true;
         if (numberBody) numberBody.innerHTML = '';
+        const fidWrap = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR);
+        const fidBody = document.querySelector(INSIGHTS_FIDRAULIS_TBODY_SELECTOR);
+        const fidLead = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR);
+        if (fidWrap) fidWrap.hidden = true;
+        if (fidBody) fidBody.innerHTML = '';
+        if (fidLead) fidLead.textContent = '';
         return;
     }
 
@@ -86,9 +98,31 @@ export function refreshInsightsUI(): void {
         }
     }
 
-    const help = stInsight?.details?.helpLine ?? insights[0]?.details?.helpLine ?? '';
+    const fidInsight = insights.find((i) => i.kind === 'fidraulis_gy_synchro');
+    const fidRows = fidInsight?.details?.fidraulisGy?.rows ?? [];
+    const fidWrap = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR);
+    const fidBody = document.querySelector(INSIGHTS_FIDRAULIS_TBODY_SELECTOR);
+    const fidLead = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR);
+    if (fidWrap && fidBody) {
+        if (fidRows.length > 0) {
+            fidWrap.hidden = false;
+            fidBody.innerHTML = insightsFidraulisGyRowsHtml(fidRows);
+            if (fidLead) fidLead.textContent = INSIGHT_FIDRAULIS_GY_INTRO_LEAD;
+        } else {
+            fidWrap.hidden = true;
+            fidBody.innerHTML = '';
+            if (fidLead) fidLead.textContent = '';
+        }
+    }
+
+    const helpParts: string[] = [];
+    if (fidInsight?.details?.helpLine) helpParts.push(fidInsight.details.helpLine);
+    if (stInsight?.details?.helpLine) helpParts.push(stInsight.details.helpLine);
+    const help = helpParts.length > 0 ? helpParts.join(' ') : insights[0]?.details?.helpLine ?? '';
     const helpEl = document.querySelector<HTMLElement>(INSIGHTS_PAGE_HELP_SELECTOR);
     if (helpEl) helpEl.textContent = help;
+
+    void loadFidraulisAggregateEncart();
 }
 
 /** @deprecated alias — utiliser `refreshInsightsUI` ; conservé pour imports existants. */

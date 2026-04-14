@@ -21,6 +21,13 @@ describe('cardTypeKindFromTypeStringOrNull', () => {
     expect(cardTypeKindFromTypeStringOrNull('Spell Card')).toBe(CARD_TYPE_KIND_SPELL);
     expect(cardTypeKindFromTypeStringOrNull('Trap')).toBe(CARD_TYPE_KIND_TRAP);
   });
+
+  it('reconnaît les libellés de type français Konami', () => {
+    expect(cardTypeKindFromTypeStringOrNull('Monstre Syntoniseur / Effet')).toBe(CARD_TYPE_KIND_MONSTER);
+    expect(cardTypeKindFromTypeStringOrNull('Carte Magie Jeu-Rapide')).toBe(CARD_TYPE_KIND_SPELL);
+    expect(cardTypeKindFromTypeStringOrNull('Carte Piège Normal')).toBe(CARD_TYPE_KIND_TRAP);
+    expect(cardTypeKindFromTypeStringOrNull('Carte Piege Normal')).toBe(CARD_TYPE_KIND_TRAP);
+  });
 });
 
 describe('cardTypeKindFromTypeString', () => {

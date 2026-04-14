@@ -6,6 +6,7 @@ pub mod admin_sync;
 pub mod associations;
 pub mod catalog;
 pub mod decks;
+pub mod insights_fidraulis_telemetry;
 pub mod pages;
 pub mod site_auth;
 pub mod template_error;

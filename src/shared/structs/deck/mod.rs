@@ -231,6 +231,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let white = CardSearchResult::new(
             200,
@@ -249,6 +250,7 @@ mod tests {
             None,
             None,
             Some(r#"(This card is always treated as "Fallen of Albaz".)"#.to_string()),
+            None,
         );
         let cache = [albaz, white];
         let mut entries: Vec<DeckEntry> = (1..=36)

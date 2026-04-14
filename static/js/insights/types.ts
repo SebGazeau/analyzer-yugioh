@@ -13,6 +13,10 @@ export interface InsightDeckRow {
     frame_type?: string;
     /** Présent sur les lignes builder quand l’API a renvoyé une image. */
     imageUrl?: string;
+    /** Passcode YGOProDeck (aligné sur `DeckRow.cardId`). */
+    cardId?: number;
+    /** Texte d’effet (aligné sur `DeckRow.cardDesc`) pour heuristiques insights. */
+    cardDesc?: string;
 }
 
 export interface InsightDeckSnapshot {
@@ -21,7 +25,20 @@ export interface InsightDeckSnapshot {
     side?: InsightDeckRow[];
 }
 
-export type InsightKind = 'seventh_tachyon';
+export type InsightKind = 'seventh_tachyon' | 'fidraulis_gy_synchro';
+
+/** Confiance pour la liste Synchro « ressource » Fidraulis (allowlist vs texte). */
+export type FidraulisGyTrust = 'verified' | 'heuristic';
+
+/** Une ligne Extra Synchro jugée pertinente après envoi au Cimetière (Fidraulis palier 4+). */
+export interface FidraulisGyResourceRow {
+    name: string;
+    quantity: number;
+    trust: FidraulisGyTrust;
+    cardId?: number;
+    /** Court rappel (ex. motif heuristique), optionnel. */
+    note?: string;
+}
 export type InsightSeverity = 'active' | 'info';
 
 export interface InsightCardRef {
@@ -71,6 +88,11 @@ export interface DeckInsight {
             xyzGroups?: SeventhTachyonXyzGroup[];
             uniqueTargetCount?: number;
             suggestedNumberXyz?: NumberXyzSuggestion[];
+        };
+        /** Synchros Extra « ressource » (effet au CY) si Fidraulis est dans Main/Side. */
+        fidraulisGy?: {
+            rows: FidraulisGyResourceRow[];
+            helpLine?: string;
         };
     };
 }
