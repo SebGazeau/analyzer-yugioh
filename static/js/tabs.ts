@@ -43,6 +43,9 @@ export function setActiveTab(tabId: string): void {
             panel.classList.toggle(TAB_PANEL_ACTIVE_CLASS, id === tabId);
         }
     });
+    if (tabId === TAB_ID_SUGGESTIONS) {
+        void import('./insights/panel.js').then((m) => m.refreshInsightsUI());
+    }
 }
 
 export function bindAppTabs(): void {

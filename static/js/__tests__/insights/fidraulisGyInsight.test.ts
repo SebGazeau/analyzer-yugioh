@@ -221,6 +221,44 @@ describe('computeFidraulisGyResourcesInsight', () => {
         expect(i!.details?.fidraulisGy?.rows?.[0].trust).toBe('heuristic');
     });
 
+    it('heuristique effet « while on the field or in the GY » sans trigger envoi (style Pegasus)', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [row({ name: 'Fidraulis Harmonia', type: 'Tuner Monster' })],
+            extra: [
+                row({
+                    name: 'Test Synchro While Field Gy',
+                    type: 'Synchro Monster',
+                    cardId: 99900102,
+                    cardDesc:
+                        'While this card is on the field or in the GY: You can target 1 Spell/Trap your opponent controls; destroy it. You can only use this effect once per turn.',
+                }),
+            ],
+        };
+        const i = computeFidraulisGyResourcesInsight(deck);
+        expect(i).not.toBeNull();
+        expect(i!.details?.fidraulisGy?.rows).toHaveLength(1);
+        expect(i!.details?.fidraulisGy?.rows?.[0].trust).toBe('heuristic');
+        expect(i!.details?.fidraulisGy?.rows?.[0].name).toBe('Test Synchro While Field Gy');
+    });
+
+    it('Wind Pegasus @Ignister : vérifié par passcode même sans cardDesc', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [row({ name: 'Fidraulis Harmonia', type: 'Tuner Monster' })],
+            extra: [
+                row({
+                    name: 'Wind Pegasus @Ignister',
+                    type: 'Synchro Monster',
+                    cardId: 98506199,
+                }),
+            ],
+        };
+        const i = computeFidraulisGyResourcesInsight(deck);
+        expect(i).not.toBeNull();
+        const rows = i!.details?.fidraulisGy?.rows ?? [];
+        const pegasus = rows.find((r) => r.cardId === 98506199);
+        expect(pegasus?.trust).toBe('verified');
+    });
+
     it('collectDeckInsights inclut Fidraulis après Seventh Tachyon quand les deux s’appliquent', () => {
         const deck: InsightDeckSnapshot = {
             main: [

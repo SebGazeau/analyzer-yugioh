@@ -11,6 +11,7 @@ const FIDRAULIS_GY_VERIFIED_PASSCODES: ReadonlySet<number> = new Set([
     93125329, // Golden Cloud Beast - Malong
     53971455, // Despian Luluwalilith
     78397661, // Ecclesia and the Dark Dragon
+    98506199, // Wind Pegasus @Ignister (effet si sur le Terrain ou dans le CY ; heuristique texte fragile selon locale/BDD)
 ]);
 
 /** Libellé court optionnel affiché en note « vérifié » (sinon nom deck). */
@@ -19,6 +20,7 @@ const FIDRAULIS_GY_VERIFIED_LABELS: Readonly<Record<number, string>> = {
     93125329: 'Golden Cloud Beast - Malong',
     53971455: 'Despian Luluwalilith',
     78397661: 'Ecclesia and the Dark Dragon',
+    98506199: 'Wind Pegasus @Ignister',
 };
 
 export function passcodeIsFidraulisGyVerified(id: number): boolean {

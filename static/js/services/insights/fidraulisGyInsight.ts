@@ -17,7 +17,7 @@ import type {
 import { coercePositivePasscode } from '../../utils/coercePasscode.js';
 import { cardTypeKindFromTypeStringOrNull } from '../../utils/cardTypeKind.js';
 import { CARD_TYPE_KIND_MONSTER } from '../../utils/cardTypeKindConstants.js';
-import { cardDescLooksLikeGySendTrigger } from './fidraulisGyHeuristic.js';
+import { cardDescLooksLikeGySendTrigger, cardDescLooksLikeGyWhileOnFieldOrInGy } from './fidraulisGyHeuristic.js';
 
 function normalizeName(name: string): string {
     return name
@@ -93,7 +93,10 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
 
         const verified = verifiedByPasscode;
         const desc = (row.cardDesc ?? '').trim();
-        const heuristic = !verified && desc.length > 0 && cardDescLooksLikeGySendTrigger(desc);
+        const heuristic =
+            !verified &&
+            desc.length > 0 &&
+            (cardDescLooksLikeGySendTrigger(desc) || cardDescLooksLikeGyWhileOnFieldOrInGy(desc));
         if (!verified && !heuristic) continue;
 
         const trust: FidraulisGyTrust = verified ? 'verified' : 'heuristic';
