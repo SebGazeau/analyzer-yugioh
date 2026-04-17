@@ -11,10 +11,11 @@ import {
  */
 export function cardTypeKindFromTypeStringOrNull(type: string | undefined): CardTypeKind | null {
     const t = (type ?? '').toLowerCase();
-    // FR officiel (Konami) : « Monstre », « Carte Magie », « Carte Piège » — pas les sous-chaînes EN.
+    // Monstre avant sort/piège : le libellé peut contenir « spell » (ex. « Spell Tuner ») ou « trap » (ex. « Trap Monster »).
+    // FR officiel (Konami) : « Monstre », « Carte Magie », « Carte Piège ».
+    if (t.includes('monster') || t.includes('monstre')) return CARD_TYPE_KIND_MONSTER;
     if (t.includes('trap') || t.includes('piège') || t.includes('piege')) return CARD_TYPE_KIND_TRAP;
     if (t.includes('spell') || t.includes('magie')) return CARD_TYPE_KIND_SPELL;
-    if (t.includes('monster') || t.includes('monstre')) return CARD_TYPE_KIND_MONSTER;
     return null;
 }
 

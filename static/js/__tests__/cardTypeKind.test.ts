@@ -22,6 +22,11 @@ describe('cardTypeKindFromTypeStringOrNull', () => {
     expect(cardTypeKindFromTypeStringOrNull('Trap')).toBe(CARD_TYPE_KIND_TRAP);
   });
 
+  it('monstre même si le type contient « spell » ou « trap » avant le mot Monstre', () => {
+    expect(cardTypeKindFromTypeStringOrNull('Effect Spell Tuner Monster')).toBe(CARD_TYPE_KIND_MONSTER);
+    expect(cardTypeKindFromTypeStringOrNull('Trap Monster')).toBe(CARD_TYPE_KIND_MONSTER);
+  });
+
   it('reconnaît les libellés de type français Konami', () => {
     expect(cardTypeKindFromTypeStringOrNull('Monstre Syntoniseur / Effet')).toBe(CARD_TYPE_KIND_MONSTER);
     expect(cardTypeKindFromTypeStringOrNull('Carte Magie Jeu-Rapide')).toBe(CARD_TYPE_KIND_SPELL);
