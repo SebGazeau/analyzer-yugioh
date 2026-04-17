@@ -9,10 +9,16 @@ import {
     INSIGHTS_SUMMARY_TBODY_SELECTOR,
     SUGGESTIONS_DETAIL_WRAP_SELECTOR,
     SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR,
+    SUGGESTIONS_FIDRAULIS_META_SELECTOR,
+    SUGGESTIONS_FIDRAULIS_SECTION_DESC_SELECTOR,
     SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR,
     SUGGESTIONS_NUMBER_WRAP_SELECTOR,
 } from './insightsDomSelectors.js';
-import { INSIGHT_FIDRAULIS_GY_INTRO_LEAD } from './fidraulisGyCopy.js';
+import {
+    INSIGHT_FIDRAULIS_GY_INTRO_LEAD,
+    INSIGHT_FIDRAULIS_GY_SECTION_DESC,
+    insightFidraulisGySectionMeta,
+} from './fidraulisGyCopy.js';
 import {
     insightsFidraulisGyRowsHtml,
     insightsNumberSuggestionRowsHtml,
@@ -28,6 +34,7 @@ import {
 } from '../tabs.js';
 import { ARIA_HIDDEN_ATTR } from '../utils/ariaAttrs.js';
 import { loadFidraulisAggregateEncart } from './fidraulisTelemetryAggregateUi.js';
+import { applyFidraulisGyVoteColumnAfterRender } from './fidraulisGyVoteUi.js';
 
 /**
  * Synchronise l’onglet Suggestions (header) + page tableaux avec le deck courant.
@@ -59,9 +66,13 @@ export function refreshInsightsUI(): void {
         const fidWrap = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR);
         const fidBody = document.querySelector(INSIGHTS_FIDRAULIS_TBODY_SELECTOR);
         const fidLead = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR);
+        const fidMeta = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_META_SELECTOR);
+        const fidSectionDesc = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_SECTION_DESC_SELECTOR);
         if (fidWrap) fidWrap.hidden = true;
         if (fidBody) fidBody.innerHTML = '';
         if (fidLead) fidLead.textContent = '';
+        if (fidMeta) fidMeta.textContent = '';
+        if (fidSectionDesc) fidSectionDesc.textContent = '';
         return;
     }
 
@@ -103,15 +114,25 @@ export function refreshInsightsUI(): void {
     const fidWrap = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR);
     const fidBody = document.querySelector(INSIGHTS_FIDRAULIS_TBODY_SELECTOR);
     const fidLead = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR);
+    const fidMeta = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_META_SELECTOR);
+    const fidSectionDesc = document.querySelector<HTMLElement>(SUGGESTIONS_FIDRAULIS_SECTION_DESC_SELECTOR);
     if (fidWrap && fidBody) {
         if (fidRows.length > 0) {
             fidWrap.hidden = false;
-            fidBody.innerHTML = insightsFidraulisGyRowsHtml(fidRows);
+            const siteUserLogged = document.body?.dataset.siteUserLogged === '1';
+            fidBody.innerHTML = insightsFidraulisGyRowsHtml(fidRows, siteUserLogged);
+            void applyFidraulisGyVoteColumnAfterRender();
+            const verifiedCount = fidRows.filter((r) => r.trust === 'verified').length;
+            const heuristicCount = fidRows.length - verifiedCount;
+            if (fidMeta) fidMeta.textContent = insightFidraulisGySectionMeta(verifiedCount, heuristicCount);
+            if (fidSectionDesc) fidSectionDesc.textContent = INSIGHT_FIDRAULIS_GY_SECTION_DESC;
             if (fidLead) fidLead.textContent = INSIGHT_FIDRAULIS_GY_INTRO_LEAD;
         } else {
             fidWrap.hidden = true;
             fidBody.innerHTML = '';
             if (fidLead) fidLead.textContent = '';
+            if (fidMeta) fidMeta.textContent = '';
+            if (fidSectionDesc) fidSectionDesc.textContent = '';
         }
     }
 

@@ -32,6 +32,26 @@ describe('tryAddCardToDeckSection', () => {
     expect(arr[0].quantity).toBe(2);
   });
 
+  it('remplit cardDesc à l’incrément si la ligne existante n’en avait pas', () => {
+    const withDesc: Card = {
+      ...monster,
+      desc: 'If this card is sent to the GY: draw 1.',
+    };
+    const arr: DeckRow[] = [
+      {
+        name: 'Test Monster',
+        type: 'Effect Monster',
+        quantity: 1,
+        engine: '',
+        categories: [],
+        cardId: 100,
+      },
+    ];
+    const r = tryAddCardToDeckSection(withDesc, arr, arr);
+    expect(r).toEqual({ ok: true, mode: 'increment' });
+    expect(arr[0].cardDesc).toBe('If this card is sent to the GY: draw 1.');
+  });
+
   it('refuse si quantity >= maxCopies', () => {
     const cap = DECK_DEFAULT_MAX_COPIES_PER_CARD;
     const arr: DeckRow[] = [

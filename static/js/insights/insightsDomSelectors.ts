@@ -12,7 +12,13 @@ export const SUGGESTIONS_NUMBER_WRAP_DATA_ATTR = 'data-suggestions-number-wrap';
 export const SUGGESTIONS_FIDRAULIS_WRAP_DATA_ATTR = 'data-suggestions-fidraulis-wrap';
 export const INSIGHTS_FIDRAULIS_TBODY_DATA_ATTR = 'data-insights-fidraulis-tbody';
 export const INSIGHTS_FIDRAULIS_TRUST_DATA_ATTR = 'data-insights-fidraulis-trust';
+export const INSIGHTS_FIDRAULIS_VOTE_CELL_DATA_ATTR = 'data-fidraulis-vote-cell';
+export const INSIGHTS_FIDRAULIS_PASSCODE_DATA_ATTR = 'data-fidraulis-passcode';
+export const INSIGHTS_FIDRAULIS_VOTE_BTN_DATA_ATTR = 'data-fidraulis-vote-btn';
 export const SUGGESTIONS_FIDRAULIS_LEAD_DATA_ATTR = 'data-suggestions-fidraulis-lead';
+export const SUGGESTIONS_FIDRAULIS_SECTION_DESC_DATA_ATTR = 'data-suggestions-fidraulis-section-desc';
+export const SUGGESTIONS_FIDRAULIS_META_DATA_ATTR = 'data-suggestions-fidraulis-meta';
+export const FIDRAULIS_AGGREGATE_HEAD_META_DATA_ATTR = 'data-fidraulis-aggregate-head-meta';
 
 function dataSelector(dataAttr: string): string {
     return `[${dataAttr}]`;
@@ -28,6 +34,9 @@ export const SUGGESTIONS_NUMBER_WRAP_SELECTOR = dataSelector(SUGGESTIONS_NUMBER_
 export const SUGGESTIONS_FIDRAULIS_WRAP_SELECTOR = dataSelector(SUGGESTIONS_FIDRAULIS_WRAP_DATA_ATTR);
 export const INSIGHTS_FIDRAULIS_TBODY_SELECTOR = dataSelector(INSIGHTS_FIDRAULIS_TBODY_DATA_ATTR);
 export const SUGGESTIONS_FIDRAULIS_LEAD_SELECTOR = dataSelector(SUGGESTIONS_FIDRAULIS_LEAD_DATA_ATTR);
+export const SUGGESTIONS_FIDRAULIS_SECTION_DESC_SELECTOR = dataSelector(SUGGESTIONS_FIDRAULIS_SECTION_DESC_DATA_ATTR);
+export const SUGGESTIONS_FIDRAULIS_META_SELECTOR = dataSelector(SUGGESTIONS_FIDRAULIS_META_DATA_ATTR);
+export const FIDRAULIS_AGGREGATE_HEAD_META_SELECTOR = dataSelector(FIDRAULIS_AGGREGATE_HEAD_META_DATA_ATTR);
 
 /** Lignes / cellules générées dans {@link panel.ts} (alignées sur templates Suggestions). */
 export const INSIGHTS_SUMMARY_ROW_DATA_ATTR = 'data-insights-summary-row';

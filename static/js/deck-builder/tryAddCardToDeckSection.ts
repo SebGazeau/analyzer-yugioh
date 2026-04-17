@@ -46,6 +46,10 @@ export function tryAddCardToDeckSection(
         const max = row.maxCopies ?? DECK_DEFAULT_MAX_COPIES_PER_CARD;
         if (row.quantity >= max) return { ok: false };
         row.quantity += DECK_DEFAULT_ROW_QUANTITY;
+        const descRaw = card.desc;
+        if ((!row.cardDesc || !row.cardDesc.trim()) && typeof descRaw === 'string' && descRaw.trim()) {
+            row.cardDesc = descRaw.trim();
+        }
         return { ok: true, mode: 'increment' };
     }
     if (!canAddToDeckLimitGroup(allRowsFlat, limitKey, DECK_DEFAULT_ROW_QUANTITY, incomingMax))

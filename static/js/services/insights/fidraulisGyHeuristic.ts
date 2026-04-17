@@ -4,12 +4,21 @@
  * - **Envoi au CY** : `cardDescLooksLikeGySendTrigger` (déclencheur « si / quand envoyé… »).
  * - **Présence Terrain + CY** : `cardDescLooksLikeGyWhileOnFieldOrInGy` (effet passif « tant que /
  *   while … sur le Terrain ou dans le CY », ex. Wind Pegasus @Ignister).
+ * - **Déjà au CY** : `cardDescLooksLikeGyIfInGyActivated` (PSCT « If this card is in your GY: » —
+ *   ex. dernier effet Quick de PSY-Framelord Omega, sans formulation « sent to the GY »).
  *
- * **Limites** : faux positifs / négatifs ; multilingue partiel (FR + EN). Ne remplace pas l’allowlist.
+ * `inferFidraulisGyResourceTaxon` classe grossièrement le « quel effet » pour l’UI ; reste **approximatif**
+ * (faux positifs / négatifs ; multilingue partiel FR + EN). Ne remplace pas l’allowlist.
  */
+import type { FidraulisGyResourceTaxon } from '../../insights/types.js';
 
 function normalizeDesc(s: string): string {
-    return s.trim().toLowerCase().replace(/\s+/g, ' ');
+    return s
+        .trim()
+        .toLowerCase()
+        // NBSP / espace étroit (textes Konami ou copier-coller) : `\s` JS ne les couvre pas tous.
+        .replace(/\u00a0|\u202f/g, ' ')
+        .replace(/\s+/g, ' ');
 }
 
 /** Pour sous-chaînes FR : aligne graphies BDD (ASCII) et cartes (accents). */
@@ -64,4 +73,45 @@ export function cardDescLooksLikeGyWhileOnFieldOrInGy(desc: string): boolean {
     if (frWhileOnFieldOrInGyPhrasesMatch(d)) return true;
 
     return false;
+}
+
+/**
+ * Effet activé **si** la carte est **déjà** dans le Cimetière (PSCT EN / FR courants), distinct de
+ * « envoyée au Cimetière » et de « tant que sur le Terrain ou au Cimetière ».
+ */
+export function cardDescLooksLikeGyIfInGyActivated(desc: string): boolean {
+    const d = normalizeDesc(desc);
+    if (d.length < 22) return false;
+    if (/\bif this card is in your (gy|graveyard)\b/.test(d)) return true;
+    if (/\bif this synchro monster is in your (gy|graveyard)\b/.test(d)) return true;
+    const x = stripCombiningMarks(d);
+    if (/\bsi cette carte est dans votre (cimetiere|gy)\b/.test(x)) return true;
+    if (/\bsi ce monstre synchro est dans votre (cimetiere|gy)\b/.test(x)) return true;
+    return false;
+}
+
+function cardDescLooksLikeDiscardCost(desc: string): boolean {
+    const d = normalizeDesc(desc);
+    if (d.length < 16) return false;
+    const hasDiscard = /\bdiscard\b/.test(d) || /\bdéfauss\w*\b/.test(d);
+    if (!hasDiscard) return false;
+    return (
+        /\bhand\b/.test(d) ||
+        /\bmain\b/.test(d) ||
+        /\bcard\b/.test(d) ||
+        /\bcarte\b/.test(d) ||
+        /\bco[uû]t\b/.test(d) ||
+        /\bcost\b/.test(d)
+    );
+}
+
+/**
+ * Taxon dérivé du texte d’effet (heuristique uniquement — allowlist prioritaire côté insight).
+ */
+export function inferFidraulisGyResourceTaxon(desc: string): FidraulisGyResourceTaxon {
+    if (cardDescLooksLikeGySendTrigger(desc)) return 'effect_on_sent_to_gy';
+    if (cardDescLooksLikeGyWhileOnFieldOrInGy(desc)) return 'field_or_gy_continuous';
+    if (cardDescLooksLikeGyIfInGyActivated(desc)) return 'effect_if_in_gy';
+    if (cardDescLooksLikeDiscardCost(desc)) return 'discard_cost';
+    return 'heuristic_uncertain';
 }

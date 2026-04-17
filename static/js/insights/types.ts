@@ -30,14 +30,31 @@ export type InsightKind = 'seventh_tachyon' | 'fidraulis_gy_synchro';
 /** Confiance pour la liste Synchro « ressource » Fidraulis (allowlist vs texte). */
 export type FidraulisGyTrust = 'verified' | 'heuristic';
 
+/**
+ * Taxonomie « quel effet » (v1) — allowlist = vérité ; heuristique = inférence limitée sur `cardDesc`.
+ */
+export type FidraulisGyResourceTaxon =
+    | 'extra_synchro_to_gy_fid_cost'
+    | 'effect_on_sent_to_gy'
+    | 'field_or_gy_continuous'
+    | 'effect_if_in_gy'
+    | 'discard_cost'
+    | 'other_documented'
+    | 'heuristic_uncertain';
+
 /** Une ligne Extra Synchro jugée pertinente après envoi au Cimetière (Fidraulis palier 4+). */
 export interface FidraulisGyResourceRow {
     name: string;
     quantity: number;
     trust: FidraulisGyTrust;
     cardId?: number;
-    /** Court rappel (ex. motif heuristique), optionnel. */
+    /** Court rappel (ex. nom catalogue allowlist), optionnel. */
     note?: string;
+    resourceTaxon: FidraulisGyResourceTaxon;
+    /** Libellé FR court dans la colonne « Contexte » (taxonomie). */
+    resourceContextLabel: string;
+    /** Texte long pour `title` / infobulle (détail du taxon). */
+    resourceContextTitle?: string;
 }
 export type InsightSeverity = 'active' | 'info';
 

@@ -7,7 +7,6 @@ import {
 } from '../../insights/insightsPanelTableHtml.js';
 import {
     INSIGHTS_DETAIL_ROW_DATA_ATTR,
-    INSIGHTS_FIND_CARD_DATA_ATTR,
     INSIGHTS_KIND_DATA_ATTR,
     INSIGHTS_MATCHES_MAIN_DATA_ATTR,
     INSIGHTS_NUMBER_SUGGESTION_ATTR_RACE_SEPARATOR,
@@ -80,14 +79,46 @@ describe('insightsSeventhTachyonDetailRowsHtml', () => {
 });
 
 describe('insightsFidraulisGyRowsHtml', () => {
-    it('émet badge confiance et bouton chercher', () => {
+    it('regroupe par contexte, pilule confiance et avis (sans Chercher)', () => {
         const rows: FidraulisGyResourceRow[] = [
-            { name: 'Enigmaster Packbit', quantity: 1, trust: 'verified', cardId: 72444406, note: 'Enigmaster Packbit' },
+            {
+                name: 'Enigmaster Packbit',
+                quantity: 1,
+                trust: 'verified',
+                cardId: 72444406,
+                note: 'Enigmaster Packbit',
+                resourceTaxon: 'effect_on_sent_to_gy',
+                resourceContextLabel: 'Déclenché si envoyé au Cimetière',
+                resourceContextTitle: 'Effet déclenché si / quand cette carte est envoyée au Cimetière.',
+            },
         ];
-        const html = insightsFidraulisGyRowsHtml(rows);
-        expect(html).toContain(INSIGHTS_FIND_CARD_DATA_ATTR);
+        const html = insightsFidraulisGyRowsHtml(rows, false);
+        expect(html).toContain('suggestions-fidraulis-ctx-group');
+        expect(html).toContain('suggestions-fidraulis-ctx-title');
+        expect(html).toContain('Déclenché si envoyé au Cimetière');
+        expect(html).toContain('title="Effet déclenché si / quand cette carte est envoyée au Cimetière."');
         expect(html).toContain('Enigmaster Packbit');
         expect(html).toContain('data-insights-fidraulis-trust="verified"');
-        expect(html).toContain('suggestions-trust-badge--verified');
+        expect(html).toContain('suggestions-fidraulis-pill--verified');
+        expect(html).toContain('data-insights-empty-cell');
+        expect(html).not.toContain('data-insights-find-card');
+    });
+
+    it('ligne heuristique connectée : boutons Oui / Non', () => {
+        const rows: FidraulisGyResourceRow[] = [
+            {
+                name: 'Test Heur',
+                quantity: 1,
+                trust: 'heuristic',
+                cardId: 9990003,
+                resourceTaxon: 'effect_on_sent_to_gy',
+                resourceContextLabel: 'Court',
+                resourceContextTitle: 'Long',
+            },
+        ];
+        const html = insightsFidraulisGyRowsHtml(rows, true);
+        expect(html).toContain('data-fidraulis-vote-cell="1"');
+        expect(html).toContain('data-fidraulis-vote-btn="approve"');
+        expect(html).toContain('data-fidraulis-vote-btn="reject"');
     });
 });

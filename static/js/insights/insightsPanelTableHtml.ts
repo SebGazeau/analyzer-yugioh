@@ -7,7 +7,6 @@ import {
     INSIGHTS_CELL_DATA_ATTR,
     INSIGHTS_DETAIL_ROW_DATA_ATTR,
     INSIGHTS_EMPTY_CELL_DATA_ATTR,
-    INSIGHTS_FIDRAULIS_TRUST_DATA_ATTR,
     INSIGHTS_FIND_CARD_BUTTON_CLASS,
     INSIGHTS_FIND_CARD_DATA_ATTR,
     INSIGHTS_KIND_DATA_ATTR,
@@ -24,11 +23,7 @@ import {
 } from './insightsDomSelectors.js';
 import { insightsMainMatchChipsHtml } from './insightsMainMatchChipsHtml.js';
 import { insightsTableKindLabel, insightsTableSeverityLabel } from './insightsPanelTableCopy.js';
-import {
-    INSIGHT_FIDRAULIS_GY_TRUST_HEURISTIC_LABEL,
-    INSIGHT_FIDRAULIS_GY_TRUST_VERIFIED_LABEL,
-} from './fidraulisGyCopy.js';
-import type { DeckInsight, FidraulisGyResourceRow, NumberXyzSuggestion, SeventhTachyonXyzGroup } from './types.js';
+import type { DeckInsight, NumberXyzSuggestion, SeventhTachyonXyzGroup } from './types.js';
 import { BTN_TYPE_ATTR, BTN_TYPE_BUTTON, TITLE_ATTR } from '../utils/htmlAttrs.js';
 import { escapeAttr, escapeHtml } from '../utils/html.js';
 import { DECK_DEFAULT_ROW_QUANTITY } from '../deck-builder/deckConstants.js';
@@ -72,39 +67,7 @@ export function insightsNumberSuggestionRowsHtml(suggested: NumberXyzSuggestion[
         .join('');
 }
 
-const FIDRAULIS_TRUST_BADGE_CLASS_VERIFIED = 'suggestions-trust-badge suggestions-trust-badge--verified';
-const FIDRAULIS_TRUST_BADGE_CLASS_HEURISTIC = 'suggestions-trust-badge suggestions-trust-badge--heuristic';
-
-function fidraulisGyTrustBadgeHtml(trust: FidraulisGyResourceRow['trust']): string {
-    const label =
-        trust === 'verified' ? INSIGHT_FIDRAULIS_GY_TRUST_VERIFIED_LABEL : INSIGHT_FIDRAULIS_GY_TRUST_HEURISTIC_LABEL;
-    const cls = trust === 'verified' ? FIDRAULIS_TRUST_BADGE_CLASS_VERIFIED : FIDRAULIS_TRUST_BADGE_CLASS_HEURISTIC;
-    return `<span class="${cls}" ${INSIGHTS_FIDRAULIS_TRUST_DATA_ATTR}="${escapeAttr(trust)}">${escapeHtml(label)}</span>`;
-}
-
-/** Lignes du tableau Synchros « ressource » Fidraulis (Extra). */
-export function insightsFidraulisGyRowsHtml(rows: FidraulisGyResourceRow[]): string {
-    return rows
-        .map((r) => {
-            const nameEsc = escapeHtml(r.name);
-            const nameAttr = escapeAttr(r.name);
-            const noteHtml =
-                r.note && r.note.trim().length > 0
-                    ? `<div class="suggestions-fidraulis-card-note">${escapeHtml(r.note)}</div>`
-                    : '';
-            const qty = String(r.quantity);
-            return `
-    <tr ${INSIGHTS_DETAIL_ROW_DATA_ATTR} ${INSIGHTS_KIND_DATA_ATTR}="fidraulis_gy_synchro">
-      <td ${INSIGHTS_CELL_DATA_ATTR}="name">${nameEsc}${noteHtml}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="trust">${fidraulisGyTrustBadgeHtml(r.trust)}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="qty">${escapeHtml(qty)}</td>
-      <td ${INSIGHTS_CELL_DATA_ATTR}="action">
-        <button ${BTN_TYPE_ATTR}="${BTN_TYPE_BUTTON}" class="${INSIGHTS_FIND_CARD_BUTTON_CLASS}" ${INSIGHTS_FIND_CARD_DATA_ATTR}="${nameAttr}" ${TITLE_ATTR}="${INSIGHTS_FIND_CARD_BUTTON_TITLE}">${INSIGHTS_FIND_CARD_BUTTON_LABEL}</button>
-      </td>
-    </tr>`;
-        })
-        .join('');
-}
+export { insightsFidraulisGyRowsHtml } from './fidraulisGySuggestionsHtml.js';
 
 /** Lignes du tableau détail Seventh Tachyon (groupes Xyz + cibles). */
 export function insightsSeventhTachyonDetailRowsHtml(groups: SeventhTachyonXyzGroup[]): string {

@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as gyAllow from '../../insights/fidraulisGyAllowlist.js';
 import { collectDeckInsights } from '../../insights/collect.js';
 import {
     computeFidraulisGyResourcesInsight,
@@ -21,6 +22,10 @@ describe('normalizedNameIndicatesFidraulisHarmonia', () => {
 });
 
 describe('computeFidraulisGyResourcesInsight', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('retourne null sans Fidraulis dans Main ou Side', () => {
         const deck: InsightDeckSnapshot = {
             main: [row({ name: 'Dark Magician', type: 'Normal Monster' })],
@@ -138,6 +143,9 @@ describe('computeFidraulisGyResourcesInsight', () => {
         expect(rows).toHaveLength(1);
         expect(rows![0].trust).toBe('verified');
         expect(rows![0].name).toBe('Enigmaster Packbit');
+        expect(rows![0].resourceTaxon).toBe('effect_on_sent_to_gy');
+        expect(rows![0].resourceContextLabel).toBe('Déclenché si envoyé au Cimetière');
+        expect(rows![0].resourceContextTitle).toContain('Effet déclenché');
     });
 
     it('accepte un passcode allowlisté même si type API est « Monster » sans « Synchro »', () => {
@@ -219,6 +227,67 @@ describe('computeFidraulisGyResourcesInsight', () => {
         };
         const i = computeFidraulisGyResourcesInsight(deck);
         expect(i!.details?.fidraulisGy?.rows?.[0].trust).toBe('heuristic');
+        expect(i!.details?.fidraulisGy?.rows?.[0].resourceTaxon).toBe('effect_on_sent_to_gy');
+    });
+
+    it('vérifié hors entrée allowlist statique : taxon déduit du texte (même famille que l’heuristique)', () => {
+        vi.spyOn(gyAllow, 'passcodeIsFidraulisGyVerified').mockImplementation((id: number) => id === 888999999);
+
+        const deck: InsightDeckSnapshot = {
+            main: [row({ name: 'Fidraulis Harmonia', type: 'Tuner Monster' })],
+            extra: [
+                row({
+                    name: 'Proxy effet GY in-place',
+                    type: 'Synchro Monster',
+                    cardId: 888999999,
+                    cardDesc:
+                        'If this card is in your GY: You can target 1 other card in the GY; shuffle both it and this card into the Deck. You can only use this effect once per turn.',
+                }),
+            ],
+        };
+        const i = computeFidraulisGyResourcesInsight(deck);
+        expect(i).not.toBeNull();
+        const r = i!.details?.fidraulisGy?.rows?.[0];
+        expect(r?.trust).toBe('verified');
+        expect(r?.resourceTaxon).toBe('effect_if_in_gy');
+        expect(r?.resourceContextLabel).toContain('cimetière');
+    });
+
+    it('heuristique Synchro avec type « Monster » + frame_type synchro (réponse API sans ligne type)', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [row({ name: 'Fidraulis Harmonia', type: 'Tuner Monster' })],
+            extra: [
+                row({
+                    name: 'PSY-Framelord Zeta',
+                    type: 'Monster',
+                    frame_type: 'synchro',
+                    cardId: 37192109,
+                    cardDesc:
+                        'If this card is in your Graveyard: You can target 1 other "PSY-Frame" card in your Graveyard; return this card to the Extra Deck.',
+                }),
+            ],
+        };
+        const i = computeFidraulisGyResourcesInsight(deck);
+        expect(i).not.toBeNull();
+        const z = i!.details?.fidraulisGy?.rows?.find((r) => r.cardId === 37192109);
+        expect(z?.trust).toBe('heuristic');
+        expect(z?.resourceTaxon).toBe('effect_if_in_gy');
+    });
+
+    it('n’inclut pas un Extra « Monster » + frame xyz malgré un texte envoyé au GY', () => {
+        const deck: InsightDeckSnapshot = {
+            main: [row({ name: 'Fidraulis Harmonia', type: 'Tuner Monster' })],
+            extra: [
+                row({
+                    name: 'Some Xyz',
+                    type: 'Monster',
+                    frame_type: 'xyz',
+                    cardId: 99900109,
+                    cardDesc: 'If this card is sent to the GY: draw 1.',
+                }),
+            ],
+        };
+        expect(computeFidraulisGyResourcesInsight(deck)).toBeNull();
     });
 
     it('heuristique effet « while on the field or in the GY » sans trigger envoi (style Pegasus)', () => {
@@ -239,6 +308,7 @@ describe('computeFidraulisGyResourcesInsight', () => {
         expect(i!.details?.fidraulisGy?.rows).toHaveLength(1);
         expect(i!.details?.fidraulisGy?.rows?.[0].trust).toBe('heuristic');
         expect(i!.details?.fidraulisGy?.rows?.[0].name).toBe('Test Synchro While Field Gy');
+        expect(i!.details?.fidraulisGy?.rows?.[0].resourceTaxon).toBe('field_or_gy_continuous');
     });
 
     it('Wind Pegasus @Ignister : vérifié par passcode même sans cardDesc', () => {
@@ -257,6 +327,9 @@ describe('computeFidraulisGyResourcesInsight', () => {
         const rows = i!.details?.fidraulisGy?.rows ?? [];
         const pegasus = rows.find((r) => r.cardId === 98506199);
         expect(pegasus?.trust).toBe('verified');
+        expect(pegasus?.resourceTaxon).toBe('field_or_gy_continuous');
+        expect(pegasus?.resourceContextLabel).toBe('Actif sur le Terrain ou au Cimetière');
+        expect(pegasus?.note).toContain('Wind Pegasus');
     });
 
     it('collectDeckInsights inclut Fidraulis après Seventh Tachyon quand les deux s’appliquent', () => {

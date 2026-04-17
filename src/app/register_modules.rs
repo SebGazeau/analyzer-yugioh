@@ -28,6 +28,9 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
         .service(crate::modules::decks::delete_deck_handler)
         .service(crate::modules::insights_fidraulis_telemetry::post_fidraulis_telemetry)
         .service(crate::modules::insights_fidraulis_telemetry::get_fidraulis_telemetry_aggregate)
+        .service(crate::modules::insights_fidraulis_gy::get_fidraulis_gy_validated_passcodes)
+        .service(crate::modules::insights_fidraulis_gy::get_fidraulis_gy_vote_state)
+        .service(crate::modules::insights_fidraulis_gy::post_fidraulis_gy_vote)
         .service(crate::modules::site_auth::register_page)
         .service(crate::modules::site_auth::register_submit)
         .service(crate::modules::site_auth::login_submit)
@@ -84,6 +87,8 @@ pub fn register_core_and_admin_routes(cfg: &mut web::ServiceConfig, admin_secret
                 .service(crate::modules::admin_sync::apply_card_metadata_fill)
                 .service(routes::admin_import)
                 .service(routes::admin_rehydrate_storage)
+                .service(crate::modules::insights_fidraulis_gy::get_admin_fidraulis_gy_queue_page)
+                .service(crate::modules::insights_fidraulis_gy::post_admin_fidraulis_gy_validate)
                 .configure(crate::modules::ygo::routes::register)
         })
         .service(

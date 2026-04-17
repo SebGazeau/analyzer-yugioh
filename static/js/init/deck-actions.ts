@@ -56,6 +56,7 @@ import {
     msgDeckSavedWithId,
     msgErrorPrefixed,
 } from '../utils/userDialogMessages.js';
+import { showToast } from '../utils/toast.js';
 
 /** Après 401, `deckApi` peut lancer un reload : éviter l’alerte « erreur » si le chrome SSR indique encore connecté. */
 function shouldSkipErrorAlertDueToStaleSessionReload(unauthorized?: boolean): boolean {
@@ -115,10 +116,10 @@ export async function refreshMyDecksList(): Promise<void> {
             e.stopPropagation();
             const r = await duplicateDeckOnServer(d.id);
             if (r.error && !shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
-                alert(msgErrorPrefixed(r.error));
+                showToast(msgErrorPrefixed(r.error), { variant: 'error' });
             } else if (!r.error) {
                 await refreshMyDecksList();
-                alert(msgDeckDuplicated(d.name));
+                showToast(msgDeckDuplicated(d.name), { variant: 'success' });
             }
         });
         const deleteBtn = bodyEl.querySelector<HTMLButtonElement>(DECK_SAVED_ITEM_DELETE_SELECTOR);
@@ -128,13 +129,13 @@ export async function refreshMyDecksList(): Promise<void> {
             if (!confirm(msgConfirmDeleteDeck(d.name))) return;
             const del = await deleteDeckFromServer(d.id);
             if (!del.ok && !shouldSkipErrorAlertDueToStaleSessionReload(del.unauthorized)) {
-                alert(MSG_DECK_DELETE_FAILED);
+                showToast(MSG_DECK_DELETE_FAILED, { variant: 'error' });
             } else if (del.ok) await refreshMyDecksList();
         });
         const loadDeck = async () => {
             const loaded = await loadDeckFromServer(d.id);
             if (!loaded.ok && !shouldSkipErrorAlertDueToStaleSessionReload(loaded.unauthorized)) {
-                alert(MSG_DECK_LOAD_FAILED);
+                showToast(MSG_DECK_LOAD_FAILED, { variant: 'error' });
             } else if (loaded.ok) {
                 setActiveTab(TAB_ID_BUILDER);
             }
@@ -186,10 +187,10 @@ export function bindDeckToolbar(): void {
         const r = await saveDeckToServer();
         if (r.error) {
             if (!shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
-                alert(msgErrorPrefixed(r.error));
+                showToast(msgErrorPrefixed(r.error), { variant: 'error' });
             }
         } else if (r.id) {
-            alert(msgDeckSavedWithId(r.id));
+            showToast(msgDeckSavedWithId(r.id), { variant: 'success' });
             await refreshMyDecksList();
         }
     });
@@ -197,10 +198,10 @@ export function bindDeckToolbar(): void {
         const r = await updateDeckOnServer();
         if (r.error) {
             if (!shouldSkipErrorAlertDueToStaleSessionReload(r.unauthorized)) {
-                alert(msgErrorPrefixed(r.error));
+                showToast(msgErrorPrefixed(r.error), { variant: 'error' });
             }
         } else if (r.ok) {
-            alert(MSG_DECK_UPDATED);
+            showToast(MSG_DECK_UPDATED, { variant: 'success' });
             await refreshMyDecksList();
         }
     });

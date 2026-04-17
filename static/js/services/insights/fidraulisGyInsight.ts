@@ -1,15 +1,17 @@
 /**
  * Insight Fidraulis Harmonia : Synchros Extra « ressource » après envoi au Cimetière (allowlist + heuristique).
  */
-import { fidraulisGyVerifiedCatalogLabel, passcodeIsFidraulisGyVerified } from '../../insights/fidraulisGyAllowlist.js';
+import { getFidraulisGyVerifiedEntry, passcodeIsFidraulisGyVerified } from '../../insights/fidraulisGyAllowlist.js';
 import {
     INSIGHT_FIDRAULIS_GY_HELP_LINE,
     INSIGHT_FIDRAULIS_GY_TITLE,
     insightFidraulisGySummary,
 } from '../../insights/fidraulisGyCopy.js';
+import { fidraulisGyTaxonLabelFr, fidraulisGyTaxonTableShortFr } from '../../insights/fidraulisGyTaxonomy.js';
 import type {
     DeckInsight,
     FidraulisGyResourceRow,
+    FidraulisGyResourceTaxon,
     FidraulisGyTrust,
     InsightDeckRow,
     InsightDeckSnapshot,
@@ -17,7 +19,12 @@ import type {
 import { coercePositivePasscode } from '../../utils/coercePasscode.js';
 import { cardTypeKindFromTypeStringOrNull } from '../../utils/cardTypeKind.js';
 import { CARD_TYPE_KIND_MONSTER } from '../../utils/cardTypeKindConstants.js';
-import { cardDescLooksLikeGySendTrigger, cardDescLooksLikeGyWhileOnFieldOrInGy } from './fidraulisGyHeuristic.js';
+import {
+    cardDescLooksLikeGyIfInGyActivated,
+    cardDescLooksLikeGySendTrigger,
+    cardDescLooksLikeGyWhileOnFieldOrInGy,
+    inferFidraulisGyResourceTaxon,
+} from './fidraulisGyHeuristic.js';
 
 function normalizeName(name: string): string {
     return name
@@ -57,8 +64,11 @@ function deckHasFidraulisHarmonia(deck: InsightDeckSnapshot): boolean {
     return any(deck.main) || any(deck.side ?? []);
 }
 
+/** Synchro Extra : ligne `type` YGOProDeck ou fallback `type: "Monster"` + `frame_type: "synchro"` (cache). */
 function isSynchroMonster(row: InsightDeckRow): boolean {
     if (cardTypeKindFromTypeStringOrNull(row.type) !== CARD_TYPE_KIND_MONSTER) return false;
+    const f = (row.frame_type ?? '').trim().toLowerCase();
+    if (f === 'synchro') return true;
     const t = (row.type || '').toLowerCase();
     if (!t.includes('synchro')) return false;
     if (t.includes('xyz') || t.includes('fusion') || t.includes('link')) return false;
@@ -70,6 +80,52 @@ interface Aggregated {
     quantity: number;
     trust: FidraulisGyTrust;
     cardId?: number;
+    resourceTaxon: FidraulisGyResourceTaxon;
+    resourceContextLabel: string;
+    resourceContextTitle: string;
+}
+
+function verifiedContextFromPasscode(id: number, cardDesc: string): {
+    taxon: FidraulisGyResourceTaxon;
+    label: string;
+    title: string;
+} {
+    const entry = getFidraulisGyVerifiedEntry(id);
+    if (entry) {
+        return {
+            taxon: entry.taxon,
+            label: fidraulisGyTaxonTableShortFr(entry.taxon),
+            title: fidraulisGyTaxonLabelFr(entry.taxon),
+        };
+    }
+    const desc = cardDesc.trim();
+    if (desc.length > 0) {
+        const taxon = inferFidraulisGyResourceTaxon(desc);
+        return {
+            taxon,
+            label: fidraulisGyTaxonTableShortFr(taxon),
+            title: fidraulisGyTaxonLabelFr(taxon),
+        };
+    }
+    const taxon: FidraulisGyResourceTaxon = 'other_documented';
+    return {
+        taxon,
+        label: fidraulisGyTaxonTableShortFr(taxon),
+        title: fidraulisGyTaxonLabelFr(taxon),
+    };
+}
+
+function heuristicContextFromDesc(desc: string): {
+    taxon: FidraulisGyResourceTaxon;
+    label: string;
+    title: string;
+} {
+    const taxon = inferFidraulisGyResourceTaxon(desc);
+    return {
+        taxon,
+        label: fidraulisGyTaxonTableShortFr(taxon),
+        title: fidraulisGyTaxonLabelFr(taxon),
+    };
 }
 
 /**
@@ -87,8 +143,6 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
 
         const id = typeof row.cardId === 'number' && row.cardId > 0 ? row.cardId : undefined;
         const verifiedByPasscode = id != null && passcodeIsFidraulisGyVerified(id);
-        // L’API / cache peut exposer un `type` grossier (« Monster ») sans « Synchro » ; les passcodes
-        // allowlistés sont des Synchros vérifiés — on ne les exclut pas sur la seule chaîne `type`.
         if (!verifiedByPasscode && !isSynchroMonster(row)) continue;
 
         const verified = verifiedByPasscode;
@@ -96,11 +150,19 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
         const heuristic =
             !verified &&
             desc.length > 0 &&
-            (cardDescLooksLikeGySendTrigger(desc) || cardDescLooksLikeGyWhileOnFieldOrInGy(desc));
+            (cardDescLooksLikeGySendTrigger(desc) ||
+                cardDescLooksLikeGyWhileOnFieldOrInGy(desc) ||
+                cardDescLooksLikeGyIfInGyActivated(desc));
         if (!verified && !heuristic) continue;
 
         const trust: FidraulisGyTrust = verified ? 'verified' : 'heuristic';
         const key = id != null ? `id:${id}` : `name:${normalizeName(row.name)}`;
+
+        const ctx =
+            verified && id != null
+                ? verifiedContextFromPasscode(id, desc)
+                : heuristicContextFromDesc(desc);
+
         const prev = byKey.get(key);
         if (!prev) {
             byKey.set(key, {
@@ -108,10 +170,19 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
                 quantity: row.quantity,
                 trust,
                 cardId: id,
+                resourceTaxon: ctx.taxon,
+                resourceContextLabel: ctx.label,
+                resourceContextTitle: ctx.title,
             });
         } else {
             prev.quantity += row.quantity;
-            if (prev.trust === 'heuristic' && trust === 'verified') prev.trust = 'verified';
+            if (prev.trust === 'heuristic' && trust === 'verified' && id != null) {
+                prev.trust = 'verified';
+                const v = verifiedContextFromPasscode(id, desc);
+                prev.resourceTaxon = v.taxon;
+                prev.resourceContextLabel = v.label;
+                prev.resourceContextTitle = v.title;
+            }
         }
     }
 
@@ -123,7 +194,7 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
         .map((a) => {
             const note =
                 a.trust === 'verified' && a.cardId != null
-                    ? fidraulisGyVerifiedCatalogLabel(a.cardId)
+                    ? getFidraulisGyVerifiedEntry(a.cardId)?.catalogShortName
                     : undefined;
             return {
                 name: a.name,
@@ -131,6 +202,9 @@ export function computeFidraulisGyResourcesInsight(deck: InsightDeckSnapshot): D
                 trust: a.trust,
                 cardId: a.cardId,
                 note,
+                resourceTaxon: a.resourceTaxon,
+                resourceContextLabel: a.resourceContextLabel,
+                resourceContextTitle: a.resourceContextTitle,
             };
         })
         .sort((a, b) => {

@@ -12,6 +12,7 @@ import {
     msgImportCardsNotFound,
     msgImportParseError,
 } from '../utils/userDialogMessages.js';
+import { showToast } from '../utils/toast.js';
 import { DECK_IMPORT_JSON_WARN_FAILED_CARDS_PREFIX } from './deckFileIoCopy.js';
 
 /** Ligne telle que sérialisée dans deck.json. */
@@ -169,11 +170,11 @@ export function runDeckImportFromFileInput(event: Event, deps: DeckJsonImportDep
             const failedCards = await applyParsedDeckJson(data, deps);
             if (failedCards.length > 0) {
                 console.warn(DECK_IMPORT_JSON_WARN_FAILED_CARDS_PREFIX, failedCards);
-                alert(msgImportCardsNotFound(failedCards));
+                showToast(msgImportCardsNotFound(failedCards), { variant: 'error' });
             }
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
-            alert(msgImportParseError(msg));
+            showToast(msgImportParseError(msg), { variant: 'error' });
         }
     };
     reader.readAsText(file);

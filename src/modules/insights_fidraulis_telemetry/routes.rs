@@ -1,5 +1,6 @@
 //! Handlers HTTP télémétrie Fidraulis.
 
+use std::collections::HashSet;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -9,12 +10,14 @@ use sqlx::PgPool;
 
 use crate::auth::csrf;
 use crate::modules::decks::require_site_user_id;
+use crate::modules::insights_fidraulis_gy::{self, repository as fid_gy_repo};
 use crate::shared::search::cache::CardCache;
 
 use super::env::{self, FidraulisTelemetryMode};
 use super::fingerprint::ZoneRow;
 use super::repository::{self, PasscodeStatRow};
 use super::rule;
+use super::synergy_delta::{SynergyTelemetryDelta, compute_synergy_telemetry_delta};
 
 const AGG_CACHE_TTL: Duration = Duration::from_secs(45);
 const AGG_FETCH_CAP: i64 = 300;
@@ -100,7 +103,21 @@ pub async fn post_fidraulis_telemetry(
     }
 
     let cards = card_cache.get();
-    let analysis = match rule::analyze(&cards, &body.main, &body.extra, &body.side) {
+    let admin_verified =
+        match insights_fidraulis_gy::load_validated_passcodes_set(pool.get_ref()).await {
+            Ok(s) => s,
+            Err(e) => {
+                if fid_gy_repo::sqlx_is_undefined_table(&e) {
+                    HashSet::new()
+                } else {
+                    tracing::error!("load_validated_passcodes_set: {}", e);
+                    return HttpResponse::InternalServerError()
+                        .json(serde_json::json!({ "error": "database" }));
+                }
+            }
+        };
+    let analysis = match rule::analyze(&cards, &body.main, &body.extra, &body.side, &admin_verified)
+    {
         Some(a) => a,
         None => {
             return HttpResponse::BadRequest().json(serde_json::json!({
@@ -117,13 +134,39 @@ pub async fn post_fidraulis_telemetry(
         }));
     }
 
-    if let Ok(Some(prev)) =
-        repository::get_last_fingerprint(pool.get_ref(), site_user_id, body.deck_id).await
-    {
-        if prev == analysis.fingerprint {
+    let last_sync = repository::get_last_deck_sync(pool.get_ref(), site_user_id, body.deck_id)
+        .await
+        .unwrap_or(None);
+
+    if let Some(ref snap) = last_sync {
+        if snap.fingerprint == analysis.fingerprint {
             return HttpResponse::NoContent().finish();
         }
     }
+
+    let baseline_only = last_sync
+        .as_ref()
+        .is_some_and(|s| s.is_legacy_synergy_arrays());
+
+    let (prev_v, prev_h): (&[i64], &[i64]) = match &last_sync {
+        None => (&[], &[]),
+        Some(_s) if baseline_only => (&[], &[]),
+        Some(s) => (
+            s.last_synergy_verified.as_deref().unwrap_or(&[]),
+            s.last_synergy_heuristic.as_deref().unwrap_or(&[]),
+        ),
+    };
+
+    let delta: SynergyTelemetryDelta = if baseline_only {
+        SynergyTelemetryDelta::default()
+    } else {
+        compute_synergy_telemetry_delta(
+            prev_v,
+            prev_h,
+            &analysis.synergy_verified,
+            &analysis.synergy_heuristic,
+        )
+    };
 
     let mut missing_cache: Vec<i64> = Vec::new();
     for z in body
@@ -144,6 +187,11 @@ pub async fn post_fidraulis_telemetry(
         deck_id = body.deck_id,
         fingerprint = %analysis.fingerprint,
         persist = matches!(env::fidraulis_telemetry_mode(), FidraulisTelemetryMode::Persist),
+        baseline_only,
+        inc_v = delta.inc_verified.len(),
+        dec_v = delta.dec_verified.len(),
+        inc_h = delta.inc_heuristic.len(),
+        dec_h = delta.dec_heuristic.len(),
         verified = ?analysis.synergy_verified,
         heuristic = ?analysis.synergy_heuristic,
         missing_cache = ?missing_cache,
@@ -156,6 +204,13 @@ pub async fn post_fidraulis_telemetry(
     ) {
         return HttpResponse::Ok().json(serde_json::json!({
             "mode": "log",
+            "baseline_only": baseline_only,
+            "delta": {
+                "inc_verified": delta.inc_verified,
+                "dec_verified": delta.dec_verified,
+                "inc_heuristic": delta.inc_heuristic,
+                "dec_heuristic": delta.dec_heuristic,
+            },
             "accepted": {
                 "synergy_verified": analysis.synergy_verified,
                 "synergy_heuristic": analysis.synergy_heuristic,
@@ -171,6 +226,8 @@ pub async fn post_fidraulis_telemetry(
         &analysis.fingerprint,
         &analysis.synergy_verified,
         &analysis.synergy_heuristic,
+        &delta,
+        baseline_only,
     )
     .await
     {
@@ -193,6 +250,13 @@ pub async fn post_fidraulis_telemetry(
 
     HttpResponse::Ok().json(serde_json::json!({
         "mode": "persist",
+        "baseline_only": baseline_only,
+        "delta": {
+            "inc_verified": delta.inc_verified,
+            "dec_verified": delta.dec_verified,
+            "inc_heuristic": delta.inc_heuristic,
+            "dec_heuristic": delta.dec_heuristic,
+        },
         "accepted": {
             "synergy_verified": analysis.synergy_verified,
             "synergy_heuristic": analysis.synergy_heuristic,

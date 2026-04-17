@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use super::fingerprint::RULE_VERSION;
+use super::synergy_delta::SynergyTelemetryDelta;
 
 /// PostgreSQL `undefined_table` (`42P01`) — tables télémétrie absentes (migrations non appliquées).
 pub fn sqlx_is_undefined_table(err: &sqlx::Error) -> bool {
@@ -27,70 +28,138 @@ pub async fn deck_owned_by_user(
     Ok(r.map(|x| x.0).unwrap_or(false))
 }
 
-pub async fn get_last_fingerprint(
+/// Dernier sync persisté pour ce deck (delta + court-circuit fingerprint).
+#[derive(Debug, Clone)]
+pub struct DeckLastSyncSnapshot {
+    pub fingerprint: String,
+    /// `None` = ligne créée avant la migration synergy (baseline au prochain POST persist).
+    pub last_synergy_verified: Option<Vec<i64>>,
+    pub last_synergy_heuristic: Option<Vec<i64>>,
+}
+
+type LastSyncSqlRow = (String, Option<Vec<i64>>, Option<Vec<i64>>);
+
+impl DeckLastSyncSnapshot {
+    /// Ligne `insight_fidraulis_deck_last_sync` sans colonnes synergy : premier POST persisté aligne l’état sans incrémenter les stats.
+    pub fn is_legacy_synergy_arrays(&self) -> bool {
+        self.last_synergy_verified.is_none() || self.last_synergy_heuristic.is_none()
+    }
+}
+
+pub async fn get_last_deck_sync(
     pool: &PgPool,
     site_user_id: Uuid,
     deck_id: i32,
-) -> Result<Option<String>, sqlx::Error> {
-    let row: Option<(String,)> =
-        sqlx::query_as("SELECT fingerprint FROM insight_fidraulis_deck_last_sync WHERE site_user_id = $1 AND deck_id = $2")
-            .bind(site_user_id)
-            .bind(deck_id)
-            .fetch_optional(pool)
-            .await?;
-    Ok(row.map(|x| x.0))
+) -> Result<Option<DeckLastSyncSnapshot>, sqlx::Error> {
+    let row: Option<LastSyncSqlRow> = sqlx::query_as(
+        r#"SELECT fingerprint, last_synergy_verified, last_synergy_heuristic
+             FROM insight_fidraulis_deck_last_sync
+            WHERE site_user_id = $1 AND deck_id = $2"#,
+    )
+    .bind(site_user_id)
+    .bind(deck_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(
+        |(fingerprint, last_synergy_verified, last_synergy_heuristic)| DeckLastSyncSnapshot {
+            fingerprint,
+            last_synergy_verified,
+            last_synergy_heuristic,
+        },
+    ))
 }
 
-/// Applique les incréments d’une sauvegarde validée (transaction) — uniquement synchros « ressource GY ».
+/// Applique delta synergy + mise à jour du dernier sync (transaction).
+///
+/// `baseline_only` : remplit `last_synergy_*` + empreinte sans toucher à `insight_fidraulis_passcode_stats`.
+#[allow(clippy::too_many_arguments)]
 pub async fn apply_telemetry_increments(
     pool: &PgPool,
     site_user_id: Uuid,
     deck_id: i32,
     fingerprint: &str,
-    synergy_verified: &[i64],
-    synergy_heuristic: &[i64],
+    current_verified: &[i64],
+    current_heuristic: &[i64],
+    delta: &SynergyTelemetryDelta,
+    baseline_only: bool,
 ) -> Result<(), sqlx::Error> {
     let mut tx = pool.begin().await?;
-    for &p in synergy_verified {
-        sqlx::query(
-            r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
-               VALUES ($1, $2, 0, 1, 0, NOW(), NOW())
-               ON CONFLICT (passcode, rule_version) DO UPDATE SET
-                 synergy_verified_pass = insight_fidraulis_passcode_stats.synergy_verified_pass + 1,
-                 last_seen_at = NOW()"#,
-        )
-        .bind(p)
-        .bind(RULE_VERSION)
-        .execute(&mut *tx)
-        .await?;
+
+    if !baseline_only {
+        for &p in &delta.dec_verified {
+            sqlx::query(
+                r#"UPDATE insight_fidraulis_passcode_stats
+                      SET synergy_verified_pass = GREATEST(0, synergy_verified_pass - 1),
+                          last_seen_at = NOW()
+                    WHERE passcode = $1 AND rule_version = $2"#,
+            )
+            .bind(p)
+            .bind(RULE_VERSION)
+            .execute(&mut *tx)
+            .await?;
+        }
+        for &p in &delta.dec_heuristic {
+            sqlx::query(
+                r#"UPDATE insight_fidraulis_passcode_stats
+                      SET synergy_heuristic_pass = GREATEST(0, synergy_heuristic_pass - 1),
+                          last_seen_at = NOW()
+                    WHERE passcode = $1 AND rule_version = $2"#,
+            )
+            .bind(p)
+            .bind(RULE_VERSION)
+            .execute(&mut *tx)
+            .await?;
+        }
+        for &p in &delta.inc_verified {
+            sqlx::query(
+                r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
+                       VALUES ($1, $2, 0, 1, 0, NOW(), NOW())
+                  ON CONFLICT (passcode, rule_version) DO UPDATE SET
+                       synergy_verified_pass = insight_fidraulis_passcode_stats.synergy_verified_pass + 1,
+                       last_seen_at = NOW()"#,
+            )
+            .bind(p)
+            .bind(RULE_VERSION)
+            .execute(&mut *tx)
+            .await?;
+        }
+        for &p in &delta.inc_heuristic {
+            sqlx::query(
+                r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
+                       VALUES ($1, $2, 0, 0, 1, NOW(), NOW())
+                  ON CONFLICT (passcode, rule_version) DO UPDATE SET
+                       synergy_heuristic_pass = insight_fidraulis_passcode_stats.synergy_heuristic_pass + 1,
+                       last_seen_at = NOW()"#,
+            )
+            .bind(p)
+            .bind(RULE_VERSION)
+            .execute(&mut *tx)
+            .await?;
+        }
     }
-    for &p in synergy_heuristic {
-        sqlx::query(
-            r#"INSERT INTO insight_fidraulis_passcode_stats (passcode, rule_version, cooccurrence_extra_with_fid, synergy_verified_pass, synergy_heuristic_pass, first_seen_at, last_seen_at)
-               VALUES ($1, $2, 0, 0, 1, NOW(), NOW())
-               ON CONFLICT (passcode, rule_version) DO UPDATE SET
-                 synergy_heuristic_pass = insight_fidraulis_passcode_stats.synergy_heuristic_pass + 1,
-                 last_seen_at = NOW()"#,
-        )
-        .bind(p)
-        .bind(RULE_VERSION)
-        .execute(&mut *tx)
-        .await?;
-    }
+
     sqlx::query(
-        r#"INSERT INTO insight_fidraulis_deck_last_sync (site_user_id, deck_id, fingerprint, rule_version, last_sent_at)
-           VALUES ($1, $2, $3, $4, NOW())
-           ON CONFLICT (site_user_id, deck_id) DO UPDATE SET
-             fingerprint = EXCLUDED.fingerprint,
-             rule_version = EXCLUDED.rule_version,
-             last_sent_at = NOW()"#,
+        r#"INSERT INTO insight_fidraulis_deck_last_sync (
+                 site_user_id, deck_id, fingerprint, rule_version, last_sent_at,
+                 last_synergy_verified, last_synergy_heuristic
+             )
+             VALUES ($1, $2, $3, $4, NOW(), $5, $6)
+        ON CONFLICT (site_user_id, deck_id) DO UPDATE SET
+               fingerprint = EXCLUDED.fingerprint,
+               rule_version = EXCLUDED.rule_version,
+               last_sent_at = NOW(),
+               last_synergy_verified = EXCLUDED.last_synergy_verified,
+               last_synergy_heuristic = EXCLUDED.last_synergy_heuristic"#,
     )
     .bind(site_user_id)
     .bind(deck_id)
     .bind(fingerprint)
     .bind(RULE_VERSION)
+    .bind(current_verified)
+    .bind(current_heuristic)
     .execute(&mut *tx)
     .await?;
+
     tx.commit().await?;
     Ok(())
 }

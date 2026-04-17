@@ -73,6 +73,11 @@ impl CardSearchResult {
         self.api_type_line.as_str()
     }
 
+    /// Sous-type affichage YGOProDeck (`frameType` JSON), ex. `synchro`, `xyz`.
+    pub fn frame_type(&self) -> Option<&str> {
+        self.frame_type.as_deref()
+    }
+
     /// URL externe (YGOProDeck) ou None. Utilisé pour résoudre vers notre image stockée.
     pub fn image_url(&self) -> Option<&str> {
         self.image_url.as_deref()

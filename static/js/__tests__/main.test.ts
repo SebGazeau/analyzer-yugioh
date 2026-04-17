@@ -27,6 +27,9 @@ import { TAB_ID_DECKS } from '../tabs.js';
 import { STYLE_DISPLAY_NONE } from '../utils/cssInlineDisplay.js';
 import { HTTP_METHOD_POST, HTTP_STATUS_OK, HTTP_STATUS_UNAUTHORIZED } from '../utils/httpMime.js';
 import { DOM_EVENT_DOM_CONTENT_LOADED } from '../utils/domEventNames.js';
+import { SESSION_RESYNC_AFTER_UNAUTHORIZED_KEY } from '../utils/sessionResyncAfterUnauthorized.js';
+import { TOAST_ITEM_CLASS } from '../utils/toast.js';
+import { MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED } from '../utils/userDialogMessages.js';
 import {
   SEARCH_BOX_ELEMENT_ID,
   SEARCH_RESULTS_CONTAINER_ID,
@@ -69,6 +72,7 @@ function mockFetchDefault(): ReturnType<typeof vi.fn> {
 describe('main.ts — intégration DOM', () => {
   beforeEach(() => {
     minimalDeckDOM();
+    sessionStorage.clear();
     vi.stubGlobal('alert', vi.fn());
     vi.stubGlobal('prompt', vi.fn().mockReturnValue('Test Deck'));
     vi.stubGlobal('fetch', mockFetchDefault());
@@ -106,8 +110,7 @@ describe('main.ts — intégration DOM', () => {
     expect(body).toHaveProperty('side');
   });
 
-  it('save échoué affiche une alerte et ne corrompt pas l’état', async () => {
-    const alertSpy = vi.mocked(alert);
+  it('save échoué affiche un toast erreur et ne corrompt pas l’état', async () => {
     vi.stubGlobal('fetch', vi.fn((url: string | URL, init?: RequestInit) => {
       const u = typeof url === 'string' ? url : url.toString();
       if (u.includes(DECK_API_COLLECTION_URL) && init?.method === HTTP_METHOD_POST) {
@@ -123,8 +126,19 @@ describe('main.ts — intégration DOM', () => {
     await Promise.resolve();
     document.getElementById(DECK_BTN_SAVE_SERVER_ID)?.click();
     await new Promise((r) => setTimeout(r, MAIN_TEST_POST_CLICK_YIELD_MS));
-    expect(alertSpy).toHaveBeenCalled();
-    expect(alertSpy.mock.calls.some((c) => String(c[0]).includes('Erreur'))).toBe(true);
+    const toast = document.querySelector(`.${TOAST_ITEM_CLASS}[data-variant="error"]`);
+    expect(toast?.textContent ?? '').toContain('Erreur');
+  });
+
+  it('après resynchro session (fanion), un toast info affiche le message dédié', async () => {
+    sessionStorage.setItem(SESSION_RESYNC_AFTER_UNAUTHORIZED_KEY, '1');
+    vi.stubGlobal('fetch', mockFetchDefault());
+    await import('../main.js');
+    document.dispatchEvent(new Event(DOM_EVENT_DOM_CONTENT_LOADED));
+    await Promise.resolve();
+    const toast = document.querySelector(`.${TOAST_ITEM_CLASS}[data-variant="info"]`);
+    expect(toast?.textContent).toBe(MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED);
+    expect(sessionStorage.getItem(SESSION_RESYNC_AFTER_UNAUTHORIZED_KEY)).toBeNull();
   });
 
   it('clic sur btn-refresh-decks remplit la liste des decks', async () => {

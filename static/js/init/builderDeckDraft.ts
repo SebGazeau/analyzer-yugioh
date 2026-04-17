@@ -25,6 +25,7 @@ import {
     DOM_EVENT_SUBMIT,
 } from '../utils/domEventNames.js';
 import { msgImportCardsNotFound } from '../utils/userDialogMessages.js';
+import { showToast } from '../utils/toast.js';
 
 function isSameOriginRegisterLink(a: HTMLAnchorElement): boolean {
     const href = a.getAttribute('href');
@@ -112,7 +113,7 @@ export async function tryRestoreBuilderDeckDraftOnLoad(): Promise<void> {
         refreshDeckSaveUpdateButtons();
         if (failed.length > 0) {
             console.warn(DECK_IMPORT_JSON_WARN_FAILED_CARDS_PREFIX, failed);
-            alert(msgImportCardsNotFound(failed));
+            showToast(msgImportCardsNotFound(failed), { variant: 'error' });
         }
     } catch (e: unknown) {
         if (isLikelyFetchNetworkFailure(e)) {
@@ -120,6 +121,6 @@ export async function tryRestoreBuilderDeckDraftOnLoad(): Promise<void> {
             return;
         }
         const msg = e instanceof Error ? e.message : String(e);
-        alert(`${MSG_BUILDER_DRAFT_RESTORE_FAILED_PREFIX}${msg}`);
+        showToast(`${MSG_BUILDER_DRAFT_RESTORE_FAILED_PREFIX}${msg}`, { variant: 'error' });
     }
 }

@@ -1,7 +1,16 @@
 //! Re-vérification insight Fidraulis (parité avec le front TS).
+//!
+//! La **taxonomie « quel effet »** (colonne Contexte Suggestions) est définie côté client
+//! (`static/js/insights/fidraulisGyAllowlist.ts`, `fidraulisGyHeuristic.ts`) — ne pas supposer
+//! la même granularité ici sans synchroniser les deux côtés.
+//!
+//! **Synchro Extra** : même règle que `isSynchroMonster` côté TS — `api_type_line` vide ⇒ DTO
+//! `type: "Monster"` ; on accepte aussi `frame_type` YGOProDeck `synchro`.
 
 use crate::shared::enums::card_type::CardType;
 use crate::shared::structs::card_search_result::CardSearchResult;
+
+use std::collections::HashSet;
 
 use super::fingerprint::{self, ZoneRow};
 
@@ -57,16 +66,26 @@ fn find_card(cards: &[CardSearchResult], passcode: i64) -> Option<&CardSearchRes
     cards.iter().find(|c| c.id() == id)
 }
 
-fn passcode_verified(id: u64) -> bool {
+fn passcode_verified(id: u64, admin_validated: &HashSet<i64>) -> bool {
     VERIFIED_PASSCODES.contains(&id)
+        || i64::try_from(id)
+            .ok()
+            .is_some_and(|p| admin_validated.contains(&p))
 }
 
-fn is_synchro_extra_row(c: &CardSearchResult) -> bool {
+fn is_synchro_extra_row(c: &CardSearchResult, admin_validated: &HashSet<i64>) -> bool {
     if c.card_type_enum() != CardType::Monster {
         return false;
     }
     let id = c.id();
-    if passcode_verified(id) {
+    if passcode_verified(id, admin_validated) {
+        return true;
+    }
+    // Aligné sur `isSynchroMonster` (TS) : sans `api_type_line`, le DTO recherche expose `type: "Monster"`
+    // et `frame_type: "synchro"` (voir `CardSearchResult::to_search_dto`).
+    if c.frame_type()
+        .is_some_and(|f| f.trim().eq_ignore_ascii_case("synchro"))
+    {
         return true;
     }
     let t = c.api_type_line().to_lowercase();
@@ -188,6 +207,37 @@ pub fn card_desc_looks_like_gy_while_on_field_or_in_gy(desc: &str) -> bool {
     fr_while_on_field_or_in_gy_phrases(&d)
 }
 
+/// Heuristique alignée sur `cardDescLooksLikeGyIfInGyActivated` (TS) — effet PSCT « If this card is in your GY: ».
+pub fn card_desc_looks_like_gy_if_in_gy_activated(desc: &str) -> bool {
+    let d = normalize_desc(desc);
+    if d.len() < 22 {
+        return false;
+    }
+    use regex::Regex;
+    if let Ok(re) = Regex::new(r"(?i)\bif this card is in your (gy|graveyard)\b") {
+        if re.is_match(&d) {
+            return true;
+        }
+    }
+    if let Ok(re) = Regex::new(r"(?i)\bif this synchro monster is in your (gy|graveyard)\b") {
+        if re.is_match(&d) {
+            return true;
+        }
+    }
+    let folded = fold_fr_card_desc_chars(&d);
+    if let Ok(re) = Regex::new(r"(?i)\bsi cette carte est dans votre (gy|cimetiere)\b") {
+        if re.is_match(&folded) {
+            return true;
+        }
+    }
+    if let Ok(re) = Regex::new(r"(?i)\bsi ce monstre synchro est dans votre (gy|cimetiere)\b") {
+        if re.is_match(&folded) {
+            return true;
+        }
+    }
+    false
+}
+
 fn deck_has_fidraulis(cards: &[CardSearchResult], main: &[ZoneRow], side: &[ZoneRow]) -> bool {
     let check_zone = |rows: &[ZoneRow]| {
         rows.iter().any(|r| {
@@ -213,6 +263,7 @@ pub fn analyze(
     main: &[ZoneRow],
     extra: &[ZoneRow],
     side: &[ZoneRow],
+    admin_validated: &HashSet<i64>,
 ) -> Option<FidraulisTelemetryAnalysis> {
     let has_fid = deck_has_fidraulis(cards, main, side);
     let fp = fingerprint::compute_fingerprint(has_fid, main, extra, side);
@@ -230,16 +281,17 @@ pub fn analyze(
         let Some(c) = find_card(cards, row.passcode) else {
             continue;
         };
-        if !is_synchro_extra_row(c) {
+        if !is_synchro_extra_row(c, admin_validated) {
             continue;
         }
         let id = c.id();
-        let verified = passcode_verified(id);
+        let verified = passcode_verified(id, admin_validated);
         let desc = c.card_desc().unwrap_or("").trim();
         let heuristic = !verified
             && !desc.is_empty()
             && (card_desc_looks_like_gy_send_trigger(desc)
-                || card_desc_looks_like_gy_while_on_field_or_in_gy(desc));
+                || card_desc_looks_like_gy_while_on_field_or_in_gy(desc)
+                || card_desc_looks_like_gy_if_in_gy_activated(desc));
         if !verified && !heuristic {
             continue;
         }
@@ -269,6 +321,8 @@ pub fn analyze(
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
     use crate::shared::enums::attribute::Attribute;
     use crate::shared::structs::card_name::CardName;
@@ -320,7 +374,7 @@ mod tests {
             passcode: 93125329,
             qty: 1,
         }];
-        let a = analyze(&cards, &main, &extra, &[]).expect("insight");
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("insight");
         assert!(a.synergy_verified.contains(&93125329));
     }
 
@@ -343,7 +397,7 @@ mod tests {
             passcode: 98_506_199,
             qty: 1,
         }];
-        let a = analyze(&cards, &main, &extra, &[]).expect("pegasus verified");
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("pegasus verified");
         assert!(a.synergy_verified.contains(&98_506_199));
     }
 
@@ -355,7 +409,7 @@ mod tests {
             passcode: 2,
             qty: 1,
         }];
-        assert!(analyze(&cards, &main, &[], &[]).is_none());
+        assert!(analyze(&cards, &main, &[], &[], &HashSet::new()).is_none());
     }
 
     #[test]
@@ -383,7 +437,7 @@ mod tests {
             passcode: 9_990_001,
             qty: 1,
         }];
-        assert!(analyze(&cards, &main, &extra, &[]).is_none());
+        assert!(analyze(&cards, &main, &extra, &[], &HashSet::new()).is_none());
     }
 
     #[test]
@@ -405,7 +459,7 @@ mod tests {
             passcode: 9_990_002,
             qty: 1,
         }];
-        assert!(analyze(&cards, &main, &extra, &[]).is_none());
+        assert!(analyze(&cards, &main, &extra, &[], &HashSet::new()).is_none());
     }
 
     #[test]
@@ -433,9 +487,41 @@ mod tests {
             passcode: 9_990_003,
             qty: 1,
         }];
-        let a = analyze(&cards, &main, &extra, &[]).expect("heuristic synchro");
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("heuristic synchro");
         assert!(a.synergy_verified.is_empty());
         assert!(a.synergy_heuristic.contains(&9_990_003));
+    }
+
+    #[test]
+    fn fidraulis_extra_passcode_admin_validated_counts_as_synergy_verified() {
+        let synchro_gy = mk(
+            9_990_033,
+            "Test Synchro Admin Verified",
+            "Synchro Tuner Monster",
+            Some("If this card is sent to the GY: draw 1."),
+            None,
+        );
+        let fid = mk(
+            FIDRAULIS_HARMONIA_PASSCODE,
+            "Fidraulis, the Dragon of Harmonia",
+            "Tuner Monster",
+            None,
+            None,
+        );
+        let cards = vec![synchro_gy, fid];
+        let main = vec![ZoneRow {
+            passcode: FIDRAULIS_HARMONIA_PASSCODE as i64,
+            qty: 1,
+        }];
+        let extra = vec![ZoneRow {
+            passcode: 9_990_033,
+            qty: 1,
+        }];
+        let mut admin = HashSet::new();
+        admin.insert(9_990_033);
+        let a = analyze(&cards, &main, &extra, &[], &admin).expect("admin verified");
+        assert!(a.synergy_verified.contains(&9_990_033));
+        assert!(!a.synergy_heuristic.contains(&9_990_033));
     }
 
     #[test]
@@ -465,9 +551,134 @@ mod tests {
             passcode: 9_990_004,
             qty: 1,
         }];
-        let a = analyze(&cards, &main, &extra, &[]).expect("while field or gy");
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("while field or gy");
         assert!(a.synergy_verified.is_empty());
         assert!(a.synergy_heuristic.contains(&9_990_004));
+    }
+
+    #[test]
+    fn card_desc_if_in_gy_matches_psy_framelord_omega_clause() {
+        let desc = "If this card is in your GY: You can target 1 other card in the GY; shuffle both it and this card into the Deck.";
+        assert!(card_desc_looks_like_gy_if_in_gy_activated(desc));
+        assert!(!card_desc_looks_like_gy_send_trigger(desc));
+    }
+
+    #[test]
+    fn fidraulis_with_heuristic_synchro_if_in_gy_only() {
+        let omega_like = mk(
+            9_990_006,
+            "Test Synchro If In GY",
+            "Synchro Monster",
+            Some(
+                "If this card is in your GY: You can target 1 other card in the GY; shuffle both it and this card into the Deck.",
+            ),
+            None,
+        );
+        let fid = mk(
+            FIDRAULIS_HARMONIA_PASSCODE,
+            "Fidraulis, the Dragon of Harmonia",
+            "Tuner Monster",
+            None,
+            None,
+        );
+        let cards = vec![omega_like, fid];
+        let main = vec![ZoneRow {
+            passcode: FIDRAULIS_HARMONIA_PASSCODE as i64,
+            qty: 1,
+        }];
+        let extra = vec![ZoneRow {
+            passcode: 9_990_006,
+            qty: 1,
+        }];
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("if in gy heuristic");
+        assert!(a.synergy_verified.is_empty());
+        assert!(a.synergy_heuristic.contains(&9_990_006));
+    }
+
+    #[test]
+    fn fidraulis_heuristic_extra_synchro_via_frame_type_when_api_type_line_is_empty_monster() {
+        let zeta_like = CardSearchResult::new(
+            9_990_007,
+            CardName::try_from("PSY-Framelord Zeta".to_string()).unwrap(),
+            None,
+            CardType::Monster,
+            Some(Attribute::Dark),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("synchro".to_string()),
+            None,
+            None,
+            None,
+            Some(
+                "If this card is in your Graveyard: You can target 1 other card in your Graveyard; return this card to the Extra Deck."
+                    .to_string(),
+            ),
+            Some(String::new()),
+        );
+        let fid = mk(
+            FIDRAULIS_HARMONIA_PASSCODE,
+            "Fidraulis, the Dragon of Harmonia",
+            "Tuner Monster",
+            None,
+            None,
+        );
+        let cards = vec![zeta_like, fid];
+        let main = vec![ZoneRow {
+            passcode: FIDRAULIS_HARMONIA_PASSCODE as i64,
+            qty: 1,
+        }];
+        let extra = vec![ZoneRow {
+            passcode: 9_990_007,
+            qty: 1,
+        }];
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new())
+            .expect("frame_type synchro heuristic");
+        assert!(a.synergy_verified.is_empty());
+        assert!(a.synergy_heuristic.contains(&9_990_007));
+    }
+
+    #[test]
+    fn fidraulis_extra_xyz_frame_not_counted_as_synchro_synergy() {
+        let xyz_like = CardSearchResult::new(
+            9_990_008,
+            CardName::try_from("Test Xyz Only".to_string()).unwrap(),
+            None,
+            CardType::Monster,
+            Some(Attribute::Dark),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some("xyz".to_string()),
+            None,
+            None,
+            None,
+            Some("If this card is sent to the GY: draw 1.".to_string()),
+            Some(String::new()),
+        );
+        let fid = mk(
+            FIDRAULIS_HARMONIA_PASSCODE,
+            "Fidraulis, the Dragon of Harmonia",
+            "Tuner Monster",
+            None,
+            None,
+        );
+        let cards = vec![xyz_like, fid];
+        let main = vec![ZoneRow {
+            passcode: FIDRAULIS_HARMONIA_PASSCODE as i64,
+            qty: 1,
+        }];
+        let extra = vec![ZoneRow {
+            passcode: 9_990_008,
+            qty: 1,
+        }];
+        assert!(analyze(&cards, &main, &extra, &[], &HashSet::new()).is_none());
     }
 
     #[test]
@@ -497,7 +708,7 @@ mod tests {
             passcode: 9_990_005,
             qty: 1,
         }];
-        let a = analyze(&cards, &main, &extra, &[]).expect("fr ascii cimetiere");
+        let a = analyze(&cards, &main, &extra, &[], &HashSet::new()).expect("fr ascii cimetiere");
         assert!(a.synergy_verified.is_empty());
         assert!(a.synergy_heuristic.contains(&9_990_005));
     }
@@ -516,6 +727,6 @@ mod tests {
             passcode: FIDRAULIS_HARMONIA_PASSCODE as i64,
             qty: 1,
         }];
-        assert!(analyze(&cards, &main, &[], &[]).is_none());
+        assert!(analyze(&cards, &main, &[], &[], &HashSet::new()).is_none());
     }
 }

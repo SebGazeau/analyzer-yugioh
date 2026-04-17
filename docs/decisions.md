@@ -290,6 +290,8 @@
 **Décision** :
 
 - **`kind`** `fidraulis_gy_synchro` : liste les Synchros Extra du deck courant avec badge **Vérifié** (passcode dans [`static/js/insights/fidraulisGyAllowlist.ts`](../static/js/insights/fidraulisGyAllowlist.ts)) ou **Heuristique** (motifs limités sur `cardDesc` dans [`static/js/services/insights/fidraulisGyHeuristic.ts`](../static/js/services/insights/fidraulisGyHeuristic.ts)).
+- **Taxonomie « quel effet » (v1)** : union `FidraulisGyResourceTaxon` + libellés FR dans [`static/js/insights/fidraulisGyTaxonomy.ts`](../static/js/insights/fidraulisGyTaxonomy.ts) ; chaque entrée allowlist porte un `taxon` documenté ; les lignes heuristiques utilisent `inferFidraulisGyResourceTaxon` (approximatif). Colonne **Contexte** sur le tableau deck (sans bouton « Chercher ») ; encart GET agrégé avec **Contexte** + **Chercher** par ligne pour ouvrir la recherche Builder.
+- **Motif « déjà au Cimetière » (2026-04)** : PSCT du type **« If this card is in your GY: »** / **« Si cette carte est dans votre Cimetière : »** (ex. effet Quick 2 de **PSY-Framelord Omega**) n’entre pas dans les motifs « envoyé au GY » ni « tant que sur le Terrain ou au Cimetière » ; détection dédiée `cardDescLooksLikeGyIfInGyActivated` + taxon `effect_if_in_gy`, avec **parité** [`card_desc_looks_like_gy_if_in_gy_activated`](../src/modules/insights_fidraulis_telemetry/rule.rs) pour la télémétrie. Limite : toute carte partageant cette tournure peut être un **faux positif** heuristique. À l’ajout d’un 2ᵉ exemplaire depuis la recherche, `tryAddCardToDeckSection` **complète** `cardDesc` si absent (aide l’heuristique après +1).
 - **Priorité** : si allowlist et heuristique s’appliquent à la même carte, **Vérifié** l’emporte.
 - **Sans candidat** : pas d’insight (évite un onglet bruité).
 
@@ -304,9 +306,25 @@
 **Décision** :
 
 - **Env** `FIDRAULIS_INSIGHT_TELEMETRY` : `off` (défaut) → 404 ; `log` → `tracing` sans SQL ; `on` / `persist` → écritures + GET.
-- **POST** `/insights/fidraulis/telemetry` : session site + en-tête `X-CSRF-Token` ; corps `deck_id`, `fingerprint` (SHA-256 de chaîne canonique `rule_version|zones`), zones `main`/`extra`/`side` en `{ passcode, qty }` ; re-vérif Rust sur `CardCache` (parité allowlist + heuristique + `api_type_line`) ; **204** si empreinte inchangée pour `(user, deck)` ; JSON `accepted.synergy_verified` / `accepted.synergy_heuristic` / `rejected.not_in_cache` (pas de persistance pour l’Extra « brut » hors critères synchro ressource GY).
+- **POST** `/insights/fidraulis/telemetry` : session site + en-tête `X-CSRF-Token` ; corps `deck_id`, `fingerprint` (SHA-256 de chaîne canonique `rule_version|zones`), zones `main`/`extra`/`side` en `{ passcode, qty }` ; re-vérif Rust sur `CardCache` (parité allowlist + heuristique + `api_type_line`) ; **204** si empreinte inchangée pour `(user, deck)` ; JSON `accepted.synergy_verified` / `accepted.synergy_heuristic` / `rejected.not_in_cache` / `delta` / `baseline_only` (pas de persistance pour l’Extra « brut » hors critères synchro ressource GY).
+- **Incréments delta (par `(site_user_id, deck_id)`)** : les colonnes `synergy_*_pass` dans `insight_fidraulis_passcode_stats` ne montent que pour les passcodes **nouveaux** ou **changés de statut** (vérifié ↔ heuristique) par rapport aux tableaux `last_synergy_verified` / `last_synergy_heuristic` stockés dans `insight_fidraulis_deck_last_sync` ; retirer une carte synergy de l’Extra **ne diminue pas** les totaux globaux. **Baseline** : lignes `deck_last_sync` créées avant la migration des tableaux synergy (`NULL`) → premier POST `persist` après upgrade **ne bump pas** les stats, seulement enregistre l’état courant (évite un pic « tout le deck »).
 - **GET** `/insights/fidraulis/aggregate` : pagination `limit`/`offset` ; lignes avec `synergy_verified_pass + synergy_heuristic_pass > 0` ; score `verified*10 + heuristic` ; cache mémoire ~45 s côté serveur ; invalidation après POST persist.
 - **Empreinte** : documentée dans [`docs/fidraulis-telemetry-verification.md`](fidraulis-telemetry-verification.md) ; alignement TS [`static/js/insights/fidraulisTelemetryFingerprint.ts`](../static/js/insights/fidraulisTelemetryFingerprint.ts) / Rust `fingerprint` module.
 - **CGU / confidentialité** : livrable séparé (voir [`TASK.md`](../TASK.md) entrée dédiée).
 
-**Pourquoi** : anti-flood par empreinte, pas de confiance aveugle au client (re-hash + règles serveur), rollback par feature flag.
+**Pourquoi** : anti-flood par empreinte, pas de confiance aveugle au client (re-hash + règles serveur), rollback par feature flag ; le delta évite de regonfler les scores à chaque « Mettre à jour » du builder quand seule une partie du deck change.
+
+---
+
+## ADR — Fidraulis GY : votes utilisateurs + validation admin
+
+**Contexte** : l’allowlist statique (TS + Rust) ne scale pas ; on veut un signal communautaire tout en gardant une **porte d’audit** admin.
+
+**Décision** :
+
+- **Tables** : `insight_fidraulis_gy_user_vote` (`site_user_id`, `passcode`, `verdict` approve/reject, PK couple) ; `insight_fidraulis_gy_admin_validated_passcode` (`passcode` PK, `validated_at`, `admin_user_id` optionnel). Seed initial = passcodes de l’ancienne allowlist.
+- **« Vérifié »** : union **allowlist statique** (transition) **ou** passcode **admin validé** ; exposé au dashboard via `data-fidraulis-gy-admin-validated` (JSON) + endpoints `GET /insights/fidraulis/gy/validated-passcodes` ; télémétrie Rust charge le set admin en base avant `rule::analyze`.
+- **Votes** : uniquement sur lignes **heuristiques** du tableau Suggestions ; **session site** + **CSRF** ; `POST /insights/fidraulis/gy/vote` ; **409** si déjà voté ou conflit ; **interdit** si passcode déjà admin-validé. `GET /insights/fidraulis/gy/vote-state?passcodes=…` pour l’état par utilisateur.
+- **Admin** : page `/admin/fidraulis-gy` (même garde-fou `/admin`) : file des passcodes avec votes et **non** validés, tri score (oui − non) ; `POST /admin/fidraulis-gy/validate` ajoute la ligne admin.
+
+**Pourquoi** : un vote par utilisateur et par passcode limite le spam ; la validation admin fige le contrat « vérifié » sans redéployer le code pour chaque carte.
