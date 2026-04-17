@@ -30,6 +30,10 @@ export const DECK_EXPORT_JSON_FILE_NAME = 'deck.json';
 export const MSG_DECK_API_AUTH_REQUIRED =
     'Connexion requise. Connectez-vous pour enregistrer ou gérer vos decks.';
 
+/** Affiché en toast après reload quand la session n’était plus valide mais l’en-tête SSR indiquait encore « connecté ». */
+export const MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED =
+    'Votre session a expiré ou n’était plus valide. La page a été actualisée pour afficher l’état réel de la connexion.';
+
 export const MSG_DECK_API_DECK_NOT_FOUND = 'Deck introuvable';
 
 export const MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN =

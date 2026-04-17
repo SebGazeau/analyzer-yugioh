@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    insightsFidraulisGyRowsHtml,
     insightsNumberSuggestionRowsHtml,
     insightsSeventhTachyonDetailRowsHtml,
     insightsSummaryRowsHtml,
@@ -12,7 +13,7 @@ import {
     INSIGHTS_SUMMARY_ROW_DATA_ATTR,
     INSIGHTS_SUGGEST_ROW_DATA_ATTR,
 } from '../../insights/insightsDomSelectors.js';
-import type { DeckInsight, NumberXyzSuggestion, SeventhTachyonXyzGroup } from '../../insights/types.js';
+import type { DeckInsight, FidraulisGyResourceRow, NumberXyzSuggestion, SeventhTachyonXyzGroup } from '../../insights/types.js';
 import { TEXT_EM_DASH } from '../../utils/textPlaceholders.js';
 
 describe('insightsSummaryRowsHtml', () => {
@@ -74,5 +75,50 @@ describe('insightsSeventhTachyonDetailRowsHtml', () => {
         const c102Idx = html.indexOf('C102');
         expect(c102Idx).toBeGreaterThan(-1);
         expect(html.slice(c102Idx)).toContain(TEXT_EM_DASH);
+    });
+});
+
+describe('insightsFidraulisGyRowsHtml', () => {
+    it('regroupe par contexte, pilule confiance et avis (sans Chercher)', () => {
+        const rows: FidraulisGyResourceRow[] = [
+            {
+                name: 'Enigmaster Packbit',
+                quantity: 1,
+                trust: 'verified',
+                cardId: 72444406,
+                note: 'Enigmaster Packbit',
+                resourceTaxon: 'effect_on_sent_to_gy',
+                resourceContextLabel: 'Déclenché si envoyé au Cimetière',
+                resourceContextTitle: 'Effet déclenché si / quand cette carte est envoyée au Cimetière.',
+            },
+        ];
+        const html = insightsFidraulisGyRowsHtml(rows, false);
+        expect(html).toContain('suggestions-fidraulis-ctx-group');
+        expect(html).toContain('suggestions-fidraulis-ctx-title');
+        expect(html).toContain('Déclenché si envoyé au Cimetière');
+        expect(html).toContain('title="Effet déclenché si / quand cette carte est envoyée au Cimetière."');
+        expect(html).toContain('Enigmaster Packbit');
+        expect(html).toContain('data-insights-fidraulis-trust="verified"');
+        expect(html).toContain('suggestions-fidraulis-pill--verified');
+        expect(html).toContain('data-insights-empty-cell');
+        expect(html).not.toContain('data-insights-find-card');
+    });
+
+    it('ligne heuristique connectée : boutons Oui / Non', () => {
+        const rows: FidraulisGyResourceRow[] = [
+            {
+                name: 'Test Heur',
+                quantity: 1,
+                trust: 'heuristic',
+                cardId: 9990003,
+                resourceTaxon: 'effect_on_sent_to_gy',
+                resourceContextLabel: 'Court',
+                resourceContextTitle: 'Long',
+            },
+        ];
+        const html = insightsFidraulisGyRowsHtml(rows, true);
+        expect(html).toContain('data-fidraulis-vote-cell="1"');
+        expect(html).toContain('data-fidraulis-vote-btn="approve"');
+        expect(html).toContain('data-fidraulis-vote-btn="reject"');
     });
 });

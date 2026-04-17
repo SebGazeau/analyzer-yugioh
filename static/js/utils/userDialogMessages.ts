@@ -1,5 +1,5 @@
 /**
- * Textes passés à `alert` / `confirm` (facade : échappement + réexport copy).
+ * Textes passés aux toasts / `confirm` / `prompt` (facade : échappement + réexport copy).
  */
 
 import { escapeHtml } from './html.js';
@@ -24,6 +24,7 @@ import {
     MSG_DECK_UPDATED,
     MSG_IMPORT_JSON_INVALID_FORMAT,
     MSG_PROMPT_DECK_NAME,
+    MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED,
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
     USER_DIALOG_ERROR_PREFIX,
@@ -42,6 +43,7 @@ export {
     MSG_DECK_UPDATED,
     MSG_IMPORT_JSON_INVALID_FORMAT,
     MSG_PROMPT_DECK_NAME,
+    MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED,
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
     MSG_UPDATE_DECK_NOT_LOADED,
     USER_DIALOG_ERROR_PREFIX,

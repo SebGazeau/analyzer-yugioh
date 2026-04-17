@@ -67,6 +67,8 @@ export function insightsNumberSuggestionRowsHtml(suggested: NumberXyzSuggestion[
         .join('');
 }
 
+export { insightsFidraulisGyRowsHtml } from './fidraulisGySuggestionsHtml.js';
+
 /** Lignes du tableau détail Seventh Tachyon (groupes Xyz + cibles). */
 export function insightsSeventhTachyonDetailRowsHtml(groups: SeventhTachyonXyzGroup[]): string {
     return groups

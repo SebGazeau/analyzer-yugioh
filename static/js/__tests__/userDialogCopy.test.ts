@@ -11,6 +11,7 @@ import {
     DECK_NAME_FALLBACK_DISPLAY,
     MSG_DECK_API_AUTH_REQUIRED,
     MSG_DECK_API_DECK_NOT_FOUND,
+    MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED,
     MSG_IMPORT_JSON_INVALID_FORMAT,
     MSG_PROMPT_DECK_NAME,
     MSG_SUGGESTIONS_SEARCH_NAME_TOO_SHORT,
@@ -62,6 +63,8 @@ describe('userDialogCopy', () => {
         expect(DECK_EXPORT_JSON_FILE_NAME).toBe('deck.json');
         expect(MSG_DECK_API_AUTH_REQUIRED).toContain('Connexion');
         expect(MSG_DECK_API_DECK_NOT_FOUND).toBe('Deck introuvable');
+        expect(MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED).toContain('session');
+        expect(MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED).toContain('actualisée');
     });
 
     it('copyImportCardsNotFoundMessage', () => {

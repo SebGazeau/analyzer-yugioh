@@ -55,6 +55,7 @@ services:
       STORAGE_BACKEND: local
       LOCAL_STORAGE_PATH: /storage
       RUST_LOG: info
+      FIDRAULIS_INSIGHT_TELEMETRY: persist
       ADMIN_SECRET: ${ADMIN_SECRET:-}
       # Optionnel : inscription avec Cloudflare Turnstile (voir .env.example)
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}

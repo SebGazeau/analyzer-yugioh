@@ -179,3 +179,10 @@ Replace manual card entry with:
 - No unwrap() anywhere
 - Unit tests for: filter_candidates, rarity mapping, viewsweek→velocity,
   false response handling
+
+---
+
+## Plateforme — CGU et confidentialité (hors slice code)
+
+- Rédiger une page **CGU** + **politique de confidentialité** couvrant notamment la télémétrie agrégée Fidraulis (`FIDRAULIS_INSIGHT_TELEMETRY`, POST `/insights/fidraulis/telemetry`, finalité, durée de rétention des agrégats, base légale).
+- Procédure de vérification phase 0 : [`docs/fidraulis-telemetry-verification.md`](docs/fidraulis-telemetry-verification.md).

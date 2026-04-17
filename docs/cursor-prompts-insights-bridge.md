@@ -208,6 +208,25 @@ Calcul de probabilité de pioche ; main de départ.
 
 ---
 
+## Fidraulis Harmonia — Synchros « ressource » envoi CY (**implémenté**)
+
+**Objectif** : si le deck contient **Fidraulis Harmonia** (Main ou Side), lister les **Monstres Synchro** de l’**Extra** qui peuvent déclencher un effet après **envoi au Cimetière** (contexte palier 4+ de Fidraulis : envoyer un Synchro révélé au CY).
+
+**`kind`** : `fidraulis_gy_synchro`.
+
+**Hybride** :
+
+- **Vérifié** : passcode dans l’allowlist [`static/js/insights/fidraulisGyAllowlist.ts`](../static/js/insights/fidraulisGyAllowlist.ts) (liste maintenue à la main après lecture du texte officiel).
+- **Heuristique** : motifs FR/EN sur `cardDesc` ([`static/js/services/insights/fidraulisGyHeuristic.ts`](../static/js/services/insights/fidraulisGyHeuristic.ts)) — **approximatif**, l’UI l’indique.
+
+**Fichiers** : logique [`static/js/services/insights/fidraulisGyInsight.ts`](../static/js/services/insights/fidraulisGyInsight.ts), façade [`static/js/insights/fidraulisGy.ts`](../static/js/insights/fidraulisGy.ts), textes [`static/js/insights/fidraulisGyCopy.ts`](../static/js/insights/fidraulisGyCopy.ts), agrégation [`static/js/insights/collect.ts`](../static/js/insights/collect.ts), UI [`templates/pages/suggestions.html`](../templates/pages/suggestions.html) + [`static/js/insights/panel.ts`](../static/js/insights/panel.ts) + [`static/js/insights/insightsPanelTableHtml.ts`](../static/js/insights/insightsPanelTableHtml.ts).
+
+**Ajouter une carte « vérifiée »** : confirmer le passcode (ex. `curl "https://db.ygoprodeck.com/api/v7/cardinfo.php?name=…"`), puis ajouter l’`id` dans `FIDRAULIS_GY_VERIFIED_PASSCODES` et une entrée optionnelle dans `FIDRAULIS_GY_VERIFIED_LABELS`.
+
+**Détection du nom Fidraulis** : normalisation minuscule ; accepte aussi la faute courante `Fridaulis Harmonia` (voir `FIDRAULIS_NAME_KEYS` dans le service).
+
+---
+
 ## Ordre d’exécution recommandé dans le projet
 
 1. **Seventh Tachyon** (référence + pipeline insights).  

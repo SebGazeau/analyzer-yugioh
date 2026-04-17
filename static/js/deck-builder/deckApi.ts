@@ -20,6 +20,7 @@ import {
 import { DECK_API_VALIDATION_ERRORS_JOIN } from './deckApiCopy.js';
 import { DECK_API_COLLECTION_URL, deckApiDeckByIdUrl } from './deckApiRoutes.js';
 import { DECK_FETCH_INIT } from './deckConstants.js';
+import { markSessionResyncAfterUnauthorized } from '../utils/sessionResyncAfterUnauthorized.js';
 
 export type DeckEntryPayload = {
     name: string;
@@ -76,6 +77,7 @@ function reloadPageIfUnauthorizedAndDomShowsLoggedInSession(res: Response, sourc
     if (res.status !== HTTP_STATUS_UNAUTHORIZED) return;
     if (typeof document === 'undefined') return;
     if (!document.querySelector('[data-auth-action="logout"]')) return;
+    markSessionResyncAfterUnauthorized();
     window.location.reload();
 }
 

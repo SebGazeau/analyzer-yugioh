@@ -9,6 +9,7 @@ import { DOM_EVENT_CLICK, DOM_EVENT_KEYDOWN, DOM_EVENT_TOGGLE } from '../utils/d
 import { INTEGER_STRING_DECIMAL_RADIX } from '../utils/numberParse.js';
 import { KEY_ENTER, KEY_ESCAPE, KEY_SPACE } from '../utils/keyboardKeys.js';
 import { MSG_ADD_CARD_BLOCKED, msgAssociationCardNotFound } from '../utils/userDialogMessages.js';
+import { showToast } from '../utils/toast.js';
 import { ROLE_ATTR, ROLE_DIALOG } from '../utils/htmlAttrs.js';
 import {
     ASSOCIATIONS_LIVE_CANNOT_RESOLVE_CARD_NAME,
@@ -129,12 +130,12 @@ async function addAssociationTileToDeck(tile: Element): Promise<void> {
     }
     const card = await resolveDeckCardForAssociationName(searchName);
     if (!card) {
-        alert(msgAssociationCardNotFound(searchName));
+        showToast(msgAssociationCardNotFound(searchName), { variant: 'error' });
         return;
     }
     const ok = await addToDeck(card);
     if (!ok) {
-        alert(MSG_ADD_CARD_BLOCKED);
+        showToast(MSG_ADD_CARD_BLOCKED, { variant: 'error' });
         return;
     }
     announceAssociationsModal(associationsLiveCardAddedToDeck(searchName));

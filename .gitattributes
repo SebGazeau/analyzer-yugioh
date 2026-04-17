@@ -1,0 +1,2 @@
+# Migrations sqlx : checksum sensible aux fins de ligne — forcer LF (évite CRLF sous Windows/WSL).
+migrations/*.sql text eol=lf

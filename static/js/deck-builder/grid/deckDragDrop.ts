@@ -32,6 +32,7 @@ import {
 } from '../../utils/domEventNames.js';
 import { HTML_DATASET_VALUE_BOUND } from '../../utils/htmlAttrs.js';
 import { MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN, msgDeckZoneFull } from '../../utils/userDialogMessages.js';
+import { showToast } from '../../utils/toast.js';
 
 export function parseDeckCellDragPayload(raw: string): { section: DeckSection; index: number } | null {
     let data: unknown;
@@ -74,7 +75,7 @@ export function executeDeckRowMove<D extends DeckRowLike>(
 
     const resolved = resolveTargetZone(row, dropSection);
     if (resolved === null) {
-        alert(MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN);
+        showToast(MSG_DECK_EXTRA_PLACEMENT_FORBIDDEN, { variant: 'error' });
         return false;
     }
 
@@ -101,7 +102,7 @@ export function executeDeckRowMove<D extends DeckRowLike>(
     const toA = getState(resolved);
     const maxT = maxCardsForZone(resolved);
     if (sumQuantities(toA) + row.quantity > maxT) {
-        alert(msgDeckZoneFull(maxT));
+        showToast(msgDeckZoneFull(maxT), { variant: 'error' });
         return false;
     }
 

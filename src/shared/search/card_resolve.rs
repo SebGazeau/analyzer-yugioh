@@ -108,6 +108,7 @@ mod tests {
             None,
             None,
             desc.map(String::from),
+            None,
         )
     }
 

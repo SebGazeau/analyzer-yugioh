@@ -11,8 +11,15 @@ import { bindBuilderDeckDraftLifecycle } from './init/builderDeckDraft.js';
 import { initDecks } from './init/decks.js';
 import { initBuilder } from './init/builder.js';
 import { initAnalysis } from './init/analysis.js';
-import { bindSuggestionsAddToDeck, bindSuggestionsFindCard } from './init/suggestions.js';
+import {
+    bindSuggestionsAddToDeck,
+    bindSuggestionsFindCard,
+    bindSuggestionsFidraulisVote,
+} from './init/suggestions.js';
 import { DOM_EVENT_DOM_CONTENT_LOADED } from './utils/domEventNames.js';
+import { consumeSessionResyncAfterUnauthorized } from './utils/sessionResyncAfterUnauthorized.js';
+import { showToast } from './utils/toast.js';
+import { MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED } from './utils/userDialogMessages.js';
 
 function bindAvatarInitials(): void {
     document.querySelectorAll<HTMLElement>(HEADER_AVATAR_SELECTOR).forEach((el) => {
@@ -21,6 +28,9 @@ function bindAvatarInitials(): void {
 }
 
 document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
+    if (consumeSessionResyncAfterUnauthorized()) {
+        showToast(MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED, { variant: 'info', durationMs: 6000 });
+    }
     bindAvatarInitials();
     bindAppTabs();
     bindBuilderDeckDraftLifecycle();
@@ -29,6 +39,7 @@ document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     initAnalysis();
     bindSuggestionsFindCard();
     bindSuggestionsAddToDeck();
+    bindSuggestionsFidraulisVote();
 });
 
 export { setActiveTab } from './tabs.js';

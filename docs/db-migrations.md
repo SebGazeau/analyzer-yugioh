@@ -25,6 +25,20 @@ make db-migrate
 
 (`scripts/db_migrate.sh` charge `.env` si présent, puis `target/release/analyzer-yugioh migrate`, sinon `cargo run -- migrate`.)
 
+### Erreur « was previously applied but has been modified »
+
+sqlx stocke un **checksum** de chaque fichier dans `_sqlx_migrations`. Si tu **édites** un `.sql` déjà appliqué sur cette base, `migrate` échoue (c’est voulu : éviter dérive schéma / prod).
+
+**Recours typiques :**
+
+| Situation | Action |
+|-----------|--------|
+| Base locale jetable (Docker) | `make docker-clean` puis relancer `migrate` / `make docker-dev MIGRATE=1` (repart d’une DB vide + migrations depuis zéro). |
+| Il fallait corriger le schéma | Ne pas réécrire l’ancienne migration : ajouter un **nouveau** fichier `migrations/YYYYMMDDHHMMSS_….sql` avec le correctif. |
+| Fichier modifié par erreur | Restaurer le `.sql` identique à celui qui avait été appliqué (git). |
+
+En cas de **verrou très long** sur `pg_advisory_lock` dans les logs : une autre instance (autre conteneur, autre terminal) exécutait déjà les migrations — n’en lancer qu’**une** à la fois sur la même base.
+
 ## Synchroniser les cartes (sans serveur HTTP)
 
 ```bash
