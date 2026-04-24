@@ -9,6 +9,7 @@
 @import './components/card-art-banner.css';
 @import './pages/auth.css';
 @import './pages/dashboard.css';
+@import './pages/account.css';
 @import './pages/decks.css';
 @import './pages/builder.css';
 @import './pages/analysis.css';

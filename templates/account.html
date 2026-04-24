@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon compte - Deck Analyzer</title>
+    <link rel="stylesheet" href="/static/css/main.css?v={{ timestamp }}">
+    <script type="module" src="/static/dist/main.js?v={{ timestamp }}"></script>
+</head>
+<body class="dashboard-page" data-dashboard="page" data-csrf-token="{{ csrf_token }}" data-site-user-logged="1">
+    <div class="container">
+        {% include "components/header.html" %}
+        <main class="account-page" data-page="account">
+            <section class="account-card account-card--profile">
+                <h2 class="account-card__title">Profil</h2>
+                <ul class="account-list">
+                    <li><strong>Pseudo :</strong> {{ pseudo }}</li>
+                    <li><strong>Compte créé le :</strong> {{ created_at_display }}</li>
+                    <li><strong>Decks sauvegardés :</strong> {{ deck_count }}</li>
+                </ul>
+                <a href="/#decks" class="btn btn--ghost">Voir mes decks</a>
+            </section>
+
+            <section class="account-card account-card--password">
+                <h2 class="account-card__title">Changer le mot de passe</h2>
+                {% if password_changed %}
+                <p class="account-success" role="status">Mot de passe mis à jour.</p>
+                {% endif %}
+                {% if password_error %}
+                <p class="account-error" role="alert">{{ password_error }}</p>
+                {% endif %}
+                <form method="post" action="/mon-compte/mot-de-passe" class="account-form" autocomplete="off">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label class="account-form__label" for="current_password">Mot de passe actuel</label>
+                    <input class="account-form__input" type="password" id="current_password" name="current_password" required autocomplete="current-password">
+
+                    <label class="account-form__label" for="new_password">Nouveau mot de passe</label>
+                    <input class="account-form__input" type="password" id="new_password" name="new_password" required minlength="8" autocomplete="new-password">
+
+                    <label class="account-form__label" for="confirm_password">Confirmer le nouveau mot de passe</label>
+                    <input class="account-form__input" type="password" id="confirm_password" name="confirm_password" required minlength="8" autocomplete="new-password">
+
+                    <button type="submit" class="btn btn--primary">Mettre à jour</button>
+                </form>
+            </section>
+
+            <section class="account-card account-card--danger">
+                <h2 class="account-card__title">Supprimer le compte</h2>
+                <p class="account-danger-copy">Action irréversible. Vos decks et vos votes seront supprimés définitivement.</p>
+                {% if delete_error %}
+                <p class="account-error" role="alert">{{ delete_error }}</p>
+                {% endif %}
+                <form method="post" action="/mon-compte/supprimer" class="account-form" autocomplete="off" data-account-action="delete">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label class="account-form__label" for="delete_current_password">Mot de passe actuel</label>
+                    <input class="account-form__input" type="password" id="delete_current_password" name="current_password" required autocomplete="current-password">
+
+                    <label class="account-form__label" for="confirm_phrase">Tapez votre pseudo "{{ pseudo }}" pour confirmer</label>
+                    <input class="account-form__input" type="text" id="confirm_phrase" name="confirm_phrase" required autocomplete="off">
+
+                    <button type="submit" class="btn btn--danger">Supprimer définitivement</button>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

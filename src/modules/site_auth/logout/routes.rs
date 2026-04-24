@@ -4,7 +4,7 @@ use actix_session::Session;
 use actix_web::{HttpResponse, post, web};
 
 use crate::auth::csrf;
-use crate::auth::session::SITE_USER_SESSION_KEY;
+use crate::auth::session::{SITE_USER_ID_SESSION_KEY, SITE_USER_SESSION_KEY};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct LogoutForm {
@@ -17,6 +17,7 @@ pub async fn logout_submit(session: Session, form: web::Form<LogoutForm>) -> Htt
         return csrf::csrf_rejected();
     }
     session.remove(SITE_USER_SESSION_KEY);
+    session.remove(SITE_USER_ID_SESSION_KEY);
     csrf::invalidate_csrf_token(&session);
     HttpResponse::SeeOther()
         .append_header(("Location", "/"))

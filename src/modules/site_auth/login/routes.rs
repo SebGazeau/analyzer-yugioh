@@ -4,7 +4,7 @@ use actix_session::Session;
 use actix_web::{HttpResponse, post, web};
 
 use crate::auth::csrf;
-use crate::auth::session::SITE_USER_SESSION_KEY;
+use crate::auth::session::{SITE_USER_ID_SESSION_KEY, SITE_USER_SESSION_KEY};
 use crate::auth::user_db;
 
 #[derive(Debug, serde::Deserialize)]
@@ -35,6 +35,9 @@ pub async fn login_submit(
         Ok(Some(user)) => {
             if session.insert(SITE_USER_SESSION_KEY, user.pseudo).is_err() {
                 tracing::error!("session insert failed");
+            }
+            if session.insert(SITE_USER_ID_SESSION_KEY, user.id).is_err() {
+                tracing::error!("session insert site_user_id failed");
             }
             csrf::invalidate_csrf_token(&session);
             HttpResponse::SeeOther()

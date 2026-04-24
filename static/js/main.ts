@@ -20,6 +20,7 @@ import { DOM_EVENT_DOM_CONTENT_LOADED } from './utils/domEventNames.js';
 import { consumeSessionResyncAfterUnauthorized } from './utils/sessionResyncAfterUnauthorized.js';
 import { showToast } from './utils/toast.js';
 import { MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED } from './utils/userDialogMessages.js';
+import { bindAccountDeleteConfirm } from './account/deleteConfirm.js';
 
 function bindAvatarInitials(): void {
     document.querySelectorAll<HTMLElement>(HEADER_AVATAR_SELECTOR).forEach((el) => {
@@ -40,6 +41,7 @@ document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     bindSuggestionsFindCard();
     bindSuggestionsAddToDeck();
     bindSuggestionsFidraulisVote();
+    bindAccountDeleteConfirm();
 });
 
 export { setActiveTab } from './tabs.js';

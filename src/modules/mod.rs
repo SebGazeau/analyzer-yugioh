@@ -2,6 +2,7 @@
 //!
 //! Voir `docs/decisions.md` — découpage `handlers` / futur `db`.
 
+pub mod account;
 pub mod admin_sync;
 pub mod associations;
 pub mod catalog;

@@ -312,6 +312,42 @@ async fn test_web_dashboard_without_session_redirects_to_index() {
     assert_eq!(loc, Some("/"));
 }
 
+#[actix_web::test]
+async fn test_account_page_without_session_redirects_to_index() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::get().uri("/mon-compte").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 303);
+    let loc = resp.headers().get("location").and_then(|v| v.to_str().ok());
+    assert_eq!(loc, Some("/"));
+}
+
+#[actix_web::test]
+async fn test_account_change_password_without_csrf_returns_403() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/mot-de-passe")
+        .set_form([
+            ("current_password", "old"),
+            ("new_password", "Abcd1234!"),
+            ("confirm_password", "Abcd1234!"),
+        ])
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_account_delete_without_csrf_returns_403() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/supprimer")
+        .set_form([("current_password", "old"), ("confirm_phrase", "alice")])
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
 /// Attributs du cookie de session après `GET /` (CSRF sync) — sec-08.
 #[actix_web::test]
 async fn test_index_get_session_cookie_dev_httponly_lax_without_secure() {

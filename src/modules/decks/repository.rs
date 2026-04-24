@@ -1,6 +1,7 @@
 //! Persistance `decks` / `deck_entries` (étape 3.2).
 
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::db::DbError;
 
@@ -35,6 +36,15 @@ pub struct DeckEntryInsert {
     pub quantity: i16,
     pub engine: Option<String>,
     pub categories: Vec<String>,
+}
+
+/// Compte le nombre de decks d'un utilisateur site.
+pub async fn count_decks_for_site_user(pool: &PgPool, site_user_id: Uuid) -> Result<i64, DbError> {
+    let row: (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM decks WHERE site_user_id = $1")
+        .bind(site_user_id)
+        .fetch_one(pool)
+        .await?;
+    Ok(row.0)
 }
 
 /// Liste les decks du compte connecté (`site_user_id`).
