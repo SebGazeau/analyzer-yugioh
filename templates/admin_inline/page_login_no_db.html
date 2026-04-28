@@ -1,7 +1,21 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin</title></head><body>
-<h1>Admin</h1>
-<p>Base de données requise pour la connexion email/mot de passe.</p>
-<p>Si vous disposez d’une <strong>clé admin</strong> (<code>X-Admin-Key</code> ou équivalent), vous pouvez tout de même <a href="/admin/fetch_cards">rafraîchir le catalogue YGOProDeck</a> : cela met à jour <code>cards</code> / <code>card_sets</code> et le cache recherche (voir la doc des autres actions une fois la base disponible).</p>
-<p><a href="/admin/fetch_cards">Rafraîchir les cartes</a> (si accès par clé) · <a href="/admin/reload_cache_from_db">Recharger le cache (Postgres)</a></p>
-</body></html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Admin</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <section class="admin-panel">
+      <h1 class="admin-title">Admin</h1>
+      <p class="admin-subtitle">Base de données requise pour la connexion email/mot de passe.</p>
+      <p class="admin-help">Avec une <strong>clé admin</strong> (<code>X-Admin-Key</code> ou équivalent), vous pouvez tout de même lancer la synchro catalogue : mise à jour <code>cards</code>/<code>card_sets</code> et recharge du cache.</p>
+      <p class="btn-row">
+        <a class="admin-btn admin-btn-secondary" href="/admin/fetch_cards">Rafraîchir les cartes</a>
+        <a class="admin-btn admin-btn-secondary" href="/admin/reload_cache_from_db">Recharger le cache (Postgres)</a>
+      </p>
+    </section>
+  </div>
+</body>
+</html>

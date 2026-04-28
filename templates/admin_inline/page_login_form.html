@@ -1,11 +1,23 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Admin</title></head><body>
-<h1>Connexion admin</h1>
-<form method="post" action="/admin/login">
-  <label>Email <input name="email" type="email" required placeholder="admin@example.com"/></label><br/>
-  <label>Mot de passe <input name="password" type="password" autocomplete="off" required/></label><br/>
-  <button type="submit">Connexion</button>
-</form>
-<p><a href="/admin/setup">Créer le premier compte admin</a></p>
-<p><small>Après connexion, vous accédez aux actions (catalogue YGOProDeck, enrichissement YGOrganization, images, stockage) avec une explication pour chaque bloc.</small></p>
-</body></html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Admin</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <section class="admin-panel">
+      <h1 class="admin-title">Connexion admin</h1>
+      <p class="admin-subtitle">Accès au hub d’administration.</p>
+      <form method="post" action="/admin/login" class="admin-form-grid">
+        <label>Email <input name="email" type="email" required placeholder="admin@example.com"></label>
+        <label>Mot de passe <input name="password" type="password" autocomplete="off" required></label>
+        <button type="submit">Connexion</button>
+      </form>
+      <p class="btn-row"><a class="admin-btn admin-btn-secondary" href="/admin/setup">Créer le premier compte admin</a></p>
+      <p class="admin-note">Après connexion, les actions sont séparées par domaine (catalogue, enrichissement, images, stockage, insights).</p>
+    </section>
+  </div>
+</body>
+</html>

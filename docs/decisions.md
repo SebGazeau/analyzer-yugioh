@@ -328,3 +328,69 @@
 - **Admin** : page `/admin/fidraulis-gy` (même garde-fou `/admin`) : file des passcodes avec votes et **non** validés, tri score (oui − non) ; `POST /admin/fidraulis-gy/validate` ajoute la ligne admin.
 
 **Pourquoi** : un vote par utilisateur et par passcode limite le spam ; la validation admin fige le contrat « vérifié » sans redéployer le code pour chaque carte.
+
+---
+
+## ADR — Reset mot de passe sans email (2FA + support/admin)
+
+**Contexte** : l’auth site ne collecte pas encore d’email utilisateur ; un flux « mot de passe oublié » classique par lien email n’est donc pas possible sans canal secondaire vérifié.
+
+**Décision** :
+
+1. Introduire un parcours **autonome** pour les comptes avec 2FA actif: `forgot-password` -> `verify-2fa` -> `verify-recovery-code` -> `reset-password`.
+2. Introduire un parcours **support/admin** pour les comptes sans 2FA: ticket support -> vérification présentielle hors app -> émission d’un code temporaire à usage unique communiqué par téléphone -> `reset-password`.
+3. Forcer l’activation 2FA après reset pour les comptes non équipés (`force_enable_2fa_after_reset`).
+4. Journaliser chaque transition sensible (demande, validation, émission, reset) dans `security_audit_events`.
+5. Invalider toutes les sessions/refresh tokens à la fin du reset.
+
+**Pourquoi** : sans email ni canal secondaire déjà vérifié, la vérification d’identité doit passer par une étape humaine stricte ; le double parcours limite la friction pour les comptes déjà durcis (2FA) tout en gardant un chemin de récupération pour les comptes historiques.
+
+**Doc de référence** : `docs/password-reset-2fa-admin-workflow.md`.
+
+---
+
+## ADR — Reset password: enforcement 2FA + session_epoch
+
+**Contexte** : après reset, il fallait forcer l’activation 2FA sur comptes non équipés et invalider les sessions antérieures sans store de sessions serveur.
+
+**Décision** :
+
+1. Ajouter `site_users.session_epoch` ; chaque reset mot de passe incrémente cette valeur.
+2. Stocker `site_user_session_epoch` en session au login/register ; comparer avec la valeur DB sur routes protégées (decks/compte).
+3. Maintenir `force_enable_2fa_after_reset` tant que l’onboarding 2FA n’est pas validé (`/auth/2fa/setup` puis `/auth/2fa/enable`).
+4. Ajouter une page utilisateur `/auth/2fa/enforce` et une page support `/mot-de-passe-oublie`.
+5. Ajouter la file admin `/admin/password-reset` + endpoint `/admin/password-reset/queue`.
+
+**Pourquoi** : cette approche fournit une révocation globale pragmatique et un guard d’enforcement 2FA sans introduire un store de sessions dédié.
+
+---
+
+## ADR — Profil 2FA : ré-auth obligatoire + TTL setup + rotation recovery
+
+**Contexte** : pour réduire le parcours support/admin lors d’un oubli de mot de passe, il faut pousser l’activation 2FA directement depuis `Mon compte`, tout en gardant un niveau de sécurité élevé sur des actions sensibles.
+
+**Décision** :
+
+1. Ajouter des endpoints dédiés session utilisateur: `POST /mon-compte/2fa/setup`, `POST /mon-compte/2fa/enable`, `POST /mon-compte/2fa/recovery-codes/rotate`.
+2. Exiger `current_password` + vérification CSRF pour chaque endpoint profil 2FA.
+3. Appliquer un TTL court (`twofa_setup_expires_at`, 10 min) au secret intermédiaire de setup; un setup expiré est invalidé avant activation.
+4. Régénérer systématiquement un nouveau lot de recovery codes à l’activation 2FA et lors d’une rotation manuelle.
+5. Journaliser les actions via `security_audit_events` (`profile_twofa_setup_started`, `profile_twofa_enabled`, `profile_twofa_recovery_codes_rotated`).
+
+**Pourquoi** : améliorer l’UX de récupération autonome tout en empêchant qu’une session seule (sans mot de passe courant) suffise à prendre le contrôle du second facteur.
+
+---
+
+## 2026-04-28 — Shell UI admin (HTML inline + CSS statique)
+
+**Contexte** : les pages admin partageaient un style inline minimal, des actions répétées sur plusieurs écrans (hub connecté, token, file Fidraulis), et un découpage visuel peu lisible pour les opérations à risque.
+
+**Décision** :
+
+- Conserver le rendu **HTML inline** existant (`include_str!`) pour limiter l’impact architecturel.
+- Introduire une feuille de style dédiée [`static/css/admin.css`](../static/css/admin.css), liée depuis les templates admin.
+- Centraliser la navigation et les actions via fragments partagés (`dashboard_nav.html`, `dashboard_actions.html`) avec sections/cartes et ancres stables.
+- Dédupliquer les formulaires d’actions : les pages login connecté et token n’embarquent plus les mêmes blocs de formulaires en double.
+- Préserver strictement le contrat des jobs admin : mêmes routes, méthodes HTTP et paramètres (`hidden` compris) pour toutes les actions existantes.
+
+**Pourquoi** : obtenir une UX admin plus claire et maintenable sans migration front complète, tout en gardant les comportements serveur inchangés.

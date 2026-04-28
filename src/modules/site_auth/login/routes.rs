@@ -4,7 +4,9 @@ use actix_session::Session;
 use actix_web::{HttpResponse, post, web};
 
 use crate::auth::csrf;
-use crate::auth::session::{SITE_USER_ID_SESSION_KEY, SITE_USER_SESSION_KEY};
+use crate::auth::session::{
+    SITE_USER_ID_SESSION_KEY, SITE_USER_SESSION_EPOCH_KEY, SITE_USER_SESSION_KEY,
+};
 use crate::auth::user_db;
 
 #[derive(Debug, serde::Deserialize)]
@@ -39,9 +41,20 @@ pub async fn login_submit(
             if session.insert(SITE_USER_ID_SESSION_KEY, user.id).is_err() {
                 tracing::error!("session insert site_user_id failed");
             }
+            if session
+                .insert(SITE_USER_SESSION_EPOCH_KEY, user.session_epoch)
+                .is_err()
+            {
+                tracing::error!("session insert session_epoch failed");
+            }
             csrf::invalidate_csrf_token(&session);
+            let location = if user.force_enable_2fa_after_reset {
+                "/auth/2fa/enforce"
+            } else {
+                "/"
+            };
             HttpResponse::SeeOther()
-                .append_header(("Location", "/"))
+                .append_header(("Location", location))
                 .finish()
         }
         _ => HttpResponse::SeeOther()

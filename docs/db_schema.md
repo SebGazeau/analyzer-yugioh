@@ -217,3 +217,49 @@ Voir **`docs/db-migrations.md`** : application des migrations (`migrate`, `make 
 - **Temps** : `TIMESTAMPTZ`.
 - **Texte** : `TEXT`. **`desc`** évité (mot réservé SQL) → colonne **`card_desc`**.
 - **ENUMs** PostgreSQL pour type, attribute, frame_type, ban_*.
+
+---
+
+## 9. Auth site — reset mot de passe / 2FA
+
+*(Migrations `20260428001000_password_reset_2fa_admin.sql` et `20260428190000_password_reset_session_epoch.sql`.)*
+
+### Extension `site_users`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `twofa_enabled` | `BOOLEAN` | 2FA TOTP active |
+| `twofa_secret_encrypted` | `TEXT` | Secret TOTP stocké côté serveur |
+| `twofa_setup_expires_at` | `TIMESTAMPTZ` | Expiration du secret de setup 2FA intermédiaire |
+| `force_enable_2fa_after_reset` | `BOOLEAN` | Force l’onboarding 2FA après reset |
+| `twofa_enforced_at` | `TIMESTAMPTZ` | Date de mise en enforcement |
+| `session_epoch` | `BIGINT` | Version de session (revocation globale) |
+
+### `password_reset_requests`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | `UUID` | PK |
+| `site_user_id` | `UUID` | FK -> `site_users(id)` |
+| `path` | `TEXT` | `twofa` ou `admin` |
+| `status` | `TEXT` | `pending`, `challenge_ready`, `approved_by_admin`, `temp_code_issued`, `password_reset_done`, `rejected`, `expired` |
+| `attempt_count` | `INTEGER` | Tentatives de vérification |
+| `twofa_verified_at` | `TIMESTAMPTZ` | Validation TOTP |
+| `recovery_verified_at` | `TIMESTAMPTZ` | Validation recovery code |
+| `temp_code_verified_at` | `TIMESTAMPTZ` | Validation code support |
+| `approved_by_admin_user_id` | `UUID` | FK optionnelle -> `admin_users(id)` |
+| `expires_at` | `TIMESTAMPTZ` | Expiration de la demande |
+| `resolved_at` | `TIMESTAMPTZ` | Clôture de la demande |
+| `created_at`,`updated_at` | `TIMESTAMPTZ` | Traçabilité |
+
+### `temporary_recovery_codes`
+
+Codes temporaires émis par support/admin (usage unique, hashés).
+
+### `recovery_codes`
+
+Batch de recovery codes utilisateur (usage unique, hashés).
+
+### `security_audit_events`
+
+Événements de sécurité liés au reset (`event_type`, `actor_type`, IP, user-agent, metadata).

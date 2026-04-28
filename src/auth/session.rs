@@ -8,6 +8,8 @@ use uuid::Uuid;
 pub const SITE_USER_SESSION_KEY: &str = "site_user_pseudo";
 /// Clé de session pour l'id utilisateur site.
 pub const SITE_USER_ID_SESSION_KEY: &str = "site_user_id";
+/// Version de session (revocation globale via `site_users.session_epoch`).
+pub const SITE_USER_SESSION_EPOCH_KEY: &str = "site_user_session_epoch";
 
 /// Vérifie qu’une session site est présente (`site_user_pseudo`) ; sinon erreur 401.
 pub fn require_session(session: &Session) -> Result<String, Error> {

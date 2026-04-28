@@ -210,6 +210,16 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
         10_000,
         Duration::from_secs(3600),
         10_000,
+        Duration::from_secs(3600),
+        10_000,
+        Duration::from_secs(3600),
+        10_000,
+        Duration::from_secs(3600),
+        10_000,
+        Duration::from_secs(3600),
+        10_000,
+        Duration::from_secs(3600),
+        10_000,
     ));
     make_app(
         cache,

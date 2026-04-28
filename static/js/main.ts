@@ -21,6 +21,7 @@ import { consumeSessionResyncAfterUnauthorized } from './utils/sessionResyncAfte
 import { showToast } from './utils/toast.js';
 import { MSG_SESSION_RESYNC_AFTER_UNAUTHORIZED } from './utils/userDialogMessages.js';
 import { bindAccountDeleteConfirm } from './account/deleteConfirm.js';
+import { bindAccountTwofa } from './account/twofa.js';
 
 function bindAvatarInitials(): void {
     document.querySelectorAll<HTMLElement>(HEADER_AVATAR_SELECTOR).forEach((el) => {
@@ -42,6 +43,7 @@ document.addEventListener(DOM_EVENT_DOM_CONTENT_LOADED, () => {
     bindSuggestionsAddToDeck();
     bindSuggestionsFidraulisVote();
     bindAccountDeleteConfirm();
+    bindAccountTwofa();
 });
 
 export { setActiveTab } from './tabs.js';

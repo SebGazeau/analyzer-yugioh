@@ -43,6 +43,56 @@
                 </form>
             </section>
 
+            <section
+                class="account-card account-card--twofa"
+                data-twofa-root
+                data-twofa-enabled="{% if twofa_enabled %}1{% else %}0{% endif %}"
+                data-twofa-setup-pending="{% if twofa_setup_pending %}1{% else %}0{% endif %}"
+                data-twofa-setup-expires-at="{{ twofa_setup_expires_at | default(value='') }}"
+            >
+                <h2 class="account-card__title">Sécuriser mon compte (2FA)</h2>
+                <p class="account-danger-copy">
+                    Activez la 2FA tant que vous connaissez votre mot de passe: en cas d'oubli, vous pourrez récupérer votre compte de façon autonome.
+                </p>
+                <p class="account-success" data-twofa-status role="status">
+                    {% if twofa_enabled %}
+                    2FA activée.
+                    {% elif twofa_setup_pending %}
+                    Setup 2FA en attente de confirmation.
+                    {% else %}
+                    2FA non activée.
+                    {% endif %}
+                </p>
+                <p class="account-danger-copy">
+                    Ensuite, conservez vos recovery codes hors ligne. Ils ne seront affichés qu'une seule fois.
+                </p>
+
+                <form class="account-form" data-twofa-action="setup" autocomplete="off">
+                    <label class="account-form__label" for="twofa_setup_password">Mot de passe actuel (ré-auth)</label>
+                    <input class="account-form__input" type="password" id="twofa_setup_password" name="current_password" required autocomplete="current-password">
+                    <button type="submit" class="btn btn--secondary">Générer mon secret 2FA</button>
+                </form>
+
+                <form class="account-form" data-twofa-action="enable" autocomplete="off">
+                    <label class="account-form__label" for="twofa_enable_password">Mot de passe actuel</label>
+                    <input class="account-form__input" type="password" id="twofa_enable_password" name="current_password" required autocomplete="current-password">
+                    <label class="account-form__label" for="twofa_code">Code 2FA (6 chiffres)</label>
+                    <input class="account-form__input" type="text" id="twofa_code" name="totp_code" required placeholder="123456" inputmode="numeric" pattern="[0-9]{6}">
+                    <button type="submit" class="btn btn--primary">Confirmer et activer la 2FA</button>
+                </form>
+
+                <form class="account-form" data-twofa-action="rotate" autocomplete="off">
+                    <label class="account-form__label" for="twofa_rotate_password">Mot de passe actuel (ré-auth)</label>
+                    <input class="account-form__input" type="password" id="twofa_rotate_password" name="current_password" required autocomplete="current-password">
+                    <button type="submit" class="btn btn--ghost">Régénérer mes recovery codes</button>
+                </form>
+
+                <p class="account-success" data-twofa-secret role="status"></p>
+                <p class="account-success" data-twofa-codes role="status"></p>
+                <p class="account-error" data-twofa-error role="alert"></p>
+                <a href="/mot-de-passe-oublie" class="btn btn--ghost">Tester le parcours de récupération</a>
+            </section>
+
             <section class="account-card account-card--danger">
                 <h2 class="account-card__title">Supprimer le compte</h2>
                 <p class="account-danger-copy">Action irréversible. Vos decks et vos votes seront supprimés définitivement.</p>

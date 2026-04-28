@@ -28,12 +28,17 @@
             {% endif %}
             <form method="post" action="/login" class="header-login-form" data-auth-form="login">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <label for="login-pseudo" class="header-login-label">Utilisateur</label>
-                <input type="text" id="login-pseudo" name="pseudo" required minlength="4" autocomplete="username" placeholder="Pseudo" class="header-login-input" aria-label="Pseudo">
-                <label for="login-password" class="header-login-label">Mot de passe</label>
-                <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="Mot de passe" class="header-login-input" aria-label="Mot de passe">
-                <button type="submit" class="btn btn-header btn-login-submit">Connexion</button>
-                <a href="/register" class="btn btn-header btn-register">Créer un compte</a>
+                <div class="header-login-credentials">
+                    <label for="login-pseudo" class="header-login-label">Utilisateur</label>
+                    <input type="text" id="login-pseudo" name="pseudo" required minlength="4" autocomplete="username" placeholder="Pseudo" class="header-login-input" aria-label="Pseudo">
+                    <label for="login-password" class="header-login-label">Mot de passe</label>
+                    <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="Mot de passe" class="header-login-input" aria-label="Mot de passe">
+                    <a href="/mot-de-passe-oublie" class="header-forgot-link">Mot de passe oublié ?</a>
+                </div>
+                <div class="header-login-actions">
+                    <button type="submit" class="btn btn-header btn-login-submit">Connexion</button>
+                    <a href="/register" class="btn btn-header btn-register">Créer un compte</a>
+                </div>
             </form>
         </div>
         {% endif %}
