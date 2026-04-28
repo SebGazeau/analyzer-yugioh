@@ -10,6 +10,10 @@
   padding: var(--space-5);
 }
 
+.account-shell .header-tabs {
+  display: none !important;
+}
+
 .account-card {
   background: var(--color-bg-surface);
   border: 1px solid var(--color-border-subtle);

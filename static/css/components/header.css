@@ -20,6 +20,7 @@
   flex-direction: column;
   justify-content: center;
   padding-bottom: var(--space-4);
+  text-decoration: none;
 }
 /* Spécificité .header .header-tabs pour battre dashboard.css (.app-tabs) chargé après */
 .header .header-tabs {
