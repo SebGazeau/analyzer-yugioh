@@ -139,11 +139,11 @@ Sur les dépôts avec **branch protection** stricte sur `main`, il faut autorise
 
 ### Déploiement
 
-Le workflow **`.github/workflows/deploy-gcp.yml`** se déclenche **uniquement** sur push d’un **tag** `v*` (ex. `v1.2.0`). Il enchaîne d’abord les mêmes contrôles qualité que la CI (workflow réutilisable **`quality-reusable.yml`**), puis build / push de l’image et mise à jour Cloud Run.
+Le workflow **`.github/workflows/deploy-gcp.yml`** se déclenche **uniquement** sur push d’un **tag** `v*` (ex. `v1.2.0`). Il enchaîne d’abord les mêmes contrôles qualité que la CI (workflow réutilisable **`quality-reusable.yml`**), puis build / push de l’image, exécution d’un job de migration Cloud Run, et mise à jour Cloud Run.
 
 La **CI** (workflow **`CI`**) tourne sur les **pull requests** vers `main` / `master` (fmt, clippy, tests, front, **intégration Postgres + E2E**, smoke Docker). Détail : **`docs/ci-integration.md`**. Après merge, **version-tag** crée le tag ; le merge seul ne déploie pas tant que le tag n’est pas poussé (c’est ce job qui le pousse).
 
-Le job de déploiement : construit le front (`static/dist`), build l’image Docker (**`--features gcs`**, comme le `Dockerfile`), pousse vers **Artifact Registry**, puis met à jour **uniquement l’image** du service Cloud Run avec **`gcloud run services update … --image=…`** — les variables d’environnement, secrets et liaison Cloud SQL **déjà configurés** dans la console (ou via des `gcloud` précédents) **ne sont pas réinitialisés** (voir l’avertissement § « Rappels utiles » ci-dessus sur `deploy … --image` seul).
+Le job de déploiement : construit le front (`static/dist`), build l’image Docker (**`--features gcs`**, comme le `Dockerfile`), pousse vers **Artifact Registry**, met à jour l’image d’un **Cloud Run Job de migration**, exécute ce job (`--wait`), puis met à jour **uniquement l’image** du service Cloud Run avec **`gcloud run services update … --image=…`**. Si la migration échoue, le service n’est pas basculé. Les variables d’environnement, secrets et liaison Cloud SQL **déjà configurés** dans la console (ou via des `gcloud` précédents) **ne sont pas réinitialisés** (voir l’avertissement § « Rappels utiles » ci-dessus sur `deploy … --image` seul).
 
 ### Variables GitHub (repository → Settings → Secrets and variables → Actions → Variables)
 
@@ -152,6 +152,7 @@ Le job de déploiement : construit le front (`static/dist`), build l’image Doc
 | `GCP_PROJECT_ID` | `mon-projet` | Projet GCP |
 | `GCP_REGION` | `europe-west1` | Région Cloud Run + préfixe registry |
 | `GCP_RUN_SERVICE` | `analyzer-yugioh` | Nom du service Cloud Run |
+| `GCP_RUN_MIGRATE_JOB` | `analyzer-yugioh-migrate` | Nom du Cloud Run Job qui exécute `./analyzer-yugioh migrate` |
 | `GCP_ARTIFACT_REPO` | `app` | Nom du **dépôt** Docker dans Artifact Registry |
 | `GCP_IMAGE_NAME` | `analyzer-yugioh` | Nom de l’**image** dans ce dépôt |
 

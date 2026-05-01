@@ -189,6 +189,32 @@ Puis **`GET /admin/fetch_cards`** avec **`X-Admin-Key`** pour remplir la table `
 
 ---
 
+## 7. Job Cloud Run de migration (pour CD)
+
+Le workflow de déploiement peut exécuter un **Cloud Run Job** avant de mettre à jour le service applicatif.
+Ce job doit utiliser la même config DB (Cloud SQL + `DATABASE_URL`) que le service, avec la commande de migration.
+
+Exemple de création initiale :
+
+```bash
+gcloud run jobs create analyzer-yugioh-migrate \
+  --region="$REGION" \
+  --image="${REGION}-docker.pkg.dev/${PROJECT_ID}/app/analyzer-yugioh:bootstrap" \
+  --command="./analyzer-yugioh" \
+  --args="migrate" \
+  --set-secrets="DATABASE_URL=analyzer-database-url:latest" \
+  --add-cloudsql-instances="${PROJECT_ID}:${REGION}:${INSTANCE}" \
+  --service-account="${RUN_SA}"
+```
+
+Ensuite, dans GitHub Actions, renseigner la variable repo :
+
+- `GCP_RUN_MIGRATE_JOB=analyzer-yugioh-migrate`
+
+Le workflow mettra l’image du job à jour à chaque release tag, exécutera la migration (`--wait`), puis déploiera le service seulement si la migration réussit.
+
+---
+
 ## Dépannage
 
 | Symptôme | Piste |
