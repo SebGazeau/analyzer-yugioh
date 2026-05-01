@@ -146,14 +146,16 @@ pub async fn forgot_password(
                     request_id = id;
                     let _ = repository::insert_audit_event(
                         pool.get_ref(),
-                        "password_reset_requested",
-                        "system",
-                        None,
-                        Some(id),
-                        None,
-                        ip_as_string(&req).as_deref(),
-                        user_agent_as_string(&req).as_deref(),
-                        serde_json::json!({ "path": path }),
+                        repository::AuditEventInsert {
+                            event_type: "password_reset_requested",
+                            actor_type: "system",
+                            actor_id: None,
+                            request_id: Some(id),
+                            ticket_id: None,
+                            ip_address: ip_as_string(&req).as_deref(),
+                            user_agent: user_agent_as_string(&req).as_deref(),
+                            metadata: serde_json::json!({ "path": path }),
+                        },
                     )
                     .await;
                 }
@@ -241,14 +243,16 @@ pub async fn verify_2fa(
     }
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "password_reset_twofa_verified",
-        "user",
-        Some(request.site_user_id),
-        Some(request.id),
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({}),
+        repository::AuditEventInsert {
+            event_type: "password_reset_twofa_verified",
+            actor_type: "user",
+            actor_id: Some(request.site_user_id),
+            request_id: Some(request.id),
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({}),
+        },
     )
     .await;
     HttpResponse::NoContent().finish()
@@ -317,14 +321,16 @@ pub async fn verify_recovery_code(
     }
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "password_reset_recovery_verified",
-        "user",
-        Some(request.site_user_id),
-        Some(request.id),
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({}),
+        repository::AuditEventInsert {
+            event_type: "password_reset_recovery_verified",
+            actor_type: "user",
+            actor_id: Some(request.site_user_id),
+            request_id: Some(request.id),
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({}),
+        },
     )
     .await;
     HttpResponse::NoContent().finish()
@@ -393,14 +399,16 @@ pub async fn verify_temp_code(
     }
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "password_reset_temp_code_verified",
-        "user",
-        Some(request.site_user_id),
-        Some(request.id),
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({}),
+        repository::AuditEventInsert {
+            event_type: "password_reset_temp_code_verified",
+            actor_type: "user",
+            actor_id: Some(request.site_user_id),
+            request_id: Some(request.id),
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({}),
+        },
     )
     .await;
     HttpResponse::NoContent().finish()
@@ -491,16 +499,18 @@ pub async fn reset_password(
     session.purge();
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "password_reset_completed",
-        "user",
-        Some(request.site_user_id),
-        Some(request.id),
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({
-            "session_revocation_scope": "current_session_only"
-        }),
+        repository::AuditEventInsert {
+            event_type: "password_reset_completed",
+            actor_type: "user",
+            actor_id: Some(request.site_user_id),
+            request_id: Some(request.id),
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({
+                "session_revocation_scope": "current_session_only"
+            }),
+        },
     )
     .await;
     HttpResponse::NoContent().finish()
@@ -563,16 +573,18 @@ pub async fn support_password_reset_request(
                     ticket_id = id;
                     let _ = repository::insert_audit_event(
                         pool.get_ref(),
-                        "password_reset_support_requested",
-                        "user",
-                        Some(user.id),
-                        Some(id),
-                        Some(id),
-                        ip_as_string(&req).as_deref(),
-                        user_agent_as_string(&req).as_deref(),
-                        serde_json::json!({
-                            "reason": body.reason.as_deref().unwrap_or("")
-                        }),
+                        repository::AuditEventInsert {
+                            event_type: "password_reset_support_requested",
+                            actor_type: "user",
+                            actor_id: Some(user.id),
+                            request_id: Some(id),
+                            ticket_id: Some(id),
+                            ip_address: ip_as_string(&req).as_deref(),
+                            user_agent: user_agent_as_string(&req).as_deref(),
+                            metadata: serde_json::json!({
+                                "reason": body.reason.as_deref().unwrap_or("")
+                            }),
+                        },
                     )
                     .await;
                 }
@@ -650,17 +662,19 @@ pub async fn admin_approve_password_reset(
         Ok(true) => {
             let _ = repository::insert_audit_event(
                 pool.get_ref(),
-                "password_reset_admin_approved",
-                "admin",
-                admin_id,
-                Some(request_id),
-                Some(request_id),
-                ip_as_string(&req).as_deref(),
-                user_agent_as_string(&req).as_deref(),
-                serde_json::json!({
-                    "verification_method": "in_person",
-                    "notes": body.notes.as_deref().unwrap_or("")
-                }),
+                repository::AuditEventInsert {
+                    event_type: "password_reset_admin_approved",
+                    actor_type: "admin",
+                    actor_id: admin_id,
+                    request_id: Some(request_id),
+                    ticket_id: Some(request_id),
+                    ip_address: ip_as_string(&req).as_deref(),
+                    user_agent: user_agent_as_string(&req).as_deref(),
+                    metadata: serde_json::json!({
+                        "verification_method": "in_person",
+                        "notes": body.notes.as_deref().unwrap_or("")
+                    }),
+                },
             )
             .await;
             HttpResponse::NoContent().finish()
@@ -734,17 +748,19 @@ pub async fn admin_issue_temp_code(
     };
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "password_reset_temp_code_issued",
-        "admin",
-        admin_id,
-        Some(request.id),
-        Some(request.id),
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({
-            "ttl_minutes": ttl,
-            "delivery_channel": "manual_phone"
-        }),
+        repository::AuditEventInsert {
+            event_type: "password_reset_temp_code_issued",
+            actor_type: "admin",
+            actor_id: admin_id,
+            request_id: Some(request.id),
+            ticket_id: Some(request.id),
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({
+                "ttl_minutes": ttl,
+                "delivery_channel": "manual_phone"
+            }),
+        },
     )
     .await;
     HttpResponse::Created().json(IssueTempCodeResponse {
@@ -842,14 +858,16 @@ pub async fn setup_2fa(
     }
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "profile_twofa_setup_started",
-        "user",
-        Some(user_id),
-        None,
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({ "channel": "enforce" }),
+        repository::AuditEventInsert {
+            event_type: "profile_twofa_setup_started",
+            actor_type: "user",
+            actor_id: Some(user_id),
+            request_id: None,
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({ "channel": "enforce" }),
+        },
     )
     .await;
     let issuer = "DeckAnalyzer";
@@ -935,14 +953,19 @@ pub async fn enable_2fa(
     }
     let _ = repository::insert_audit_event(
         pool.get_ref(),
-        "profile_twofa_enabled",
-        "user",
-        Some(user_id),
-        None,
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({ "channel": "enforce", "recovery_code_count": recovery_codes.len() }),
+        repository::AuditEventInsert {
+            event_type: "profile_twofa_enabled",
+            actor_type: "user",
+            actor_id: Some(user_id),
+            request_id: None,
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({
+                "channel": "enforce",
+                "recovery_code_count": recovery_codes.len()
+            }),
+        },
     )
     .await;
     HttpResponse::Ok().json(Enable2faResponse { recovery_codes })

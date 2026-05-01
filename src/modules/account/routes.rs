@@ -69,6 +69,20 @@ fn created_at_display(dt: DateTime<Utc>) -> String {
     dt.format("%d/%m/%Y %H:%M UTC").to_string()
 }
 
+#[derive(Debug)]
+struct AccountPageInput<'a> {
+    csrf_token: &'a str,
+    pseudo: &'a str,
+    created_at: Option<DateTime<Utc>>,
+    deck_count: Option<i64>,
+    password_error: Option<String>,
+    password_changed: bool,
+    delete_error: Option<String>,
+    twofa_enabled: bool,
+    twofa_setup_pending: bool,
+    twofa_setup_expires_at: Option<String>,
+}
+
 fn ip_as_string(req: &HttpRequest) -> Option<String> {
     req.peer_addr().map(|addr| addr.ip().to_string())
 }
@@ -181,36 +195,26 @@ async fn resolve_current_site_user(
     Ok((user.id, user.pseudo))
 }
 
-fn account_context(
-    csrf_token: &str,
-    pseudo: &str,
-    created_at: Option<DateTime<Utc>>,
-    deck_count: Option<i64>,
-    password_error: Option<String>,
-    password_changed: bool,
-    delete_error: Option<String>,
-    twofa_enabled: bool,
-    twofa_setup_pending: bool,
-    twofa_setup_expires_at: Option<String>,
-) -> tera::Context {
+fn account_context(input: AccountPageInput<'_>) -> tera::Context {
     let mut ctx = tera::Context::new();
     ctx.insert("timestamp", &format!("{}", Utc::now().timestamp()));
-    ctx.insert("csrf_token", csrf_token);
-    ctx.insert("user_pseudo", &Some(pseudo.to_string()));
-    ctx.insert("pseudo", pseudo);
+    ctx.insert("csrf_token", input.csrf_token);
+    ctx.insert("user_pseudo", &Some(input.pseudo.to_string()));
+    ctx.insert("pseudo", input.pseudo);
     ctx.insert(
         "created_at_display",
-        &created_at
+        &input
+            .created_at
             .map(created_at_display)
             .unwrap_or_else(|| "Inconnue".to_string()),
     );
-    ctx.insert("deck_count", &deck_count.unwrap_or(0));
-    ctx.insert("password_error", &password_error);
-    ctx.insert("password_changed", &password_changed);
-    ctx.insert("delete_error", &delete_error);
-    ctx.insert("twofa_enabled", &twofa_enabled);
-    ctx.insert("twofa_setup_pending", &twofa_setup_pending);
-    ctx.insert("twofa_setup_expires_at", &twofa_setup_expires_at);
+    ctx.insert("deck_count", &input.deck_count.unwrap_or(0));
+    ctx.insert("password_error", &input.password_error);
+    ctx.insert("password_changed", &input.password_changed);
+    ctx.insert("delete_error", &input.delete_error);
+    ctx.insert("twofa_enabled", &input.twofa_enabled);
+    ctx.insert("twofa_setup_pending", &input.twofa_setup_pending);
+    ctx.insert("twofa_setup_expires_at", &input.twofa_setup_expires_at);
     ctx
 }
 
@@ -225,10 +229,9 @@ fn render_account_template(
 }
 
 async fn load_twofa_ui_state(pool: &sqlx::PgPool, user_id: Uuid) -> (bool, bool, Option<String>) {
-    let user = match user_db::get_user_by_id(pool, user_id).await {
-        Ok(v) => v,
-        Err(_) => None,
-    };
+    let user = user_db::get_user_by_id(pool, user_id)
+        .await
+        .unwrap_or_default();
     let twofa_enabled = user.as_ref().is_some_and(|u| u.twofa_enabled);
     let twofa_setup_pending = user.as_ref().is_some_and(|u| {
         !u.twofa_enabled
@@ -284,18 +287,18 @@ pub async fn account_page(
     let deck_count = profile.as_ref().map(|p| p.deck_count);
     let (twofa_enabled, twofa_setup_pending, twofa_setup_expires_at) =
         load_twofa_ui_state(pool.get_ref(), user_id).await;
-    let ctx = account_context(
-        &csrf_token,
-        &profile_pseudo,
+    let ctx = account_context(AccountPageInput {
+        csrf_token: &csrf_token,
+        pseudo: &profile_pseudo,
         created_at,
         deck_count,
-        None,
+        password_error: None,
         password_changed,
-        None,
+        delete_error: None,
         twofa_enabled,
         twofa_setup_pending,
         twofa_setup_expires_at,
-    );
+    });
     render_account_template(tera.get_ref(), &ctx)
 }
 
@@ -328,18 +331,18 @@ pub async fn account_change_password_submit(
             Ok(t) => t,
             Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
         };
-        let ctx = account_context(
-            &csrf_token,
-            &pseudo,
-            profile.as_ref().map(|p| p.created_at),
-            profile.as_ref().map(|p| p.deck_count),
-            Some("Les deux mots de passe ne correspondent pas.".to_string()),
-            false,
-            None,
+        let ctx = account_context(AccountPageInput {
+            csrf_token: &csrf_token,
+            pseudo: &pseudo,
+            created_at: profile.as_ref().map(|p| p.created_at),
+            deck_count: profile.as_ref().map(|p| p.deck_count),
+            password_error: Some("Les deux mots de passe ne correspondent pas.".to_string()),
+            password_changed: false,
+            delete_error: None,
             twofa_enabled,
             twofa_setup_pending,
-            twofa_setup_expires_at.clone(),
-        );
+            twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+        });
         return render_account_template(tera.get_ref(), &ctx);
     }
     let verified =
@@ -351,18 +354,18 @@ pub async fn account_change_password_submit(
             Ok(t) => t,
             Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
         };
-        let ctx = account_context(
-            &csrf_token,
-            &pseudo,
-            profile.as_ref().map(|p| p.created_at),
-            profile.as_ref().map(|p| p.deck_count),
-            Some("Impossible de mettre à jour le mot de passe.".to_string()),
-            false,
-            None,
+        let ctx = account_context(AccountPageInput {
+            csrf_token: &csrf_token,
+            pseudo: &pseudo,
+            created_at: profile.as_ref().map(|p| p.created_at),
+            deck_count: profile.as_ref().map(|p| p.deck_count),
+            password_error: Some("Impossible de mettre à jour le mot de passe.".to_string()),
+            password_changed: false,
+            delete_error: None,
             twofa_enabled,
             twofa_setup_pending,
-            twofa_setup_expires_at.clone(),
-        );
+            twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+        });
         return render_account_template(tera.get_ref(), &ctx);
     }
     match user_db::update_password(pool.get_ref(), user_id, &form.new_password).await {
@@ -385,18 +388,18 @@ pub async fn account_change_password_submit(
                 Ok(t) => t,
                 Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
             };
-            let ctx = account_context(
-                &csrf_token,
-                &pseudo,
-                profile.as_ref().map(|p| p.created_at),
-                profile.as_ref().map(|p| p.deck_count),
-                Some(msg),
-                false,
-                None,
+            let ctx = account_context(AccountPageInput {
+                csrf_token: &csrf_token,
+                pseudo: &pseudo,
+                created_at: profile.as_ref().map(|p| p.created_at),
+                deck_count: profile.as_ref().map(|p| p.deck_count),
+                password_error: Some(msg),
+                password_changed: false,
+                delete_error: None,
                 twofa_enabled,
                 twofa_setup_pending,
-                twofa_setup_expires_at.clone(),
-            );
+                twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+            });
             render_account_template(tera.get_ref(), &ctx)
         }
     }
@@ -437,18 +440,20 @@ pub async fn account_delete_submit(
             Ok(t) => t,
             Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
         };
-        let ctx = account_context(
-            &csrf_token,
-            &pseudo,
-            profile.as_ref().map(|p| p.created_at),
-            profile.as_ref().map(|p| p.deck_count),
-            None,
-            false,
-            Some("Confirmation invalide. Vérifiez le mot de passe et le pseudo.".to_string()),
+        let ctx = account_context(AccountPageInput {
+            csrf_token: &csrf_token,
+            pseudo: &pseudo,
+            created_at: profile.as_ref().map(|p| p.created_at),
+            deck_count: profile.as_ref().map(|p| p.deck_count),
+            password_error: None,
+            password_changed: false,
+            delete_error: Some(
+                "Confirmation invalide. Vérifiez le mot de passe et le pseudo.".to_string(),
+            ),
             twofa_enabled,
             twofa_setup_pending,
-            twofa_setup_expires_at.clone(),
-        );
+            twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+        });
         return render_account_template(tera.get_ref(), &ctx);
     }
     match user_db::delete_user(pool.get_ref(), user_id).await {
@@ -463,18 +468,18 @@ pub async fn account_delete_submit(
                 Ok(t) => t,
                 Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
             };
-            let ctx = account_context(
-                &csrf_token,
-                &pseudo,
-                profile.as_ref().map(|p| p.created_at),
-                profile.as_ref().map(|p| p.deck_count),
-                None,
-                false,
-                Some("Compte introuvable.".to_string()),
+            let ctx = account_context(AccountPageInput {
+                csrf_token: &csrf_token,
+                pseudo: &pseudo,
+                created_at: profile.as_ref().map(|p| p.created_at),
+                deck_count: profile.as_ref().map(|p| p.deck_count),
+                password_error: None,
+                password_changed: false,
+                delete_error: Some("Compte introuvable.".to_string()),
                 twofa_enabled,
                 twofa_setup_pending,
-                twofa_setup_expires_at.clone(),
-            );
+                twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+            });
             render_account_template(tera.get_ref(), &ctx)
         }
         Err(e) => {
@@ -483,18 +488,18 @@ pub async fn account_delete_submit(
                 Ok(t) => t,
                 Err(_) => return Ok(HttpResponse::InternalServerError().finish()),
             };
-            let ctx = account_context(
-                &csrf_token,
-                &pseudo,
-                profile.as_ref().map(|p| p.created_at),
-                profile.as_ref().map(|p| p.deck_count),
-                None,
-                false,
-                Some("Erreur technique. Réessayez.".to_string()),
+            let ctx = account_context(AccountPageInput {
+                csrf_token: &csrf_token,
+                pseudo: &pseudo,
+                created_at: profile.as_ref().map(|p| p.created_at),
+                deck_count: profile.as_ref().map(|p| p.deck_count),
+                password_error: None,
+                password_changed: false,
+                delete_error: Some("Erreur technique. Réessayez.".to_string()),
                 twofa_enabled,
                 twofa_setup_pending,
-                twofa_setup_expires_at.clone(),
-            );
+                twofa_setup_expires_at: twofa_setup_expires_at.clone(),
+            });
             render_account_template(tera.get_ref(), &ctx)
         }
     }
@@ -547,7 +552,9 @@ pub async fn account_twofa_setup(
         }
     };
     let secret = generate_totp_secret_base32(32);
-    if let Err(_) = reset_repository::set_user_twofa_secret(pool.get_ref(), user_id, &secret).await
+    if reset_repository::set_user_twofa_secret(pool.get_ref(), user_id, &secret)
+        .await
+        .is_err()
     {
         return HttpResponse::InternalServerError()
             .json(serde_json::json!({ "error": "database" }));
@@ -564,14 +571,16 @@ pub async fn account_twofa_setup(
     );
     let _ = reset_repository::insert_audit_event(
         pool.get_ref(),
-        "profile_twofa_setup_started",
-        "user",
-        Some(user_id),
-        None,
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({ "setup_expires_at": setup_expires_at }),
+        reset_repository::AuditEventInsert {
+            event_type: "profile_twofa_setup_started",
+            actor_type: "user",
+            actor_id: Some(user_id),
+            request_id: None,
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({ "setup_expires_at": setup_expires_at }),
+        },
     )
     .await;
     HttpResponse::Ok().json(ProfileSetup2faResponse {
@@ -645,31 +654,37 @@ pub async fn account_twofa_enable(
     let recovery_codes: Vec<String> = (0..10).map(|_| generate_human_code(3, 4)).collect();
     let hashes: Vec<String> = recovery_codes.iter().map(|v| hash_code(v)).collect();
     let expires_at = Utc::now() + chrono::Duration::days(365);
-    if let Err(_) = reset_repository::replace_recovery_codes_batch(
+    if reset_repository::replace_recovery_codes_batch(
         pool.get_ref(),
         user_id,
         &hashes,
         Some(expires_at),
     )
     .await
+    .is_err()
     {
         return HttpResponse::InternalServerError()
             .json(serde_json::json!({ "error": "database" }));
     }
-    if let Err(_) = reset_repository::enable_user_twofa(pool.get_ref(), user_id).await {
+    if reset_repository::enable_user_twofa(pool.get_ref(), user_id)
+        .await
+        .is_err()
+    {
         return HttpResponse::InternalServerError()
             .json(serde_json::json!({ "error": "database" }));
     }
     let _ = reset_repository::insert_audit_event(
         pool.get_ref(),
-        "profile_twofa_enabled",
-        "user",
-        Some(user_id),
-        None,
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({ "recovery_code_count": recovery_codes.len() }),
+        reset_repository::AuditEventInsert {
+            event_type: "profile_twofa_enabled",
+            actor_type: "user",
+            actor_id: Some(user_id),
+            request_id: None,
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({ "recovery_code_count": recovery_codes.len() }),
+        },
     )
     .await;
     HttpResponse::Ok().json(ProfileRecoveryCodesResponse { recovery_codes })
@@ -727,27 +742,30 @@ pub async fn account_twofa_rotate_recovery_codes(
     let recovery_codes: Vec<String> = (0..10).map(|_| generate_human_code(3, 4)).collect();
     let hashes: Vec<String> = recovery_codes.iter().map(|v| hash_code(v)).collect();
     let expires_at = Utc::now() + chrono::Duration::days(365);
-    if let Err(_) = reset_repository::replace_recovery_codes_batch(
+    if reset_repository::replace_recovery_codes_batch(
         pool.get_ref(),
         user_id,
         &hashes,
         Some(expires_at),
     )
     .await
+    .is_err()
     {
         return HttpResponse::InternalServerError()
             .json(serde_json::json!({ "error": "database" }));
     }
     let _ = reset_repository::insert_audit_event(
         pool.get_ref(),
-        "profile_twofa_recovery_codes_rotated",
-        "user",
-        Some(user_id),
-        None,
-        None,
-        ip_as_string(&req).as_deref(),
-        user_agent_as_string(&req).as_deref(),
-        serde_json::json!({ "recovery_code_count": recovery_codes.len() }),
+        reset_repository::AuditEventInsert {
+            event_type: "profile_twofa_recovery_codes_rotated",
+            actor_type: "user",
+            actor_id: Some(user_id),
+            request_id: None,
+            ticket_id: None,
+            ip_address: ip_as_string(&req).as_deref(),
+            user_agent: user_agent_as_string(&req).as_deref(),
+            metadata: serde_json::json!({ "recovery_code_count": recovery_codes.len() }),
+        },
     )
     .await;
     HttpResponse::Ok().json(ProfileRecoveryCodesResponse { recovery_codes })

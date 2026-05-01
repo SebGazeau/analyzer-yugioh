@@ -15,7 +15,9 @@ use tera::Tera;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::auth::{ApiDoc, api};
-use crate::rate_limit::{RateLimitState, login_post_blocked_response};
+use crate::rate_limit::{
+    FixedWindowConfig, RateLimitState, RateLimitStateConfig, login_post_blocked_response,
+};
 use crate::routes;
 use crate::session_cookies::{SessionCookieSettings, cookie_session_middleware};
 use crate::shared::search::cache::CardCache;
@@ -203,24 +205,24 @@ pub fn configure_app_for_tests_rate_limit_strict_site() -> App<
     let tera = create_template().expect("templates must load for tests");
     let tera_data = web::Data::new(tera);
     let cards_path = web::Data::new(crate::modules::CARDS_PATH_DEFAULT.to_string());
-    let rl = web::Data::new(RateLimitState::new(
-        Duration::from_secs(3600),
-        2,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-        Duration::from_secs(3600),
-        10_000,
-    ));
+    let hour = Duration::from_secs(3600);
+    let wide = FixedWindowConfig {
+        window: hour,
+        max: 10_000,
+    };
+    let rl = web::Data::new(RateLimitState::new(RateLimitStateConfig {
+        site: FixedWindowConfig {
+            window: hour,
+            max: 2,
+        },
+        register: wide,
+        admin: wide,
+        reset: wide,
+        admin_reset_issue: wide,
+        profile_twofa_setup: wide,
+        profile_twofa_enable: wide,
+        profile_twofa_rotate: wide,
+    }));
     make_app(
         cache,
         tera_data,

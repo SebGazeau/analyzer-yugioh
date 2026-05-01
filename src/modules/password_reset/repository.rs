@@ -465,16 +465,21 @@ pub async fn list_password_reset_queue(
     Ok(rows)
 }
 
+#[derive(Debug)]
+pub struct AuditEventInsert<'a> {
+    pub event_type: &'a str,
+    pub actor_type: &'a str,
+    pub actor_id: Option<Uuid>,
+    pub request_id: Option<Uuid>,
+    pub ticket_id: Option<Uuid>,
+    pub ip_address: Option<&'a str>,
+    pub user_agent: Option<&'a str>,
+    pub metadata: serde_json::Value,
+}
+
 pub async fn insert_audit_event(
     pool: &sqlx::PgPool,
-    event_type: &str,
-    actor_type: &str,
-    actor_id: Option<Uuid>,
-    request_id: Option<Uuid>,
-    ticket_id: Option<Uuid>,
-    ip_address: Option<&str>,
-    user_agent: Option<&str>,
-    metadata: serde_json::Value,
+    row: AuditEventInsert<'_>,
 ) -> Result<(), DbError> {
     sqlx::query(
         r#"
@@ -485,14 +490,14 @@ pub async fn insert_audit_event(
         "#,
     )
     .bind(Uuid::new_v4())
-    .bind(event_type)
-    .bind(actor_type)
-    .bind(actor_id)
-    .bind(request_id)
-    .bind(ticket_id)
-    .bind(ip_address)
-    .bind(user_agent)
-    .bind(metadata)
+    .bind(row.event_type)
+    .bind(row.actor_type)
+    .bind(row.actor_id)
+    .bind(row.request_id)
+    .bind(row.ticket_id)
+    .bind(row.ip_address)
+    .bind(row.user_agent)
+    .bind(row.metadata)
     .execute(pool)
     .await?;
     Ok(())

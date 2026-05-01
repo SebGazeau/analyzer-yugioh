@@ -60,6 +60,26 @@ impl FixedWindowLimiter {
     }
 }
 
+/// Fenêtre + plafond pour un compteur `FixedWindowLimiter`.
+#[derive(Debug, Clone, Copy)]
+pub struct FixedWindowConfig {
+    pub window: Duration,
+    pub max: u32,
+}
+
+/// Jeu de limites pour l’état global (site, admin, reset, 2FA profil, etc.).
+#[derive(Debug, Clone, Copy)]
+pub struct RateLimitStateConfig {
+    pub site: FixedWindowConfig,
+    pub register: FixedWindowConfig,
+    pub admin: FixedWindowConfig,
+    pub reset: FixedWindowConfig,
+    pub admin_reset_issue: FixedWindowConfig,
+    pub profile_twofa_setup: FixedWindowConfig,
+    pub profile_twofa_enable: FixedWindowConfig,
+    pub profile_twofa_rotate: FixedWindowConfig,
+}
+
 /// Limite `POST /login`, `POST /register` (séparé) et `POST /admin/login`.
 #[derive(Debug)]
 pub struct RateLimitState {
@@ -74,68 +94,47 @@ pub struct RateLimitState {
 }
 
 impl RateLimitState {
-    pub fn new(
-        site_window: Duration,
-        site_max: u32,
-        register_window: Duration,
-        register_max: u32,
-        admin_window: Duration,
-        admin_max: u32,
-        reset_window: Duration,
-        reset_max: u32,
-        admin_reset_issue_window: Duration,
-        admin_reset_issue_max: u32,
-        profile_twofa_setup_window: Duration,
-        profile_twofa_setup_max: u32,
-        profile_twofa_enable_window: Duration,
-        profile_twofa_enable_max: u32,
-        profile_twofa_rotate_window: Duration,
-        profile_twofa_rotate_max: u32,
-    ) -> Self {
+    pub fn new(cfg: RateLimitStateConfig) -> Self {
         Self {
-            site: FixedWindowLimiter::new(site_window, site_max),
-            register: FixedWindowLimiter::new(register_window, register_max),
-            admin: FixedWindowLimiter::new(admin_window, admin_max),
-            reset: FixedWindowLimiter::new(reset_window, reset_max),
+            site: FixedWindowLimiter::new(cfg.site.window, cfg.site.max),
+            register: FixedWindowLimiter::new(cfg.register.window, cfg.register.max),
+            admin: FixedWindowLimiter::new(cfg.admin.window, cfg.admin.max),
+            reset: FixedWindowLimiter::new(cfg.reset.window, cfg.reset.max),
             admin_reset_issue: FixedWindowLimiter::new(
-                admin_reset_issue_window,
-                admin_reset_issue_max,
+                cfg.admin_reset_issue.window,
+                cfg.admin_reset_issue.max,
             ),
             profile_twofa_setup: FixedWindowLimiter::new(
-                profile_twofa_setup_window,
-                profile_twofa_setup_max,
+                cfg.profile_twofa_setup.window,
+                cfg.profile_twofa_setup.max,
             ),
             profile_twofa_enable: FixedWindowLimiter::new(
-                profile_twofa_enable_window,
-                profile_twofa_enable_max,
+                cfg.profile_twofa_enable.window,
+                cfg.profile_twofa_enable.max,
             ),
             profile_twofa_rotate: FixedWindowLimiter::new(
-                profile_twofa_rotate_window,
-                profile_twofa_rotate_max,
+                cfg.profile_twofa_rotate.window,
+                cfg.profile_twofa_rotate.max,
             ),
         }
     }
 
     /// Valeur très permissive pour les tests d’intégration (évite les courses sur `unknown`).
     pub fn permissive_for_tests() -> Self {
-        Self::new(
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-        )
+        let w = FixedWindowConfig {
+            window: Duration::from_secs(60),
+            max: 50_000,
+        };
+        Self::new(RateLimitStateConfig {
+            site: w,
+            register: w,
+            admin: w,
+            reset: w,
+            admin_reset_issue: w,
+            profile_twofa_setup: w,
+            profile_twofa_enable: w,
+            profile_twofa_rotate: w,
+        })
     }
 }
 
@@ -156,24 +155,41 @@ pub fn rate_limit_state_from_env() -> RateLimitState {
     let profile_twofa_setup = parse_u32("PROFILE_2FA_SETUP_RATE_LIMIT_PER_MINUTE", 6);
     let profile_twofa_enable = parse_u32("PROFILE_2FA_ENABLE_RATE_LIMIT_PER_MINUTE", 10);
     let profile_twofa_rotate = parse_u32("PROFILE_2FA_ROTATE_RATE_LIMIT_PER_MINUTE", 5);
-    RateLimitState::new(
-        Duration::from_secs(60),
-        site,
-        Duration::from_secs(60),
-        register,
-        Duration::from_secs(60),
-        admin,
-        Duration::from_secs(60),
-        reset,
-        Duration::from_secs(60),
-        admin_reset_issue,
-        Duration::from_secs(60),
-        profile_twofa_setup,
-        Duration::from_secs(60),
-        profile_twofa_enable,
-        Duration::from_secs(60),
-        profile_twofa_rotate,
-    )
+    let minute = Duration::from_secs(60);
+    RateLimitState::new(RateLimitStateConfig {
+        site: FixedWindowConfig {
+            window: minute,
+            max: site,
+        },
+        register: FixedWindowConfig {
+            window: minute,
+            max: register,
+        },
+        admin: FixedWindowConfig {
+            window: minute,
+            max: admin,
+        },
+        reset: FixedWindowConfig {
+            window: minute,
+            max: reset,
+        },
+        admin_reset_issue: FixedWindowConfig {
+            window: minute,
+            max: admin_reset_issue,
+        },
+        profile_twofa_setup: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_setup,
+        },
+        profile_twofa_enable: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_enable,
+        },
+        profile_twofa_rotate: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_rotate,
+        },
+    })
 }
 
 /// Extrait l’IP depuis `peer_addr` (`a.b.c.d:port` ou `[ipv6]:port`).
