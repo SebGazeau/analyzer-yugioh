@@ -312,6 +312,42 @@ async fn test_web_dashboard_without_session_redirects_to_index() {
     assert_eq!(loc, Some("/"));
 }
 
+#[actix_web::test]
+async fn test_account_page_without_session_redirects_to_index() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::get().uri("/mon-compte").to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 303);
+    let loc = resp.headers().get("location").and_then(|v| v.to_str().ok());
+    assert_eq!(loc, Some("/"));
+}
+
+#[actix_web::test]
+async fn test_account_change_password_without_csrf_returns_403() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/mot-de-passe")
+        .set_form([
+            ("current_password", "old"),
+            ("new_password", "Abcd1234!"),
+            ("confirm_password", "Abcd1234!"),
+        ])
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_account_delete_without_csrf_returns_403() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/supprimer")
+        .set_form([("current_password", "old"), ("confirm_phrase", "alice")])
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
 /// Attributs du cookie de session après `GET /` (CSRF sync) — sec-08.
 #[actix_web::test]
 async fn test_index_get_session_cookie_dev_httponly_lax_without_secure() {
@@ -994,6 +1030,214 @@ async fn test_post_logout_without_valid_csrf_returns_403() {
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 403);
+}
+
+// --- Password reset (2FA + support/admin) ---
+
+#[actix_web::test]
+async fn test_forgot_password_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/auth/forgot-password")
+        .set_json(serde_json::json!({ "login": "alice" }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_forgot_password_page_returns_200() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::get()
+        .uri("/mot-de-passe-oublie")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert!(resp.status().is_success());
+}
+
+#[actix_web::test]
+async fn test_support_password_reset_request_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/support/password-reset-request")
+        .set_json(serde_json::json!({ "login": "alice", "reason": "lost access" }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_support_password_reset_status_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::get()
+        .uri(&format!(
+            "/support/password-reset-request/{}",
+            Uuid::new_v4()
+        ))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_verify_2fa_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/auth/reset/verify-2fa")
+        .set_json(serde_json::json!({
+            "request_id": Uuid::new_v4(),
+            "totp_code": "123456"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_setup_2fa_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/auth/2fa/setup")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_enable_2fa_without_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/auth/2fa/enable")
+        .set_json(serde_json::json!({ "totp_code": "123456" }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_account_twofa_setup_without_session_returns_401() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/2fa/setup")
+        .set_json(serde_json::json!({
+            "current_password": "Abcd1234!",
+            "csrf_token": "noop"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 401);
+}
+
+#[actix_web::test]
+async fn test_account_twofa_enable_without_session_returns_401() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/2fa/enable")
+        .set_json(serde_json::json!({
+            "current_password": "Abcd1234!",
+            "totp_code": "123456",
+            "csrf_token": "noop"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 401);
+}
+
+#[actix_web::test]
+async fn test_account_twofa_rotate_without_session_returns_401() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::post()
+        .uri("/mon-compte/2fa/recovery-codes/rotate")
+        .set_json(serde_json::json!({
+            "current_password": "Abcd1234!",
+            "csrf_token": "noop"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 401);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_approve_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri(&format!("/admin/password-reset/{}/approve", Uuid::new_v4()))
+        .set_json(serde_json::json!({
+            "verification_method": "in_person"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_issue_temp_code_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri(&format!(
+            "/admin/password-reset/{}/issue-temp-code",
+            Uuid::new_v4()
+        ))
+        .set_json(serde_json::json!({ "ttl_minutes": 15 }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_approve_with_key_no_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::post()
+        .uri(&format!("/admin/password-reset/{}/approve", Uuid::new_v4()))
+        .insert_header(("x-admin-key", "secret-key"))
+        .set_json(serde_json::json!({
+            "verification_method": "in_person"
+        }))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_page_without_key_returns_403() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/password-reset")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 403);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_page_with_key_returns_200() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/password-reset")
+        .insert_header(("x-admin-key", "secret-key"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+}
+
+#[actix_web::test]
+async fn test_admin_password_reset_queue_with_key_no_pool_returns_503() {
+    let app = test::init_service(configure_app_for_tests_with_auth(Some("secret-key"), None)).await;
+    let req = test::TestRequest::get()
+        .uri("/admin/password-reset/queue")
+        .insert_header(("x-admin-key", "secret-key"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 503);
+}
+
+#[actix_web::test]
+async fn test_enforce_2fa_page_without_session_redirects_to_index() {
+    let app = test::init_service(configure_app_for_tests()).await;
+    let req = test::TestRequest::get()
+        .uri("/auth/2fa/enforce")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 303);
 }
 
 #[actix_web::test]

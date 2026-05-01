@@ -30,6 +30,8 @@ const ADMIN_TOKEN_HOURS: i64 = 24;
 pub struct AdminSecret(pub Option<String>);
 
 const SESSION_KEY_ADMIN: &str = "admin_authenticated";
+pub const SESSION_KEY_ADMIN_ID: &str = "admin_user_id";
+pub const SESSION_KEY_ADMIN_EMAIL: &str = "admin_user_email";
 
 #[derive(Deserialize)]
 pub struct AdminLoginForm {
@@ -108,6 +110,12 @@ pub async fn admin_login(
     };
     if let Err(e) = session.insert(SESSION_KEY_ADMIN, true) {
         tracing::error!("admin session insert: {e}");
+    }
+    if let Err(e) = session.insert(SESSION_KEY_ADMIN_ID, admin.id) {
+        tracing::error!("admin session insert id: {e}");
+    }
+    if let Err(e) = session.insert(SESSION_KEY_ADMIN_EMAIL, admin.email.clone()) {
+        tracing::error!("admin session insert email: {e}");
     }
     let sub_esc = html_escape(sub);
     let token_esc = html_escape(&token);
@@ -190,6 +198,8 @@ pub async fn admin_setup(
 #[post("/logout")]
 pub async fn admin_logout(session: Session) -> HttpResponse {
     session.remove(SESSION_KEY_ADMIN);
+    session.remove(SESSION_KEY_ADMIN_ID);
+    session.remove(SESSION_KEY_ADMIN_EMAIL);
     HttpResponse::SeeOther()
         .append_header(("Location", "/admin/login"))
         .finish()

@@ -4,7 +4,9 @@ use actix_session::Session;
 use actix_web::{HttpRequest, HttpResponse, get, post, web};
 
 use crate::auth::csrf;
-use crate::auth::session::SITE_USER_SESSION_KEY;
+use crate::auth::session::{
+    SITE_USER_ID_SESSION_KEY, SITE_USER_SESSION_EPOCH_KEY, SITE_USER_SESSION_KEY,
+};
 use crate::auth::turnstile::{self, TurnstileConfig};
 use crate::auth::user_db::{self, CreateUserError};
 use crate::modules::template_error::TemplateError;
@@ -156,6 +158,8 @@ pub async fn register_submit(
                 .flatten();
             if let Some(u) = user {
                 let _ = session.insert(SITE_USER_SESSION_KEY, u.pseudo.clone());
+                let _ = session.insert(SITE_USER_ID_SESSION_KEY, u.id);
+                let _ = session.insert(SITE_USER_SESSION_EPOCH_KEY, u.session_epoch);
             }
             csrf::invalidate_csrf_token(&session);
             Ok(HttpResponse::SeeOther()

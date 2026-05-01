@@ -60,40 +60,81 @@ impl FixedWindowLimiter {
     }
 }
 
+/// Fenêtre + plafond pour un compteur `FixedWindowLimiter`.
+#[derive(Debug, Clone, Copy)]
+pub struct FixedWindowConfig {
+    pub window: Duration,
+    pub max: u32,
+}
+
+/// Jeu de limites pour l’état global (site, admin, reset, 2FA profil, etc.).
+#[derive(Debug, Clone, Copy)]
+pub struct RateLimitStateConfig {
+    pub site: FixedWindowConfig,
+    pub register: FixedWindowConfig,
+    pub admin: FixedWindowConfig,
+    pub reset: FixedWindowConfig,
+    pub admin_reset_issue: FixedWindowConfig,
+    pub profile_twofa_setup: FixedWindowConfig,
+    pub profile_twofa_enable: FixedWindowConfig,
+    pub profile_twofa_rotate: FixedWindowConfig,
+}
+
 /// Limite `POST /login`, `POST /register` (séparé) et `POST /admin/login`.
 #[derive(Debug)]
 pub struct RateLimitState {
     pub site: FixedWindowLimiter,
     pub register: FixedWindowLimiter,
     pub admin: FixedWindowLimiter,
+    pub reset: FixedWindowLimiter,
+    pub admin_reset_issue: FixedWindowLimiter,
+    pub profile_twofa_setup: FixedWindowLimiter,
+    pub profile_twofa_enable: FixedWindowLimiter,
+    pub profile_twofa_rotate: FixedWindowLimiter,
 }
 
 impl RateLimitState {
-    pub fn new(
-        site_window: Duration,
-        site_max: u32,
-        register_window: Duration,
-        register_max: u32,
-        admin_window: Duration,
-        admin_max: u32,
-    ) -> Self {
+    pub fn new(cfg: RateLimitStateConfig) -> Self {
         Self {
-            site: FixedWindowLimiter::new(site_window, site_max),
-            register: FixedWindowLimiter::new(register_window, register_max),
-            admin: FixedWindowLimiter::new(admin_window, admin_max),
+            site: FixedWindowLimiter::new(cfg.site.window, cfg.site.max),
+            register: FixedWindowLimiter::new(cfg.register.window, cfg.register.max),
+            admin: FixedWindowLimiter::new(cfg.admin.window, cfg.admin.max),
+            reset: FixedWindowLimiter::new(cfg.reset.window, cfg.reset.max),
+            admin_reset_issue: FixedWindowLimiter::new(
+                cfg.admin_reset_issue.window,
+                cfg.admin_reset_issue.max,
+            ),
+            profile_twofa_setup: FixedWindowLimiter::new(
+                cfg.profile_twofa_setup.window,
+                cfg.profile_twofa_setup.max,
+            ),
+            profile_twofa_enable: FixedWindowLimiter::new(
+                cfg.profile_twofa_enable.window,
+                cfg.profile_twofa_enable.max,
+            ),
+            profile_twofa_rotate: FixedWindowLimiter::new(
+                cfg.profile_twofa_rotate.window,
+                cfg.profile_twofa_rotate.max,
+            ),
         }
     }
 
     /// Valeur très permissive pour les tests d’intégration (évite les courses sur `unknown`).
     pub fn permissive_for_tests() -> Self {
-        Self::new(
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-            Duration::from_secs(60),
-            50_000,
-        )
+        let w = FixedWindowConfig {
+            window: Duration::from_secs(60),
+            max: 50_000,
+        };
+        Self::new(RateLimitStateConfig {
+            site: w,
+            register: w,
+            admin: w,
+            reset: w,
+            admin_reset_issue: w,
+            profile_twofa_setup: w,
+            profile_twofa_enable: w,
+            profile_twofa_rotate: w,
+        })
     }
 }
 
@@ -109,14 +150,46 @@ pub fn rate_limit_state_from_env() -> RateLimitState {
     let site = parse_u32("SITE_AUTH_RATE_LIMIT_PER_MINUTE", 30);
     let register = parse_u32("REGISTER_RATE_LIMIT_PER_MINUTE", 5);
     let admin = parse_u32("ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE", 15);
-    RateLimitState::new(
-        Duration::from_secs(60),
-        site,
-        Duration::from_secs(60),
-        register,
-        Duration::from_secs(60),
-        admin,
-    )
+    let reset = parse_u32("RESET_AUTH_RATE_LIMIT_PER_MINUTE", 10);
+    let admin_reset_issue = parse_u32("RESET_ADMIN_ISSUE_RATE_LIMIT_PER_MINUTE", 20);
+    let profile_twofa_setup = parse_u32("PROFILE_2FA_SETUP_RATE_LIMIT_PER_MINUTE", 6);
+    let profile_twofa_enable = parse_u32("PROFILE_2FA_ENABLE_RATE_LIMIT_PER_MINUTE", 10);
+    let profile_twofa_rotate = parse_u32("PROFILE_2FA_ROTATE_RATE_LIMIT_PER_MINUTE", 5);
+    let minute = Duration::from_secs(60);
+    RateLimitState::new(RateLimitStateConfig {
+        site: FixedWindowConfig {
+            window: minute,
+            max: site,
+        },
+        register: FixedWindowConfig {
+            window: minute,
+            max: register,
+        },
+        admin: FixedWindowConfig {
+            window: minute,
+            max: admin,
+        },
+        reset: FixedWindowConfig {
+            window: minute,
+            max: reset,
+        },
+        admin_reset_issue: FixedWindowConfig {
+            window: minute,
+            max: admin_reset_issue,
+        },
+        profile_twofa_setup: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_setup,
+        },
+        profile_twofa_enable: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_enable,
+        },
+        profile_twofa_rotate: FixedWindowConfig {
+            window: minute,
+            max: profile_twofa_rotate,
+        },
+    })
 }
 
 /// Extrait l’IP depuis `peer_addr` (`a.b.c.d:port` ou `[ipv6]:port`).
@@ -146,6 +219,35 @@ pub fn admin_login_post_path(path: &str) -> bool {
     path == "/admin/login"
 }
 
+pub fn reset_post_path(path: &str) -> bool {
+    matches!(
+        path,
+        "/auth/forgot-password"
+            | "/auth/reset/verify-2fa"
+            | "/auth/reset/verify-recovery-code"
+            | "/auth/reset/verify-temp-code"
+            | "/auth/reset-password"
+            | "/auth/2fa/setup"
+            | "/auth/2fa/enable"
+    )
+}
+
+pub fn admin_reset_issue_post_path(path: &str) -> bool {
+    path.starts_with("/admin/password-reset/") && path.ends_with("/issue-temp-code")
+}
+
+pub fn profile_twofa_setup_post_path(path: &str) -> bool {
+    path == "/mon-compte/2fa/setup"
+}
+
+pub fn profile_twofa_enable_post_path(path: &str) -> bool {
+    path == "/mon-compte/2fa/enable"
+}
+
+pub fn profile_twofa_rotate_post_path(path: &str) -> bool {
+    path == "/mon-compte/2fa/recovery-codes/rotate"
+}
+
 /// Si la requête est un POST d’auth ciblé et que la limite est dépassée, réponse **429** à renvoyer.
 pub fn login_post_blocked_response(
     req: &ServiceRequest,
@@ -173,6 +275,41 @@ pub fn login_post_blocked_response(
         );
     }
     if site_login_post_path(path) && !lim.site.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if reset_post_path(path) && !lim.reset.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if admin_reset_issue_post_path(path) && !lim.admin_reset_issue.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if profile_twofa_setup_post_path(path) && !lim.profile_twofa_setup.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if profile_twofa_enable_post_path(path) && !lim.profile_twofa_enable.check(&key) {
+        return Some(
+            HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
+                .insert_header(("Retry-After", "60"))
+                .body(body),
+        );
+    }
+    if profile_twofa_rotate_post_path(path) && !lim.profile_twofa_rotate.check(&key) {
         return Some(
             HttpResponse::build(StatusCode::TOO_MANY_REQUESTS)
                 .insert_header(("Retry-After", "60"))
@@ -228,5 +365,15 @@ mod tests {
             !site_login_post_path("/web/login"),
             "POST /web/login supprimé (sec-11)"
         );
+        assert!(reset_post_path("/auth/forgot-password"));
+        assert!(reset_post_path("/auth/reset/verify-2fa"));
+        assert!(admin_reset_issue_post_path(
+            "/admin/password-reset/00000000-0000-0000-0000-000000000000/issue-temp-code"
+        ));
+        assert!(profile_twofa_setup_post_path("/mon-compte/2fa/setup"));
+        assert!(profile_twofa_enable_post_path("/mon-compte/2fa/enable"));
+        assert!(profile_twofa_rotate_post_path(
+            "/mon-compte/2fa/recovery-codes/rotate"
+        ));
     }
 }

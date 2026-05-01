@@ -50,7 +50,7 @@ Le middleware `SessionMiddleware` (CookieSessionStore) est enregistré sur toute
 
 **CSRF (sec-09)** : les `POST` **formulaire** qui s’appuient sur la session (`/login`, `/logout`, `/register`, `/web/logout`) exigent un champ **`csrf_token`** identique au jeton en session (`auth::csrf`). Les pages concernées (`GET /`, `/register`, **`GET /web/dashboard`**) appellent `sync_csrf_token` pour injecter le jeton (Tera ou HTML inline). Après connexion / inscription réussie, le jeton est invalidé (`invalidate_csrf_token`) pour limiter la fixation.
 
-**Rate limit (sec-10)** : avant la session, un `wrap_fn` sur l’`App` appelle `rate_limit::login_post_blocked_response` pour les `POST` `/login`, `/register` et `/admin/login` (fenêtre **1 minute** par **IP**). Variables : `SITE_AUTH_RATE_LIMIT_PER_MINUTE`, `ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE`.
+**Rate limit (sec-10)** : avant la session, un `wrap_fn` sur l’`App` appelle `rate_limit::login_post_blocked_response` pour les `POST` `/login`, `/register`, `/admin/login`, `/auth/forgot-password`, `/auth/reset/*`, `/auth/2fa/*`, `/admin/password-reset/*/issue-temp-code`, et `/mon-compte/2fa/*` (fenêtre **1 minute** par **IP**). Variables : `SITE_AUTH_RATE_LIMIT_PER_MINUTE`, `REGISTER_RATE_LIMIT_PER_MINUTE`, `ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE`, `RESET_AUTH_RATE_LIMIT_PER_MINUTE`, `RESET_ADMIN_ISSUE_RATE_LIMIT_PER_MINUTE`, `PROFILE_2FA_SETUP_RATE_LIMIT_PER_MINUTE`, `PROFILE_2FA_ENABLE_RATE_LIMIT_PER_MINUTE`, `PROFILE_2FA_ROTATE_RATE_LIMIT_PER_MINUTE`.
 
 Les routes `/web/dashboard` et le helper `require_session` vérifient la présence de **`site_user_pseudo`** (même clé que pour les decks).
 
@@ -84,3 +84,45 @@ Le **builder** (pages HTML, recherche, validation locale) reste utilisable sans 
 - **Decks** : auth par session cookie (même mécanisme que la page d’accueil), pas par JWT.
 
 Ces choix sont résumés dans `docs/decisions.md` si besoin.
+
+---
+
+## 8. Réinitialisation mot de passe (sans email)
+
+Le workflow cible est documenté dans `docs/password-reset-2fa-admin-workflow.md`.
+
+### Parcours supportés
+
+- **Parcours A (`path=twofa`)** : compte avec 2FA actif -> challenge TOTP -> challenge recovery code -> reset mot de passe.
+- **Parcours B (`path=admin`)** : compte sans 2FA -> ticket support -> vérification présentielle hors app -> émission d’un code temporaire (téléphone) -> reset mot de passe.
+
+### Endpoints (proposition de contrat)
+
+- Public:
+  - `POST /auth/forgot-password`
+  - `POST /auth/reset/verify-2fa`
+  - `POST /auth/reset/verify-recovery-code`
+  - `POST /auth/reset/verify-temp-code`
+  - `POST /auth/reset-password`
+- Support/Admin:
+  - `POST /support/password-reset-request`
+  - `GET /support/password-reset-request/:requestId`
+  - `POST /admin/password-reset/:requestId/approve`
+  - `POST /admin/password-reset/:requestId/issue-temp-code`
+  - `GET /admin/password-reset/queue`
+- Onboarding 2FA (session site):
+  - `POST /auth/2fa/setup`
+  - `POST /auth/2fa/enable`
+  - `POST /mon-compte/2fa/setup` (ré-auth + CSRF)
+  - `POST /mon-compte/2fa/enable` (ré-auth + CSRF)
+  - `POST /mon-compte/2fa/recovery-codes/rotate` (ré-auth + CSRF)
+  - `GET /auth/2fa/enforce`
+  - `GET /mot-de-passe-oublie`
+
+### Exigences sécurité minimales
+
+- Réponse neutre sur `forgot-password` (anti-enumération).
+- Codes de recovery et codes temporaires stockés uniquement sous forme hashée.
+- Expiration courte (15-30 min), usage unique, limite de tentatives et backoff.
+- Invalidation de session via `session_epoch` (rotation au reset + vérification côté routes protégées).
+- Journal d’audit systématique (`security_audit_events`) sur chaque étape sensible.

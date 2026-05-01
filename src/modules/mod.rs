@@ -2,6 +2,7 @@
 //!
 //! Voir `docs/decisions.md` — découpage `handlers` / futur `db`.
 
+pub mod account;
 pub mod admin_sync;
 pub mod associations;
 pub mod catalog;
@@ -9,6 +10,7 @@ pub mod decks;
 pub mod insights_fidraulis_gy;
 pub mod insights_fidraulis_telemetry;
 pub mod pages;
+pub mod password_reset;
 pub mod site_auth;
 pub mod template_error;
 pub mod ygo;

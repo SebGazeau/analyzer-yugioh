@@ -3,7 +3,7 @@
 use actix_session::Session;
 use actix_web::HttpResponse;
 
-use crate::auth::session::SITE_USER_SESSION_KEY;
+use crate::auth::session::{SITE_USER_SESSION_EPOCH_KEY, SITE_USER_SESSION_KEY};
 use crate::auth::user_db;
 use crate::shared::search::card_resolve::resolve_passcode_by_name;
 use crate::shared::structs::card_search_result::CardSearchResult;
@@ -75,5 +75,20 @@ pub async fn require_site_user_id(
             "error": "Session invalide. Reconnectez-vous."
         }))
     })?;
+    let session_epoch = session
+        .get::<i64>(SITE_USER_SESSION_EPOCH_KEY)
+        .ok()
+        .flatten()
+        .unwrap_or_default();
+    if session_epoch != u.session_epoch {
+        return Err(HttpResponse::Unauthorized().json(serde_json::json!({
+            "error": "Session expirée. Reconnectez-vous."
+        })));
+    }
+    if u.force_enable_2fa_after_reset {
+        return Err(HttpResponse::Forbidden().json(serde_json::json!({
+            "error": "Activation 2FA requise avant cette action."
+        })));
+    }
     Ok(u.id)
 }

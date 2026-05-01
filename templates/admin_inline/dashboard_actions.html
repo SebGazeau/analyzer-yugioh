@@ -1,67 +1,104 @@
-<h2 class="admin-actions-title">Actions</h2>
+%%NAV%%
+<h2 class="admin-title">Actions d’administration</h2>
+<p class="admin-subtitle">Sépare les opérations métier par domaine. Les routes et paramètres existants restent inchangés.</p>
 
-<section class="admin-section">
-  <h2>Fidraulis GY — validation communautaire</h2>
-  <p class="admin-help">File des passcodes avec votes utilisateurs (hors déjà validés admin), tri par score (oui − non). <strong>Valider</strong> ajoute le passcode à la liste officielle interne (plus de votes utilisateurs).</p>
-  <p class="btn-row"><a href="/admin/fidraulis-gy">Ouvrir la file</a></p>
-</section>
+<div class="admin-actions">
+  <section class="admin-card" id="section-password-reset">
+    <div class="admin-card-head">
+      <h2>Password reset (support/admin)</h2>
+      <span class="admin-badge admin-badge-write">Workflow manuel</span>
+    </div>
+    <p class="admin-help">File des demandes mot de passe oublié (sans email) : validation présentielle, approbation, émission code temporaire.</p>
+    <p class="btn-row"><a class="admin-btn admin-btn-secondary" href="/admin/password-reset">Ouvrir la file reset</a></p>
+  </section>
 
-<section class="admin-section">
-  <h2>Analyse display (YGO)</h2>
-  <p class="admin-help">Estimation EV / liquidité / risques sur un display (données saisies, sans base).</p>
-  <p class="btn-row"><a href="/admin/ygo">Ouvrir l’outil</a></p>
-</section>
+  <section class="admin-card" id="section-insights">
+    <div class="admin-card-head">
+      <h2>Fidraulis GY — validation communautaire</h2>
+      <span class="admin-badge admin-badge-read">Lecture + validation</span>
+    </div>
+    <p class="admin-help">File des passcodes avec votes utilisateurs (hors déjà validés admin), tri par score (oui − non). <strong>Valider</strong> ajoute le passcode à la liste officielle interne.</p>
+    <p class="btn-row"><a class="admin-btn admin-btn-secondary" href="/admin/fidraulis-gy">Ouvrir la file</a></p>
+  </section>
 
-<section class="admin-section">
-  <h2>Catalogue YGOProDeck</h2>
-  <p class="admin-help">Interroge l’API publique YGOProDeck, met à jour les tables <code>cards</code> et <code>card_sets</code>, peut écrire le fichier <code>cards.json</code> selon la config, puis recharge le cache utilisé par la recherche. À lancer sur une base vide ou après de nouvelles sorties de cartes.</p>
-  <p class="btn-row">
-    <form method="get" action="/admin/fetch_cards" style="display:inline"><button type="submit">Rafraîchir les cartes</button></form>
-  </p>
-</section>
+  <section class="admin-card" id="section-analysis">
+    <div class="admin-card-head">
+      <h2>Analyse display (YGO)</h2>
+      <span class="admin-badge admin-badge-read">Lecture seule</span>
+    </div>
+    <p class="admin-help">Estimation EV / liquidité / risques sur un display (données saisies, sans base).</p>
+    <p class="btn-row"><a class="admin-btn admin-btn-secondary" href="/admin/ygo">Ouvrir l’outil</a></p>
+  </section>
 
-<section class="admin-section">
-  <h2>Enrichissement YGOrganization (YGResources)</h2>
-  <p class="admin-help">Enrichit la base avec des données YGOrg (effets EN, JSON cartes, etc.). <strong>Ordre conseillé la première fois</strong> : sync index → init révision → backfill (répéter si besoin) → manifest. Ensuite, <strong>sync Q&amp;A</strong> de temps en temps pour le module « cartes associées ».</p>
-  <ul class="admin-help" style="margin: 0 0 0.5rem 1.1rem; padding: 0;">
-    <li><strong>Sync index EN</strong> : télécharge l’index des noms anglais (volumineux, à faire rarement).</li>
-    <li><strong>Init révision</strong> : enregistre la révision YGOrg de référence pour les manifests suivants.</li>
-    <li><strong>Backfill</strong> : associe les passcodes de <code>cards</code> aux IDs YGOrg via l’index.</li>
-    <li><strong>Manifest</strong> : télécharge le JSON brut des cartes (couche <code>card_raw</code>).</li>
-    <li><strong>Sync Q&amp;A</strong> : importe des Q&amp;A récents (liens entre cartes pour l’UI associations).</li>
-  </ul>
-  <p class="btn-row">
-    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="sync_index"/><button type="submit">YGOrg — sync index EN (lourd)</button></form>
-    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="init"/><button type="submit">YGOrg — init révision</button></form>
-    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="backfill"/><input type="hidden" name="max" value="30"/><button type="submit">YGOrg — backfill (30)</button></form>
-    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="manifest"/><input type="hidden" name="max" value="50"/><button type="submit">YGOrg — manifest (50)</button></form>
-    <form method="get" action="/admin/enrich_ygorganization" style="display:inline"><input type="hidden" name="mode" value="sync_qa"/><input type="hidden" name="max" value="150"/><button type="submit">YGOrg — sync Q&amp;A (150)</button></form>
-  </p>
-</section>
+  <section class="admin-card" id="section-catalogue">
+    <div class="admin-card-head">
+      <h2>Catalogue YGOProDeck</h2>
+      <span class="admin-badge admin-badge-write">Écrit en DB</span>
+    </div>
+    <p class="admin-help">Interroge l’API publique YGOProDeck, met à jour les tables <code>cards</code> et <code>card_sets</code>, peut écrire <code>cards.json</code> selon la config, puis recharge le cache recherche.</p>
+    <p class="btn-row">
+      <form method="get" action="/admin/fetch_cards"><button type="submit">Rafraîchir les cartes</button></form>
+      <form method="get" action="/admin/reload_cache_from_db"><button type="submit">Recharger le cache (Postgres)</button></form>
+    </p>
+  </section>
 
-<section class="admin-section">
-  <h2>Complément archétype (YGOrg)</h2>
-  <p class="admin-help">Cible : cartes sans archétype YGOProDeck mais avec couche <code>card_raw</code>. <strong>Liste CSV</strong> (<code>preview_card_metadata_fill</code>) sans analyse JSON. <strong>Phases 2–3</strong> (<code>apply_card_metadata_fill</code>) : dérive depuis le JSON (monstre : <code>\"…\" monster</code> ; sort/piège : <code>add 1 \"…\" card</code> sur la 1re ligne ; ou champ futur <code>cardData.en.archetype</code>). Avec <code>write=1</code> : <code>cards.archetype</code> + <code>archetype_source</code> (NULL-only), recharge du cache. Sinon simulation.</p>
-  <p class="btn-row">
-    <form method="get" action="/admin/preview_card_metadata_fill" style="display:inline"><input type="hidden" name="max" value="500"/><button type="submit">Liste CSV candidats (500)</button></form>
-    <form method="get" action="/admin/apply_card_metadata_fill" style="display:inline"><input type="hidden" name="max" value="300"/><button type="submit">Simuler dérivation (300)</button></form>
-    <form method="get" action="/admin/apply_card_metadata_fill" style="display:inline" onsubmit="return confirm('Écrire archetype + archetype_source en base et recharger le cache ?');"><input type="hidden" name="max" value="300"/><input type="hidden" name="write" value="1"/><button type="submit">Appliquer dérivation (300)</button></form>
-  </p>
-</section>
+  <section class="admin-card" id="section-ygorg">
+    <div class="admin-card-head">
+      <h2>Enrichissement YGOrganization (YGResources)</h2>
+      <span class="admin-badge admin-badge-risk">Lourd</span>
+      <span class="admin-badge admin-badge-write">Écrit en DB</span>
+    </div>
+    <p class="admin-help">Ordre conseillé la première fois : <strong>sync index</strong> → <strong>init</strong> → <strong>backfill</strong> (répéter si besoin) → <strong>manifest</strong>. Ensuite, lancer <strong>sync Q&amp;A</strong> ponctuellement.</p>
+    <ul class="admin-list">
+      <li><strong>Sync index EN</strong> : télécharge l’index des noms anglais (volumineux, rarement).</li>
+      <li><strong>Init révision</strong> : enregistre la révision de référence.</li>
+      <li><strong>Backfill</strong> : associe passcodes de <code>cards</code> aux IDs YGOrg.</li>
+      <li><strong>Manifest</strong> : télécharge le JSON brut cartes (<code>card_raw</code>).</li>
+      <li><strong>Sync Q&amp;A</strong> : importe des Q&amp;A récents pour les associations.</li>
+    </ul>
+    <p class="btn-row">
+      <form method="get" action="/admin/enrich_ygorganization"><input type="hidden" name="mode" value="sync_index"><button type="submit">YGOrg — sync index EN (lourd)</button></form>
+      <form method="get" action="/admin/enrich_ygorganization"><input type="hidden" name="mode" value="init"><button type="submit">YGOrg — init révision</button></form>
+      <form method="get" action="/admin/enrich_ygorganization"><input type="hidden" name="mode" value="backfill"><input type="hidden" name="max" value="30"><button type="submit">YGOrg — backfill (30)</button></form>
+      <form method="get" action="/admin/enrich_ygorganization"><input type="hidden" name="mode" value="manifest"><input type="hidden" name="max" value="50"><button type="submit">YGOrg — manifest (50)</button></form>
+      <form method="get" action="/admin/enrich_ygorganization"><input type="hidden" name="mode" value="sync_qa"><input type="hidden" name="max" value="150"><button type="submit">YGOrg — sync Q&amp;A (150)</button></form>
+    </p>
+  </section>
 
-<section class="admin-section">
-  <h2>Images illustrées</h2>
-  <p class="admin-help">Parcourt les URLs d’images référencées en base, télécharge et produit les variantes WebP. Les images déjà importées sont en principe ignorées (pas de re-traitement inutile).</p>
-  <p class="btn-row">
-    <form method="post" action="/admin/import" style="display:inline"><button type="submit">Importer les images</button></form>
-  </p>
-</section>
+  <section class="admin-card" id="section-metadata">
+    <div class="admin-card-head">
+      <h2>Complément archétype (YGOrg)</h2>
+      <span class="admin-badge admin-badge-write">Écrit en DB</span>
+    </div>
+    <p class="admin-help">Cible : cartes sans archétype YGOProDeck mais avec couche <code>card_raw</code>. Simulation via <code>apply_card_metadata_fill</code>, puis écriture explicite avec <code>write=1</code> en mode NULL-only.</p>
+    <p class="btn-row">
+      <form method="get" action="/admin/preview_card_metadata_fill"><input type="hidden" name="max" value="500"><button type="submit">Liste CSV candidats (500)</button></form>
+      <form method="get" action="/admin/apply_card_metadata_fill"><input type="hidden" name="max" value="300"><button type="submit">Simuler dérivation (300)</button></form>
+      <form method="get" action="/admin/apply_card_metadata_fill" onsubmit="return confirm('Écrire archetype + archetype_source en base et recharger le cache ?');"><input type="hidden" name="max" value="300"><input type="hidden" name="write" value="1"><button type="submit">Appliquer dérivation (300)</button></form>
+    </p>
+  </section>
 
-<section class="admin-section">
-  <h2>Fichiers de stockage</h2>
-  <p class="admin-help">Pour chaque enregistrement <code>images</code>, retélécharge depuis l’URL source et écrit les fichiers aux chemins déjà en base (ex. dossier vide après déploiement ou changement de stockage). <strong>Forcer</strong> réécrit même si le fichier existe déjà.</p>
-  <p class="btn-row">
-    <form method="post" action="/admin/rehydrate_storage" style="display:inline"><button type="submit">Remplir le stockage (URLs → fichiers)</button></form>
-    <form method="post" action="/admin/rehydrate_storage?force=true" style="display:inline"><button type="submit">Remplir le stockage (forcer réécriture)</button></form>
-  </p>
-</section>
+  <section class="admin-card" id="section-images">
+    <div class="admin-card-head">
+      <h2>Images illustrées</h2>
+      <span class="admin-badge admin-badge-write">Écrit fichiers</span>
+    </div>
+    <p class="admin-help">Parcourt les URLs d’images référencées en base, télécharge et produit les variantes WebP. Les images déjà importées sont ignorées.</p>
+    <p class="btn-row">
+      <form method="post" action="/admin/import"><button type="submit">Importer les images</button></form>
+    </p>
+  </section>
+
+  <section class="admin-card" id="section-storage">
+    <div class="admin-card-head">
+      <h2>Fichiers de stockage</h2>
+      <span class="admin-badge admin-badge-risk">Lourd</span>
+      <span class="admin-badge admin-badge-write">Écrit fichiers</span>
+    </div>
+    <p class="admin-help">Pour chaque entrée <code>images</code>, retélécharge depuis l’URL source et réécrit les chemins déjà en base. Le mode <strong>force=true</strong> réécrit même si le fichier existe.</p>
+    <p class="btn-row">
+      <form method="post" action="/admin/rehydrate_storage"><button type="submit">Remplir le stockage (URLs → fichiers)</button></form>
+      <form method="post" action="/admin/rehydrate_storage?force=true"><button type="submit">Remplir le stockage (forcer réécriture)</button></form>
+    </p>
+  </section>
+</div>

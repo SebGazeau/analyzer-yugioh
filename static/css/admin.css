@@ -1,0 +1,243 @@
+:root {
+  --admin-bg: #f6f7f9;
+  --admin-surface: #ffffff;
+  --admin-border: #d9dee7;
+  --admin-text: #162033;
+  --admin-muted: #4d5a70;
+  --admin-accent: #2f5fe7;
+  --admin-accent-hover: #214bc0;
+  --admin-danger: #b42318;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--admin-accent);
+}
+
+a:hover {
+  color: var(--admin-accent-hover);
+}
+
+.admin-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.admin-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.6rem;
+}
+
+.admin-subtitle {
+  margin: 0 0 1rem;
+  color: var(--admin-muted);
+}
+
+.admin-nav {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+}
+
+.admin-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-nav-list a {
+  display: inline-block;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #f9fafe;
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.admin-nav-list a:hover {
+  background: #edf1ff;
+}
+
+.admin-actions {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-card {
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+}
+
+.admin-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.admin-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-help {
+  color: var(--admin-muted);
+  max-width: 72rem;
+  margin: 0.55rem 0 0.2rem;
+}
+
+.admin-list {
+  margin: 0.45rem 0 0.4rem 1.1rem;
+  color: var(--admin-muted);
+}
+
+.btn-row {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-row form {
+  margin: 0;
+}
+
+.admin-btn,
+.btn-row button,
+.btn-row a {
+  display: inline-block;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.admin-btn-primary,
+.btn-row button {
+  background: var(--admin-accent);
+  color: #fff;
+}
+
+.admin-btn-primary:hover,
+.btn-row button:hover {
+  background: var(--admin-accent-hover);
+}
+
+.admin-btn-secondary,
+.btn-row a {
+  background: #f6f8fc;
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+}
+
+.admin-btn-secondary:hover,
+.btn-row a:hover {
+  background: #edf1f8;
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--admin-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.admin-badge-risk {
+  color: #8a2d0c;
+  border-color: #f3c6ac;
+  background: #fff3ec;
+}
+
+.admin-badge-write {
+  color: #6a1b9a;
+  border-color: #d5b7ed;
+  background: #f7f0ff;
+}
+
+.admin-badge-read {
+  color: #135e33;
+  border-color: #b6dfc5;
+  background: #edfbf2;
+}
+
+.admin-panel {
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  padding: 1rem;
+}
+
+.admin-form-grid {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 28rem;
+}
+
+.admin-form-grid label {
+  display: grid;
+  gap: 0.22rem;
+  font-size: 0.92rem;
+}
+
+.admin-form-grid input {
+  padding: 0.52rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  font: inherit;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.8rem;
+  background: var(--admin-surface);
+}
+
+.admin-table th,
+.admin-table td {
+  border: 1px solid var(--admin-border);
+  text-align: left;
+  padding: 0.45rem 0.55rem;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  background: #f1f4fb;
+}
+
+.admin-note {
+  color: var(--admin-muted);
+  font-size: 0.9rem;
+}
+
+.admin-error {
+  color: var(--admin-danger);
+}

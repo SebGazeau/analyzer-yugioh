@@ -4,7 +4,9 @@ use actix_web::{HttpResponse, get, post, web};
 use serde::Deserialize;
 use sqlx::PgPool;
 
-use crate::routes::{ADMIN_DASHBOARD_ACTIONS_HTML, ADMIN_DASHBOARD_STYLE};
+use crate::routes::{
+    ADMIN_DASHBOARD_ACTIONS_HTML, ADMIN_DASHBOARD_NAV_HTML, ADMIN_DASHBOARD_STYLE,
+};
 use crate::shared::search::cache::CardCache;
 use crate::shared::structs::card_search_result::CardSearchResult;
 
@@ -63,25 +65,31 @@ pub async fn get_admin_fidraulis_gy_queue_page(
         body_rows.push_str(&row_html(&cards, r));
     }
     if body_rows.is_empty() {
-        body_rows.push_str("<tr><td colspan=\"6\">Aucun vote sur des passcodes non encore validés admin.</td></tr>");
+        body_rows.push_str(
+            "<tr><td colspan=\"6\">Aucun vote sur des passcodes non encore validés admin.</td></tr>",
+        );
     }
     let html = format!(
         r#"<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><title>Fidraulis GY — validation</title></head>
+<html lang="fr"><head><meta charset="UTF-8"><title>Fidraulis GY — validation</title>%%STYLE%%</head>
 <body>
-%%STYLE%%
+<div class="admin-shell">
 %%ACTIONS%%
-<h1>Fidraulis GY — file communautaire</h1>
-<p>Passcodes avec au moins un vote utilisateur, <strong>non</strong> présents dans la validation admin. Tri par score (approve − reject).</p>
-<table border="1" cellpadding="6" cellspacing="0">
+<section class="admin-panel">
+<h1 class="admin-title">Fidraulis GY — file communautaire</h1>
+<p class="admin-help">Passcodes avec au moins un vote utilisateur, <strong>non</strong> présents dans la validation admin. Tri par score (approve − reject).</p>
+<table class="admin-table">
 <thead><tr><th>Carte</th><th>Passcode</th><th>Oui</th><th>Non</th><th>Score</th><th>Action</th></tr></thead>
 <tbody>{body_rows}</tbody>
 </table>
-<p><a href="/admin/login">Retour admin</a></p>
+<p class="admin-note"><a href="/admin/login">Retour au hub admin</a></p>
+</section>
+</div>
 </body></html>"#
     )
     .replace("%%STYLE%%", ADMIN_DASHBOARD_STYLE)
-    .replace("%%ACTIONS%%", ADMIN_DASHBOARD_ACTIONS_HTML);
+    .replace("%%ACTIONS%%", ADMIN_DASHBOARD_ACTIONS_HTML)
+    .replace("%%NAV%%", ADMIN_DASHBOARD_NAV_HTML);
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html)

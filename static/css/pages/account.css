@@ -1,0 +1,246 @@
+/*
+ * pages/account.css
+ * Espace Mon compte (SSR).
+ */
+
+.account-page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  padding: var(--space-5);
+}
+
+.account-shell .header-tabs {
+  display: none !important;
+}
+
+.account-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.account-card__title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.account-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.account-form__label {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.account-form__input {
+  width: 100%;
+  min-height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-sunken);
+  color: var(--color-text-primary);
+  padding: var(--space-2) var(--space-3);
+  box-sizing: border-box;
+}
+
+.account-form__input:focus {
+  outline: none;
+  border-color: var(--color-gold-dim);
+  box-shadow: var(--focus-ring-gold);
+}
+
+.account-success {
+  margin: 0;
+  color: var(--color-success);
+}
+
+.account-error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.account-danger-copy {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.account-card--twofa .account-success[data-twofa-secret],
+.account-card--twofa .account-success[data-twofa-codes] {
+  white-space: pre-wrap;
+}
+
+.password-reset-card {
+  width: min(1100px, 100%);
+  max-width: 1100px;
+  box-shadow: var(--shadow-lg);
+}
+
+.password-reset-page .header-tabs {
+  display: none !important;
+}
+
+.password-reset-page .header-auth {
+  display: none !important;
+}
+
+.password-reset-main {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-7) var(--space-4);
+}
+
+.password-reset-intro {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  font-size: var(--text-base);
+}
+
+.password-reset-card .account-card {
+  margin-top: var(--space-4);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-strong);
+}
+
+.password-reset-card .account-success {
+  white-space: pre-wrap;
+}
+
+.reset-stepper {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.reset-step {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  font-weight: 600;
+}
+
+.reset-step--active {
+  border-color: var(--color-gold-dim);
+  color: var(--color-gold);
+  background: var(--color-gold-alpha-06);
+}
+
+.reset-panel[hidden] {
+  display: none;
+}
+
+.reset-request-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-sunken);
+}
+
+.reset-request-controls {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.reset-request-controls .account-form__input {
+  flex: 1;
+}
+
+.reset-method-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.reset-method-btn {
+  min-width: 160px;
+}
+
+.reset-method-btn--active {
+  border-color: var(--color-gold-dim);
+  color: var(--color-gold);
+  background: var(--color-gold-alpha-06);
+}
+
+.reset-method-pane[hidden] {
+  display: none;
+}
+
+.reset-method-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-sunken);
+}
+
+.reset-method-pane .account-form {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.reset-method-pane .account-form:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.password-reset-card .account-error,
+.password-reset-card .account-success {
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.password-reset-card .account-error {
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+}
+
+.password-reset-card .account-success {
+  background: var(--color-gold-alpha-06);
+  border: 1px solid var(--color-gold-alpha-20);
+}
+
+@media (max-width: 900px) {
+  .password-reset-main {
+    padding: var(--space-5) var(--space-3);
+  }
+
+  .reset-stepper {
+    flex-direction: column;
+  }
+}

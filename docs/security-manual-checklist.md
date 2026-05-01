@@ -133,3 +133,23 @@ Ce fichier liste ce que **tu dois vérifier toi-même** (environnements réels, 
 
 - **Ne pas committer** `.env` avec de vrais secrets.
 - Après chaque slice : `cargo test` (et tests front si concerné).
+
+---
+
+## sec-13 — Reset mot de passe (2FA + support/admin, sans email)
+
+| Action | Pourquoi |
+|--------|----------|
+| Vérifier que `POST /auth/forgot-password` répond le **même message** pour un compte existant et inexistant | Empêche l’énumération de comptes. |
+| Contrôler que les `recovery_code` et `temp_code` sont stockés **hashés** uniquement (jamais en clair en DB/logs) | Réduit l’impact d’une fuite DB ou logs. |
+| Confirmer TTL court (15-30 min), usage unique, compteur de tentatives et **429** au dépassement | Limite brute force et réutilisation de code. |
+| Vérifier qu’après `POST /auth/reset-password` toutes les sessions actives et refresh tokens sont invalidés | Empêche une session volée de survivre au reset. |
+| Sur le parcours admin, exiger une validation hors app (présentiel) avant `issue-temp-code` | Sans canal secondaire vérifié, l’identité n’est pas prouvée. |
+| Contrôler la présence d’entrées d’audit complètes (`security_audit_events`) pour: demande, validation, émission code, reset final | Garantit traçabilité et capacité d’enquête. |
+| Vérifier qu’un compte sans 2FA est forcé à activer la 2FA après reset (`force_enable_2fa_after_reset`) | Réduit le risque de récidive sur comptes faibles. |
+| Vérifier la rotation de `session_epoch` après reset mot de passe et la déconnexion effective des anciennes sessions | Révocation globale de sessions sans store serveur centralisé. |
+| Vérifier les limites `RESET_AUTH_RATE_LIMIT_PER_MINUTE` et `RESET_ADMIN_ISSUE_RATE_LIMIT_PER_MINUTE` | Réduit le brute force sur les étapes de récupération et l’émission admin. |
+| Vérifier que les endpoints profil 2FA (`/mon-compte/2fa/setup`, `/enable`, `/recovery-codes/rotate`) exigent **ré-auth** (`current_password`) + CSRF | Empêche l’activation/rotation 2FA via session volée ou CSRF seule. |
+| Vérifier qu’un setup 2FA non confirmé expire (TTL court) et qu’un code TOTP après expiration est refusé | Réduit la fenêtre d’abus d’un secret intermédiaire. |
+| Vérifier la rotation systématique des recovery codes à l’activation 2FA et lors d’une régénération manuelle | Invalide immédiatement les anciens lots compromis ou perdus. |
+| Contrôler les événements d’audit `profile_twofa_setup_started`, `profile_twofa_enabled`, `profile_twofa_recovery_codes_rotated` | Traçabilité des actions sensibles côté profil utilisateur. |

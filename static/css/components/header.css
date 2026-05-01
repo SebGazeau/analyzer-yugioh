@@ -20,6 +20,7 @@
   flex-direction: column;
   justify-content: center;
   padding-bottom: var(--space-4);
+  text-decoration: none;
 }
 /* Spécificité .header .header-tabs pour battre dashboard.css (.app-tabs) chargé après */
 .header .header-tabs {
@@ -70,7 +71,6 @@
   justify-self: end;
   display: flex;
   align-items: center;
-  padding-bottom: var(--space-3);
 }
 @media (max-width: 768px) {
   .header {
@@ -132,6 +132,17 @@
   color: var(--color-text-secondary);
 }
 
+.header-user-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+.header-user-link:hover .header-user {
+  color: var(--color-gold);
+}
+
 .header-logout-form {
   display: inline-flex;
 }
@@ -145,10 +156,25 @@
 }
 
 .header-login-form {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.header-login-credentials {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(150px, 190px);
+  align-items: start;
+  gap: var(--space-3);
+  column-gap: var(--space-2);
+}
+
+.header-login-actions {
   display: flex;
+  align-self: start;
   align-items: center;
   gap: var(--space-3);
-  flex-wrap: wrap;
 }
 
 .header-login-label {
@@ -183,6 +209,48 @@
   outline: none;
   border-color: var(--color-gold-dim);
   box-shadow: var(--focus-ring-gold);
+}
+
+.header-forgot-link {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin-top: calc(var(--space-2) * -1);
+  margin-bottom: var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.header-forgot-link:hover {
+  color: var(--color-gold);
+  text-decoration: underline;
+}
+
+@media (max-width: 980px) {
+  .header-login-form {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .header-login-credentials {
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .header-login-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .header-login-credentials {
+    grid-template-columns: 1fr;
+  }
+  .header-forgot-link {
+    justify-self: start;
+    margin-top: 0;
+  }
 }
 
 .header-login-error {

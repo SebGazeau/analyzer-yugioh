@@ -14,6 +14,12 @@ pub struct SiteUser {
     pub id: Uuid,
     pub pseudo: String,
     pub password_hash: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub twofa_enabled: bool,
+    pub twofa_secret_encrypted: Option<String>,
+    pub twofa_setup_expires_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub force_enable_2fa_after_reset: bool,
+    pub session_epoch: i64,
 }
 
 /// Vérifie que le mot de passe respecte les critères (min 8, maj, min, chiffre, spécial).
@@ -97,9 +103,22 @@ pub async fn get_user_by_pseudo(
         return Ok(None);
     }
     let row = sqlx::query_as::<_, SiteUser>(
-        "SELECT id, pseudo, password_hash FROM site_users WHERE LOWER(TRIM(pseudo)) = $1",
+        "SELECT id, pseudo, password_hash, created_at, twofa_enabled, twofa_secret_encrypted, twofa_setup_expires_at, force_enable_2fa_after_reset, session_epoch FROM site_users WHERE LOWER(TRIM(pseudo)) = $1",
     )
     .bind(&key)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_user_by_id(
+    pool: &sqlx::PgPool,
+    user_id: Uuid,
+) -> Result<Option<SiteUser>, db::DbError> {
+    let row = sqlx::query_as::<_, SiteUser>(
+        "SELECT id, pseudo, password_hash, created_at, twofa_enabled, twofa_secret_encrypted, twofa_setup_expires_at, force_enable_2fa_after_reset, session_epoch FROM site_users WHERE id = $1",
+    )
+    .bind(user_id)
     .fetch_optional(pool)
     .await?;
     Ok(row)
@@ -154,6 +173,64 @@ pub async fn authenticate(
         Some(u) if verify_password(password, &u.password_hash) => Ok(Some(u)),
         _ => Ok(None),
     }
+}
+
+pub async fn verify_current_password(
+    pool: &sqlx::PgPool,
+    user_id: Uuid,
+    password: &str,
+) -> Result<bool, db::DbError> {
+    let user = get_user_by_id(pool, user_id).await?;
+    Ok(user
+        .as_ref()
+        .is_some_and(|u| verify_password(password, &u.password_hash)))
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum UpdatePasswordError {
+    #[error("{0}")]
+    Password(#[from] PasswordError),
+    #[error("Erreur technique")]
+    Hash,
+    #[error("Erreur base de données")]
+    Db(#[from] db::DbError),
+}
+
+pub async fn update_password(
+    pool: &sqlx::PgPool,
+    user_id: Uuid,
+    new_password: &str,
+) -> Result<(), UpdatePasswordError> {
+    validate_password_strength(new_password).map_err(UpdatePasswordError::Password)?;
+    let hash = hash_password(new_password).map_err(|_| UpdatePasswordError::Hash)?;
+    sqlx::query(
+        "UPDATE site_users SET password_hash = $1, session_epoch = session_epoch + 1 WHERE id = $2",
+    )
+    .bind(hash)
+    .bind(user_id)
+    .execute(pool)
+    .await
+    .map_err(db::DbError::from)
+    .map_err(UpdatePasswordError::Db)?;
+    Ok(())
+}
+
+pub async fn bump_session_epoch(pool: &sqlx::PgPool, user_id: Uuid) -> Result<i64, db::DbError> {
+    let row: (i64,) = sqlx::query_as(
+        "UPDATE site_users SET session_epoch = session_epoch + 1 WHERE id = $1 RETURNING session_epoch",
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(row.0)
+}
+
+pub async fn delete_user(pool: &sqlx::PgPool, user_id: Uuid) -> Result<bool, db::DbError> {
+    let res = sqlx::query("DELETE FROM site_users WHERE id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(res.rows_affected() > 0)
 }
 
 #[cfg(test)]
